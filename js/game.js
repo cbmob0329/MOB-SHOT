@@ -30,7 +30,11 @@
     if (!src) return null;
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src;
+      image.src = src + '?v=20260604';
+      image.__src = src;
+      image.onerror = function(){
+        console.warn('画像が読み込めません:', src);
+      };
       images.set(src, image);
     }
     return images.get(src);
@@ -291,7 +295,7 @@
   }
 
   function spawnMidBoss() {
-    const def = D.enemies.midBoss;
+    const def = pick(D.enemies.midBoss);
     const hp = Math.ceil(def.hp * (flow.midBoss === 2 ? 1.35 : 1));
 
     state.entities.push({
@@ -623,7 +627,7 @@
     runCommitted = true;
     running = false;
 
-    if (clear) window.MobShotStorage.addRunResult(state.score, state.coin);
+    if (clear && window.MobShotStorage) window.MobShotStorage.addRunResult(state.score, state.coin);
 
     resultTitle.textContent = clear ? 'CLEAR!' : 'GAME OVER';
     resultText.textContent = clear ? 'ボス撃破！ステージクリア' : 'ライフがなくなりました';
@@ -693,16 +697,6 @@
     ctx.lineTo(W * 0.2, H);
     ctx.closePath();
     ctx.fill();
-
-    ctx.strokeStyle = 'rgba(255,255,255,.22)';
-    ctx.lineWidth = 4;
-
-    for (let y = -120 + (scroll % 120); y < H; y += 120) {
-      ctx.beginPath();
-      ctx.moveTo(W * 0.18, y);
-      ctx.lineTo(W * 0.82, y);
-      ctx.stroke();
-    }
   }
 
   function drawEntity(e) {
@@ -788,32 +782,28 @@
     ctx.save();
     ctx.translate(e.x, y);
 
-    const isBoss = e.kind === 'boss' || e.kind === 'midBoss';
-
     ctx.fillStyle =
       e.kind === 'chest' ? '#b77822' :
-      isBoss ? '#42215f' :
       e.kind === 'gimmick' ? '#86664a' :
+      e.kind === 'midBoss' || e.kind === 'boss' ? '#42215f' :
       '#151822';
 
-    ctx.strokeStyle = isBoss ? '#ffe66b' : '#111';
+    ctx.strokeStyle = '#111';
     ctx.lineWidth = 5;
 
-    if (e.kind === 'gimmick' || e.kind === 'chest') {
-      roundRect(-size / 2, -size / 2, size, size * 0.8, 12);
-    } else {
-      ctx.beginPath();
-      ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
-    }
-
+    ctx.beginPath();
+    ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = '#ffe66b';
-    ctx.beginPath();
-    ctx.arc(-size * 0.15, -size * 0.08, 5, 0, Math.PI * 2);
-    ctx.arc(size * 0.15, -size * 0.08, 5, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 3;
+    ctx.font = '900 11px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeText(e.name || 'NO IMG', 0, 0);
+    ctx.fillText(e.name || 'NO IMG', 0, 0);
 
     ctx.restore();
   }
@@ -877,17 +867,6 @@
     ctx.arc(p.x, p.y, 28, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-
-    ctx.fillStyle = '#ffdf35';
-    ctx.beginPath();
-    ctx.arc(p.x - 10, p.y - 4, 6, 0, Math.PI * 2);
-    ctx.arc(p.x + 10, p.y - 4, 6, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#ff4aa4';
-    ctx.font = '900 12px system-ui';
-    ctx.textAlign = 'center';
-    ctx.fillText('MOB', p.x, p.y + 16);
   }
 
   function drawParticle(p) {
@@ -922,7 +901,6 @@
   function loop() {
     update();
     draw();
-
     if (running) raf = requestAnimationFrame(loop);
   }
 
