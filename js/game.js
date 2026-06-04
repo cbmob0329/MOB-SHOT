@@ -36,6 +36,10 @@
     return images.get(src);
   }
 
+  function imageReady(image) {
+    return image && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
+  }
+
   const state = {
     hp: 50,
     maxHp: 50,
@@ -177,10 +181,10 @@
       name: def.name,
       image: def.image,
       x: rand(W * 0.18, W * 0.82),
-      y: -60,
+      y: -68,
       vx: rand(-0.45, 0.45),
       vy: 2.15 + flow.area * 0.08,
-      r: 25,
+      r: 28,
       hp: Math.ceil(def.hp * scale),
       maxHp: Math.ceil(def.hp * scale),
       score: def.score,
@@ -200,11 +204,11 @@
       name: def.name,
       image: def.image,
       x: rand(W * 0.18, W * 0.82),
-      y: -70,
+      y: -74,
       vx: 0,
       vy: 2.05,
-      w: 58,
-      h: 58,
+      w: 64,
+      h: 64,
       hp: Math.ceil(def.hp * scale),
       maxHp: Math.ceil(def.hp * scale),
       score: def.score,
@@ -223,11 +227,11 @@
       name: def.name,
       image: def.image,
       x: rand(W * 0.2, W * 0.8),
-      y: -64,
+      y: -68,
       vx: 0,
       vy: 2.0,
-      w: 54,
-      h: 48,
+      w: 58,
+      h: 52,
       hp: def.hp,
       maxHp: def.hp,
       score: def.score,
@@ -242,13 +246,16 @@
     let pool;
 
     if (flow.gate < 7) {
-      pool = D.gates.filter(g => g.type !== 'wide');
+      pool = D.gates.filter(g => g.type !== 'wide' && g.type !== 'skillmax');
     } else {
       pool = D.gates.map(g => {
         if (g.type === 'wide') return Object.assign({}, g, { weight: 0.05 });
+        if (g.type === 'skillmax') return Object.assign({}, g, { weight: 0.02 });
         return g;
       });
     }
+
+    pool = pool.filter(g => !g.minRank || g.minRank <= 1);
 
     const a = weightedPick(pool);
     let b = weightedPick(pool);
@@ -260,8 +267,8 @@
     }
 
     const pair = `gate-${frame}-${Math.random()}`;
-    state.entities.push(makeGate(a, W * 0.32, pair));
-    state.entities.push(makeGate(b, W * 0.68, pair));
+    state.entities.push(makeGate(a, W * 0.31, pair));
+    state.entities.push(makeGate(b, W * 0.69, pair));
   }
 
   function makeGate(def, x, pair) {
@@ -273,9 +280,9 @@
       value: def.value,
       color: def.color,
       x,
-      y: -74,
-      w: 138,
-      h: 82,
+      y: -86,
+      w: 116,
+      h: 116,
       vy: 2.25,
       pair,
       dead: false,
@@ -292,11 +299,11 @@
       name: def.name,
       image: def.image,
       x: W / 2,
-      y: -100,
+      y: -110,
       targetY: H * 0.25,
       vx: 1.4,
       vy: 2.2,
-      r: 48,
+      r: 52,
       hp,
       maxHp: hp,
       score: def.score,
@@ -315,11 +322,11 @@
       name: def.name,
       image: def.image,
       x: W / 2,
-      y: -130,
+      y: -140,
       targetY: H * 0.23,
       vx: 1.7,
       vy: 1.8,
-      r: 66,
+      r: 70,
       hp: def.hp,
       maxHp: def.hp,
       score: def.score,
@@ -594,10 +601,10 @@
   function cleanup() {
     state.entities = state.entities.filter(e =>
       !e.dead &&
-      e.y < H + 150 &&
-      e.y > -240 &&
-      e.x > -140 &&
-      e.x < W + 140
+      e.y < H + 170 &&
+      e.y > -260 &&
+      e.x > -160 &&
+      e.x < W + 160
     );
 
     state.bullets = state.bullets.filter(b =>
@@ -664,7 +671,7 @@
   function drawBackground() {
     const bg = img(D.stage.background);
 
-    if (bg && bg.complete && bg.naturalWidth) {
+    if (imageReady(bg)) {
       const h = H;
       const w = W;
       const y1 = (scroll % h) - h;
@@ -710,24 +717,24 @@
       return;
     }
 
-    if (e.kind === 'gate') return drawGate(e);
+    if (e.kind === 'gate') {
+      drawGate(e);
+      return;
+    }
 
     const y = e.y + Math.sin(e.bob) * 5;
     const im = e.image ? img(e.image) : null;
 
     const size =
-      e.kind === 'boss' ? 136 :
-      e.kind === 'midBoss' ? 104 :
-      e.kind === 'enemy' ? 68 :
-      e.kind === 'gimmick' ? 76 :
-      e.kind === 'chest' ? 70 :
-      64;
+      e.kind === 'boss' ? 150 :
+      e.kind === 'midBoss' ? 112 :
+      e.kind === 'enemy' ? 76 :
+      e.kind === 'gimmick' ? 86 :
+      e.kind === 'chest' ? 76 :
+      70;
 
-    if (im && im.complete && im.naturalWidth) {
-      const ratio = Math.min(size / im.naturalWidth, size / im.naturalHeight);
-      const iw = im.naturalWidth * ratio;
-      const ih = im.naturalHeight * ratio;
-      ctx.drawImage(im, e.x - iw / 2, y - ih / 2, iw, ih);
+    if (imageReady(im)) {
+      drawImageContain(im, e.x, y, size, size);
     } else {
       drawFallbackEntity(e, y, size);
     }
@@ -737,46 +744,44 @@
 
   function drawGate(g) {
     const im = img(g.image);
-    const gw = 138;
-    const gh = 82;
+    const size = 118;
+
+    if (imageReady(im)) {
+      drawImageContain(im, g.x, g.y, size, size);
+      return;
+    }
 
     ctx.save();
     ctx.translate(g.x, g.y);
 
-    roundRect(-gw / 2, -gh / 2, gw, gh, 16);
+    ctx.globalAlpha = 0.95;
     ctx.fillStyle = g.color || '#277dff';
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 5;
+
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 54, 42, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
-    if (im && im.complete && im.naturalWidth) {
-      const pad = 6;
-      const boxW = gw - pad * 2;
-      const boxH = gh - pad * 2;
-      const ratio = Math.min(boxW / im.naturalWidth, boxH / im.naturalHeight);
-      const iw = im.naturalWidth * ratio;
-      const ih = im.naturalHeight * ratio;
-
-      ctx.drawImage(
-        im,
-        -iw / 2,
-        -ih / 2,
-        iw,
-        ih
-      );
-    } else {
-      ctx.fillStyle = '#fff';
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 4;
-      ctx.font = '900 17px system-ui';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.strokeText(g.name, 0, 0);
-      ctx.fillText(g.name, 0, 0);
-    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 4;
+    ctx.font = '900 16px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeText(g.name, 0, 0);
+    ctx.fillText(g.name, 0, 0);
 
     ctx.restore();
+  }
+
+  function drawImageContain(image, centerX, centerY, boxW, boxH) {
+    const ratio = Math.min(boxW / image.naturalWidth, boxH / image.naturalHeight);
+    const iw = image.naturalWidth * ratio;
+    const ih = image.naturalHeight * ratio;
+    ctx.drawImage(image, centerX - iw / 2, centerY - ih / 2, iw, ih);
   }
 
   function drawFallbackEntity(e, y, size) {
@@ -835,6 +840,13 @@
   }
 
   function drawBullet(b) {
+    const im = img(D.player.bulletImage);
+
+    if (imageReady(im)) {
+      drawImageContain(im, b.x, b.y, 18, 18);
+      return;
+    }
+
     ctx.fillStyle = '#ffdf35';
     ctx.strokeStyle = '#7a4300';
     ctx.lineWidth = 3;
@@ -853,33 +865,29 @@
     ctx.ellipse(p.x, p.y + 35, 40, 11, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    if (im && im.complete && im.naturalWidth) {
-      const maxW = 72;
-      const maxH = 86;
-      const ratio = Math.min(maxW / im.naturalWidth, maxH / im.naturalHeight);
-      const iw = im.naturalWidth * ratio;
-      const ih = im.naturalHeight * ratio;
-      ctx.drawImage(im, p.x - iw / 2, p.y - ih * 0.60, iw, ih);
-    } else {
-      ctx.fillStyle = '#11131e';
-      ctx.strokeStyle = '#2b3654';
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 28, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = '#ffdf35';
-      ctx.beginPath();
-      ctx.arc(p.x - 10, p.y - 4, 6, 0, Math.PI * 2);
-      ctx.arc(p.x + 10, p.y - 4, 6, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#ff4aa4';
-      ctx.font = '900 12px system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillText('MOB', p.x, p.y + 16);
+    if (imageReady(im)) {
+      drawImageContain(im, p.x, p.y - 8, 76, 92);
+      return;
     }
+
+    ctx.fillStyle = '#11131e';
+    ctx.strokeStyle = '#2b3654';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 28, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffdf35';
+    ctx.beginPath();
+    ctx.arc(p.x - 10, p.y - 4, 6, 0, Math.PI * 2);
+    ctx.arc(p.x + 10, p.y - 4, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ff4aa4';
+    ctx.font = '900 12px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('MOB', p.x, p.y + 16);
   }
 
   function drawParticle(p) {
