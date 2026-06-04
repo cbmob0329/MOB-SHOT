@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>MOB SHOT</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <section id="mainScreen" class="screen active">
+      <div class="main-bg"></div>
+
+      <header class="main-top">
+        <img class="title-img" src="mt/menutitle.png" alt="MOB SHOT" onerror="this.style.display='none';document.querySelector('.fallback-title').style.display='block';" />
+        <div class="fallback-title">MOB SHOT</div>
+      </header>
+
+      <div class="main-status">
+        <div class="status-pill"><span class="icon diamond"></span><span id="mainDiamond">0</span></div>
+        <div class="status-pill"><span class="icon rank">R</span><span id="mainRank">1</span></div>
+        <div class="status-pill"><span class="icon coin"></span><span id="mainCoin">0</span></div>
+      </div>
+
+      <div class="player-showcase">
+        <div class="player-glow"></div>
+        <img id="mainPlayer" src="play/playpink2.png" alt="player" onerror="this.style.display='none';document.querySelector('.fallback-player').style.display='block';" />
+        <div class="fallback-player">MOB</div>
+      </div>
+
+      <nav class="right-menu">
+        <button id="sortieBtn" class="image-button sortie">
+          <img src="mt/menusta.png" alt="出撃" onerror="this.style.display='none';this.parentElement.querySelector('span').style.display='block';" />
+          <span>出撃</span>
+        </button>
+        <button class="image-button disabled-btn">
+          <img src="mt/menushop.png" alt="SHOP" onerror="this.style.display='none';this.parentElement.querySelector('span').style.display='block';" />
+          <span>SHOP</span>
+        </button>
+        <button class="image-button disabled-btn">
+          <img src="mt/menusoubi.png" alt="装備" onerror="this.style.display='none';this.parentElement.querySelector('span').style.display='block';" />
+          <span>装備</span>
+        </button>
+        <button class="image-button disabled-btn">
+          <img src="mt/menupet.png" alt="ペット" onerror="this.style.display='none';this.parentElement.querySelector('span').style.display='block';" />
+          <span>ペット</span>
+        </button>
+      </nav>
+
+      <nav class="bottom-menu">
+        <button class="bottom-button disabled-btn">
+          <img src="mt/menugacha.png" alt="ガチャ" onerror="this.style.display='none';this.parentElement.querySelector('span').style.display='block';" />
+          <span>ガチャ</span>
+        </button>
+        <button class="bottom-button disabled-btn">
+          <img src="mt/menumission.png" alt="ミッション" onerror="this.style.display='none';this.parentElement.querySelector('span').style.display='block';" />
+          <span>ミッション</span>
+        </button>
+        <button class="bottom-button disabled-btn">
+          <img src="mt/menucolle.png" alt="コレクション" onerror="this.style.display='none';this.parentElement.querySelector('span').style.display='block';" />
+          <span>コレクション</span>
+        </button>
+      </nav>
+    </section>
+
+    <section id="gameScreen" class="screen">
+      <canvas id="gameCanvas"></canvas>
+
+      <div class="game-hud">
+        <div class="hud-item"><img src="mt/stagestage.png" alt="STAGE" onerror="this.style.display='none';" /><span id="hudStage">1-1</span></div>
+        <div class="hud-item"><img src="mt/stagescore.png" alt="SCORE" onerror="this.style.display='none';" /><span id="hudScore">0</span></div>
+        <div class="hud-item"><img src="mt/stagecoin.png" alt="COIN" onerror="this.style.display='none';" /><span id="hudCoin">0</span></div>
+        <div class="hud-item"><img src="mt/stagelife.png" alt="LIFE" onerror="this.style.display='none';" /><span id="hudLife">50</span></div>
+      </div>
+
+      <div id="phaseBanner" class="phase-banner"></div>
+      <button id="backToMainBtn" class="back-btn">戻る</button>
+
+      <div id="resultPanel" class="result-panel hidden">
+        <div class="result-card">
+          <h1 id="resultTitle">CLEAR!</h1>
+          <p id="resultText">ステージクリア</p>
+          <div class="result-row"><span>SCORE</span><b id="resultScore">0</b></div>
+          <div class="result-row"><span>COIN</span><b id="resultCoin">0</b></div>
+          <button id="resultMainBtn">メインへ</button>
+          <button id="resultRetryBtn">もう一度</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/stage-flow.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
