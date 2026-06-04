@@ -1,99 +1,155 @@
 'use strict';
 
 (function(){
-  const mainScreen = document.getElementById('mainScreen');
-  const gameScreen = document.getElementById('gameScreen');
-  const sortieBtn = document.getElementById('sortieBtn');
-  const backBtn = document.getElementById('backToMainBtn');
-  const resultMainBtn = document.getElementById('resultMainBtn');
-  const resultRetryBtn = document.getElementById('resultRetryBtn');
-  const disabledButtons = document.querySelectorAll('.disabled-btn');
+  const D = window.MOBSHOT_DATA;
 
-  const mainDiamond = document.getElementById('mainDiamond');
-  const mainRank = document.getElementById('mainRank');
-  const mainCoin = document.getElementById('mainCoin');
+  const mainScreen = document.getElementById('mainScreen') || document.getElementById('mainView') || document.querySelector('.screen');
+  const gameScreen = document.getElementById('gameScreen') || document.getElementById('gameView');
 
-  function updateMainHud() {
-    const data = window.MobShotStorage.load();
-    mainDiamond.textContent = data.diamond;
-    mainRank.textContent = data.rank;
-    mainCoin.textContent = data.coin.toLocaleString();
+  function $(id){
+    return document.getElementById(id);
   }
 
-  function showMain() {
-    if (window.MobShotGame && typeof window.MobShotGame.stop === 'function') {
-      window.MobShotGame.stop();
+  function showScreen(name){
+    const screens = document.querySelectorAll('.screen');
+    screens.forEach(s => s.classList.remove('active'));
+
+    if(name === 'game'){
+      if(gameScreen) gameScreen.classList.add('active');
+      if(window.MobShotGame) window.MobShotGame.start();
+      return;
     }
-    mainScreen.classList.add('active');
-    gameScreen.classList.remove('active');
-    updateMainHud();
+
+    if(window.MobShotGame) window.MobShotGame.stop();
+    if(mainScreen) mainScreen.classList.add('active');
+    refreshMainHud();
   }
 
-  function showGame() {
-    mainScreen.classList.remove('active');
-    gameScreen.classList.add('active');
-    if (window.MobShotGame && typeof window.MobShotGame.start === 'function') {
-      window.MobShotGame.start();
-    } else {
-      console.error('MobShotGame.start が見つかりません');
-      mainScreen.classList.add('active');
-      gameScreen.classList.remove('active');
-    }
+  function setImage(id, src){
+    const el = $(id);
+    if(!el || !src) return;
+    el.src = src;
+    el.onerror = function(){
+      el.style.display = 'none';
+      const fallback = el.nextElementSibling;
+      if(fallback) fallback.style.display = 'block';
+    };
   }
 
-  function pressAnim(btn) {
-    if (!btn || !btn.animate) return;
-    btn.animate([
-      { transform: 'translateY(0)' },
-      { transform: 'translateY(5px)' },
-      { transform: 'translateY(0)' }
-    ], { duration: 150 });
+  function refreshMainHud(){
+    const save = window.MobShotStorage ? window.MobShotStorage.load() : { score:0, coin:0, diamond:0, rank:1 };
+
+    const diamond = $('mainDiamond');
+    const rank = $('mainRank');
+    const coin = $('mainCoin');
+
+    if(diamond) diamond.textContent = save.diamond || 0;
+    if(rank) rank.textContent = save.rank || 1;
+    if(coin) coin.textContent = save.coin || 0;
   }
 
-  function startSortie(e) {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    pressAnim(sortieBtn);
-    showGame();
-  }
-
-  // iPhone/Safariでclickが取りこぼされても出撃できるように、pointerupを主導にする。
-  let sortiePointerStarted = false;
-  sortieBtn.setAttribute('type', 'button');
-  sortieBtn.addEventListener('pointerdown', e => {
-    sortiePointerStarted = true;
-    if (e) e.preventDefault();
-  }, { passive: false });
-  sortieBtn.addEventListener('pointerup', e => {
-    if (!sortiePointerStarted) return;
-    sortiePointerStarted = false;
-    startSortie(e);
-  }, { passive: false });
-  sortieBtn.addEventListener('click', e => {
-    if (sortiePointerStarted) sortiePointerStarted = false;
-    startSortie(e);
-  });
-
-  backBtn.addEventListener('click', () => showMain());
-  resultMainBtn.addEventListener('click', () => showMain());
-  resultRetryBtn.addEventListener('click', () => {
-    if (window.MobShotGame && typeof window.MobShotGame.start === 'function') window.MobShotGame.start();
-  });
-
-  disabledButtons.forEach(btn => {
-    btn.setAttribute('type', 'button');
-    btn.addEventListener('click', () => {
-      pressAnim(btn);
-      if (mainScreen.classList.contains('active')) return;
-      if (window.MobShotGame && typeof window.MobShotGame.showBanner === 'function') {
-        window.MobShotGame.showBanner('後で実装');
-      }
+  function wireButton(ids, handler){
+    ids.forEach(id => {
+      const btn = $(id);
+      if(!btn) return;
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        handler();
+      });
+      btn.addEventListener('pointerup', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        handler();
+      }, { passive:false });
     });
-  });
+  }
 
-  // ゲーム中は画面スクロールを止める。ボタンのタップは止めない。
-  document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
-  updateMainHud();
+  function addDeleteSaveButton(){
+    if($('deleteSaveBtn')) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'deleteSaveBtn';
+    btn.type = 'button';
+    btn.textContent = 'セーブ削除';
+    btn.style.position = 'absolute';
+    btn.style.left = '3vw';
+    btn.style.bottom = '12.2svh';
+    btn.style.zIndex = '20';
+    btn.style.border = '0';
+    btn.style.borderRadius = '999px';
+    btn.style.padding = '9px 14px';
+    btn.style.fontWeight = '1000';
+    btn.style.fontSize = '13px';
+    btn.style.color = '#fff';
+    btn.style.background = 'linear-gradient(#ff5b5b,#9d1212)';
+    btn.style.border = '2px solid rgba(255,255,255,.35)';
+    btn.style.boxShadow = '0 4px 0 rgba(0,0,0,.3)';
+
+    btn.addEventListener('click', function(){
+      const ok = confirm('セーブデータを削除しますか？\nコイン・スコア・ランクなどが初期化されます。');
+      if(!ok) return;
+
+      localStorage.removeItem('mobshot_save');
+      localStorage.removeItem('mobshot_meta');
+      localStorage.removeItem('MOBSHOT_SAVE');
+
+      alert('セーブデータを削除しました。');
+      location.reload();
+    });
+
+    if(mainScreen) mainScreen.appendChild(btn);
+  }
+
+  function initImages(){
+    if(!D) return;
+
+    setImage('titleImg', D.menu.title);
+    setImage('mainPlayer', D.player.menuImage || D.player.image);
+
+    setImage('sortieImg', D.menu.sortie);
+    setImage('shopImg', D.menu.shop);
+    setImage('equipImg', D.menu.equip);
+    setImage('petImg', D.menu.pet);
+
+    setImage('gachaImg', D.menu.gacha);
+    setImage('missionImg', D.menu.mission);
+    setImage('collectionImg', D.menu.collection);
+
+    setImage('hudStageImg', D.hud.stage);
+    setImage('hudScoreImg', D.hud.score);
+    setImage('hudCoinImg', D.hud.coin);
+    setImage('hudLifeImg', D.hud.life);
+  }
+
+  function init(){
+    initImages();
+    refreshMainHud();
+    addDeleteSaveButton();
+
+    wireButton(['sortieBtn','btnSortie','mainSortieBtn'], function(){
+      showScreen('game');
+    });
+
+    wireButton(['backBtn','gameBackBtn'], function(){
+      showScreen('main');
+    });
+
+    const retry = $('resultRetryBtn');
+    if(retry){
+      retry.addEventListener('click', function(){
+        showScreen('game');
+      });
+    }
+
+    const resultHome = $('resultHomeBtn');
+    if(resultHome){
+      resultHome.addEventListener('click', function(){
+        showScreen('main');
+      });
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', init);
+  window.MobShotMain = { showScreen, refreshMainHud };
 })();
