@@ -231,21 +231,26 @@
     btn = document.createElement('button');
     btn.id = 'deleteSaveBtn';
     btn.type = 'button';
-    btn.textContent = 'セーブ削除';
+    btn.textContent = '🗑';
     btn.className = 'delete-save-btn';
+    btn.setAttribute('aria-label', 'セーブ削除');
 
     btn.style.position = 'absolute';
-    btn.style.left = '3vw';
-    btn.style.bottom = '22svh';
+    btn.style.left = '6.2vw';
+    btn.style.top = '17.2svh';
+    btn.style.width = '42px';
+    btn.style.height = '42px';
     btn.style.zIndex = '20';
-    btn.style.border = '2px solid rgba(255,255,255,.35)';
-    btn.style.borderRadius = '999px';
-    btn.style.padding = '8px 12px';
+    btn.style.border = '2px solid rgba(255,255,255,.45)';
+    btn.style.borderRadius = '50%';
+    btn.style.padding = '0';
     btn.style.fontWeight = '1000';
-    btn.style.fontSize = '12px';
+    btn.style.fontSize = '20px';
+    btn.style.lineHeight = '42px';
+    btn.style.textAlign = 'center';
     btn.style.color = '#fff';
     btn.style.background = 'linear-gradient(#ff5b5b,#9d1212)';
-    btn.style.boxShadow = '0 4px 0 rgba(0,0,0,.3)';
+    btn.style.boxShadow = '0 4px 0 rgba(0,0,0,.3), inset 0 2px 0 rgba(255,255,255,.18)';
 
     mainScreen.appendChild(btn);
   }
