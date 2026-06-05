@@ -60,6 +60,8 @@
 
       if (window.MobShotGame && window.MobShotGame.start) {
         window.MobShotGame.start();
+      } else {
+        alert('ゲーム本体が読み込まれていません。js/game.js を確認してください。');
       }
 
       return;
@@ -219,6 +221,35 @@
     }
   }
 
+  function createDeleteSaveButton(){
+    if (!mainScreen) return;
+
+    let btn = $('deleteSaveBtn');
+
+    if (btn) return;
+
+    btn = document.createElement('button');
+    btn.id = 'deleteSaveBtn';
+    btn.type = 'button';
+    btn.textContent = 'セーブ削除';
+    btn.className = 'delete-save-btn';
+
+    btn.style.position = 'absolute';
+    btn.style.left = '3vw';
+    btn.style.bottom = '22svh';
+    btn.style.zIndex = '20';
+    btn.style.border = '2px solid rgba(255,255,255,.35)';
+    btn.style.borderRadius = '999px';
+    btn.style.padding = '8px 12px';
+    btn.style.fontWeight = '1000';
+    btn.style.fontSize = '12px';
+    btn.style.color = '#fff';
+    btn.style.background = 'linear-gradient(#ff5b5b,#9d1212)';
+    btn.style.boxShadow = '0 4px 0 rgba(0,0,0,.3)';
+
+    mainScreen.appendChild(btn);
+  }
+
   function bindPetButtonFallback(){
     const petBtn = $('openPetEquipBtn');
 
@@ -303,6 +334,8 @@
     preventSmartphoneZoom();
     initImages();
     refreshMainHud();
+
+    createDeleteSaveButton();
 
     if (window.MobShotPets && window.MobShotPets.init) {
       window.MobShotPets.init();
