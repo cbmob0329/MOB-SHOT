@@ -4,7 +4,8 @@ window.MOBSHOT_DATA = {
   stage: {
     id: '1-1',
     name: '草原 1-1',
-    areaType: 'grass',
+    areaType: '草原',
+    difficulty: 'イージー',
     background: 'sta/backsougen.png'
   },
 
@@ -12,7 +13,6 @@ window.MOBSHOT_DATA = {
     image: 'play/playpink.png',
     menuImage: 'play/playpink2.png',
     bulletImage: 'mt/atk.png',
-
     maxHp: 50,
     power: 1,
     range: 3,
@@ -39,75 +39,14 @@ window.MOBSHOT_DATA = {
   },
 
   gates: [
-    {
-      type: 'power',
-      label: 'POWER +1',
-      value: 1,
-      weight: 8,
-      image: 'mt/gatepower1.png',
-      color: '#ff574a'
-    },
-    {
-      type: 'range',
-      label: 'RANGE +1',
-      value: 1,
-      weight: 8,
-      image: 'mt/gaterage1.png',
-      color: '#4bb8ff'
-    },
-    {
-      type: 'rapid',
-      label: 'RAPID +1',
-      value: 1,
-      weight: 8,
-      image: 'mt/gaterapid1.png',
-      color: '#ff9c2a'
-    },
-    {
-      type: 'life',
-      label: 'LIFE +5',
-      value: 5,
-      weight: 3,
-      image: 'mt/gatelife5.png',
-      color: '#52e66b'
-    },
-    {
-      type: 'cooldown',
-      label: 'CD -1',
-      value: 1,
-      weight: 1.2,
-      image: 'mt/gatecd.png',
-      color: '#b78cff'
-    },
-    {
-      type: 'wide',
-      label: 'WIDE +1',
-      value: 1,
-      weight: 0.05,
-      rare: true,
-      image: 'mt/gatewide.png',
-      color: '#a85cff'
-    },
-    {
-      type: 'wide',
-      label: 'WIDE +2',
-      value: 2,
-      weight: 0.02,
-      rare: true,
-      minRank: 20,
-      image: 'mt/gatewide2.png',
-      color: '#a85cff'
-    },
-    {
-      type: 'skillmax',
-      label: 'SKILL MAX',
-      value: 1,
-      weight: 0.02,
-      rare: true,
-      minRank: 20,
-      image: 'mt/gateskillmax.png',
-      color: '#ffe66b'
-    }
+    { type: 'power', label: 'パワーアップ', value: 1, weight: 8, image: 'mt/gatepower1.png', color: '#ff574a' },
+    { type: 'range', label: '射程距離+1', value: 1, weight: 8, image: 'mt/gaterage1.png', color: '#4bb8ff' },
+    { type: 'rapid', label: '連射速度+1', value: 1, weight: 8, image: 'mt/gaterapid1.png', color: '#ff9c2a' },
+    { type: 'life', label: 'ライフ回復+5', value: 5, weight: 3, image: 'mt/gatelife5.png', color: '#52e66b' },
+    { type: 'cooldown', label: 'スキルクールダウン-1秒', value: 1, weight: 1.2, image: 'mt/gatecd.png', color: '#b78cff' },
+    { type: 'wide', label: 'ワイド+1', value: 1, weight: 0.05, rare: true, image: 'mt/gatewide.png', color: '#a85cff' },
+    { type: 'wide', label: 'WIDE+2', value: 2, weight: 0.02, rare: true, minRank: 20, image: 'mt/gatewide2.png', color: '#a85cff' },
+    { type: 'skillmax', label: 'SKILL MAX', value: 1, weight: 0.02, rare: true, minRank: 20, image: 'mt/gateskillmax.png', color: '#ffe66b' }
   ],
 
   enemies: {
@@ -123,8 +62,8 @@ window.MOBSHOT_DATA = {
       {
         name: 'モブロック',
         image: 'en/eniwa.png',
-        hp: 7,
-        score: 12,
+        hp: 5,
+        score: 10,
         coinMin: 2,
         coinMax: 5
       }
@@ -168,19 +107,11 @@ window.MOBSHOT_DATA = {
     },
     {
       name: '丸岩',
-      image: 'gimi/gimiiwa.png',
+      image: 'gimi/gimiiwa.pmg',
       hp: 14,
       score: 16,
       coinMin: 3,
       coinMax: 6
-    },
-    {
-      name: '木の家',
-      image: 'gimi/gimiwood.png',
-      hp: 24,
-      score: 28,
-      coinMin: 5,
-      coinMax: 10
     }
   ],
 
