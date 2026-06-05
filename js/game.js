@@ -1,225 +1,130 @@
-以下3つです。
+了解です。今後は部分修正ではなく、必要ファイルを必ずフルで出します。
+今回は index.html と js/game.js を丸ごと置き換えしてください。
 
-1. index.html の読み込み順
+index.html
 
-game.js の前にこれを追加。
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>MOB SHOT</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <section id="mainScreen" class="screen active">
+      <div class="main-bg"></div>
+      <div class="main-top">
+        <img id="titleImg" class="title-img" src="mt/menutitle.png" alt="MOB SHOT" />
+        <div class="fallback-title">MOB<br>SHOT</div>
+      </div>
+      <div class="main-status">
+        <div class="status-pill">
+          <span class="icon diamond"></span>
+          <span id="mainDiamond">0</span>
+        </div>
+        <div class="status-pill">
+          <span class="icon rank">R</span>
+          <span id="mainRank">1</span>
+        </div>
+        <div class="status-pill">
+          <span class="icon coin"></span>
+          <span id="mainCoin">0</span>
+        </div>
+      </div>
+      <div class="player-showcase">
+        <div class="player-glow"></div>
+        <img id="mainPlayer" src="play/playpink2.png" alt="PLAYER" />
+        <div class="fallback-player">MOB</div>
+      </div>
+      <nav class="right-menu">
+        <button id="sortieBtn" class="image-button sortie" type="button">
+          <img id="sortieImg" src="mt/menusta.png" alt="出撃" />
+          <span>出撃</span>
+        </button>
+        <button class="image-button disabled-btn" type="button">
+          <img id="shopImg" src="mt/menushop.png" alt="SHOP" />
+          <span>SHOP</span>
+        </button>
+        <button class="image-button disabled-btn" type="button">
+          <img id="equipImg" src="mt/menusoubi.png" alt="装備" />
+          <span>装備</span>
+        </button>
+        <button class="image-button disabled-btn" type="button">
+          <img id="petImg" src="mt/menupet.png" alt="ペット" />
+          <span>ペット</span>
+        </button>
+      </nav>
+      <nav class="bottom-menu">
+        <button class="bottom-button disabled-btn" type="button">
+          <img id="gachaImg" src="mt/menugacha.png" alt="ガチャ" />
+          <span>ガチャ</span>
+        </button>
+        <button class="bottom-button disabled-btn" type="button">
+          <img id="missionImg" src="mt/menumission.png" alt="ミッション" />
+          <span>ミッション</span>
+        </button>
+        <button class="bottom-button disabled-btn" type="button">
+          <img id="collectionImg" src="mt/menucolle.png" alt="コレクション" />
+          <span>コレクション</span>
+        </button>
+      </nav>
+    </section>
+    <section id="gameScreen" class="screen">
+      <canvas id="gameCanvas"></canvas>
+      <div class="game-hud">
+        <div class="hud-item">
+          <img id="hudStageImg" src="mt/stagestage.png" alt="STAGE" />
+          <span id="hudStage">1-1</span>
+        </div>
+        <div class="hud-item">
+          <img id="hudScoreImg" src="mt/stagescore.png" alt="SCORE" />
+          <span id="hudScore">0</span>
+        </div>
+        <div class="hud-item">
+          <img id="hudCoinImg" src="mt/stagecoin.png" alt="COIN" />
+          <span id="hudCoin">0</span>
+        </div>
+        <div class="hud-item">
+          <img id="hudLifeImg" src="mt/stagelife.png" alt="LIFE" />
+          <span id="hudLife">50</span>
+        </div>
+      </div>
+      <div id="phaseBanner" class="phase-banner"></div>
+      <button id="gameBackBtn" class="back-btn" type="button">メインへ</button>
+      <div class="skill-dummies">
+        <button class="skill-dummy" type="button">SKILL 1</button>
+        <button class="skill-dummy" type="button">SKILL 2</button>
+        <button class="skill-dummy" type="button">SKILL 3</button>
+      </div>
+      <div id="resultPanel" class="result-panel hidden">
+        <div class="result-card">
+          <h1 id="resultTitle">CLEAR!</h1>
+          <p id="resultText">ボス撃破！ステージクリア</p>
+          <div class="result-row">
+            <span>SCORE</span>
+            <b id="resultScore">0</b>
+          </div>
+          <div class="result-row">
+            <span>COIN</span>
+            <b id="resultCoin">0</b>
+          </div>
+          <button id="resultRetryBtn" type="button">もう一度</button>
+          <button id="resultHomeBtn" type="button">メインへ戻る</button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script src="js/data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/stage-flow.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
 
-<script src="js/game-render.js"></script>
-<script src="js/game.js"></script>
-
-2. js/game-render.js 新規作成
-
-'use strict';
-(function(){
-  function drawImageContain(ctx, image, centerX, centerY, boxW, boxH) {
-    const ratio = Math.min(boxW / image.naturalWidth, boxH / image.naturalHeight);
-    const iw = image.naturalWidth * ratio;
-    const ih = image.naturalHeight * ratio;
-    ctx.drawImage(image, centerX - iw / 2, centerY - ih / 2, iw, ih);
-  }
-  function roundRect(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-  }
-  function drawBackground(ctx, D, W, H, scroll, img, imageReady) {
-    const bg = img(D.stage.background);
-    if (imageReady(bg)) {
-      const y1 = (scroll % H) - H;
-      ctx.drawImage(bg, 0, y1, W, H);
-      ctx.drawImage(bg, 0, y1 + H, W, H);
-      ctx.drawImage(bg, 0, y1 + H * 2, W, H);
-      return;
-    }
-    ctx.fillStyle = '#58ba48';
-    ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#3b9b37';
-    ctx.beginPath();
-    ctx.moveTo(W * 0.12, 0);
-    ctx.lineTo(W * 0.88, 0);
-    ctx.lineTo(W * 0.8, H);
-    ctx.lineTo(W * 0.2, H);
-    ctx.closePath();
-    ctx.fill();
-  }
-  function drawGate(ctx, g, img, imageReady) {
-    const im = img(g.image);
-    const size = 118;
-    if (imageReady(im)) {
-      drawImageContain(ctx, im, g.x, g.y, size, size);
-      return;
-    }
-    ctx.save();
-    ctx.translate(g.x, g.y);
-    ctx.globalAlpha = 0.95;
-    ctx.fillStyle = g.color || '#277dff';
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 54, 42, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = '#fff';
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 4;
-    ctx.font = '900 16px system-ui';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.strokeText(g.name, 0, 0);
-    ctx.fillText(g.name, 0, 0);
-    ctx.restore();
-  }
-  function drawFallbackEntity(ctx, e, y, size) {
-    ctx.save();
-    ctx.translate(e.x, y);
-    ctx.fillStyle =
-      e.kind === 'chest' ? '#b77822' :
-      e.kind === 'gimmick' ? '#86664a' :
-      e.kind === 'midBoss' || e.kind === 'boss' ? '#42215f' :
-      '#151822';
-    ctx.strokeStyle = '#111';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#fff';
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 3;
-    ctx.font = '900 11px system-ui';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.strokeText(e.name || 'NO IMG', 0, 0);
-    ctx.fillText(e.name || 'NO IMG', 0, 0);
-    ctx.restore();
-  }
-  function drawHpNumber(ctx, e, y, size) {
-    const ratio = Math.max(0, e.hp / e.maxHp);
-    const barW = size * 0.78;
-    const barH = 8;
-    const barX = e.x - barW / 2;
-    const barY = y + size / 2 + 6;
-    ctx.fillStyle = 'rgba(0,0,0,.58)';
-    roundRect(ctx, barX, barY, barW, barH, 6);
-    ctx.fill();
-    ctx.fillStyle = ratio > 0.45 ? '#ffe66b' : '#ff5b5b';
-    roundRect(ctx, barX, barY, barW * ratio, barH, 6);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 4;
-    ctx.font = '900 16px system-ui';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    const hpText = String(Math.ceil(e.hp));
-    ctx.strokeText(hpText, e.x, barY + 10);
-    ctx.fillText(hpText, e.x, barY + 10);
-  }
-  function drawEntity(ctx, e, img, imageReady) {
-    if (e.kind === 'enemyBullet') {
-      ctx.fillStyle = '#ff4aff';
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      return;
-    }
-    if (e.kind === 'gate') {
-      drawGate(ctx, e, img, imageReady);
-      return;
-    }
-    const y =
-      e.kind === 'enemy' ||
-      e.kind === 'midBoss' ||
-      e.kind === 'boss'
-        ? e.y + Math.sin(e.bob) * 5
-        : e.y;
-    const im = e.image ? img(e.image) : null;
-    const size =
-      e.kind === 'boss' ? 168 :
-      e.kind === 'midBoss' ? 130 :
-      e.kind === 'enemy' && e.name === 'モブロック' ? 92 :
-      e.kind === 'enemy' ? 84 :
-      e.kind === 'gimmick' ? 104 :
-      e.kind === 'chest' ? 82 :
-      70;
-    if (imageReady(im)) {
-      drawImageContain(ctx, im, e.x, y, size, size);
-    } else {
-      drawFallbackEntity(ctx, e, y, size);
-    }
-    if (e.hp != null) drawHpNumber(ctx, e, y, size);
-  }
-  function drawBullet(ctx, b, D, img, imageReady) {
-    const im = img(D.player.bulletImage);
-    if (imageReady(im)) {
-      drawImageContain(ctx, im, b.x, b.y, 18, 18);
-      return;
-    }
-    ctx.fillStyle = '#ffdf35';
-    ctx.strokeStyle = '#7a4300';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-  }
-  function drawPlayer(ctx, p, D, img, imageReady) {
-    const im = img(D.player.image);
-    ctx.fillStyle = 'rgba(0,0,0,.25)';
-    ctx.beginPath();
-    ctx.ellipse(p.x, p.y + 35, 40, 11, 0, 0, Math.PI * 2);
-    ctx.fill();
-    if (imageReady(im)) {
-      drawImageContain(ctx, im, p.x, p.y - 8, 76, 92);
-      return;
-    }
-    ctx.fillStyle = '#11131e';
-    ctx.strokeStyle = '#2b3654';
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 28, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-  }
-  function drawParticle(ctx, p) {
-    ctx.globalAlpha = Math.max(0, p.life / 34);
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x, p.y, 6, 6);
-    ctx.globalAlpha = 1;
-  }
-  function drawText(ctx, t) {
-    ctx.globalAlpha = Math.max(0, t.life / 48);
-    ctx.fillStyle = t.color;
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 4;
-    ctx.font = '900 18px system-ui';
-    ctx.textAlign = 'center';
-    ctx.strokeText(t.text, t.x, t.y);
-    ctx.fillText(t.text, t.x, t.y);
-    ctx.globalAlpha = 1;
-  }
-  function drawAll(ctx, state, D, W, H, scroll, img, imageReady) {
-    drawBackground(ctx, D, W, H, scroll, img, imageReady);
-    for (const e of state.entities) drawEntity(ctx, e, img, imageReady);
-    for (const b of state.bullets) drawBullet(ctx, b, D, img, imageReady);
-    drawPlayer(ctx, state.player, D, img, imageReady);
-    for (const p of state.particles) drawParticle(ctx, p);
-    for (const t of state.texts) drawText(ctx, t);
-  }
-  window.MobShotRender = {
-    drawAll
-  };
-})();
-
-3. js/game.js 置き換え
+js/game.js
 
 'use strict';
 (function(){
@@ -255,9 +160,20 @@ game.js の前にこれを追加。
     attackSpeed: 1,
     score: 0,
     coin: 0,
-    player: { x: 0, y: 0, targetX: 0, targetY: 0, r: 24 },
+    player: {
+      x: 0,
+      y: 0,
+      targetX: 0,
+      targetY: 0,
+      r: 24
+    },
     shootCd: 0,
-    areaSpawn: { nextEnemy: 0, nextGimmick: 0, nextChest: 0, endAt: 0 },
+    areaSpawn: {
+      nextEnemy: 0,
+      nextGimmick: 0,
+      nextChest: 0,
+      endAt: 0
+    },
     gateEndAt: 0,
     entities: [],
     bullets: [],
@@ -268,8 +184,10 @@ game.js の前にこれを追加。
     if (!src) return null;
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260605d';
-      image.onerror = function(){ console.warn('画像が読み込めません:', src); };
+      image.src = src + '?v=20260605_fixed';
+      image.onerror = function(){
+        console.warn('画像が読み込めません:', src);
+      };
       images.set(src, image);
     }
     return images.get(src);
@@ -280,10 +198,18 @@ game.js の前にこれを追加。
   function getPlayerBaseY() {
     return Math.max(H * 0.58, H - 148);
   }
-  function rand(a, b) { return a + Math.random() * (b - a); }
-  function intRand(a, b) { return Math.floor(rand(a, b + 1)); }
-  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function rand(a, b) {
+    return a + Math.random() * (b - a);
+  }
+  function intRand(a, b) {
+    return Math.floor(rand(a, b + 1));
+  }
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+  function clamp(v, a, b) {
+    return Math.max(a, Math.min(b, v));
+  }
   function weightedPick(list) {
     const total = list.reduce((sum, item) => sum + (item.weight || 1), 0);
     let roll = Math.random() * total;
@@ -327,7 +253,9 @@ game.js の前にこれを追加。
     state.particles.length = 0;
     state.texts.length = 0;
     flow.reset();
-    if (resultPanel) resultPanel.classList.add('hidden');
+    if (resultPanel) {
+      resultPanel.classList.add('hidden');
+    }
     const ev = flow.start();
     handleFlowEvent(ev);
   }
@@ -339,7 +267,9 @@ game.js の前にこれを追加。
     loop();
   }
   function stopLoopOnly() {
-    if (raf) cancelAnimationFrame(raf);
+    if (raf) {
+      cancelAnimationFrame(raf);
+    }
     raf = 0;
   }
   function stop() {
@@ -366,9 +296,15 @@ game.js の前にこれを追加。
       spawnGatePair();
       state.gateEndAt = frame + 280;
     }
-    if (ev.type === 'midBossStart') spawnMidBoss();
-    if (ev.type === 'bossStart') spawnBoss();
-    if (ev.type === 'clear') finishRun(true);
+    if (ev.type === 'midBossStart') {
+      spawnMidBoss();
+    }
+    if (ev.type === 'bossStart') {
+      spawnBoss();
+    }
+    if (ev.type === 'clear') {
+      finishRun(true);
+    }
   }
   function spawnEnemy() {
     const def = pick(D.enemies.zako);
@@ -437,11 +373,18 @@ game.js の前にこれを追加。
   function spawnGatePair() {
     let pool;
     if (flow.gate < 7) {
-      pool = D.gates.filter(g => g.type !== 'wide' && g.type !== 'skillmax');
+      pool = D.gates.filter(g =>
+        g.type !== 'wide' &&
+        g.type !== 'skillmax'
+      );
     } else {
       pool = D.gates.map(g => {
-        if (g.type === 'wide') return Object.assign({}, g, { weight: 0.05 });
-        if (g.type === 'skillmax') return Object.assign({}, g, { weight: 0.02 });
+        if (g.type === 'wide') {
+          return Object.assign({}, g, { weight: 0.05 });
+        }
+        if (g.type === 'skillmax') {
+          return Object.assign({}, g, { weight: 0.02 });
+        }
         return g;
       });
     }
@@ -472,7 +415,8 @@ game.js の前にこれを追加。
       vy: 2.25,
       pair,
       dead: false,
-      used: false
+      used: false,
+      bob: 0
     };
   }
   function spawnMidBoss() {
@@ -519,15 +463,27 @@ game.js の前にこれを追加。
     });
   }
   function applyGate(gate) {
-    if (gate.type === 'power') state.power += gate.value;
-    if (gate.type === 'range') state.range += gate.value;
-    if (gate.type === 'rapid') state.attackSpeed += 0.25 * gate.value;
-    if (gate.type === 'life') state.hp = Math.min(state.maxHp, state.hp + gate.value);
-    if (gate.type === 'wide') state.wide += gate.value;
+    if (gate.type === 'power') {
+      state.power += gate.value;
+    }
+    if (gate.type === 'range') {
+      state.range += gate.value;
+    }
+    if (gate.type === 'rapid') {
+      state.attackSpeed += 0.25 * gate.value;
+    }
+    if (gate.type === 'life') {
+      state.hp = Math.min(state.maxHp, state.hp + gate.value);
+    }
+    if (gate.type === 'wide') {
+      state.wide += gate.value;
+    }
     addText(gate.name, state.player.x, state.player.y - 70, gate.color);
     burst(gate.x, gate.y, gate.color, 24);
     state.entities.forEach(e => {
-      if (e.kind === 'gate' && e.pair === gate.pair) e.dead = true;
+      if (e.kind === 'gate' && e.pair === gate.pair) {
+        e.dead = true;
+      }
     });
   }
   function shoot() {
@@ -561,7 +517,9 @@ game.js の前にこれを追加。
         state.areaSpawn.nextGimmick = frame + intRand(115, 175);
       }
       if (frame >= state.areaSpawn.nextChest) {
-        if (Math.random() < 0.42) spawnChest();
+        if (Math.random() < 0.42) {
+          spawnChest();
+        }
         state.areaSpawn.nextChest = frame + intRand(230, 350);
       }
       if (frame >= state.areaSpawn.endAt) {
@@ -569,21 +527,36 @@ game.js の前にこれを追加。
       }
     }
     if (snap.phase === 'gate') {
-      const gatesAlive = state.entities.some(e => e.kind === 'gate' && !e.dead);
+      const gatesAlive = state.entities.some(e =>
+        e.kind === 'gate' &&
+        !e.dead
+      );
       if (!gatesAlive || frame >= state.gateEndAt) {
         state.entities.forEach(e => {
-          if (e.kind === 'gate') e.dead = true;
+          if (e.kind === 'gate') {
+            e.dead = true;
+          }
         });
         handleFlowEvent(flow.completeGate());
       }
     }
     if (snap.phase === 'midBoss') {
-      const alive = state.entities.some(e => e.kind === 'midBoss' && !e.dead);
-      if (!alive && snap.phaseFrame > 60) handleFlowEvent(flow.completeMidBoss());
+      const alive = state.entities.some(e =>
+        e.kind === 'midBoss' &&
+        !e.dead
+      );
+      if (!alive && snap.phaseFrame > 60) {
+        handleFlowEvent(flow.completeMidBoss());
+      }
     }
     if (snap.phase === 'boss') {
-      const alive = state.entities.some(e => e.kind === 'boss' && !e.dead);
-      if (!alive && snap.phaseFrame > 60) handleFlowEvent(flow.completeBoss());
+      const alive = state.entities.some(e =>
+        e.kind === 'boss' &&
+        !e.dead
+      );
+      if (!alive && snap.phaseFrame > 60) {
+        handleFlowEvent(flow.completeBoss());
+      }
     }
   }
   function update() {
@@ -600,7 +573,11 @@ game.js の前にこれを追加。
     p.y = getPlayerBaseY();
     for (const e of state.entities) {
       if (e.dead) continue;
-      if (e.kind === 'enemy' || e.kind === 'midBoss' || e.kind === 'boss') {
+      if (
+        e.kind === 'enemy' ||
+        e.kind === 'midBoss' ||
+        e.kind === 'boss'
+      ) {
         e.bob += 0.06;
       }
       if (e.kind === 'midBoss' || e.kind === 'boss') {
@@ -608,7 +585,9 @@ game.js の前にこれを追加。
           e.y += e.vy;
         } else {
           e.x += e.vx;
-          if (e.x < W * 0.18 || e.x > W * 0.82) e.vx *= -1;
+          if (e.x < W * 0.18 || e.x > W * 0.82) {
+            e.vx *= -1;
+          }
           e.shootCd--;
           if (e.shootCd <= 0) {
             e.shootCd = e.kind === 'boss' ? 54 : 82;
@@ -619,7 +598,9 @@ game.js の前にこれを追加。
         e.y += e.vy;
         if (e.kind === 'enemy') {
           e.x += e.vx || 0;
-          if (e.x < W * 0.16 || e.x > W * 0.84) e.vx *= -1;
+          if (e.x < W * 0.16 || e.x > W * 0.84) {
+            e.vx *= -1;
+          }
         }
       }
     }
@@ -641,7 +622,9 @@ game.js の前にこれを追加。
     }
     cleanup();
     updateHud();
-    if (state.hp <= 0) finishRun(false);
+    if (state.hp <= 0) {
+      finishRun(false);
+    }
   }
   function enemyShot(e) {
     const count = e.kind === 'boss' ? 3 : 1;
@@ -667,15 +650,24 @@ game.js の前にこれを追加。
     for (const b of state.bullets) {
       if (b.dead) continue;
       for (const e of state.entities) {
-        if (e.dead || e.kind === 'gate' || e.kind === 'enemyBullet') continue;
+        if (
+          e.dead ||
+          e.kind === 'gate' ||
+          e.kind === 'enemyBullet'
+        ) {
+          continue;
+        }
         const hit = e.r
           ? Math.hypot(b.x - e.x, b.y - e.y) < e.r + b.r
-          : Math.abs(b.x - e.x) < e.w / 2 && Math.abs(b.y - e.y) < e.h / 2;
+          : Math.abs(b.x - e.x) < e.w / 2 &&
+            Math.abs(b.y - e.y) < e.h / 2;
         if (!hit) continue;
         b.dead = true;
         e.hp -= b.dmg;
         burst(b.x, b.y, '#ffffff', 4);
-        if (e.hp <= 0) killEntity(e);
+        if (e.hp <= 0) {
+          killEntity(e);
+        }
         break;
       }
     }
@@ -685,7 +677,10 @@ game.js の前にこれを追加。
     for (const e of state.entities) {
       if (e.dead) continue;
       if (e.kind === 'gate') {
-        if (Math.abs(p.x - e.x) < e.w / 2 && Math.abs(p.y - 20 - e.y) < e.h / 2) {
+        if (
+          Math.abs(p.x - e.x) < e.w / 2 &&
+          Math.abs(p.y - 20 - e.y) < e.h / 2
+        ) {
           applyGate(e);
         }
         continue;
@@ -699,10 +694,13 @@ game.js の前にこれを追加。
         }
         continue;
       }
-      if (e.kind === 'boss' || e.kind === 'midBoss') continue;
+      if (e.kind === 'boss' || e.kind === 'midBoss') {
+        continue;
+      }
       const hit = e.r
         ? Math.hypot(p.x - e.x, p.y - e.y) < p.r + e.r
-        : Math.abs(p.x - e.x) < e.w / 2 + p.r && Math.abs(p.y - e.y) < e.h / 2 + p.r;
+        : Math.abs(p.x - e.x) < e.w / 2 + p.r &&
+          Math.abs(p.y - e.y) < e.h / 2 + p.r;
       if (hit) {
         e.dead = true;
         const dmg = Math.max(1, Math.ceil(e.hp));
@@ -740,9 +738,17 @@ game.js の前にこれを追加。
       e.x > -170 &&
       e.x < W + 170
     );
-    state.bullets = state.bullets.filter(b => !b.dead && b.life > 0 && b.y > -80);
-    state.particles = state.particles.filter(p => p.life > 0);
-    state.texts = state.texts.filter(t => t.life > 0);
+    state.bullets = state.bullets.filter(b =>
+      !b.dead &&
+      b.life > 0 &&
+      b.y > -80
+    );
+    state.particles = state.particles.filter(p =>
+      p.life > 0
+    );
+    state.texts = state.texts.filter(t =>
+      t.life > 0
+    );
   }
   function finishRun(clear) {
     if (runCommitted) return;
@@ -764,16 +770,22 @@ game.js の前にこれを追加。
   function goMainFromResult() {
     running = false;
     stopLoopOnly();
-    if (resultPanel) resultPanel.classList.add('hidden');
+    if (resultPanel) {
+      resultPanel.classList.add('hidden');
+    }
     if (window.MobShotMain && window.MobShotMain.goMain) {
       window.MobShotMain.goMain();
       return;
     }
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(screen => {
+      screen.classList.remove('active');
+    });
     const main =
       document.getElementById('mainScreen') ||
       document.getElementById('mainView');
-    if (main) main.classList.add('active');
+    if (main) {
+      main.classList.add('active');
+    }
   }
   function bindResultButtons() {
     ['resultHomeBtn', 'gameBackBtn', 'backBtn'].forEach(id => {
@@ -799,7 +811,13 @@ game.js の前にこれを追加。
     if (hudLife) hudLife.textContent = Math.max(0, Math.ceil(state.hp));
   }
   function addText(text, x, y, color) {
-    state.texts.push({ text, x, y, color, life: 48 });
+    state.texts.push({
+      text,
+      x,
+      y,
+      color,
+      life: 48
+    });
   }
   function burst(x, y, color, n) {
     for (let i = 0; i < n; i++) {
@@ -813,12 +831,239 @@ game.js の前にこれを追加。
       });
     }
   }
+  function drawImageContain(image, centerX, centerY, boxW, boxH) {
+    if (!imageReady(image)) return;
+    const ratio = Math.min(
+      boxW / image.naturalWidth,
+      boxH / image.naturalHeight
+    );
+    const iw = image.naturalWidth * ratio;
+    const ih = image.naturalHeight * ratio;
+    ctx.drawImage(
+      image,
+      centerX - iw / 2,
+      centerY - ih / 2,
+      iw,
+      ih
+    );
+  }
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  function drawBackground() {
+    const bg = img(D.stage.background);
+    if (imageReady(bg)) {
+      const y1 = (scroll % H) - H;
+      ctx.drawImage(bg, 0, y1, W, H);
+      ctx.drawImage(bg, 0, y1 + H, W, H);
+      ctx.drawImage(bg, 0, y1 + H * 2, W, H);
+      return;
+    }
+    ctx.fillStyle = '#58ba48';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#3b9b37';
+    ctx.beginPath();
+    ctx.moveTo(W * 0.12, 0);
+    ctx.lineTo(W * 0.88, 0);
+    ctx.lineTo(W * 0.8, H);
+    ctx.lineTo(W * 0.2, H);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function drawGate(gate) {
+    const im = img(gate.image);
+    const size = 118;
+    if (imageReady(im)) {
+      drawImageContain(im, gate.x, gate.y, size, size);
+      return;
+    }
+    ctx.save();
+    ctx.translate(gate.x, gate.y);
+    ctx.globalAlpha = 0.95;
+    ctx.fillStyle = gate.color || '#277dff';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 54, 42, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 4;
+    ctx.font = '900 16px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeText(gate.name || 'GATE', 0, 0);
+    ctx.fillText(gate.name || 'GATE', 0, 0);
+    ctx.restore();
+  }
+  function entitySize(entity) {
+    if (entity.kind === 'boss') return 168;
+    if (entity.kind === 'midBoss') return 130;
+    if (entity.kind === 'enemy' && entity.name === 'モブロック') return 92;
+    if (entity.kind === 'enemy') return 84;
+    if (entity.kind === 'gimmick') return 104;
+    if (entity.kind === 'chest') return 82;
+    return 70;
+  }
+  function drawFallbackEntity(entity, y, size) {
+    ctx.save();
+    ctx.translate(entity.x, y);
+    ctx.fillStyle =
+      entity.kind === 'chest' ? '#b77822' :
+      entity.kind === 'gimmick' ? '#86664a' :
+      entity.kind === 'midBoss' || entity.kind === 'boss' ? '#42215f' :
+      '#151822';
+    ctx.strokeStyle = '#111';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 3;
+    ctx.font = '900 11px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeText(entity.name || 'NO IMG', 0, 0);
+    ctx.fillText(entity.name || 'NO IMG', 0, 0);
+    ctx.restore();
+  }
+  function drawHpNumber(entity, y, size) {
+    const ratio = Math.max(0, entity.hp / entity.maxHp);
+    const barW = size * 0.78;
+    const barH = 8;
+    const barX = entity.x - barW / 2;
+    const barY = y + size / 2 + 6;
+    ctx.fillStyle = 'rgba(0,0,0,.58)';
+    roundRect(barX, barY, barW, barH, 6);
+    ctx.fill();
+    ctx.fillStyle = ratio > 0.45 ? '#ffe66b' : '#ff5b5b';
+    roundRect(barX, barY, barW * ratio, barH, 6);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 4;
+    ctx.font = '900 16px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const hpText = String(Math.ceil(entity.hp));
+    ctx.strokeText(hpText, entity.x, barY + 10);
+    ctx.fillText(hpText, entity.x, barY + 10);
+  }
+  function drawEntity(entity) {
+    if (entity.kind === 'enemyBullet') {
+      ctx.fillStyle = '#ff4aff';
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(entity.x, entity.y, entity.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      return;
+    }
+    if (entity.kind === 'gate') {
+      drawGate(entity);
+      return;
+    }
+    const y =
+      entity.kind === 'enemy' ||
+      entity.kind === 'midBoss' ||
+      entity.kind === 'boss'
+        ? entity.y + Math.sin(entity.bob || 0) * 5
+        : entity.y;
+    const size = entitySize(entity);
+    const im = entity.image ? img(entity.image) : null;
+    if (imageReady(im)) {
+      drawImageContain(im, entity.x, y, size, size);
+    } else {
+      drawFallbackEntity(entity, y, size);
+    }
+    if (entity.hp != null && entity.maxHp != null) {
+      drawHpNumber(entity, y, size);
+    }
+  }
+  function drawBullet(bullet) {
+    const im = img(D.player.bulletImage);
+    if (imageReady(im)) {
+      drawImageContain(im, bullet.x, bullet.y, 18, 18);
+      return;
+    }
+    ctx.fillStyle = '#ffdf35';
+    ctx.strokeStyle = '#7a4300';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(bullet.x, bullet.y, bullet.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  function drawPlayer() {
+    const p = state.player;
+    const im = img(D.player.image);
+    ctx.fillStyle = 'rgba(0,0,0,.25)';
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y + 35, 40, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+    if (imageReady(im)) {
+      drawImageContain(im, p.x, p.y - 8, 76, 92);
+      return;
+    }
+    ctx.fillStyle = '#11131e';
+    ctx.strokeStyle = '#2b3654';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 28, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  function drawParticle(particle) {
+    ctx.globalAlpha = Math.max(0, particle.life / 34);
+    ctx.fillStyle = particle.color;
+    ctx.fillRect(particle.x, particle.y, 6, 6);
+    ctx.globalAlpha = 1;
+  }
+  function drawText(textItem) {
+    ctx.globalAlpha = Math.max(0, textItem.life / 48);
+    ctx.fillStyle = textItem.color;
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 4;
+    ctx.font = '900 18px system-ui';
+    ctx.textAlign = 'center';
+    ctx.strokeText(textItem.text, textItem.x, textItem.y);
+    ctx.fillText(textItem.text, textItem.x, textItem.y);
+    ctx.globalAlpha = 1;
+  }
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    drawBackground();
+    for (const entity of state.entities) {
+      drawEntity(entity);
+    }
+    for (const bullet of state.bullets) {
+      drawBullet(bullet);
+    }
+    drawPlayer();
+    for (const particle of state.particles) {
+      drawParticle(particle);
+    }
+    for (const textItem of state.texts) {
+      drawText(textItem);
+    }
+  }
   function loop() {
     update();
-    if (window.MobShotRender) {
-      window.MobShotRender.drawAll(ctx, state, D, W, H, scroll, img, imageReady);
+    draw();
+    if (running) {
+      raf = requestAnimationFrame(loop);
     }
-    if (running) raf = requestAnimationFrame(loop);
   }
   canvas.addEventListener('pointerdown', e => {
     state.player.targetX = e.clientX;
