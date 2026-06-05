@@ -63,7 +63,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260605_fixed';
+      image.src = src + '?v=20260605_fixed_pet';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -151,6 +151,10 @@
     state.texts.length = 0;
 
     flow.reset();
+
+    if (window.MobShotPetBattle && window.MobShotPetBattle.init) {
+      window.MobShotPetBattle.init(state);
+    }
 
     if (resultPanel) {
       resultPanel.classList.add('hidden');
@@ -527,6 +531,10 @@
     updateFlow();
     shoot();
 
+    if (window.MobShotPetBattle && window.MobShotPetBattle.update) {
+      window.MobShotPetBattle.update();
+    }
+
     const p = state.player;
 
     p.targetY = getPlayerBaseY();
@@ -708,6 +716,9 @@
   }
 
   function killEntity(e) {
+    if (e.__rewarded) return;
+
+    e.__rewarded = true;
     e.dead = true;
 
     burst(
@@ -763,7 +774,7 @@
     runCommitted = true;
     running = false;
 
-    if (clear && window.MobShotStorage) {
+    if (window.MobShotStorage) {
       window.MobShotStorage.addRunResult(state.score, state.coin);
     }
 
@@ -1135,6 +1146,10 @@
 
     drawPlayer();
 
+    if (window.MobShotPetBattle && window.MobShotPetBattle.draw) {
+      window.MobShotPetBattle.draw(ctx);
+    }
+
     for (const particle of state.particles) {
       drawParticle(particle);
     }
@@ -1167,6 +1182,10 @@
   window.addEventListener('DOMContentLoaded', bindResultButtons);
 
   bindResultButtons();
+
+  window.MobShotGameCore = {
+    killEntity
+  };
 
   window.MobShotGame = {
     start,
