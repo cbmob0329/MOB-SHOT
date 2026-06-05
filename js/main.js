@@ -1,74 +1,83 @@
-'use strict';
+原因は ペットボタンのイベントが確実に拾えていない ことです。
+まず js/main.js をフルで置き換えてください。
+ダブルタップズーム防止も入れています。
 
+'use strict';
 (function(){
   const D = window.MOBSHOT_DATA;
-
   const mainScreen =
     document.getElementById('mainScreen') ||
     document.getElementById('mainView') ||
     document.querySelector('.screen');
-
   const gameScreen =
     document.getElementById('gameScreen') ||
     document.getElementById('gameView');
-
   function $(id){
     return document.getElementById(id);
   }
-
+  function preventSmartphoneZoom(){
+    let lastTouchEnd = 0;
+    document.addEventListener('gesturestart', function(e){
+      e.preventDefault();
+    }, { passive:false });
+    document.addEventListener('gesturechange', function(e){
+      e.preventDefault();
+    }, { passive:false });
+    document.addEventListener('gestureend', function(e){
+      e.preventDefault();
+    }, { passive:false });
+    document.addEventListener('dblclick', function(e){
+      e.preventDefault();
+    }, { passive:false });
+    document.addEventListener('touchend', function(e){
+      const now = Date.now();
+      if (now - lastTouchEnd <= 350) {
+        e.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive:false });
+  }
   function showScreen(name){
     const screens = document.querySelectorAll('.screen');
-
     screens.forEach(screen => {
       screen.classList.remove('active');
     });
-
     if (name === 'game') {
       if (gameScreen) {
         gameScreen.classList.add('active');
       }
-
       if (window.MobShotGame) {
         window.MobShotGame.start();
       }
-
       return;
     }
-
     if (window.MobShotGame) {
       window.MobShotGame.stop();
     }
-
     if (mainScreen) {
       mainScreen.classList.add('active');
     }
-
     refreshMainHud();
+    if (window.MobShotPets && window.MobShotPets.renderAll) {
+      window.MobShotPets.renderAll();
+    }
   }
-
   function setImage(id, src){
     const el = $(id);
-
     if (!el || !src) return;
-
     el.src = src;
-
     el.onerror = function(){
       el.style.display = 'none';
-
       const fallback = el.nextElementSibling;
-
       if (fallback) {
         fallback.style.display = 'block';
       }
     };
   }
-
   function readSave(){
     if (window.MobShotStorage && window.MobShotStorage.load) {
       return window.MobShotStorage.load();
     }
-
     return {
       score: 0,
       coin: 0,
@@ -76,39 +85,31 @@
       rank: 1
     };
   }
-
   function refreshMainHud(){
     const save = readSave();
-
     const diamond = $('mainDiamond');
     const rank = $('mainRank');
     const coin = $('mainCoin');
-
     if (diamond) {
       diamond.textContent = Number(save.diamond || 0).toLocaleString();
     }
-
     if (rank) {
       rank.textContent = Number(save.rank || 1).toLocaleString();
     }
-
     if (coin) {
       coin.textContent = Number(save.coin || 0).toLocaleString();
     }
   }
-
   function wireButton(ids, handler){
     ids.forEach(id => {
       const btn = $(id);
-
-      if (!btn) return;
-
+      if (!btn || btn.__mobMainBound) return;
+      btn.__mobMainBound = true;
       btn.addEventListener('click', function(e){
         e.preventDefault();
         e.stopPropagation();
         handler(e);
       });
-
       btn.addEventListener('pointerup', function(e){
         e.preventDefault();
         e.stopPropagation();
@@ -116,16 +117,12 @@
       }, { passive:false });
     });
   }
-
   function addDeleteSaveButton(){
     if ($('deleteSaveBtn')) return;
-
     const btn = document.createElement('button');
-
     btn.id = 'deleteSaveBtn';
     btn.type = 'button';
     btn.textContent = 'セーブ削除';
-
     btn.style.position = 'absolute';
     btn.style.left = '3vw';
     btn.style.bottom = '12.2svh';
@@ -138,101 +135,116 @@
     btn.style.color = '#fff';
     btn.style.background = 'linear-gradient(#ff5b5b,#9d1212)';
     btn.style.boxShadow = '0 4px 0 rgba(0,0,0,.3)';
-
     btn.addEventListener('click', function(){
       const ok = confirm(
         'セーブデータを削除しますか？\nコイン・スコア・ランクなどが初期化されます。'
       );
-
       if (!ok) return;
-
       localStorage.removeItem('mobshot_save');
       localStorage.removeItem('mobshot_meta');
       localStorage.removeItem('MOBSHOT_SAVE');
-
+      localStorage.removeItem('mobshot_pet_equip_test');
+      localStorage.removeItem('mobshot_pet_equip_test_v2');
       alert('セーブデータを削除しました。');
       location.reload();
     });
-
     if (mainScreen) {
       mainScreen.appendChild(btn);
     }
   }
-
   function initImages(){
     if (!D) return;
-
     setImage('titleImg', D.menu.title);
     setImage('mainPlayer', D.player.menuImage || D.player.image);
-
     setImage('sortieImg', D.menu.sortie);
     setImage('shopImg', D.menu.shop);
     setImage('equipImg', D.menu.equip);
     setImage('petImg', D.menu.pet);
-
     setImage('gachaImg', D.menu.gacha);
     setImage('missionImg', D.menu.mission);
     setImage('collectionImg', D.menu.collection);
-
     setImage('hudStageImg', D.hud.stage);
     setImage('hudScoreImg', D.hud.score);
     setImage('hudCoinImg', D.hud.coin);
     setImage('hudLifeImg', D.hud.life);
   }
-
   function goMain(){
     if (window.MobShotGame) {
       window.MobShotGame.stop();
     }
-
     showScreen('main');
     refreshMainHud();
+    if (window.MobShotPets && window.MobShotPets.renderAll) {
+      window.MobShotPets.renderAll();
+    }
   }
-
   function goGame(){
     showScreen('game');
   }
-
+  function openPetEquip(){
+    if (window.MobShotPets && window.MobShotPets.openModal) {
+      window.MobShotPets.openModal();
+      return;
+    }
+    const modal = $('petEquipModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+    }
+  }
+  function bindPetButtonFallback(){
+    const petBtn = $('openPetEquipBtn');
+    if (!petBtn || petBtn.__mobPetFallbackBound) return;
+    petBtn.__mobPetFallbackBound = true;
+    petBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      openPetEquip();
+    });
+    petBtn.addEventListener('pointerup', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      openPetEquip();
+    }, { passive:false });
+  }
   function init(){
+    preventSmartphoneZoom();
     initImages();
     refreshMainHud();
     addDeleteSaveButton();
-
+    if (window.MobShotPets && window.MobShotPets.init) {
+      window.MobShotPets.init();
+    }
     wireButton(['sortieBtn', 'btnSortie', 'mainSortieBtn'], goGame);
-
     wireButton(['backBtn', 'gameBackBtn'], goMain);
-
+    bindPetButtonFallback();
     const retry = $('resultRetryBtn');
-
-    if (retry) {
+    if (retry && !retry.__mobRetryBound) {
+      retry.__mobRetryBound = true;
       retry.addEventListener('click', function(e){
         e.preventDefault();
         e.stopPropagation();
         goGame();
       });
     }
-
     const resultHome = $('resultHomeBtn');
-
-    if (resultHome) {
+    if (resultHome && !resultHome.__mobHomeBound) {
+      resultHome.__mobHomeBound = true;
       resultHome.addEventListener('click', function(e){
         e.preventDefault();
         e.stopPropagation();
         goMain();
       });
     }
-
     window.addEventListener('mobshot:saveUpdated', function(){
       refreshMainHud();
     });
   }
-
   window.addEventListener('DOMContentLoaded', init);
-
   window.MobShotMain = {
     showScreen,
     refreshMainHud,
     goMain,
-    goGame
+    goGame,
+    openPetEquip
   };
 })();
