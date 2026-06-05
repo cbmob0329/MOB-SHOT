@@ -3,7 +3,7 @@
 window.MobShotStorage = {
   key: 'mobshot_split_v1',
   defaultData() {
-    return { diamond: 0, rank: 1, coin: 0, totalScore: 0, bestScore: 0 };
+    return { diamond: 0, rank: 1, coin: 10000, totalScore: 0, bestScore: 0 };
   },
   load() {
     try {
