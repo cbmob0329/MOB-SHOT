@@ -13,7 +13,7 @@
 
     if(!petImages.has(src)){
       const image = new Image();
-      image.src = src + '?v=20260605_petbattle_back';
+      image.src = src + '?v=20260606_pet_front_only';
       petImages.set(src, image);
     }
 
@@ -98,11 +98,14 @@
   }
 
   function validTarget(e){
+    if(!gameState) return false;
+
     return e &&
       !e.dead &&
       e.kind !== 'gate' &&
       e.kind !== 'enemyBullet' &&
-      e.hp != null;
+      e.hp != null &&
+      e.y < gameState.player.y - 25;
   }
 
   function findTarget(pet){
@@ -125,6 +128,14 @@
     });
 
     return nearest;
+  }
+
+  function getFrontTargets(){
+    if(!gameState) return [];
+
+    return gameState.entities.filter(validTarget).sort((a, b) => {
+      return b.y - a.y;
+    });
   }
 
   function pushBullet(pet, target, damage, type){
@@ -180,7 +191,7 @@
   function skillShot(pet){
     if(!gameState) return;
 
-    const targets = gameState.entities.filter(validTarget);
+    const targets = getFrontTargets();
     if(!targets.length) return;
 
     const baseCount = pet.data.skillBaseCount || 1;
