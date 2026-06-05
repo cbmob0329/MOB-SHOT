@@ -149,6 +149,16 @@
     phaseBanner.classList.add('show');
   }
 
+  function clearFieldForGate() {
+    state.entities = state.entities.filter(e =>
+      e.kind === 'enemyBullet' ||
+      e.kind === 'midBoss' ||
+      e.kind === 'boss'
+    );
+
+    state.bullets.length = 0;
+  }
+
   function handleFlowEvent(ev) {
     if (!ev) return;
 
@@ -162,6 +172,7 @@
     }
 
     if (ev.type === 'gateStart') {
+      clearFieldForGate();
       spawnGatePair();
       state.gateEndAt = frame + 300;
     }
@@ -219,7 +230,7 @@
       coinMin: def.coinMin,
       coinMax: def.coinMax,
       dead: false,
-      bob: rand(0, Math.PI * 2)
+      bob: 0
     });
   }
 
@@ -242,7 +253,7 @@
       coinMin: def.coinMin,
       coinMax: def.coinMax,
       dead: false,
-      bob: rand(0, Math.PI * 2)
+      bob: 0
     });
   }
 
@@ -447,7 +458,9 @@
     for (const e of state.entities) {
       if (e.dead) continue;
 
-      e.bob += 0.06;
+      if (e.kind === 'enemy' || e.kind === 'midBoss' || e.kind === 'boss') {
+        e.bob += 0.06;
+      }
 
       if (e.kind === 'midBoss' || e.kind === 'boss') {
         if (e.y < e.targetY) {
@@ -512,7 +525,8 @@
         vy: Math.sin(base) * 3.8,
         r: e.kind === 'boss' ? 11 : 8,
         dmg: e.kind === 'boss' ? 16 : 9,
-        dead: false
+        dead: false,
+        bob: 0
       });
     }
   }
@@ -716,7 +730,10 @@
       return;
     }
 
-    const y = e.y + Math.sin(e.bob) * 5;
+    const y = (e.kind === 'enemy' || e.kind === 'midBoss' || e.kind === 'boss')
+      ? e.y + Math.sin(e.bob) * 5
+      : e.y;
+
     const im = e.image ? img(e.image) : null;
 
     const size =
