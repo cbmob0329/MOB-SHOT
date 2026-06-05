@@ -33,7 +33,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260605';
+      image.src = src + '?v=20260605b';
       image.__src = src;
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
@@ -187,8 +187,8 @@
     const leftGateX = W * 0.31;
     const rightGateX = W * 0.69;
     const gateY = -86;
-    const safeRadiusX = 88;
-    const safeRadiusY = 170;
+    const safeRadiusX = 96;
+    const safeRadiusY = 180;
 
     for (const e of state.entities) {
       if (
@@ -215,8 +215,8 @@
         e.x = W * 0.83;
       }
 
-      if (e.y < 90) {
-        e.y += 125;
+      if (e.y < 95) {
+        e.y += 130;
       }
     }
   }
@@ -227,16 +227,16 @@
     showBanner(ev.text);
 
     if (ev.type === 'areaStart') {
-      state.areaSpawn.nextEnemy = frame + 45;
+      state.areaSpawn.nextEnemy = frame + 40;
       state.areaSpawn.nextGimmick = frame + 80;
-      state.areaSpawn.nextChest = frame + 160;
-      state.areaSpawn.endAt = frame + 520;
+      state.areaSpawn.nextChest = frame + 150;
+      state.areaSpawn.endAt = frame + 430;
     }
 
     if (ev.type === 'gateStart') {
       moveFieldAwayFromGate();
       spawnGatePair();
-      state.gateEndAt = frame + 300;
+      state.gateEndAt = frame + 280;
     }
 
     if (ev.type === 'midBossStart') {
@@ -261,10 +261,10 @@
       name: def.name,
       image: def.image,
       x: rand(W * 0.18, W * 0.82),
-      y: -68,
+      y: -78,
       vx: rand(-0.45, 0.45),
       vy: 2.15 + flow.area * 0.08,
-      r: 28,
+      r: def.name === 'モブロック' ? 34 : 31,
       hp: Math.ceil(def.hp * scale),
       maxHp: Math.ceil(def.hp * scale),
       score: def.score,
@@ -284,11 +284,11 @@
       name: def.name,
       image: def.image,
       x: rand(W * 0.18, W * 0.82),
-      y: -74,
+      y: -80,
       vx: 0,
       vy: 2.05,
-      w: 64,
-      h: 64,
+      w: 72,
+      h: 72,
       hp: Math.ceil(def.hp * scale),
       maxHp: Math.ceil(def.hp * scale),
       score: def.score,
@@ -307,11 +307,11 @@
       name: def.name,
       image: def.image,
       x: rand(W * 0.2, W * 0.8),
-      y: -68,
+      y: -76,
       vx: 0,
       vy: 2.0,
-      w: 58,
-      h: 52,
+      w: 64,
+      h: 58,
       hp: def.hp,
       maxHp: def.hp,
       score: def.score,
@@ -389,11 +389,11 @@
       name: def.name,
       image: def.image,
       x: W / 2,
-      y: -110,
+      y: -130,
       targetY: H * 0.25,
       vx: 1.4,
       vy: 2.2,
-      r: 52,
+      r: 58,
       hp,
       maxHp: hp,
       score: def.score,
@@ -412,11 +412,11 @@
       name: def.name,
       image: def.image,
       x: W / 2,
-      y: -140,
+      y: -160,
       targetY: H * 0.23,
       vx: 1.7,
       vy: 1.8,
-      r: 70,
+      r: 76,
       hp: def.hp,
       maxHp: def.hp,
       score: def.score,
@@ -762,10 +762,10 @@
   function cleanup() {
     state.entities = state.entities.filter(e =>
       !e.dead &&
-      e.y < H + 170 &&
-      e.y > -260 &&
-      e.x > -160 &&
-      e.x < W + 160
+      e.y < H + 190 &&
+      e.y > -280 &&
+      e.x > -170 &&
+      e.x < W + 170
     );
 
     state.bullets = state.bullets.filter(b =>
@@ -906,9 +906,10 @@
     const im = e.image ? img(e.image) : null;
 
     const size =
-      e.kind === 'boss' ? 150 :
-      e.kind === 'midBoss' ? 112 :
-      e.kind === 'enemy' ? 76 :
+      e.kind === 'boss' ? 168 :
+      e.kind === 'midBoss' ? 130 :
+      e.kind === 'enemy' && e.name === 'モブロック' ? 92 :
+      e.kind === 'enemy' ? 84 :
       e.kind === 'gimmick' ? 86 :
       e.kind === 'chest' ? 76 :
       70;
@@ -1009,35 +1010,29 @@
 
   function drawHpNumber(e, y, size) {
     const ratio = Math.max(0, e.hp / e.maxHp);
+    const barW = size * 0.78;
+    const barH = 8;
+    const barX = e.x - barW / 2;
+    const barY = y + size / 2 + 6;
 
-    ctx.fillStyle = 'rgba(0,0,0,.55)';
-    roundRect(
-      e.x - size / 2,
-      y - size / 2 - 16,
-      size,
-      9,
-      6
-    );
+    ctx.fillStyle = 'rgba(0,0,0,.58)';
+    roundRect(barX, barY, barW, barH, 6);
     ctx.fill();
 
     ctx.fillStyle = ratio > 0.45 ? '#ffe66b' : '#ff5b5b';
-    roundRect(
-      e.x - size / 2,
-      y - size / 2 - 16,
-      size * ratio,
-      9,
-      6
-    );
+    roundRect(barX, barY, barW * ratio, barH, 6);
     ctx.fill();
 
     ctx.fillStyle = '#fff';
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 4;
-    ctx.font = '900 18px system-ui';
+    ctx.font = '900 16px system-ui';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.strokeText(Math.ceil(e.hp), e.x, y);
-    ctx.fillText(Math.ceil(e.hp), e.x, y);
+    ctx.textBaseline = 'top';
+
+    const hpText = String(Math.ceil(e.hp));
+    ctx.strokeText(hpText, e.x, barY + 10);
+    ctx.fillText(hpText, e.x, barY + 10);
   }
 
   function drawBullet(b) {
