@@ -107,7 +107,7 @@ window.MOBSHOT_DATA = {
     },
     {
       name: '丸岩',
-      image: 'gimi/gimiiwa.pmg',
+      image: 'gimi/gimiiwa.png',
       hp: 14,
       score: 16,
       coinMin: 3,
