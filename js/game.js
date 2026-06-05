@@ -17,7 +17,9 @@
   const resultScore = document.getElementById('resultScore');
   const resultCoin = document.getElementById('resultCoin');
 
-  let W = 0, H = 0, DPR = 1;
+  let W = 0;
+  let H = 0;
+  let DPR = 1;
   let running = false;
   let raf = 0;
   let frame = 0;
@@ -28,15 +30,17 @@
 
   function img(src) {
     if (!src) return null;
+
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260604';
+      image.src = src + '?v=20260605';
       image.__src = src;
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
       images.set(src, image);
     }
+
     return images.get(src);
   }
 
@@ -53,9 +57,20 @@
     attackSpeed: 1,
     score: 0,
     coin: 0,
-    player: { x: 0, y: 0, targetX: 0, targetY: 0, r: 24 },
+    player: {
+      x: 0,
+      y: 0,
+      targetX: 0,
+      targetY: 0,
+      r: 24
+    },
     shootCd: 0,
-    areaSpawn: { nextEnemy: 0, nextGimmick: 0, nextChest: 0, endAt: 0 },
+    areaSpawn: {
+      nextEnemy: 0,
+      nextGimmick: 0,
+      nextChest: 0,
+      endAt: 0
+    },
     gateEndAt: 0,
     entities: [],
     bullets: [],
@@ -67,13 +82,31 @@
     return Math.max(H * 0.58, H - 148);
   }
 
+  function rand(a, b) {
+    return a + Math.random() * (b - a);
+  }
+
+  function intRand(a, b) {
+    return Math.floor(rand(a, b + 1));
+  }
+
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function clamp(v, a, b) {
+    return Math.max(a, Math.min(b, v));
+  }
+
   function weightedPick(list) {
     const total = list.reduce((sum, item) => sum + (item.weight || 1), 0);
     let roll = Math.random() * total;
+
     for (const item of list) {
-      roll -= (item.weight || 1);
+      roll -= item.weight || 1;
       if (roll <= 0) return item;
     }
+
     return list[list.length - 1];
   }
 
@@ -81,6 +114,7 @@
     DPR = Math.min(window.devicePixelRatio || 1, 2);
     W = window.innerWidth;
     H = window.innerHeight;
+
     canvas.width = Math.floor(W * DPR);
     canvas.height = Math.floor(H * DPR);
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -149,14 +183,42 @@
     phaseBanner.classList.add('show');
   }
 
-  function clearFieldForGate() {
-    state.entities = state.entities.filter(e =>
-      e.kind === 'enemyBullet' ||
-      e.kind === 'midBoss' ||
-      e.kind === 'boss'
-    );
+  function moveFieldAwayFromGate() {
+    const leftGateX = W * 0.31;
+    const rightGateX = W * 0.69;
+    const gateY = -86;
+    const safeRadiusX = 88;
+    const safeRadiusY = 170;
 
-    state.bullets.length = 0;
+    for (const e of state.entities) {
+      if (
+        e.kind !== 'enemy' &&
+        e.kind !== 'gimmick' &&
+        e.kind !== 'chest'
+      ) {
+        continue;
+      }
+
+      const nearLeftGate =
+        Math.abs(e.x - leftGateX) < safeRadiusX &&
+        Math.abs(e.y - gateY) < safeRadiusY;
+
+      const nearRightGate =
+        Math.abs(e.x - rightGateX) < safeRadiusX &&
+        Math.abs(e.y - gateY) < safeRadiusY;
+
+      if (nearLeftGate) {
+        e.x = W * 0.17;
+      }
+
+      if (nearRightGate) {
+        e.x = W * 0.83;
+      }
+
+      if (e.y < 90) {
+        e.y += 125;
+      }
+    }
   }
 
   function handleFlowEvent(ev) {
@@ -172,20 +234,23 @@
     }
 
     if (ev.type === 'gateStart') {
-      clearFieldForGate();
+      moveFieldAwayFromGate();
       spawnGatePair();
       state.gateEndAt = frame + 300;
     }
 
-    if (ev.type === 'midBossStart') spawnMidBoss();
-    if (ev.type === 'bossStart') spawnBoss();
-    if (ev.type === 'clear') finishRun(true);
-  }
+    if (ev.type === 'midBossStart') {
+      spawnMidBoss();
+    }
 
-  function rand(a,b){ return a + Math.random() * (b-a); }
-  function intRand(a,b){ return Math.floor(rand(a,b+1)); }
-  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+    if (ev.type === 'bossStart') {
+      spawnBoss();
+    }
+
+    if (ev.type === 'clear') {
+      finishRun(true);
+    }
+  }
 
   function spawnEnemy() {
     const def = pick(D.enemies.zako);
@@ -261,11 +326,20 @@
     let pool;
 
     if (flow.gate < 7) {
-      pool = D.gates.filter(g => g.type !== 'wide' && g.type !== 'skillmax');
+      pool = D.gates.filter(g =>
+        g.type !== 'wide' &&
+        g.type !== 'skillmax'
+      );
     } else {
       pool = D.gates.map(g => {
-        if (g.type === 'wide') return Object.assign({}, g, { weight: 0.05 });
-        if (g.type === 'skillmax') return Object.assign({}, g, { weight: 0.02 });
+        if (g.type === 'wide') {
+          return Object.assign({}, g, { weight: 0.05 });
+        }
+
+        if (g.type === 'skillmax') {
+          return Object.assign({}, g, { weight: 0.02 });
+        }
+
         return g;
       });
     }
@@ -282,6 +356,7 @@
     }
 
     const pair = `gate-${frame}-${Math.random()}`;
+
     state.entities.push(makeGate(a, W * 0.31, pair));
     state.entities.push(makeGate(b, W * 0.69, pair));
   }
@@ -353,17 +428,33 @@
   }
 
   function applyGate(gate) {
-    if (gate.type === 'power') state.power += gate.value;
-    if (gate.type === 'range') state.range += gate.value;
-    if (gate.type === 'rapid') state.attackSpeed += 0.25 * gate.value;
-    if (gate.type === 'life') state.hp = Math.min(state.maxHp, state.hp + gate.value);
-    if (gate.type === 'wide') state.wide += gate.value;
+    if (gate.type === 'power') {
+      state.power += gate.value;
+    }
+
+    if (gate.type === 'range') {
+      state.range += gate.value;
+    }
+
+    if (gate.type === 'rapid') {
+      state.attackSpeed += 0.25 * gate.value;
+    }
+
+    if (gate.type === 'life') {
+      state.hp = Math.min(state.maxHp, state.hp + gate.value);
+    }
+
+    if (gate.type === 'wide') {
+      state.wide += gate.value;
+    }
 
     addText(gate.name, state.player.x, state.player.y - 70, gate.color);
     burst(gate.x, gate.y, gate.color, 24);
 
     state.entities.forEach(e => {
-      if (e.kind === 'gate' && e.pair === gate.pair) e.dead = true;
+      if (e.kind === 'gate' && e.pair === gate.pair) {
+        e.dead = true;
+      }
     });
   }
 
@@ -407,7 +498,10 @@
       }
 
       if (frame >= state.areaSpawn.nextChest) {
-        if (Math.random() < 0.42) spawnChest();
+        if (Math.random() < 0.42) {
+          spawnChest();
+        }
+
         state.areaSpawn.nextChest = frame + intRand(230, 350);
       }
 
@@ -417,24 +511,42 @@
     }
 
     if (snap.phase === 'gate') {
-      const gatesAlive = state.entities.some(e => e.kind === 'gate' && !e.dead);
+      const gatesAlive = state.entities.some(e =>
+        e.kind === 'gate' &&
+        !e.dead
+      );
 
       if (!gatesAlive || frame >= state.gateEndAt) {
         state.entities.forEach(e => {
-          if (e.kind === 'gate') e.dead = true;
+          if (e.kind === 'gate') {
+            e.dead = true;
+          }
         });
+
         handleFlowEvent(flow.completeGate());
       }
     }
 
     if (snap.phase === 'midBoss') {
-      const alive = state.entities.some(e => e.kind === 'midBoss' && !e.dead);
-      if (!alive && snap.phaseFrame > 60) handleFlowEvent(flow.completeMidBoss());
+      const alive = state.entities.some(e =>
+        e.kind === 'midBoss' &&
+        !e.dead
+      );
+
+      if (!alive && snap.phaseFrame > 60) {
+        handleFlowEvent(flow.completeMidBoss());
+      }
     }
 
     if (snap.phase === 'boss') {
-      const alive = state.entities.some(e => e.kind === 'boss' && !e.dead);
-      if (!alive && snap.phaseFrame > 60) handleFlowEvent(flow.completeBoss());
+      const alive = state.entities.some(e =>
+        e.kind === 'boss' &&
+        !e.dead
+      );
+
+      if (!alive && snap.phaseFrame > 60) {
+        handleFlowEvent(flow.completeBoss());
+      }
     }
   }
 
@@ -458,7 +570,11 @@
     for (const e of state.entities) {
       if (e.dead) continue;
 
-      if (e.kind === 'enemy' || e.kind === 'midBoss' || e.kind === 'boss') {
+      if (
+        e.kind === 'enemy' ||
+        e.kind === 'midBoss' ||
+        e.kind === 'boss'
+      ) {
         e.bob += 0.06;
       }
 
@@ -467,7 +583,10 @@
           e.y += e.vy;
         } else {
           e.x += e.vx;
-          if (e.x < W * 0.18 || e.x > W * 0.82) e.vx *= -1;
+
+          if (e.x < W * 0.18 || e.x > W * 0.82) {
+            e.vx *= -1;
+          }
 
           e.shootCd--;
 
@@ -505,7 +624,9 @@
     cleanup();
     updateHud();
 
-    if (state.hp <= 0) finishRun(false);
+    if (state.hp <= 0) {
+      finishRun(false);
+    }
   }
 
   function enemyShot(e) {
@@ -536,11 +657,18 @@
       if (b.dead) continue;
 
       for (const e of state.entities) {
-        if (e.dead || e.kind === 'gate' || e.kind === 'enemyBullet') continue;
+        if (
+          e.dead ||
+          e.kind === 'gate' ||
+          e.kind === 'enemyBullet'
+        ) {
+          continue;
+        }
 
         const hit = e.r
           ? Math.hypot(b.x - e.x, b.y - e.y) < e.r + b.r
-          : Math.abs(b.x - e.x) < e.w / 2 && Math.abs(b.y - e.y) < e.h / 2;
+          : Math.abs(b.x - e.x) < e.w / 2 &&
+            Math.abs(b.y - e.y) < e.h / 2;
 
         if (!hit) continue;
 
@@ -549,7 +677,9 @@
 
         burst(b.x, b.y, '#ffffff', 4);
 
-        if (e.hp <= 0) killEntity(e);
+        if (e.hp <= 0) {
+          killEntity(e);
+        }
 
         break;
       }
@@ -563,9 +693,13 @@
       if (e.dead) continue;
 
       if (e.kind === 'gate') {
-        if (Math.abs(p.x - e.x) < e.w / 2 && Math.abs(p.y - 20 - e.y) < e.h / 2) {
+        if (
+          Math.abs(p.x - e.x) < e.w / 2 &&
+          Math.abs(p.y - 20 - e.y) < e.h / 2
+        ) {
           applyGate(e);
         }
+
         continue;
       }
 
@@ -576,14 +710,18 @@
           addText(`-${e.dmg}`, p.x, p.y - 50, '#ff5b5b');
           burst(p.x, p.y, '#ff5b5b', 16);
         }
+
         continue;
       }
 
-      if (e.kind === 'boss' || e.kind === 'midBoss') continue;
+      if (e.kind === 'boss' || e.kind === 'midBoss') {
+        continue;
+      }
 
       const hit = e.r
         ? Math.hypot(p.x - e.x, p.y - e.y) < p.r + e.r
-        : Math.abs(p.x - e.x) < e.w / 2 + p.r && Math.abs(p.y - e.y) < e.h / 2 + p.r;
+        : Math.abs(p.x - e.x) < e.w / 2 + p.r &&
+          Math.abs(p.y - e.y) < e.h / 2 + p.r;
 
       if (hit) {
         e.dead = true;
@@ -598,10 +736,15 @@
   function killEntity(e) {
     e.dead = true;
 
-    burst(e.x, e.y, e.kind === 'boss' ? '#ff4aff' : '#ffe66b', e.kind === 'boss' ? 56 : 24);
+    burst(
+      e.x,
+      e.y,
+      e.kind === 'boss' ? '#ff4aff' : '#ffe66b',
+      e.kind === 'boss' ? 56 : 24
+    );
 
     let coin = 0;
-    let score = e.score || 0;
+    const score = e.score || 0;
 
     if (e.kind === 'midBoss' || e.kind === 'boss') {
       coin = e.coin;
@@ -631,8 +774,13 @@
       b.y > -80
     );
 
-    state.particles = state.particles.filter(p => p.life > 0);
-    state.texts = state.texts.filter(t => t.life > 0);
+    state.particles = state.particles.filter(p =>
+      p.life > 0
+    );
+
+    state.texts = state.texts.filter(t =>
+      t.life > 0
+    );
   }
 
   function finishRun(clear) {
@@ -641,7 +789,9 @@
     runCommitted = true;
     running = false;
 
-    if (clear && window.MobShotStorage) window.MobShotStorage.addRunResult(state.score, state.coin);
+    if (clear && window.MobShotStorage) {
+      window.MobShotStorage.addRunResult(state.score, state.coin);
+    }
 
     resultTitle.textContent = clear ? 'CLEAR!' : 'GAME OVER';
     resultText.textContent = clear ? 'ボス撃破！ステージクリア' : 'ライフがなくなりました';
@@ -658,7 +808,13 @@
   }
 
   function addText(text, x, y, color) {
-    state.texts.push({ text, x, y, color, life: 48 });
+    state.texts.push({
+      text,
+      x,
+      y,
+      color,
+      life: 48
+    });
   }
 
   function burst(x, y, color, n) {
@@ -677,13 +833,23 @@
   function draw() {
     drawBackground();
 
-    for (const e of state.entities) drawEntity(e);
-    for (const b of state.bullets) drawBullet(b);
+    for (const e of state.entities) {
+      drawEntity(e);
+    }
+
+    for (const b of state.bullets) {
+      drawBullet(b);
+    }
 
     drawPlayer();
 
-    for (const p of state.particles) drawParticle(p);
-    for (const t of state.texts) drawText(t);
+    for (const p of state.particles) {
+      drawParticle(p);
+    }
+
+    for (const t of state.texts) {
+      drawText(t);
+    }
   }
 
   function drawBackground() {
@@ -730,9 +896,12 @@
       return;
     }
 
-    const y = (e.kind === 'enemy' || e.kind === 'midBoss' || e.kind === 'boss')
-      ? e.y + Math.sin(e.bob) * 5
-      : e.y;
+    const y =
+      e.kind === 'enemy' ||
+      e.kind === 'midBoss' ||
+      e.kind === 'boss'
+        ? e.y + Math.sin(e.bob) * 5
+        : e.y;
 
     const im = e.image ? img(e.image) : null;
 
@@ -750,7 +919,9 @@
       drawFallbackEntity(e, y, size);
     }
 
-    if (e.hp != null) drawHpNumber(e, y, size);
+    if (e.hp != null) {
+      drawHpNumber(e, y, size);
+    }
   }
 
   function drawGate(g) {
@@ -789,10 +960,21 @@
   }
 
   function drawImageContain(image, centerX, centerY, boxW, boxH) {
-    const ratio = Math.min(boxW / image.naturalWidth, boxH / image.naturalHeight);
+    const ratio = Math.min(
+      boxW / image.naturalWidth,
+      boxH / image.naturalHeight
+    );
+
     const iw = image.naturalWidth * ratio;
     const ih = image.naturalHeight * ratio;
-    ctx.drawImage(image, centerX - iw / 2, centerY - ih / 2, iw, ih);
+
+    ctx.drawImage(
+      image,
+      centerX - iw / 2,
+      centerY - ih / 2,
+      iw,
+      ih
+    );
   }
 
   function drawFallbackEntity(e, y, size) {
@@ -829,11 +1011,23 @@
     const ratio = Math.max(0, e.hp / e.maxHp);
 
     ctx.fillStyle = 'rgba(0,0,0,.55)';
-    roundRect(e.x - size / 2, y - size / 2 - 16, size, 9, 6);
+    roundRect(
+      e.x - size / 2,
+      y - size / 2 - 16,
+      size,
+      9,
+      6
+    );
     ctx.fill();
 
     ctx.fillStyle = ratio > 0.45 ? '#ffe66b' : '#ff5b5b';
-    roundRect(e.x - size / 2, y - size / 2 - 16, size * ratio, 9, 6);
+    roundRect(
+      e.x - size / 2,
+      y - size / 2 - 16,
+      size * ratio,
+      9,
+      6
+    );
     ctx.fill();
 
     ctx.fillStyle = '#fff';
@@ -869,7 +1063,15 @@
 
     ctx.fillStyle = 'rgba(0,0,0,.25)';
     ctx.beginPath();
-    ctx.ellipse(p.x, p.y + 35, 40, 11, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      p.x,
+      p.y + 35,
+      40,
+      11,
+      0,
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
 
     if (imageReady(im)) {
@@ -880,6 +1082,7 @@
     ctx.fillStyle = '#11131e';
     ctx.strokeStyle = '#2b3654';
     ctx.lineWidth = 5;
+
     ctx.beginPath();
     ctx.arc(p.x, p.y, 28, 0, Math.PI * 2);
     ctx.fill();
@@ -918,7 +1121,10 @@
   function loop() {
     update();
     draw();
-    if (running) raf = requestAnimationFrame(loop);
+
+    if (running) {
+      raf = requestAnimationFrame(loop);
+    }
   }
 
   canvas.addEventListener('pointerdown', e => {
@@ -933,5 +1139,9 @@
 
   window.addEventListener('resize', resize);
 
-  window.MobShotGame = { start, stop, showBanner };
+  window.MobShotGame = {
+    start,
+    stop,
+    showBanner
+  };
 })();
