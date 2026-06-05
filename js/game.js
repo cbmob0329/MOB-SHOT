@@ -33,7 +33,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260605b';
+      image.src = src + '?v=20260605c';
       image.__src = src;
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
@@ -183,44 +183,6 @@
     phaseBanner.classList.add('show');
   }
 
-  function moveFieldAwayFromGate() {
-    const leftGateX = W * 0.31;
-    const rightGateX = W * 0.69;
-    const gateY = -86;
-    const safeRadiusX = 96;
-    const safeRadiusY = 180;
-
-    for (const e of state.entities) {
-      if (
-        e.kind !== 'enemy' &&
-        e.kind !== 'gimmick' &&
-        e.kind !== 'chest'
-      ) {
-        continue;
-      }
-
-      const nearLeftGate =
-        Math.abs(e.x - leftGateX) < safeRadiusX &&
-        Math.abs(e.y - gateY) < safeRadiusY;
-
-      const nearRightGate =
-        Math.abs(e.x - rightGateX) < safeRadiusX &&
-        Math.abs(e.y - gateY) < safeRadiusY;
-
-      if (nearLeftGate) {
-        e.x = W * 0.17;
-      }
-
-      if (nearRightGate) {
-        e.x = W * 0.83;
-      }
-
-      if (e.y < 95) {
-        e.y += 130;
-      }
-    }
-  }
-
   function handleFlowEvent(ev) {
     if (!ev) return;
 
@@ -234,7 +196,6 @@
     }
 
     if (ev.type === 'gateStart') {
-      moveFieldAwayFromGate();
       spawnGatePair();
       state.gateEndAt = frame + 280;
     }
@@ -262,7 +223,7 @@
       image: def.image,
       x: rand(W * 0.18, W * 0.82),
       y: -78,
-      vx: rand(-0.45, 0.45),
+      vx: rand(-0.85, 0.85),
       vy: 2.15 + flow.area * 0.08,
       r: def.name === 'モブロック' ? 34 : 31,
       hp: Math.ceil(def.hp * scale),
@@ -287,8 +248,8 @@
       y: -80,
       vx: 0,
       vy: 2.05,
-      w: 72,
-      h: 72,
+      w: 82,
+      h: 82,
       hp: Math.ceil(def.hp * scale),
       maxHp: Math.ceil(def.hp * scale),
       score: def.score,
@@ -597,7 +558,14 @@
         }
       } else {
         e.y += e.vy;
-        e.x += e.vx || 0;
+
+        if (e.kind === 'enemy') {
+          e.x += e.vx || 0;
+
+          if (e.x < W * 0.16 || e.x > W * 0.84) {
+            e.vx *= -1;
+          }
+        }
       }
     }
 
@@ -793,6 +761,12 @@
       window.MobShotStorage.addRunResult(state.score, state.coin);
     }
 
+    if (window.MobShotMain && window.MobShotMain.refreshMainHud) {
+      window.MobShotMain.refreshMainHud();
+    }
+
+    window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
+
     resultTitle.textContent = clear ? 'CLEAR!' : 'GAME OVER';
     resultText.textContent = clear ? 'ボス撃破！ステージクリア' : 'ライフがなくなりました';
     resultScore.textContent = state.score.toLocaleString();
@@ -910,8 +884,8 @@
       e.kind === 'midBoss' ? 130 :
       e.kind === 'enemy' && e.name === 'モブロック' ? 92 :
       e.kind === 'enemy' ? 84 :
-      e.kind === 'gimmick' ? 86 :
-      e.kind === 'chest' ? 76 :
+      e.kind === 'gimmick' ? 104 :
+      e.kind === 'chest' ? 82 :
       70;
 
     if (imageReady(im)) {
