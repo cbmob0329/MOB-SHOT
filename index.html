@@ -9,6 +9,7 @@
 
 <body>
   <div id="app">
+
     <section id="mainScreen" class="screen active">
       <div class="main-bg"></div>
 
@@ -18,9 +19,20 @@
       </div>
 
       <div class="main-status">
-        <div class="status-pill"><span class="icon diamond"></span><span id="mainDiamond">0</span></div>
-        <div class="status-pill"><span class="icon rank">R</span><span id="mainRank">1</span></div>
-        <div class="status-pill"><span class="icon coin"></span><span id="mainCoin">0</span></div>
+        <div class="status-pill">
+          <span class="icon diamond"></span>
+          <span id="mainDiamond">0</span>
+        </div>
+
+        <div class="status-pill">
+          <span class="icon rank">R</span>
+          <span id="mainRank">1</span>
+        </div>
+
+        <div class="status-pill">
+          <span class="icon coin"></span>
+          <span id="mainCoin">0</span>
+        </div>
       </div>
 
       <div class="player-showcase">
@@ -74,15 +86,17 @@
         </button>
       </nav>
 
-      <button id="deleteSaveBtn" class="delete-save-btn" type="button">セーブ削除</button>
-
       <div id="petEquipModal" class="pet-modal hidden">
         <div class="pet-modal-card">
           <div class="pet-modal-head">
             <h2>ペット装備</h2>
             <button id="petModalCloseBtn" type="button">閉じる</button>
           </div>
-          <p class="pet-modal-help">購入・強化・装備ができます。最大3体まで装備可能です。</p>
+
+          <p class="pet-modal-help">
+            ペットを購入・強化・装備できます。最大3体まで装備可能です。
+          </p>
+
           <div id="petOwnedList" class="pet-owned-list"></div>
         </div>
       </div>
@@ -143,6 +157,7 @@
         </div>
       </div>
     </section>
+
   </div>
 
   <script src="js/data.js"></script>
