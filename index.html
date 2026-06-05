@@ -39,7 +39,14 @@
         <div class="player-glow"></div>
         <img id="mainPlayer" src="play/playpink2.png" alt="PLAYER" />
         <div class="fallback-player">MOB</div>
+
+        <div id="mainPetFloatLayer" class="main-pet-float-layer"></div>
       </div>
+
+      <section id="petEquipPanel" class="pet-equip-panel">
+        <div class="pet-equip-title">PET</div>
+        <div id="petEquipSlots" class="pet-equip-slots"></div>
+      </section>
 
       <nav class="right-menu">
         <button id="sortieBtn" class="image-button sortie" type="button">
@@ -57,7 +64,7 @@
           <span>装備</span>
         </button>
 
-        <button class="image-button disabled-btn" type="button">
+        <button id="openPetEquipBtn" class="image-button" type="button">
           <img id="petImg" src="mt/menupet.png" alt="ペット" />
           <span>ペット</span>
         </button>
@@ -79,6 +86,17 @@
           <span>コレクション</span>
         </button>
       </nav>
+
+      <div id="petEquipModal" class="pet-modal hidden">
+        <div class="pet-modal-card">
+          <div class="pet-modal-head">
+            <h2>ペット装備</h2>
+            <button id="petModalCloseBtn" type="button">閉じる</button>
+          </div>
+          <p class="pet-modal-help">テスト中のため全ペット所持扱いです。最大3体まで装備できます。</p>
+          <div id="petOwnedList" class="pet-owned-list"></div>
+        </div>
+      </div>
     </section>
 
     <section id="gameScreen" class="screen">
@@ -143,6 +161,7 @@
   <script src="js/storage.js"></script>
   <script src="js/stage-flow.js"></script>
   <script src="js/game.js"></script>
+  <script src="js/pets.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
