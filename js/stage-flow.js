@@ -1,93 +1,112 @@
 'use strict';
 
-class MobShotStageFlow {
-  constructor() {
-    this.reset();
-  }
-
-  reset() {
-    this.phase = 'start';
-    this.area = 0;
-    this.gate = 0;
-    this.midBoss = 0;
-    this.done = false;
-    this.timer = 0;
-    this.phaseFrame = 0;
-    return this.snapshot();
-  }
-
-  snapshot() {
-    return {
-      phase: this.phase,
-      area: this.area,
-      gate: this.gate,
-      midBoss: this.midBoss,
-      done: this.done,
-      phaseFrame: this.phaseFrame
-    };
-  }
-
-  start() {
-    this.phase = 'area';
-    this.area = 1;
-    this.gate = 0;
-    this.midBoss = 0;
-    this.done = false;
-    this.phaseFrame = 0;
-    return { type: 'areaStart', area: 1, text: 'AREA 1' };
-  }
-
-  update() {
-    this.timer++;
-    this.phaseFrame++;
-    return null;
-  }
-
-  completeArea() {
-    if (this.phase !== 'area') return null;
-    this.phase = 'gate';
-    this.gate = this.area;
-    this.phaseFrame = 0;
-    return { type: 'gateStart', gate: this.gate, text: `GATE ${this.gate}` };
-  }
-
-  completeGate() {
-    if (this.phase !== 'gate') return null;
-
-    if (this.gate === 3 || this.gate === 6) {
-      this.phase = 'midBoss';
-      this.midBoss = this.gate === 3 ? 1 : 2;
-      this.phaseFrame = 0;
-      return { type: 'midBossStart', midBoss: this.midBoss, text: `CHECKPOINT BOSS ${this.midBoss}` };
+(function(){
+  class MobShotStageFlow {
+    constructor(){
+      this.reset();
     }
 
-    if (this.gate === 9) {
-      this.phase = 'boss';
+    reset(){
+      this.phase = 'idle';
       this.phaseFrame = 0;
-      return { type: 'bossStart', text: 'BOSS' };
+      this.area = 0;
+      this.gate = 0;
+      this.midBoss = 0;
+      this.boss = 0;
+      this.step = 0;
+
+      this.steps = [
+        { type:'areaStart', text:'AREA 1' },
+        { type:'gateStart', text:'GATE 1' },
+        { type:'areaStart', text:'AREA 2' },
+        { type:'gateStart', text:'GATE 2' },
+        { type:'midBossStart', text:'中ボス出現！' },
+
+        { type:'areaStart', text:'AREA 3' },
+        { type:'gateStart', text:'GATE 3' },
+        { type:'areaStart', text:'AREA 4' },
+        { type:'gateStart', text:'GATE 4' },
+        { type:'midBossStart', text:'中ボス出現！' },
+
+        { type:'areaStart', text:'AREA 5' },
+        { type:'gateStart', text:'GATE 5' },
+        { type:'areaStart', text:'AREA 6' },
+        { type:'gateStart', text:'GATE 6' },
+        { type:'bossStart', text:'BOSS 出現！' }
+      ];
     }
 
-    this.area += 1;
-    this.phase = 'area';
-    this.phaseFrame = 0;
-    return { type: 'areaStart', area: this.area, text: `AREA ${this.area}` };
+    start(){
+      this.step = 0;
+      return this.nextStep();
+    }
+
+    update(){
+      this.phaseFrame++;
+    }
+
+    snapshot(){
+      return {
+        phase: this.phase,
+        phaseFrame: this.phaseFrame,
+        area: this.area,
+        gate: this.gate,
+        midBoss: this.midBoss,
+        boss: this.boss
+      };
+    }
+
+    nextStep(){
+      const ev = this.steps[this.step];
+
+      if (!ev) {
+        this.phase = 'clear';
+        this.phaseFrame = 0;
+        return { type:'clear', text:'CLEAR!' };
+      }
+
+      this.step++;
+      this.phaseFrame = 0;
+
+      if (ev.type === 'areaStart') {
+        this.phase = 'area';
+        this.area++;
+      }
+
+      if (ev.type === 'gateStart') {
+        this.phase = 'gate';
+        this.gate++;
+      }
+
+      if (ev.type === 'midBossStart') {
+        this.phase = 'midBoss';
+        this.midBoss++;
+      }
+
+      if (ev.type === 'bossStart') {
+        this.phase = 'boss';
+        this.boss++;
+      }
+
+      return ev;
+    }
+
+    completeArea(){
+      return this.nextStep();
+    }
+
+    completeGate(){
+      return this.nextStep();
+    }
+
+    completeMidBoss(){
+      return this.nextStep();
+    }
+
+    completeBoss(){
+      return this.nextStep();
+    }
   }
 
-  completeMidBoss() {
-    if (this.phase !== 'midBoss') return null;
-    this.area += 1;
-    this.phase = 'area';
-    this.phaseFrame = 0;
-    return { type: 'areaStart', area: this.area, text: `AREA ${this.area}` };
-  }
-
-  completeBoss() {
-    if (this.phase !== 'boss') return null;
-    this.phase = 'clear';
-    this.done = true;
-    this.phaseFrame = 0;
-    return { type: 'clear', text: 'STAGE CLEAR' };
-  }
-}
-
-window.MobShotStageFlow = MobShotStageFlow;
+  window.MobShotStageFlow = MobShotStageFlow;
+})();
