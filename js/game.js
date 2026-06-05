@@ -63,7 +63,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260605_fixed_pet';
+      image.src = src + '?v=20260606_boss_range';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -361,17 +361,25 @@
       name: def.name,
       image: def.image,
       x: W / 2,
-      y: -130,
+      y: -150,
+      baseY: H * 0.25,
       targetY: H * 0.25,
-      vx: 1.4,
-      vy: 2.2,
-      r: 58,
+      vx: 1.45,
+      vy: 2.35,
+      r: 64,
       hp,
       maxHp: hp,
       score: def.score,
       coin: def.coin,
       dead: false,
       shootCd: 80,
+      attackCd: 120,
+      diveMode: false,
+      diveReturn: false,
+      diveVx: 0,
+      diveVy: 0,
+      contactDmg: 13,
+      hitPlayerCd: 0,
       bob: 0
     });
   }
@@ -384,17 +392,21 @@
       name: def.name,
       image: def.image,
       x: W / 2,
-      y: -160,
-      targetY: H * 0.23,
-      vx: 1.7,
-      vy: 1.8,
-      r: 76,
+      y: -240,
+      baseY: H * 0.21,
+      targetY: H * 0.21,
+      vx: 1.55,
+      vy: 1.6,
+      r: 106,
       hp: def.hp,
       maxHp: def.hp,
       score: def.score,
       coin: def.coin,
       dead: false,
-      shootCd: 60,
+      shootCd: 50,
+      attackCd: 95,
+      attackStep: 0,
+      contactDmg: 18,
       bob: 0
     });
   }
@@ -438,6 +450,7 @@
     state.shootCd = Math.max(7, Math.floor(22 / state.attackSpeed));
 
     const count = Math.max(1, state.wide);
+    const maxTravel = 150 + state.range * 45;
 
     for (let i = 0; i < count; i++) {
       const offset = (i - (count - 1) / 2) * 26;
@@ -445,9 +458,10 @@
       state.bullets.push({
         x: state.player.x + offset,
         y: state.player.y - 30,
+        startY: state.player.y - 30,
         vy: -8.4,
         r: 7,
-        life: 42 + state.range * 12,
+        maxTravel,
         dmg: state.power,
         dead: false
       });
@@ -554,23 +568,10 @@
         e.bob += 0.06;
       }
 
-      if (e.kind === 'midBoss' || e.kind === 'boss') {
-        if (e.y < e.targetY) {
-          e.y += e.vy;
-        } else {
-          e.x += e.vx;
-
-          if (e.x < W * 0.18 || e.x > W * 0.82) {
-            e.vx *= -1;
-          }
-
-          e.shootCd--;
-
-          if (e.shootCd <= 0) {
-            e.shootCd = e.kind === 'boss' ? 54 : 82;
-            enemyShot(e);
-          }
-        }
+      if (e.kind === 'midBoss') {
+        updateMidBoss(e);
+      } else if (e.kind === 'boss') {
+        updateBoss(e);
       } else {
         e.y += e.vy;
 
@@ -586,7 +587,10 @@
 
     for (const b of state.bullets) {
       b.y += b.vy;
-      b.life--;
+
+      if (b.startY - b.y >= b.maxTravel) {
+        b.dead = true;
+      }
     }
 
     collideBullets();
@@ -612,27 +616,223 @@
     }
   }
 
+  function updateMidBoss(e) {
+    if (e.y < e.targetY && !e.diveMode) {
+      e.y += e.vy;
+      return;
+    }
+
+    if (e.hitPlayerCd > 0) {
+      e.hitPlayerCd--;
+    }
+
+    if (e.diveMode) {
+      e.x += e.diveVx;
+      e.y += e.diveVy;
+
+      if (e.y > H + 90) {
+        e.diveMode = false;
+        e.diveReturn = true;
+        e.x = clamp(e.x, W * 0.2, W * 0.8);
+        e.y = -110;
+        e.targetY = e.baseY;
+        e.vx = rand(1.1, 1.7) * (Math.random() < 0.5 ? -1 : 1);
+        e.attackCd = 95;
+      }
+
+      return;
+    }
+
+    if (e.diveReturn) {
+      e.y += e.vy;
+
+      if (e.y >= e.baseY) {
+        e.y = e.baseY;
+        e.diveReturn = false;
+      }
+
+      return;
+    }
+
+    e.x += e.vx;
+
+    if (e.x < W * 0.18 || e.x > W * 0.82) {
+      e.vx *= -1;
+    }
+
+    e.shootCd--;
+    e.attackCd--;
+
+    if (e.shootCd <= 0) {
+      e.shootCd = 76;
+      enemyShot(e);
+    }
+
+    if (e.attackCd <= 0) {
+      startMidBossDive(e);
+    }
+  }
+
+  function startMidBossDive(e) {
+    const dx = state.player.x - e.x;
+    const dy = state.player.y - e.y;
+    const len = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+    const speed = 6.4;
+
+    e.diveMode = true;
+    e.diveVx = dx / len * speed;
+    e.diveVy = dy / len * speed;
+    addText('突進！', e.x, e.y - 54, '#ffcf5b');
+  }
+
+  function updateBoss(e) {
+    if (e.y < e.targetY) {
+      e.y += e.vy;
+      return;
+    }
+
+    e.x += e.vx;
+
+    if (e.x < W * 0.18 || e.x > W * 0.82) {
+      e.vx *= -1;
+    }
+
+    e.shootCd--;
+    e.attackCd--;
+
+    if (e.shootCd <= 0) {
+      e.shootCd = 48;
+      bossFanShot(e);
+    }
+
+    if (e.attackCd <= 0) {
+      e.attackStep++;
+      e.attackCd = 88;
+
+      if (e.attackStep % 3 === 1) {
+        bossWideRain(e);
+      } else if (e.attackStep % 3 === 2) {
+        bossAimBurst(e);
+      } else {
+        bossCrossShot(e);
+      }
+    }
+  }
+
   function enemyShot(e) {
-    const count = e.kind === 'boss' ? 3 : 1;
+    const dx = state.player.x - e.x;
+    const dy = state.player.y - e.y;
+    const base = Math.atan2(dy, dx);
+
+    state.entities.push({
+      kind: 'enemyBullet',
+      x: e.x,
+      y: e.y + 30,
+      vx: Math.cos(base) * 3.8,
+      vy: Math.sin(base) * 3.8,
+      r: 8,
+      dmg: 9,
+      dead: false,
+      bob: 0,
+      color: '#ff4aff'
+    });
+  }
+
+  function bossFanShot(e) {
+    const count = 5;
+    const dx = state.player.x - e.x;
+    const dy = state.player.y - e.y;
+    const base = Math.atan2(dy, dx);
 
     for (let i = 0; i < count; i++) {
-      const angleOffset = (i - (count - 1) / 2) * 0.34;
-      const dx = state.player.x - e.x;
-      const dy = state.player.y - e.y;
-      const base = Math.atan2(dy, dx) + angleOffset;
+      const angle = base + (i - (count - 1) / 2) * 0.22;
 
       state.entities.push({
         kind: 'enemyBullet',
         x: e.x,
-        y: e.y + 30,
-        vx: Math.cos(base) * 3.8,
-        vy: Math.sin(base) * 3.8,
-        r: e.kind === 'boss' ? 11 : 8,
-        dmg: e.kind === 'boss' ? 16 : 9,
+        y: e.y + 64,
+        vx: Math.cos(angle) * 3.6,
+        vy: Math.sin(angle) * 3.6,
+        r: 11,
+        dmg: 14,
         dead: false,
-        bob: 0
+        bob: 0,
+        color: '#ff4aff'
       });
     }
+  }
+
+  function bossAimBurst(e) {
+    addText('連射！', e.x, e.y - 92, '#ff5bff');
+
+    for (let i = 0; i < 9; i++) {
+      const delayAngle = (i - 4) * 0.08;
+      const dx = state.player.x - e.x;
+      const dy = state.player.y - e.y;
+      const base = Math.atan2(dy, dx) + delayAngle;
+
+      state.entities.push({
+        kind: 'enemyBullet',
+        x: e.x + rand(-28, 28),
+        y: e.y + 66,
+        vx: Math.cos(base) * 4.2,
+        vy: Math.sin(base) * 4.2,
+        r: 9,
+        dmg: 11,
+        dead: false,
+        bob: 0,
+        color: '#ff8cff'
+      });
+    }
+  }
+
+  function bossWideRain(e) {
+    addText('羽弾！', e.x, e.y - 92, '#ffe66b');
+
+    for (let i = 0; i < 7; i++) {
+      const x = W * 0.18 + (W * 0.64) * (i / 6);
+
+      state.entities.push({
+        kind: 'enemyBullet',
+        x,
+        y: e.y + 42,
+        vx: (i - 3) * 0.12,
+        vy: 3.55 + Math.abs(i - 3) * 0.08,
+        r: 10,
+        dmg: 12,
+        dead: false,
+        bob: 0,
+        color: '#ffe66b'
+      });
+    }
+  }
+
+  function bossCrossShot(e) {
+    addText('拡散！', e.x, e.y - 92, '#6be6ff');
+
+    const angles = [
+      Math.PI * 0.28,
+      Math.PI * 0.36,
+      Math.PI * 0.44,
+      Math.PI * 0.56,
+      Math.PI * 0.64,
+      Math.PI * 0.72
+    ];
+
+    angles.forEach(angle => {
+      state.entities.push({
+        kind: 'enemyBullet',
+        x: e.x,
+        y: e.y + 64,
+        vx: Math.cos(angle) * 3.35,
+        vy: Math.sin(angle) * 3.35,
+        r: 10,
+        dmg: 12,
+        dead: false,
+        bob: 0,
+        color: '#6be6ff'
+      });
+    });
   }
 
   function collideBullets() {
@@ -696,7 +896,22 @@
         continue;
       }
 
-      if (e.kind === 'boss' || e.kind === 'midBoss') {
+      if (e.kind === 'midBoss' && e.diveMode) {
+        if (Math.hypot(p.x - e.x, p.y - e.y) < p.r + e.r && e.hitPlayerCd <= 0) {
+          e.hitPlayerCd = 90;
+          state.hp -= e.contactDmg;
+          addText(`-${e.contactDmg}`, p.x, p.y - 50, '#ff5b5b');
+          burst(p.x, p.y, '#ff5b5b', 20);
+        }
+
+        continue;
+      }
+
+      if (e.kind === 'boss') {
+        continue;
+      }
+
+      if (e.kind === 'midBoss') {
         continue;
       }
 
@@ -725,7 +940,7 @@
       e.x,
       e.y,
       e.kind === 'boss' ? '#ff4aff' : '#ffe66b',
-      e.kind === 'boss' ? 56 : 24
+      e.kind === 'boss' ? 70 : 24
     );
 
     let coin = 0;
@@ -747,15 +962,14 @@
   function cleanup() {
     state.entities = state.entities.filter(e =>
       !e.dead &&
-      e.y < H + 190 &&
-      e.y > -280 &&
-      e.x > -170 &&
-      e.x < W + 170
+      e.y < H + 240 &&
+      e.y > -330 &&
+      e.x > -210 &&
+      e.x < W + 210
     );
 
     state.bullets = state.bullets.filter(b =>
       !b.dead &&
-      b.life > 0 &&
       b.y > -80
     );
 
@@ -961,8 +1175,8 @@
   }
 
   function entitySize(entity) {
-    if (entity.kind === 'boss') return 168;
-    if (entity.kind === 'midBoss') return 130;
+    if (entity.kind === 'boss') return 238;
+    if (entity.kind === 'midBoss') return 140;
     if (entity.kind === 'enemy' && entity.name === 'モブロック') return 92;
     if (entity.kind === 'enemy') return 84;
     if (entity.kind === 'gimmick') return 104;
@@ -1003,10 +1217,12 @@
 
   function drawHpNumber(entity, y, size) {
     const ratio = Math.max(0, entity.hp / entity.maxHp);
-    const barW = size * 0.78;
-    const barH = 8;
+    const barW = size * 0.72;
+    const barH = entity.kind === 'boss' ? 10 : 8;
     const barX = entity.x - barW / 2;
-    const barY = y + size / 2 + 6;
+    const barY = entity.kind === 'boss'
+      ? y + size * 0.34
+      : y + size * 0.42;
 
     ctx.fillStyle = 'rgba(0,0,0,.58)';
     roundRect(barX, barY, barW, barH, 6);
@@ -1019,18 +1235,18 @@
     ctx.fillStyle = '#fff';
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 4;
-    ctx.font = '900 16px system-ui';
+    ctx.font = entity.kind === 'boss' ? '900 18px system-ui' : '900 16px system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
     const hpText = String(Math.ceil(entity.hp));
-    ctx.strokeText(hpText, entity.x, barY + 10);
-    ctx.fillText(hpText, entity.x, barY + 10);
+    ctx.strokeText(hpText, entity.x, barY + barH + 2);
+    ctx.fillText(hpText, entity.x, barY + barH + 2);
   }
 
   function drawEntity(entity) {
     if (entity.kind === 'enemyBullet') {
-      ctx.fillStyle = '#ff4aff';
+      ctx.fillStyle = entity.color || '#ff4aff';
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 2;
 
