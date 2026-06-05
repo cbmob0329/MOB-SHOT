@@ -1,137 +1,11 @@
-了解です。今後は部分修正ではなく、必要ファイルを必ずフルで出します。
-今回は index.html と js/game.js を丸ごと置き換えしてください。
-
-index.html
-
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>MOB SHOT</title>
-  <link rel="stylesheet" href="css/style.css" />
-</head>
-<body>
-  <div id="app">
-    <section id="mainScreen" class="screen active">
-      <div class="main-bg"></div>
-      <div class="main-top">
-        <img id="titleImg" class="title-img" src="mt/menutitle.png" alt="MOB SHOT" />
-        <div class="fallback-title">MOB<br>SHOT</div>
-      </div>
-      <div class="main-status">
-        <div class="status-pill">
-          <span class="icon diamond"></span>
-          <span id="mainDiamond">0</span>
-        </div>
-        <div class="status-pill">
-          <span class="icon rank">R</span>
-          <span id="mainRank">1</span>
-        </div>
-        <div class="status-pill">
-          <span class="icon coin"></span>
-          <span id="mainCoin">0</span>
-        </div>
-      </div>
-      <div class="player-showcase">
-        <div class="player-glow"></div>
-        <img id="mainPlayer" src="play/playpink2.png" alt="PLAYER" />
-        <div class="fallback-player">MOB</div>
-      </div>
-      <nav class="right-menu">
-        <button id="sortieBtn" class="image-button sortie" type="button">
-          <img id="sortieImg" src="mt/menusta.png" alt="出撃" />
-          <span>出撃</span>
-        </button>
-        <button class="image-button disabled-btn" type="button">
-          <img id="shopImg" src="mt/menushop.png" alt="SHOP" />
-          <span>SHOP</span>
-        </button>
-        <button class="image-button disabled-btn" type="button">
-          <img id="equipImg" src="mt/menusoubi.png" alt="装備" />
-          <span>装備</span>
-        </button>
-        <button class="image-button disabled-btn" type="button">
-          <img id="petImg" src="mt/menupet.png" alt="ペット" />
-          <span>ペット</span>
-        </button>
-      </nav>
-      <nav class="bottom-menu">
-        <button class="bottom-button disabled-btn" type="button">
-          <img id="gachaImg" src="mt/menugacha.png" alt="ガチャ" />
-          <span>ガチャ</span>
-        </button>
-        <button class="bottom-button disabled-btn" type="button">
-          <img id="missionImg" src="mt/menumission.png" alt="ミッション" />
-          <span>ミッション</span>
-        </button>
-        <button class="bottom-button disabled-btn" type="button">
-          <img id="collectionImg" src="mt/menucolle.png" alt="コレクション" />
-          <span>コレクション</span>
-        </button>
-      </nav>
-    </section>
-    <section id="gameScreen" class="screen">
-      <canvas id="gameCanvas"></canvas>
-      <div class="game-hud">
-        <div class="hud-item">
-          <img id="hudStageImg" src="mt/stagestage.png" alt="STAGE" />
-          <span id="hudStage">1-1</span>
-        </div>
-        <div class="hud-item">
-          <img id="hudScoreImg" src="mt/stagescore.png" alt="SCORE" />
-          <span id="hudScore">0</span>
-        </div>
-        <div class="hud-item">
-          <img id="hudCoinImg" src="mt/stagecoin.png" alt="COIN" />
-          <span id="hudCoin">0</span>
-        </div>
-        <div class="hud-item">
-          <img id="hudLifeImg" src="mt/stagelife.png" alt="LIFE" />
-          <span id="hudLife">50</span>
-        </div>
-      </div>
-      <div id="phaseBanner" class="phase-banner"></div>
-      <button id="gameBackBtn" class="back-btn" type="button">メインへ</button>
-      <div class="skill-dummies">
-        <button class="skill-dummy" type="button">SKILL 1</button>
-        <button class="skill-dummy" type="button">SKILL 2</button>
-        <button class="skill-dummy" type="button">SKILL 3</button>
-      </div>
-      <div id="resultPanel" class="result-panel hidden">
-        <div class="result-card">
-          <h1 id="resultTitle">CLEAR!</h1>
-          <p id="resultText">ボス撃破！ステージクリア</p>
-          <div class="result-row">
-            <span>SCORE</span>
-            <b id="resultScore">0</b>
-          </div>
-          <div class="result-row">
-            <span>COIN</span>
-            <b id="resultCoin">0</b>
-          </div>
-          <button id="resultRetryBtn" type="button">もう一度</button>
-          <button id="resultHomeBtn" type="button">メインへ戻る</button>
-        </div>
-      </div>
-    </section>
-  </div>
-  <script src="js/data.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/stage-flow.js"></script>
-  <script src="js/game.js"></script>
-  <script src="js/main.js"></script>
-</body>
-</html>
-
-js/game.js
-
 'use strict';
+
 (function(){
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
   const D = window.MOBSHOT_DATA;
   const flow = new window.MobShotStageFlow();
+
   const hudStage = document.getElementById('hudStage');
   const hudScore = document.getElementById('hudScore');
   const hudCoin = document.getElementById('hudCoin');
@@ -142,6 +16,7 @@ js/game.js
   const resultText = document.getElementById('resultText');
   const resultScore = document.getElementById('resultScore');
   const resultCoin = document.getElementById('resultCoin');
+
   let W = 0;
   let H = 0;
   let DPR = 1;
@@ -150,7 +25,9 @@ js/game.js
   let frame = 0;
   let scroll = 0;
   let runCommitted = false;
+
   const images = new Map();
+
   const state = {
     hp: 50,
     maxHp: 50,
@@ -180,8 +57,10 @@ js/game.js
     particles: [],
     texts: []
   };
+
   function img(src) {
     if (!src) return null;
+
     if (!images.has(src)) {
       const image = new Image();
       image.src = src + '?v=20260605_fixed';
@@ -190,51 +69,67 @@ js/game.js
       };
       images.set(src, image);
     }
+
     return images.get(src);
   }
+
   function imageReady(image) {
     return image && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
   }
+
   function getPlayerBaseY() {
     return Math.max(H * 0.58, H - 148);
   }
+
   function rand(a, b) {
     return a + Math.random() * (b - a);
   }
+
   function intRand(a, b) {
     return Math.floor(rand(a, b + 1));
   }
+
   function pick(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
   }
+
   function clamp(v, a, b) {
     return Math.max(a, Math.min(b, v));
   }
+
   function weightedPick(list) {
     const total = list.reduce((sum, item) => sum + (item.weight || 1), 0);
     let roll = Math.random() * total;
+
     for (const item of list) {
       roll -= item.weight || 1;
       if (roll <= 0) return item;
     }
+
     return list[list.length - 1];
   }
+
   function resize() {
     DPR = Math.min(window.devicePixelRatio || 1, 2);
     W = window.innerWidth;
     H = window.innerHeight;
+
     canvas.width = Math.floor(W * DPR);
     canvas.height = Math.floor(H * DPR);
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
     state.player.y = getPlayerBaseY();
     state.player.targetY = getPlayerBaseY();
+
     if (!state.player.x) state.player.x = W / 2;
     if (!state.player.targetX) state.player.targetX = W / 2;
   }
+
   function resetRun() {
     frame = 0;
     scroll = 0;
     runCommitted = false;
+
     state.maxHp = D.player.maxHp;
     state.hp = D.player.maxHp;
     state.power = D.player.power;
@@ -243,22 +138,28 @@ js/game.js
     state.attackSpeed = D.player.attackSpeed;
     state.score = 0;
     state.coin = 0;
+
     state.player.x = W / 2;
     state.player.targetX = W / 2;
     state.player.y = getPlayerBaseY();
     state.player.targetY = getPlayerBaseY();
+
     state.shootCd = 0;
     state.entities.length = 0;
     state.bullets.length = 0;
     state.particles.length = 0;
     state.texts.length = 0;
+
     flow.reset();
+
     if (resultPanel) {
       resultPanel.classList.add('hidden');
     }
+
     const ev = flow.start();
     handleFlowEvent(ev);
   }
+
   function start() {
     resize();
     stopLoopOnly();
@@ -266,49 +167,62 @@ js/game.js
     resetRun();
     loop();
   }
+
   function stopLoopOnly() {
     if (raf) {
       cancelAnimationFrame(raf);
     }
     raf = 0;
   }
+
   function stop() {
     running = false;
     stopLoopOnly();
   }
+
   function showBanner(text) {
     if (!phaseBanner) return;
+
     phaseBanner.textContent = text;
     phaseBanner.classList.remove('show');
     void phaseBanner.offsetWidth;
     phaseBanner.classList.add('show');
   }
+
   function handleFlowEvent(ev) {
     if (!ev) return;
+
     showBanner(ev.text);
+
     if (ev.type === 'areaStart') {
       state.areaSpawn.nextEnemy = frame + 40;
       state.areaSpawn.nextGimmick = frame + 80;
       state.areaSpawn.nextChest = frame + 150;
       state.areaSpawn.endAt = frame + 430;
     }
+
     if (ev.type === 'gateStart') {
       spawnGatePair();
       state.gateEndAt = frame + 280;
     }
+
     if (ev.type === 'midBossStart') {
       spawnMidBoss();
     }
+
     if (ev.type === 'bossStart') {
       spawnBoss();
     }
+
     if (ev.type === 'clear') {
       finishRun(true);
     }
   }
+
   function spawnEnemy() {
     const def = pick(D.enemies.zako);
     const scale = 1 + flow.area * 0.08;
+
     state.entities.push({
       kind: 'enemy',
       name: def.name,
@@ -327,9 +241,11 @@ js/game.js
       bob: rand(0, Math.PI * 2)
     });
   }
+
   function spawnGimmick() {
     const def = pick(D.gimmicks);
     const scale = 1 + flow.area * 0.1;
+
     state.entities.push({
       kind: 'gimmick',
       name: def.name,
@@ -349,8 +265,10 @@ js/game.js
       bob: 0
     });
   }
+
   function spawnChest() {
     const def = pick(D.chests);
+
     state.entities.push({
       kind: 'chest',
       name: def.name,
@@ -370,8 +288,10 @@ js/game.js
       bob: 0
     });
   }
+
   function spawnGatePair() {
     let pool;
+
     if (flow.gate < 7) {
       pool = D.gates.filter(g =>
         g.type !== 'wide' &&
@@ -382,24 +302,32 @@ js/game.js
         if (g.type === 'wide') {
           return Object.assign({}, g, { weight: 0.05 });
         }
+
         if (g.type === 'skillmax') {
           return Object.assign({}, g, { weight: 0.02 });
         }
+
         return g;
       });
     }
+
     pool = pool.filter(g => !g.minRank || g.minRank <= 1);
+
     const a = weightedPick(pool);
     let b = weightedPick(pool);
     let guard = 0;
+
     while (b.type === a.type && guard < 20) {
       b = weightedPick(pool);
       guard++;
     }
+
     const pair = `gate-${frame}-${Math.random()}`;
+
     state.entities.push(makeGate(a, W * 0.31, pair));
     state.entities.push(makeGate(b, W * 0.69, pair));
   }
+
   function makeGate(def, x, pair) {
     return {
       kind: 'gate',
@@ -419,9 +347,11 @@ js/game.js
       bob: 0
     };
   }
+
   function spawnMidBoss() {
     const def = pick(D.enemies.midBoss);
     const hp = Math.ceil(def.hp * (flow.midBoss === 2 ? 1.35 : 1));
+
     state.entities.push({
       kind: 'midBoss',
       name: def.name,
@@ -441,8 +371,10 @@ js/game.js
       bob: 0
     });
   }
+
   function spawnBoss() {
     const def = D.enemies.boss;
+
     state.entities.push({
       kind: 'boss',
       name: def.name,
@@ -462,37 +394,50 @@ js/game.js
       bob: 0
     });
   }
+
   function applyGate(gate) {
     if (gate.type === 'power') {
       state.power += gate.value;
     }
+
     if (gate.type === 'range') {
       state.range += gate.value;
     }
+
     if (gate.type === 'rapid') {
       state.attackSpeed += 0.25 * gate.value;
     }
+
     if (gate.type === 'life') {
       state.hp = Math.min(state.maxHp, state.hp + gate.value);
     }
+
     if (gate.type === 'wide') {
       state.wide += gate.value;
     }
+
     addText(gate.name, state.player.x, state.player.y - 70, gate.color);
     burst(gate.x, gate.y, gate.color, 24);
+
     state.entities.forEach(e => {
       if (e.kind === 'gate' && e.pair === gate.pair) {
         e.dead = true;
       }
     });
   }
+
   function shoot() {
     state.shootCd--;
+
     if (state.shootCd > 0) return;
+
     state.shootCd = Math.max(7, Math.floor(22 / state.attackSpeed));
+
     const count = Math.max(1, state.wide);
+
     for (let i = 0; i < count; i++) {
       const offset = (i - (count - 1) / 2) * 26;
+
       state.bullets.push({
         x: state.player.x + offset,
         y: state.player.y - 30,
@@ -504,75 +449,95 @@ js/game.js
       });
     }
   }
+
   function updateFlow() {
     flow.update();
     const snap = flow.snapshot();
+
     if (snap.phase === 'area') {
       if (frame >= state.areaSpawn.nextEnemy) {
         spawnEnemy();
         state.areaSpawn.nextEnemy = frame + intRand(90, 145);
       }
+
       if (frame >= state.areaSpawn.nextGimmick) {
         spawnGimmick();
         state.areaSpawn.nextGimmick = frame + intRand(115, 175);
       }
+
       if (frame >= state.areaSpawn.nextChest) {
         if (Math.random() < 0.42) {
           spawnChest();
         }
+
         state.areaSpawn.nextChest = frame + intRand(230, 350);
       }
+
       if (frame >= state.areaSpawn.endAt) {
         handleFlowEvent(flow.completeArea());
       }
     }
+
     if (snap.phase === 'gate') {
       const gatesAlive = state.entities.some(e =>
         e.kind === 'gate' &&
         !e.dead
       );
+
       if (!gatesAlive || frame >= state.gateEndAt) {
         state.entities.forEach(e => {
           if (e.kind === 'gate') {
             e.dead = true;
           }
         });
+
         handleFlowEvent(flow.completeGate());
       }
     }
+
     if (snap.phase === 'midBoss') {
       const alive = state.entities.some(e =>
         e.kind === 'midBoss' &&
         !e.dead
       );
+
       if (!alive && snap.phaseFrame > 60) {
         handleFlowEvent(flow.completeMidBoss());
       }
     }
+
     if (snap.phase === 'boss') {
       const alive = state.entities.some(e =>
         e.kind === 'boss' &&
         !e.dead
       );
+
       if (!alive && snap.phaseFrame > 60) {
         handleFlowEvent(flow.completeBoss());
       }
     }
   }
+
   function update() {
     if (!running) return;
+
     frame++;
     scroll += 2.2;
+
     updateFlow();
     shoot();
+
     const p = state.player;
+
     p.targetY = getPlayerBaseY();
     p.x += (p.targetX - p.x) * 0.19;
     p.y += (p.targetY - p.y) * 0.20;
     p.x = clamp(p.x, W * 0.14, W * 0.86);
     p.y = getPlayerBaseY();
+
     for (const e of state.entities) {
       if (e.dead) continue;
+
       if (
         e.kind === 'enemy' ||
         e.kind === 'midBoss' ||
@@ -580,15 +545,19 @@ js/game.js
       ) {
         e.bob += 0.06;
       }
+
       if (e.kind === 'midBoss' || e.kind === 'boss') {
         if (e.y < e.targetY) {
           e.y += e.vy;
         } else {
           e.x += e.vx;
+
           if (e.x < W * 0.18 || e.x > W * 0.82) {
             e.vx *= -1;
           }
+
           e.shootCd--;
+
           if (e.shootCd <= 0) {
             e.shootCd = e.kind === 'boss' ? 54 : 82;
             enemyShot(e);
@@ -596,43 +565,54 @@ js/game.js
         }
       } else {
         e.y += e.vy;
+
         if (e.kind === 'enemy') {
           e.x += e.vx || 0;
+
           if (e.x < W * 0.16 || e.x > W * 0.84) {
             e.vx *= -1;
           }
         }
       }
     }
+
     for (const b of state.bullets) {
       b.y += b.vy;
       b.life--;
     }
+
     collideBullets();
     collidePlayer();
+
     for (const pt of state.particles) {
       pt.x += pt.vx;
       pt.y += pt.vy;
       pt.vy += 0.12;
       pt.life--;
     }
+
     for (const t of state.texts) {
       t.y -= 1.1;
       t.life--;
     }
+
     cleanup();
     updateHud();
+
     if (state.hp <= 0) {
       finishRun(false);
     }
   }
+
   function enemyShot(e) {
     const count = e.kind === 'boss' ? 3 : 1;
+
     for (let i = 0; i < count; i++) {
       const angleOffset = (i - (count - 1) / 2) * 0.34;
       const dx = state.player.x - e.x;
       const dy = state.player.y - e.y;
       const base = Math.atan2(dy, dx) + angleOffset;
+
       state.entities.push({
         kind: 'enemyBullet',
         x: e.x,
@@ -646,9 +626,11 @@ js/game.js
       });
     }
   }
+
   function collideBullets() {
     for (const b of state.bullets) {
       if (b.dead) continue;
+
       for (const e of state.entities) {
         if (
           e.dead ||
@@ -657,25 +639,33 @@ js/game.js
         ) {
           continue;
         }
+
         const hit = e.r
           ? Math.hypot(b.x - e.x, b.y - e.y) < e.r + b.r
           : Math.abs(b.x - e.x) < e.w / 2 &&
             Math.abs(b.y - e.y) < e.h / 2;
+
         if (!hit) continue;
+
         b.dead = true;
         e.hp -= b.dmg;
         burst(b.x, b.y, '#ffffff', 4);
+
         if (e.hp <= 0) {
           killEntity(e);
         }
+
         break;
       }
     }
   }
+
   function collidePlayer() {
     const p = state.player;
+
     for (const e of state.entities) {
       if (e.dead) continue;
+
       if (e.kind === 'gate') {
         if (
           Math.abs(p.x - e.x) < e.w / 2 &&
@@ -683,8 +673,10 @@ js/game.js
         ) {
           applyGate(e);
         }
+
         continue;
       }
+
       if (e.kind === 'enemyBullet') {
         if (Math.hypot(p.x - e.x, p.y - e.y) < p.r + e.r) {
           e.dead = true;
@@ -692,15 +684,19 @@ js/game.js
           addText(`-${e.dmg}`, p.x, p.y - 50, '#ff5b5b');
           burst(p.x, p.y, '#ff5b5b', 16);
         }
+
         continue;
       }
+
       if (e.kind === 'boss' || e.kind === 'midBoss') {
         continue;
       }
+
       const hit = e.r
         ? Math.hypot(p.x - e.x, p.y - e.y) < p.r + e.r
         : Math.abs(p.x - e.x) < e.w / 2 + p.r &&
           Math.abs(p.y - e.y) < e.h / 2 + p.r;
+
       if (hit) {
         e.dead = true;
         const dmg = Math.max(1, Math.ceil(e.hp));
@@ -710,26 +706,33 @@ js/game.js
       }
     }
   }
+
   function killEntity(e) {
     e.dead = true;
+
     burst(
       e.x,
       e.y,
       e.kind === 'boss' ? '#ff4aff' : '#ffe66b',
       e.kind === 'boss' ? 56 : 24
     );
+
     let coin = 0;
     const score = e.score || 0;
+
     if (e.kind === 'midBoss' || e.kind === 'boss') {
       coin = e.coin;
     } else {
       coin = intRand(e.coinMin || 1, e.coinMax || 3);
     }
+
     state.coin += coin;
     state.score += score;
+
     addText(`+${score} SCORE`, e.x, e.y - 24, '#6be6ff');
     addText(`+${coin} COIN`, e.x, e.y, '#ffcf5b');
   }
+
   function cleanup() {
     state.entities = state.entities.filter(e =>
       !e.dead &&
@@ -738,65 +741,85 @@ js/game.js
       e.x > -170 &&
       e.x < W + 170
     );
+
     state.bullets = state.bullets.filter(b =>
       !b.dead &&
       b.life > 0 &&
       b.y > -80
     );
+
     state.particles = state.particles.filter(p =>
       p.life > 0
     );
+
     state.texts = state.texts.filter(t =>
       t.life > 0
     );
   }
+
   function finishRun(clear) {
     if (runCommitted) return;
+
     runCommitted = true;
     running = false;
+
     if (clear && window.MobShotStorage) {
       window.MobShotStorage.addRunResult(state.score, state.coin);
     }
+
     if (window.MobShotMain && window.MobShotMain.refreshMainHud) {
       window.MobShotMain.refreshMainHud();
     }
+
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
+
     if (resultTitle) resultTitle.textContent = clear ? 'CLEAR!' : 'GAME OVER';
     if (resultText) resultText.textContent = clear ? 'ボス撃破！ステージクリア' : 'ライフがなくなりました';
     if (resultScore) resultScore.textContent = state.score.toLocaleString();
     if (resultCoin) resultCoin.textContent = state.coin.toLocaleString();
     if (resultPanel) resultPanel.classList.remove('hidden');
   }
+
   function goMainFromResult() {
     running = false;
     stopLoopOnly();
+
     if (resultPanel) {
       resultPanel.classList.add('hidden');
     }
+
     if (window.MobShotMain && window.MobShotMain.goMain) {
       window.MobShotMain.goMain();
       return;
     }
+
     document.querySelectorAll('.screen').forEach(screen => {
       screen.classList.remove('active');
     });
+
     const main =
       document.getElementById('mainScreen') ||
       document.getElementById('mainView');
+
     if (main) {
       main.classList.add('active');
     }
   }
+
   function bindResultButtons() {
     ['resultHomeBtn', 'gameBackBtn', 'backBtn'].forEach(id => {
       const btn = document.getElementById(id);
+
       if (!btn || btn.__mobShotBound) return;
+
       btn.__mobShotBound = true;
+
       btn.addEventListener('click', function(e){
         e.preventDefault();
         e.stopPropagation();
         goMainFromResult();
       });
+
       btn.addEventListener('pointerup', function(e){
         e.preventDefault();
         e.stopPropagation();
@@ -804,12 +827,14 @@ js/game.js
       }, { passive:false });
     });
   }
+
   function updateHud() {
     if (hudStage) hudStage.textContent = D.stage.id;
     if (hudScore) hudScore.textContent = Math.floor(state.score).toLocaleString();
     if (hudCoin) hudCoin.textContent = Math.floor(state.coin).toLocaleString();
     if (hudLife) hudLife.textContent = Math.max(0, Math.ceil(state.hp));
   }
+
   function addText(text, x, y, color) {
     state.texts.push({
       text,
@@ -819,6 +844,7 @@ js/game.js
       life: 48
     });
   }
+
   function burst(x, y, color, n) {
     for (let i = 0; i < n; i++) {
       state.particles.push({
@@ -831,14 +857,18 @@ js/game.js
       });
     }
   }
+
   function drawImageContain(image, centerX, centerY, boxW, boxH) {
     if (!imageReady(image)) return;
+
     const ratio = Math.min(
       boxW / image.naturalWidth,
       boxH / image.naturalHeight
     );
+
     const iw = image.naturalWidth * ratio;
     const ih = image.naturalHeight * ratio;
+
     ctx.drawImage(
       image,
       centerX - iw / 2,
@@ -847,6 +877,7 @@ js/game.js
       ih
     );
   }
+
   function roundRect(x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
@@ -856,17 +887,22 @@ js/game.js
     ctx.arcTo(x, y, x + w, y, r);
     ctx.closePath();
   }
+
   function drawBackground() {
     const bg = img(D.stage.background);
+
     if (imageReady(bg)) {
       const y1 = (scroll % H) - H;
+
       ctx.drawImage(bg, 0, y1, W, H);
       ctx.drawImage(bg, 0, y1 + H, W, H);
       ctx.drawImage(bg, 0, y1 + H * 2, W, H);
       return;
     }
+
     ctx.fillStyle = '#58ba48';
     ctx.fillRect(0, 0, W, H);
+
     ctx.fillStyle = '#3b9b37';
     ctx.beginPath();
     ctx.moveTo(W * 0.12, 0);
@@ -876,23 +912,29 @@ js/game.js
     ctx.closePath();
     ctx.fill();
   }
+
   function drawGate(gate) {
     const im = img(gate.image);
     const size = 118;
+
     if (imageReady(im)) {
       drawImageContain(im, gate.x, gate.y, size, size);
       return;
     }
+
     ctx.save();
     ctx.translate(gate.x, gate.y);
+
     ctx.globalAlpha = 0.95;
     ctx.fillStyle = gate.color || '#277dff';
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 5;
+
     ctx.beginPath();
     ctx.ellipse(0, 0, 54, 42, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
+
     ctx.globalAlpha = 1;
     ctx.fillStyle = '#fff';
     ctx.strokeStyle = '#000';
@@ -900,10 +942,13 @@ js/game.js
     ctx.font = '900 16px system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+
     ctx.strokeText(gate.name || 'GATE', 0, 0);
     ctx.fillText(gate.name || 'GATE', 0, 0);
+
     ctx.restore();
   }
+
   function entitySize(entity) {
     if (entity.kind === 'boss') return 168;
     if (entity.kind === 'midBoss') return 130;
@@ -913,169 +958,216 @@ js/game.js
     if (entity.kind === 'chest') return 82;
     return 70;
   }
+
   function drawFallbackEntity(entity, y, size) {
     ctx.save();
     ctx.translate(entity.x, y);
+
     ctx.fillStyle =
       entity.kind === 'chest' ? '#b77822' :
       entity.kind === 'gimmick' ? '#86664a' :
       entity.kind === 'midBoss' || entity.kind === 'boss' ? '#42215f' :
       '#151822';
+
     ctx.strokeStyle = '#111';
     ctx.lineWidth = 5;
+
     ctx.beginPath();
     ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
+
     ctx.fillStyle = '#fff';
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 3;
     ctx.font = '900 11px system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+
     ctx.strokeText(entity.name || 'NO IMG', 0, 0);
     ctx.fillText(entity.name || 'NO IMG', 0, 0);
+
     ctx.restore();
   }
+
   function drawHpNumber(entity, y, size) {
     const ratio = Math.max(0, entity.hp / entity.maxHp);
     const barW = size * 0.78;
     const barH = 8;
     const barX = entity.x - barW / 2;
     const barY = y + size / 2 + 6;
+
     ctx.fillStyle = 'rgba(0,0,0,.58)';
     roundRect(barX, barY, barW, barH, 6);
     ctx.fill();
+
     ctx.fillStyle = ratio > 0.45 ? '#ffe66b' : '#ff5b5b';
     roundRect(barX, barY, barW * ratio, barH, 6);
     ctx.fill();
+
     ctx.fillStyle = '#fff';
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 4;
     ctx.font = '900 16px system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
+
     const hpText = String(Math.ceil(entity.hp));
     ctx.strokeText(hpText, entity.x, barY + 10);
     ctx.fillText(hpText, entity.x, barY + 10);
   }
+
   function drawEntity(entity) {
     if (entity.kind === 'enemyBullet') {
       ctx.fillStyle = '#ff4aff';
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 2;
+
       ctx.beginPath();
       ctx.arc(entity.x, entity.y, entity.r, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
       return;
     }
+
     if (entity.kind === 'gate') {
       drawGate(entity);
       return;
     }
+
     const y =
       entity.kind === 'enemy' ||
       entity.kind === 'midBoss' ||
       entity.kind === 'boss'
         ? entity.y + Math.sin(entity.bob || 0) * 5
         : entity.y;
+
     const size = entitySize(entity);
     const im = entity.image ? img(entity.image) : null;
+
     if (imageReady(im)) {
       drawImageContain(im, entity.x, y, size, size);
     } else {
       drawFallbackEntity(entity, y, size);
     }
+
     if (entity.hp != null && entity.maxHp != null) {
       drawHpNumber(entity, y, size);
     }
   }
+
   function drawBullet(bullet) {
     const im = img(D.player.bulletImage);
+
     if (imageReady(im)) {
       drawImageContain(im, bullet.x, bullet.y, 18, 18);
       return;
     }
+
     ctx.fillStyle = '#ffdf35';
     ctx.strokeStyle = '#7a4300';
     ctx.lineWidth = 3;
+
     ctx.beginPath();
     ctx.arc(bullet.x, bullet.y, bullet.r, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
   }
+
   function drawPlayer() {
     const p = state.player;
     const im = img(D.player.image);
+
     ctx.fillStyle = 'rgba(0,0,0,.25)';
     ctx.beginPath();
     ctx.ellipse(p.x, p.y + 35, 40, 11, 0, 0, Math.PI * 2);
     ctx.fill();
+
     if (imageReady(im)) {
       drawImageContain(im, p.x, p.y - 8, 76, 92);
       return;
     }
+
     ctx.fillStyle = '#11131e';
     ctx.strokeStyle = '#2b3654';
     ctx.lineWidth = 5;
+
     ctx.beginPath();
     ctx.arc(p.x, p.y, 28, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
   }
+
   function drawParticle(particle) {
     ctx.globalAlpha = Math.max(0, particle.life / 34);
     ctx.fillStyle = particle.color;
     ctx.fillRect(particle.x, particle.y, 6, 6);
     ctx.globalAlpha = 1;
   }
+
   function drawText(textItem) {
     ctx.globalAlpha = Math.max(0, textItem.life / 48);
+
     ctx.fillStyle = textItem.color;
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 4;
     ctx.font = '900 18px system-ui';
     ctx.textAlign = 'center';
+
     ctx.strokeText(textItem.text, textItem.x, textItem.y);
     ctx.fillText(textItem.text, textItem.x, textItem.y);
+
     ctx.globalAlpha = 1;
   }
+
   function draw() {
     ctx.clearRect(0, 0, W, H);
+
     drawBackground();
+
     for (const entity of state.entities) {
       drawEntity(entity);
     }
+
     for (const bullet of state.bullets) {
       drawBullet(bullet);
     }
+
     drawPlayer();
+
     for (const particle of state.particles) {
       drawParticle(particle);
     }
+
     for (const textItem of state.texts) {
       drawText(textItem);
     }
   }
+
   function loop() {
     update();
     draw();
+
     if (running) {
       raf = requestAnimationFrame(loop);
     }
   }
+
   canvas.addEventListener('pointerdown', e => {
     state.player.targetX = e.clientX;
     state.player.targetY = getPlayerBaseY();
   });
+
   canvas.addEventListener('pointermove', e => {
     state.player.targetX = e.clientX;
     state.player.targetY = getPlayerBaseY();
   });
+
   window.addEventListener('resize', resize);
   window.addEventListener('DOMContentLoaded', bindResultButtons);
+
   bindResultButtons();
+
   window.MobShotGame = {
     start,
     stop,
