@@ -6,10 +6,8 @@
   <title>MOB SHOT</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
-
 <body>
   <div id="app">
-
     <section id="mainScreen" class="screen active">
       <div class="main-bg"></div>
 
@@ -23,12 +21,10 @@
           <span class="icon diamond"></span>
           <span id="mainDiamond">0</span>
         </div>
-
         <div class="status-pill">
           <span class="icon rank">R</span>
           <span id="mainRank">1</span>
         </div>
-
         <div class="status-pill">
           <span class="icon coin"></span>
           <span id="mainCoin">0</span>
@@ -53,12 +49,12 @@
           <span>出撃</span>
         </button>
 
-        <button class="image-button disabled-btn" type="button">
+        <button id="openShopBtn" class="image-button" type="button">
           <img id="shopImg" src="mt/menushop.png" alt="SHOP" />
           <span>SHOP</span>
         </button>
 
-        <button class="image-button disabled-btn" type="button">
+        <button id="openEquipBtn" class="image-button" type="button">
           <img id="equipImg" src="mt/menusoubi.png" alt="装備" />
           <span>装備</span>
         </button>
@@ -85,6 +81,48 @@
           <span>コレクション</span>
         </button>
       </nav>
+
+      <div id="shopModal" class="shop-modal hidden">
+        <div class="shop-modal-card">
+          <div class="shop-modal-head">
+            <h2>SHOP</h2>
+            <button id="shopCloseBtn" type="button">閉じる</button>
+          </div>
+
+          <div class="shop-tabs">
+            <button id="shopTabAvatar" class="shop-tab active" type="button">アバター</button>
+            <button id="shopTabRecord" class="shop-tab" type="button">レコード</button>
+            <button id="shopTabUpgrade" class="shop-tab" type="button">強化</button>
+          </div>
+
+          <p id="shopHelpText" class="shop-help">
+            アイテム購入と強化ができます。装備は装備メニューで行います。
+          </p>
+
+          <div id="shopList" class="shop-list"></div>
+        </div>
+      </div>
+
+      <div id="equipModal" class="equip-modal hidden">
+        <div class="equip-modal-card">
+          <div class="equip-modal-head">
+            <h2>装備</h2>
+            <button id="equipCloseBtn" type="button">閉じる</button>
+          </div>
+
+          <div class="equip-tabs">
+            <button id="equipTabAvatar" class="equip-tab active" type="button">アバター</button>
+            <button id="equipTabRecord" class="equip-tab" type="button">レコード</button>
+            <button id="equipTabSkill" class="equip-tab" type="button">スキル</button>
+          </div>
+
+          <p id="equipHelpText" class="equip-help">
+            所持しているアイテムを装備できます。
+          </p>
+
+          <div id="equipList" class="equip-list"></div>
+        </div>
+      </div>
 
       <div id="petEquipModal" class="pet-modal hidden">
         <div class="pet-modal-card">
@@ -157,13 +195,14 @@
         </div>
       </div>
     </section>
-
   </div>
 
   <script src="js/data.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/stage-flow.js"></script>
   <script src="js/pets.js"></script>
+  <script src="js/shop.js"></script>
+  <script src="js/equip.js"></script>
   <script src="js/game-pets.js"></script>
   <script src="js/game.js"></script>
   <script src="js/main.js"></script>
