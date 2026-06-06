@@ -35,6 +35,8 @@
     range: 3,
     wide: 1,
     attackSpeed: 1,
+    playerImage: 'play/playpink.png',
+    bulletImage: 'mt/atk.png',
     score: 0,
     coin: 0,
     player: {
@@ -63,7 +65,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260606_boss_range';
+      image.src = src + '?v=20260606_shop_equip';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -109,6 +111,47 @@
     return list[list.length - 1];
   }
 
+  function getShopBonus(){
+    if (window.MobShotShop && window.MobShotShop.getUpgradeBonus) {
+      return window.MobShotShop.getUpgradeBonus();
+    }
+
+    return {
+      power: 0,
+      range: 0,
+      rapid: 0,
+      hp: 0
+    };
+  }
+
+  function getEquipBonus(){
+    if (window.MobShotEquip && window.MobShotEquip.getEquipmentBonus) {
+      return window.MobShotEquip.getEquipmentBonus();
+    }
+
+    return {
+      power: 0,
+      rapid: 0,
+      hp: 0
+    };
+  }
+
+  function getEquippedAvatar(){
+    if (window.MobShotEquip && window.MobShotEquip.getEquippedAvatar) {
+      return window.MobShotEquip.getEquippedAvatar();
+    }
+
+    return null;
+  }
+
+  function getEquippedRecord(){
+    if (window.MobShotEquip && window.MobShotEquip.getEquippedRecord) {
+      return window.MobShotEquip.getEquippedRecord();
+    }
+
+    return null;
+  }
+
   function resize() {
     DPR = Math.min(window.devicePixelRatio || 1, 2);
     W = window.innerWidth;
@@ -130,12 +173,26 @@
     scroll = 0;
     runCommitted = false;
 
-    state.maxHp = D.player.maxHp;
-    state.hp = D.player.maxHp;
-    state.power = D.player.power;
-    state.range = D.player.range;
+    const shopBonus = getShopBonus();
+    const equipBonus = getEquipBonus();
+    const avatar = getEquippedAvatar();
+    const record = getEquippedRecord();
+
+    state.maxHp = D.player.maxHp + shopBonus.hp + equipBonus.hp;
+    state.hp = state.maxHp;
+
+    state.power = D.player.power + shopBonus.power + equipBonus.power;
+    state.range = D.player.range + shopBonus.range;
     state.wide = D.player.wide;
-    state.attackSpeed = D.player.attackSpeed;
+    state.attackSpeed = D.player.attackSpeed + shopBonus.rapid + equipBonus.rapid;
+
+    state.playerImage = avatar ? avatar.backImage : D.player.image;
+    state.bulletImage = D.player.bulletImage;
+
+    if (record && record.bulletImage) {
+      state.bulletImage = record.bulletImage;
+    }
+
     state.score = 0;
     state.coin = 0;
 
@@ -447,7 +504,7 @@
 
     if (state.shootCd > 0) return;
 
-    state.shootCd = Math.max(7, Math.floor(22 / state.attackSpeed));
+    state.shootCd = Math.max(7, Math.floor(22 / Math.max(0.5, state.attackSpeed)));
 
     const count = Math.max(1, state.wide);
     const maxTravel = 150 + state.range * 45;
@@ -1284,7 +1341,7 @@
   }
 
   function drawBullet(bullet) {
-    const im = img(D.player.bulletImage);
+    const im = img(state.bulletImage || D.player.bulletImage);
 
     if (imageReady(im)) {
       drawImageContain(im, bullet.x, bullet.y, 18, 18);
@@ -1303,7 +1360,7 @@
 
   function drawPlayer() {
     const p = state.player;
-    const im = img(D.player.image);
+    const im = img(state.playerImage || D.player.image);
 
     ctx.fillStyle = 'rgba(0,0,0,.25)';
     ctx.beginPath();
