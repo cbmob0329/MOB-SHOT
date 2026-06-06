@@ -46,30 +46,52 @@ button{font-family:inherit;touch-action:manipulation}
 .pet-equip-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .pet-slot{height:48px;border-radius:14px;background:linear-gradient(#233655,#111a2d);border:2px solid rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
 .pet-slot.empty:before{content:"EMPTY";font-size:10px;font-weight:1000;color:rgba(255,255,255,.45)}
-.pet-slot-icon{font-size:25px;line-height:1;filter:drop-shadow(0 3px 0 rgba(0,0,0,.35))}
 .pet-slot-name{position:absolute;left:2px;right:2px;bottom:2px;font-size:8px;font-weight:1000;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;text-shadow:0 2px 0 #000}
 
 .main-pet-float-layer{position:absolute;inset:0;pointer-events:none;z-index:4}
-.main-float-pet{position:absolute;width:40px;height:40px;border-radius:50%;background:rgba(12,18,32,.72);border:2px solid rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 6px 0 rgba(0,0,0,.20);animation:petFloat 1.8s ease-in-out infinite}
-.main-float-pet:nth-child(1){left:18%;top:55%;animation-delay:0s}
-.main-float-pet:nth-child(2){right:18%;top:50%;animation-delay:.22s}
-.main-float-pet:nth-child(3){left:48%;top:78%;animation-delay:.44s}
+.main-float-pet{position:absolute;width:48px;height:48px;border-radius:50%;background:rgba(12,18,32,.72);border:2px solid rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 6px 0 rgba(0,0,0,.20);animation:petFloat 1.8s ease-in-out infinite}
+.main-float-pet:nth-child(1){left:17%;top:53%;animation-delay:0s}
+.main-float-pet:nth-child(2){right:17%;top:48%;animation-delay:.22s}
+.main-float-pet:nth-child(3){left:47%;top:76%;animation-delay:.44s}
 
-.pet-modal{position:absolute;inset:0;z-index:80;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}
-.pet-modal.hidden{display:none}
-.pet-modal-card{width:min(92vw,430px);max-height:82svh;overflow:auto;border-radius:24px;background:linear-gradient(160deg,#1b2945,#0a1020);border:4px solid rgba(255,255,255,.34);box-shadow:0 22px 60px rgba(0,0,0,.55);padding:16px}
-.pet-modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
-.pet-modal-head h2{margin:0;font-size:24px;color:#ffe66b;text-shadow:0 3px 0 #000}
-.pet-modal-head button{border:0;border-radius:999px;background:#ff5b5b;color:#fff;font-weight:1000;padding:8px 13px;box-shadow:0 4px 0 #7c1212}
-.pet-modal-help{margin:0 0 12px;font-size:12px;font-weight:900;color:rgba(255,255,255,.8);line-height:1.45}
-.pet-owned-list{display:grid;gap:9px}
-.pet-card{display:grid;grid-template-columns:54px 1fr 82px;gap:10px;align-items:center;border-radius:18px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.16);padding:9px}
-.pet-card-icon{width:54px;height:54px;border-radius:16px;background:rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center;font-size:31px;border:2px solid rgba(255,255,255,.14)}
-.pet-card-name{font-size:16px;font-weight:1000}
-.pet-card-desc{margin-top:3px;font-size:11px;font-weight:900;color:#9deeff}
-.pet-card-price{margin-top:3px;font-size:10px;font-weight:900;color:#ffe66b}
-.pet-card-btn{border:0;border-radius:14px;background:linear-gradient(#ffe44d,#ff9418);box-shadow:0 5px 0 #874300;color:#351900;font-size:13px;font-weight:1000;padding:10px 6px}
-.pet-card-btn.equipped{background:linear-gradient(#60d9ff,#1774ee);box-shadow:0 5px 0 #084b9d;color:#fff}
+.pet-modal,.shop-modal,.equip-modal{position:absolute;inset:0;z-index:80;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.pet-modal.hidden,.shop-modal.hidden,.equip-modal.hidden{display:none}
+.pet-modal-card,.shop-modal-card,.equip-modal-card{width:min(92vw,440px);max-height:84svh;overflow:auto;border-radius:24px;background:linear-gradient(160deg,#1b2945,#0a1020);border:4px solid rgba(255,255,255,.34);box-shadow:0 22px 60px rgba(0,0,0,.55);padding:16px}
+.pet-modal-head,.shop-modal-head,.equip-modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.pet-modal-head h2,.shop-modal-head h2,.equip-modal-head h2{margin:0;font-size:24px;color:#ffe66b;text-shadow:0 3px 0 #000}
+.pet-modal-head button,.shop-modal-head button,.equip-modal-head button{border:0;border-radius:999px;background:#ff5b5b;color:#fff;font-weight:1000;padding:8px 13px;box-shadow:0 4px 0 #7c1212}
+.pet-modal-help,.shop-help,.equip-help{margin:0 0 12px;font-size:12px;font-weight:900;color:rgba(255,255,255,.8);line-height:1.45}
+
+.shop-tabs,.equip-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0 12px}
+.shop-tab,.equip-tab{border:0;border-radius:14px;background:linear-gradient(#2f4167,#14203a);border:2px solid rgba(255,255,255,.24);box-shadow:0 4px 0 rgba(0,0,0,.28);color:#fff;font-size:13px;font-weight:1000;padding:10px 4px}
+.shop-tab.active,.equip-tab.active{background:linear-gradient(#ffe44d,#ff9418);color:#351900;box-shadow:0 4px 0 #874300}
+
+.pet-owned-list,.shop-list,.equip-list{display:grid;gap:9px}
+.pet-card,.shop-card,.equip-card{display:grid;grid-template-columns:58px 1fr 86px;gap:10px;align-items:center;border-radius:18px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.16);padding:9px}
+.pet-card.equipped,.equip-card.equipped{border-color:#60d9ff;background:rgba(96,217,255,.13)}
+.shop-card.locked,.equip-card.locked{opacity:.65;filter:saturate(.55)}
+.pet-card-icon,.shop-card-icon,.equip-card-icon{width:58px;height:58px;border-radius:16px;background:rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center;font-size:31px;border:2px solid rgba(255,255,255,.14);overflow:hidden;position:relative}
+.shop-card-icon.record-icon,.equip-card-icon.record-icon{border-radius:50%;background:radial-gradient(circle,#ff4aa4 0 10%,#111 11% 19%,#3a3a3a 20% 22%,#050505 23% 38%,#333 39% 41%,#050505 42% 60%,#333 61% 63%,#050505 64%)}
+.shop-card-icon.upgrade-icon:before{content:"UP";font-size:16px;font-weight:1000;color:#ffe66b;text-shadow:0 2px 0 #000}
+.shop-card-icon.lock-icon:after,.equip-card-icon.lock-icon:after{content:"🔒";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.42);font-size:22px}
+.shop-card-icon img,.equip-card-icon img,.pet-card-icon img{width:46px;height:46px;object-fit:contain;display:block}
+.pet-card-name,.shop-card-name,.equip-card-name{font-size:15px;font-weight:1000;line-height:1.15}
+.pet-card-name span,.shop-card-name span,.equip-card-name span{font-size:11px;color:#ffe66b;margin-left:5px}
+.pet-card-desc,.shop-card-desc,.equip-card-desc{margin-top:3px;font-size:11px;font-weight:900;color:#9deeff;line-height:1.35}
+.pet-card-price,.shop-card-price,.equip-card-price{margin-top:3px;font-size:10px;font-weight:900;color:#ffe66b;line-height:1.3}
+.pet-card-spec,.shop-card-spec,.equip-card-spec{margin-top:3px;font-size:10px;font-weight:800;color:rgba(255,255,255,.82);line-height:1.35}
+.pet-card-actions,.shop-card-actions,.equip-card-actions{display:flex;flex-direction:column;gap:6px}
+.pet-card-btn,.shop-card-btn,.equip-card-btn{border:0;border-radius:14px;background:linear-gradient(#ffe44d,#ff9418);box-shadow:0 5px 0 #874300;color:#351900;font-size:12px;font-weight:1000;padding:10px 5px}
+.pet-card-btn.equipped,.equip-card-btn.equipped{background:linear-gradient(#60d9ff,#1774ee);box-shadow:0 5px 0 #084b9d;color:#fff}
+.pet-card-btn:disabled,.shop-card-btn:disabled,.equip-card-btn:disabled{opacity:.5}
+.pet-upgrade-btn{border:0;border-radius:12px;background:linear-gradient(#60d9ff,#1774ee);box-shadow:0 4px 0 #084b9d;color:#fff;font-size:11px;font-weight:1000;padding:8px 4px}
+.pet-upgrade-btn:disabled{opacity:.5}
+
+.pet-slot img{width:30px;height:30px;object-fit:contain;display:block}
+.main-float-pet img{width:32px;height:32px;object-fit:contain;display:block}
+.pet-slot-num{position:absolute;top:2px;left:2px;font-size:10px;font-weight:1000;color:#ffe66b;text-shadow:0 2px 0 #000}
+.pet-img-fallback{display:none;width:100%;height:100%;align-items:center;justify-content:center}
+.pet-lock-silhouette{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
 
 #gameCanvas{position:absolute;inset:0;width:100vw;height:100vh;background:#4fb84b}
 .game-hud{position:absolute;top:max(8px,env(safe-area-inset-top));left:8px;right:8px;z-index:20;display:grid;grid-template-columns:1.05fr 1.1fr 1fr 1fr;gap:5px;pointer-events:none}
@@ -95,8 +117,7 @@ button{font-family:inherit;touch-action:manipulation}
 .result-card button{width:100%;margin-top:10px;border:0;border-radius:999px;background:linear-gradient(#ffe44d,#ff9418);box-shadow:0 5px 0 #874300;color:#341900;font-size:18px;font-weight:1000;padding:12px}
 #resultRetryBtn{background:linear-gradient(#60d9ff,#1774ee);box-shadow:0 5px 0 #084b9d;color:#fff}
 
-.danger-save{background:linear-gradient(#ff5b5b,#9d1212)!important;border-color:rgba(255,255,255,.35)!important}
-.danger-save span{display:block!important;color:#fff!important}
+.delete-save-btn{position:absolute}
 
 @media (max-height:720px){
   .main-top{top:.8svh;height:10svh}
@@ -109,73 +130,6 @@ button{font-family:inherit;touch-action:manipulation}
   .bottom-menu{height:8.4svh}
   .pet-equip-panel{bottom:10.8svh}
   .pet-slot{height:42px}
-  .main-float-pet{width:34px;height:34px;font-size:20px}
-}/* ===== PET FIX ===== */
-
-.pet-slot img{
-  width:28px;
-  height:28px;
-  object-fit:contain;
-  display:block;
-}
-
-.main-float-pet img{
-  width:24px;
-  height:24px;
-  object-fit:contain;
-  display:block;
-}
-
-.pet-card-icon img{
-  width:42px;
-  height:42px;
-  object-fit:contain;
-  display:block;
-}
-
-.pet-slot-num{
-  position:absolute;
-  top:2px;
-  left:2px;
-  font-size:10px;
-  font-weight:1000;
-  color:#ffe66b;
-  text-shadow:0 2px 0 #000;
-}
-
-.pet-img-fallback{
-  display:none;
-  width:100%;
-  height:100%;
-  align-items:center;
-  justify-content:center;
-}
-
-.pet-lock-silhouette{
-  width:100%;
-  height:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.pet-card-actions{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-
-.pet-upgrade-btn{
-  border:0;
-  border-radius:12px;
-  background:linear-gradient(#60d9ff,#1774ee);
-  box-shadow:0 4px 0 #084b9d;
-  color:#fff;
-  font-size:11px;
-  font-weight:1000;
-  padding:8px 4px;
-}
-
-.pet-upgrade-btn:disabled{
-  opacity:.5;
+  .main-float-pet{width:40px;height:40px;font-size:20px}
+  .main-float-pet img{width:28px;height:28px}
 }
