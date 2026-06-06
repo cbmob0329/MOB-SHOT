@@ -76,10 +76,7 @@
     }
 
     refreshMainHud();
-
-    if (window.MobShotPets && window.MobShotPets.renderAll) {
-      window.MobShotPets.renderAll();
-    }
+    refreshMainVisuals();
   }
 
   function setImage(id, src){
@@ -131,6 +128,24 @@
 
     if (coin) {
       coin.textContent = Number(save.coin || 0).toLocaleString();
+    }
+  }
+
+  function refreshMainVisuals(){
+    if (window.MobShotEquip && window.MobShotEquip.updateMainPlayerImage) {
+      window.MobShotEquip.updateMainPlayerImage();
+    }
+
+    if (window.MobShotPets && window.MobShotPets.renderAll) {
+      window.MobShotPets.renderAll();
+    }
+
+    if (window.MobShotShop && window.MobShotShop.render) {
+      window.MobShotShop.render();
+    }
+
+    if (window.MobShotEquip && window.MobShotEquip.render) {
+      window.MobShotEquip.render();
     }
   }
 
@@ -198,10 +213,7 @@
 
     showScreen('main');
     refreshMainHud();
-
-    if (window.MobShotPets && window.MobShotPets.renderAll) {
-      window.MobShotPets.renderAll();
-    }
+    refreshMainVisuals();
   }
 
   function goGame(){
@@ -215,6 +227,32 @@
     }
 
     const modal = $('petEquipModal');
+
+    if (modal) {
+      modal.classList.remove('hidden');
+    }
+  }
+
+  function openShop(){
+    if (window.MobShotShop && window.MobShotShop.open) {
+      window.MobShotShop.open();
+      return;
+    }
+
+    const modal = $('shopModal');
+
+    if (modal) {
+      modal.classList.remove('hidden');
+    }
+  }
+
+  function openEquip(){
+    if (window.MobShotEquip && window.MobShotEquip.open) {
+      window.MobShotEquip.open();
+      return;
+    }
+
+    const modal = $('equipModal');
 
     if (modal) {
       modal.classList.remove('hidden');
@@ -275,6 +313,46 @@
     }, { passive:false });
   }
 
+  function bindShopButtonFallback(){
+    const shopBtn = $('openShopBtn');
+
+    if (!shopBtn || shopBtn.__mobShopFallbackBound) return;
+
+    shopBtn.__mobShopFallbackBound = true;
+
+    shopBtn.addEventListener('click', function(e){
+      runHandler(openShop, e);
+    }, { passive:false });
+
+    shopBtn.addEventListener('pointerup', function(e){
+      runHandler(openShop, e);
+    }, { passive:false });
+
+    shopBtn.addEventListener('touchend', function(e){
+      runHandler(openShop, e);
+    }, { passive:false });
+  }
+
+  function bindEquipButtonFallback(){
+    const equipBtn = $('openEquipBtn');
+
+    if (!equipBtn || equipBtn.__mobEquipFallbackBound) return;
+
+    equipBtn.__mobEquipFallbackBound = true;
+
+    equipBtn.addEventListener('click', function(e){
+      runHandler(openEquip, e);
+    }, { passive:false });
+
+    equipBtn.addEventListener('pointerup', function(e){
+      runHandler(openEquip, e);
+    }, { passive:false });
+
+    equipBtn.addEventListener('touchend', function(e){
+      runHandler(openEquip, e);
+    }, { passive:false });
+  }
+
   function bindResultButtons(){
     const retry = $('resultRetryBtn');
 
@@ -317,7 +395,7 @@
       e.stopPropagation();
 
       const ok = confirm(
-        'セーブデータを削除しますか？\nコイン・スコア・ランク・ペット状態などが初期化されます。'
+        'セーブデータを削除しますか？\nコイン・スコア・ランク・ペット・ショップ・装備状態などが初期化されます。'
       );
 
       if (!ok) return;
@@ -326,13 +404,31 @@
       localStorage.removeItem('mobshot_save');
       localStorage.removeItem('mobshot_meta');
       localStorage.removeItem('MOBSHOT_SAVE');
+
       localStorage.removeItem('mobshot_pet_state_v3');
       localStorage.removeItem('mobshot_pet_equip_test');
       localStorage.removeItem('mobshot_pet_equip_test_v2');
 
+      localStorage.removeItem('mobshot_shop_state_v1');
+      localStorage.removeItem('mobshot_equip_state_v1');
+
       alert('セーブデータを削除しました。');
       location.reload();
     }, { passive:false });
+  }
+
+  function initModules(){
+    if (window.MobShotShop && window.MobShotShop.init) {
+      window.MobShotShop.init();
+    }
+
+    if (window.MobShotEquip && window.MobShotEquip.init) {
+      window.MobShotEquip.init();
+    }
+
+    if (window.MobShotPets && window.MobShotPets.init) {
+      window.MobShotPets.init();
+    }
   }
 
   function init(){
@@ -341,24 +437,22 @@
     refreshMainHud();
 
     createDeleteSaveButton();
-
-    if (window.MobShotPets && window.MobShotPets.init) {
-      window.MobShotPets.init();
-    }
+    initModules();
 
     wireButton(['sortieBtn', 'btnSortie', 'mainSortieBtn'], goGame);
     wireButton(['backBtn', 'gameBackBtn'], goMain);
 
+    bindShopButtonFallback();
+    bindEquipButtonFallback();
     bindPetButtonFallback();
     bindResultButtons();
     bindDeleteSave();
 
+    refreshMainVisuals();
+
     window.addEventListener('mobshot:saveUpdated', function(){
       refreshMainHud();
-
-      if (window.MobShotPets && window.MobShotPets.renderAll) {
-        window.MobShotPets.renderAll();
-      }
+      refreshMainVisuals();
     });
   }
 
@@ -367,8 +461,11 @@
   window.MobShotMain = {
     showScreen,
     refreshMainHud,
+    refreshMainVisuals,
     goMain,
     goGame,
+    openShop,
+    openEquip,
     openPetEquip
   };
 })();
