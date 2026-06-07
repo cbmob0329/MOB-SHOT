@@ -71,7 +71,7 @@
           <span>ガチャ</span>
         </button>
 
-        <button class="bottom-button disabled-btn" type="button">
+        <button id="openMissionBtn" class="bottom-button" type="button">
           <img id="missionImg" src="mt/menumission.png" alt="ミッション" />
           <span>ミッション</span>
         </button>
@@ -121,6 +121,29 @@
           </p>
 
           <div id="equipList" class="equip-list"></div>
+        </div>
+      </div>
+
+      <div id="missionModal" class="mission-modal hidden">
+        <div class="mission-modal-card">
+          <div class="mission-modal-head">
+            <h2>ミッション</h2>
+            <button id="missionCloseBtn" type="button">閉じる</button>
+          </div>
+
+          <div class="mission-tabs">
+            <button id="missionTabStage" class="mission-tab active" type="button">ステージ</button>
+            <button id="missionTabDestroy" class="mission-tab" type="button">撃破</button>
+            <button id="missionTabGate" class="mission-tab" type="button">ゲート</button>
+            <button id="missionTabRank" class="mission-tab" type="button">ランク</button>
+            <button id="missionTabCoin" class="mission-tab" type="button">コイン</button>
+          </div>
+
+          <p id="missionHelpText" class="mission-help">
+            条件達成後に「受け取る」で報酬を獲得できます。
+          </p>
+
+          <div id="missionList" class="mission-list"></div>
         </div>
       </div>
 
@@ -204,6 +227,7 @@
   <script src="js/pets.js"></script>
   <script src="js/shop.js"></script>
   <script src="js/equip.js"></script>
+  <script src="js/mission.js"></script>
 
   <script src="js/game-pets.js"></script>
   <script src="js/game-boss.js"></script>
