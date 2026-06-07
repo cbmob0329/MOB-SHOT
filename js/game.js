@@ -65,7 +65,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260607_split_core';
+      image.src = src + '?v=20260607_mission';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -146,6 +146,34 @@
     }
 
     return null;
+  }
+
+  function getStageAreaKey(){
+    const stage = D.stage || {};
+    const area = String(stage.areaKey || stage.areaType || stage.name || '').toLowerCase();
+
+    if (area.includes('草原') || area.includes('grass')) return 'grass';
+    if (area.includes('砂漠') || area.includes('desert')) return 'desert';
+    if (area.includes('田舎') || area.includes('town')) return 'town';
+    if (area.includes('ネオン') || area.includes('neon')) return 'neon';
+    if (area.includes('マグマ') || area.includes('magma')) return 'magma';
+    if (area.includes('魔王') || area.includes('castle')) return 'castle';
+
+    return 'grass';
+  }
+
+  function getStageNo(){
+    const stage = D.stage || {};
+
+    if (stage.stageNo != null) return Number(stage.stageNo || 1);
+    if (stage.no != null) return Number(stage.no || 1);
+    if (stage.number != null) return Number(stage.number || 1);
+
+    const id = String(stage.id || '1-1');
+    const parts = id.split('-');
+    const last = Number(parts[parts.length - 1] || 1);
+
+    return Math.max(1, last || 1);
   }
 
   function makeTools(){
@@ -522,8 +550,16 @@
     runCommitted = true;
     running = false;
 
+    if (clear && window.MobShotMission && window.MobShotMission.onStageClear) {
+      window.MobShotMission.onStageClear(getStageAreaKey(), getStageNo());
+    }
+
     if (window.MobShotStorage) {
       window.MobShotStorage.addRunResult(state.score, state.coin);
+    }
+
+    if (window.MobShotMission && window.MobShotMission.addEarnedCoin) {
+      window.MobShotMission.addEarnedCoin(state.coin);
     }
 
     if (window.MobShotMain && window.MobShotMain.refreshMainHud) {
