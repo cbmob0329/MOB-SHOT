@@ -26,6 +26,10 @@
       state.wide += gate.value;
     }
 
+    if (window.MobShotMission && window.MobShotMission.onGateTaken) {
+      window.MobShotMission.onGateTaken();
+    }
+
     addText(gate.name, state.player.x, state.player.y - 70, gate.color);
     burst(gate.x, gate.y, gate.color, 24);
 
@@ -204,13 +208,17 @@
     const score = e.score || 0;
 
     if (e.kind === 'midBoss' || e.kind === 'boss') {
-      coin = e.coin;
+      coin = Number(e.coin || 0);
     } else {
       coin = intRand(e.coinMin || 1, e.coinMax || 3);
     }
 
     state.coin += coin;
     state.score += score;
+
+    if (window.MobShotMission && window.MobShotMission.onEntityKilled) {
+      window.MobShotMission.onEntityKilled(e, coin);
+    }
 
     addText(`+${score} SCORE`, e.x, e.y - 24, '#6be6ff');
     addText(`+${coin} COIN`, e.x, e.y, '#ffcf5b');
