@@ -147,6 +147,10 @@
     if (window.MobShotEquip && window.MobShotEquip.render) {
       window.MobShotEquip.render();
     }
+
+    if (window.MobShotMission && window.MobShotMission.render) {
+      window.MobShotMission.render();
+    }
   }
 
   function runHandler(handler, e){
@@ -259,6 +263,19 @@
     }
   }
 
+  function openMission(){
+    if (window.MobShotMission && window.MobShotMission.open) {
+      window.MobShotMission.open();
+      return;
+    }
+
+    const modal = $('missionModal');
+
+    if (modal) {
+      modal.classList.remove('hidden');
+    }
+  }
+
   function createDeleteSaveButton(){
     if (!mainScreen) return;
 
@@ -353,6 +370,26 @@
     }, { passive:false });
   }
 
+  function bindMissionButtonFallback(){
+    const missionBtn = $('openMissionBtn');
+
+    if (!missionBtn || missionBtn.__mobMissionFallbackBound) return;
+
+    missionBtn.__mobMissionFallbackBound = true;
+
+    missionBtn.addEventListener('click', function(e){
+      runHandler(openMission, e);
+    }, { passive:false });
+
+    missionBtn.addEventListener('pointerup', function(e){
+      runHandler(openMission, e);
+    }, { passive:false });
+
+    missionBtn.addEventListener('touchend', function(e){
+      runHandler(openMission, e);
+    }, { passive:false });
+  }
+
   function bindResultButtons(){
     const retry = $('resultRetryBtn');
 
@@ -395,7 +432,7 @@
       e.stopPropagation();
 
       const ok = confirm(
-        'セーブデータを削除しますか？\nコイン・スコア・ランク・ペット・ショップ・装備状態などが初期化されます。'
+        'セーブデータを削除しますか？\nコイン・スコア・ランク・ペット・ショップ・装備・ミッション状態などが初期化されます。'
       );
 
       if (!ok) return;
@@ -411,6 +448,7 @@
 
       localStorage.removeItem('mobshot_shop_state_v1');
       localStorage.removeItem('mobshot_equip_state_v1');
+      localStorage.removeItem('mobshot_mission_state_v1');
 
       alert('セーブデータを削除しました。');
       location.reload();
@@ -424,6 +462,10 @@
 
     if (window.MobShotEquip && window.MobShotEquip.init) {
       window.MobShotEquip.init();
+    }
+
+    if (window.MobShotMission && window.MobShotMission.init) {
+      window.MobShotMission.init();
     }
 
     if (window.MobShotPets && window.MobShotPets.init) {
@@ -444,7 +486,9 @@
 
     bindShopButtonFallback();
     bindEquipButtonFallback();
+    bindMissionButtonFallback();
     bindPetButtonFallback();
+
     bindResultButtons();
     bindDeleteSave();
 
@@ -466,6 +510,7 @@
     goGame,
     openShop,
     openEquip,
+    openMission,
     openPetEquip
   };
 })();
