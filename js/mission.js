@@ -196,7 +196,7 @@
           tab: 'stage',
           icon: 'ST',
           title: `${area.name}${target}クリア`,
-          desc: `${area.name}ステージ${target}をクリア`,
+          desc: `${area.name}ステージ${target}までクリア`,
           currentKey: area.key,
           currentType: 'stage',
           target,
@@ -213,7 +213,7 @@
         tab: 'stage',
         icon: '99',
         title: `${area.name}99クリア`,
-        desc: `${area.name}ステージ99をクリア`,
+        desc: `${area.name}ステージ99までクリア`,
         currentKey: area.key,
         currentType: 'stage',
         target: 99,
@@ -583,8 +583,14 @@
 
   function recordStageClear(areaKey, stageNo){
     const state = loadState();
+
+    areaKey = areaKey || 'grass';
+    stageNo = Math.max(1, Math.min(99, Number(stageNo || 0)));
+
     const current = Number(state.stageClear[areaKey] || 0);
-    state.stageClear[areaKey] = Math.max(current, Number(stageNo || 0));
+
+    state.stageClear[areaKey] = Math.max(current, stageNo);
+
     saveState(state);
   }
 
