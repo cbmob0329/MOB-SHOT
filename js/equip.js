@@ -2,207 +2,412 @@
 
 (function(){
   const EQUIP_SAVE_KEY = 'mobshot_equip_state_v1';
+  const SHOP_SAVE_KEY = 'mobshot_shop_state_v1';
 
   let currentTab = 'avatar';
+
+  const AVATARS = [
+    {
+      key: 'pink',
+      name: 'ピンクモデル',
+      rank: 1,
+      price: 0,
+      menuImage: 'play/playpink2.png',
+      backImage: 'play/playpink.png',
+      initial: true
+    },
+    {
+      key: 'blue',
+      name: 'ブルーモデル',
+      rank: 1,
+      price: 1000,
+      menuImage: 'play/playblue2.png',
+      backImage: 'play/playblue.png'
+    },
+    {
+      key: 'purple',
+      name: 'パープルモデル',
+      rank: 1,
+      price: 1000,
+      menuImage: 'play/playpar2.png',
+      backImage: 'play/playpar.png'
+    },
+    {
+      key: 'yellow',
+      name: 'イエローモデル',
+      rank: 1,
+      price: 1000,
+      menuImage: 'play/playye2.png',
+      backImage: 'play/playye.png'
+    },
+    {
+      key: 'slime',
+      name: 'スライムモデル',
+      rank: 5,
+      price: 5000,
+      menuImage: 'play/playsura2.png',
+      backImage: 'play/playsura.png'
+    },
+    {
+      key: 'hero',
+      name: '勇者モデル',
+      rank: 10,
+      price: 10000,
+      menuImage: 'play/playyu2.png',
+      backImage: 'play/playyu.png'
+    },
+    {
+      key: 'mobbr',
+      name: 'MOB BRモデル',
+      rank: 15,
+      price: 15000,
+      menuImage: 'play/playbr2.png',
+      backImage: 'play/playbr.png'
+    }
+  ];
+
+  const RECORDS = [
+    {
+      key: 'iron',
+      name: '鉄の弾',
+      rank: 1,
+      price: 0,
+      power: 0,
+      rapid: 0,
+      hp: 0,
+      bulletImage: '',
+      initial: true
+    },
+    {
+      key: 'hinotama',
+      name: '火の玉',
+      rank: 1,
+      price: 1000,
+      power: 1,
+      rapid: 0,
+      hp: 0,
+      bulletImage: 'atk/hinotama.png'
+    },
+    {
+      key: 'recordfire',
+      name: 'レコードファイア',
+      rank: 3,
+      price: 3000,
+      power: 2,
+      rapid: 0,
+      hp: 0,
+      bulletImage: 'atk/record.png'
+    },
+    {
+      key: 'rainbow',
+      name: 'レインボーファイア',
+      rank: 5,
+      price: 3000,
+      power: 2,
+      rapid: 0,
+      hp: 0,
+      bulletImage: 'atk/bow.png'
+    },
+    {
+      key: 'wataame',
+      name: 'WATAAME!!',
+      rank: 10,
+      price: 0,
+      power: 2,
+      rapid: 2,
+      hp: 0,
+      bulletImage: 'atk/wata.png'
+    },
+    {
+      key: 'garagara',
+      name: 'ガラガラの旅',
+      rank: 10,
+      price: 0,
+      power: 3,
+      rapid: 2,
+      hp: 0,
+      bulletImage: 'atk/garagara.png'
+    },
+    {
+      key: 'book',
+      name: '読みかけの本',
+      rank: 10,
+      price: 0,
+      power: 3,
+      rapid: 1,
+      hp: 50,
+      bulletImage: 'atk/book.png'
+    },
+    {
+      key: 'rpg',
+      name: 'MOB RPG',
+      rank: 10,
+      price: 0,
+      power: 4,
+      rapid: 0,
+      hp: 0,
+      bulletImage: 'atk/rpg.png'
+    },
+    {
+      key: 'iyo',
+      name: '伊予ノ国',
+      rank: 20,
+      price: 0,
+      power: 2,
+      rapid: 0,
+      hp: 150,
+      bulletImage: 'atk/iyo.png'
+    },
+    {
+      key: 'realize',
+      name: 'Realize',
+      rank: 20,
+      price: 0,
+      power: 4,
+      rapid: 0,
+      hp: 0,
+      bulletImage: 'atk/rea.png'
+    },
+    {
+      key: 'portal',
+      name: 'Portal',
+      rank: 20,
+      price: 0,
+      power: 1,
+      rapid: 4,
+      hp: 0,
+      bulletImage: 'atk/portal.png'
+    },
+    {
+      key: 'pb2',
+      name: 'PB2',
+      rank: 20,
+      price: 0,
+      power: 2,
+      rapid: 3,
+      hp: 100,
+      bulletImage: 'atk/pb2.png'
+    }
+  ];
 
   function $(id){
     return document.getElementById(id);
   }
 
-  function defaultState(){
+  function defaultEquipState(){
     return {
       avatar: 'pink',
-      record: 'iron',
-      skill: null
+      record: 'iron'
     };
   }
 
-  function loadState(){
-    let state = defaultState();
+  function defaultShopState(){
+    const avatars = {};
+    const records = {};
+
+    AVATARS.forEach(item => {
+      avatars[item.key] = !!item.initial;
+    });
+
+    RECORDS.forEach(item => {
+      records[item.key] = true;
+    });
+
+    return {
+      avatars,
+      records
+    };
+  }
+
+  function loadEquipState(){
+    let state = defaultEquipState();
 
     try {
       const raw = localStorage.getItem(EQUIP_SAVE_KEY);
 
       if (raw) {
-        const parsed = JSON.parse(raw);
-        state = Object.assign(state, parsed || {});
+        state = Object.assign(state, JSON.parse(raw) || {});
       }
     } catch(e) {}
 
-    if (!state.avatar) state.avatar = 'pink';
-    if (!state.record) state.record = 'iron';
+    if (!getAvatar(state.avatar)) {
+      state.avatar = 'pink';
+    }
+
+    if (!getRecord(state.record)) {
+      state.record = 'iron';
+    }
 
     return state;
   }
 
-  function saveState(state){
+  function saveEquipState(state){
     try {
       localStorage.setItem(EQUIP_SAVE_KEY, JSON.stringify(state));
     } catch(e) {}
   }
 
-  function refreshMain(){
-    if (window.MobShotMain && window.MobShotMain.refreshMainHud) {
-      window.MobShotMain.refreshMainHud();
-    }
+  function loadShopState(){
+    let state = defaultShopState();
 
-    updateMainPlayerImage();
+    try {
+      const raw = localStorage.getItem(SHOP_SAVE_KEY);
 
-    window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        state = Object.assign(state, parsed || {});
+        state.avatars = Object.assign(defaultShopState().avatars, parsed.avatars || {});
+        state.records = Object.assign(defaultShopState().records, parsed.records || {});
+      }
+    } catch(e) {}
+
+    return state;
   }
 
-  function updateMainPlayerImage(){
-    const mainPlayer = $('mainPlayer');
-    const equipped = loadState();
-
-    if (!mainPlayer) return;
-    if (!window.MobShotShop || !window.MobShotShop.getAvatar) return;
-
-    const avatar = window.MobShotShop.getAvatar(equipped.avatar);
-
-    if (!avatar) return;
-
-    mainPlayer.src = avatar.menuImage;
-    mainPlayer.style.display = 'block';
+  function getAvatar(key){
+    return AVATARS.find(item => item.key === key) || null;
   }
 
-  function isAvatarOwned(key){
-    if (!window.MobShotShop || !window.MobShotShop.isAvatarOwned) {
-      return key === 'pink';
-    }
-
-    return window.MobShotShop.isAvatarOwned(key);
+  function getRecord(key){
+    return RECORDS.find(item => item.key === key) || null;
   }
 
-  function isRecordOwned(key){
-    if (!window.MobShotShop || !window.MobShotShop.isRecordOwned) {
-      return key === 'iron';
+  function getSave(){
+    if (window.MobShotStorage && window.MobShotStorage.load) {
+      return window.MobShotStorage.load();
     }
 
-    return window.MobShotShop.isRecordOwned(key);
+    return {
+      rank: 1,
+      coin: 0,
+      diamond: 0,
+      totalScore: 0,
+      bestScore: 0
+    };
   }
 
-  function equipAvatar(key){
-    if (!isAvatarOwned(key)) {
-      alert('未所持です。ショップで購入してください。');
-      return;
+  function isOwned(type, key){
+    const shop = loadShopState();
+
+    if (type === 'avatar') {
+      return !!shop.avatars[key];
     }
 
-    const state = loadState();
-    state.avatar = key;
-    saveState(state);
-
-    refreshMain();
-    render();
-  }
-
-  function equipRecord(key){
-    if (!isRecordOwned(key)) {
-      alert('未所持です。ショップで購入してください。');
-      return;
+    if (type === 'record') {
+      return !!shop.records[key];
     }
 
-    const state = loadState();
-    state.record = key;
-    saveState(state);
-
-    refreshMain();
-    render();
+    return false;
   }
 
   function getEquippedAvatar(){
-    const state = loadState();
-
-    if (!window.MobShotShop || !window.MobShotShop.getAvatar) {
-      return null;
-    }
-
-    return window.MobShotShop.getAvatar(state.avatar);
+    const state = loadEquipState();
+    return getAvatar(state.avatar) || getAvatar('pink');
   }
 
   function getEquippedRecord(){
-    const state = loadState();
-
-    if (!window.MobShotShop || !window.MobShotShop.getRecord) {
-      return null;
-    }
-
-    return window.MobShotShop.getRecord(state.record);
+    const state = loadEquipState();
+    return getRecord(state.record) || getRecord('iron');
   }
 
   function getEquipmentBonus(){
     const record = getEquippedRecord();
 
     return {
-      power: record ? Number(record.power || 0) : 0,
-      rapid: record ? Number(record.rapid || 0) : 0,
-      hp: record ? Number(record.hp || 0) : 0
+      power: Number(record.power || 0),
+      rapid: Number(record.rapid || 0),
+      hp: Number(record.hp || 0)
     };
   }
 
-  function avatarIcon(item, locked){
-    const lock = locked ? ' lock-icon' : '';
+  function updateMainPlayerImage(){
+    const avatar = getEquippedAvatar();
+    const img = $('mainPlayer');
 
-    return `
-      <div class="equip-card-icon${lock}">
-        <img src="${item.menuImage}" alt="${item.name}" onerror="this.style.display='none';">
-      </div>
-    `;
+    if (img && avatar && avatar.menuImage) {
+      img.style.display = 'block';
+      img.src = avatar.menuImage;
+    }
   }
 
-  function recordIcon(item, locked){
-    const lock = locked ? ' lock-icon' : '';
+  function itemImageHtml(item, type){
+    if (type === 'avatar') {
+      return `<img src="${item.menuImage}" alt="${item.name}" onerror="this.style.display='none';">`;
+    }
 
-    return `
-      <div class="equip-card-icon record-icon${lock}">
-        <span style="font-size:10px;font-weight:1000;color:#fff;text-shadow:0 2px 0 #000;text-align:center;line-height:1.05;">${item.name}</span>
-      </div>
-    `;
+    if (type === 'record') {
+      return `<div class="record-disc-small"></div>`;
+    }
+
+    if (type === 'skill') {
+      return `<img src="${item.image}" alt="${item.name}" onerror="this.style.display='none';">`;
+    }
+
+    return '';
   }
 
-  function renderAvatar(){
+  function skillSpecText(skill){
+    if (!window.MobShotSkills || !window.MobShotSkills.getSkillRuntimeData) {
+      return '';
+    }
+
+    const data = window.MobShotSkills.getSkillRuntimeData(skill.key);
+
+    if (!data) return '未所持';
+
+    return `Lv${data.level} / +${data.plus} / CT${data.cooldown}秒`;
+  }
+
+  function renderAvatarList(){
     const list = $('equipList');
     if (!list) return;
 
-    const state = loadState();
-    const avatars =
-      window.MobShotShop && window.MobShotShop.AVATAR_MASTER
-        ? window.MobShotShop.AVATAR_MASTER
-        : [];
+    const save = getSave();
+    const rank = Number(save.rank || 1);
+    const equip = loadEquipState();
 
     list.innerHTML = '';
 
-    avatars.forEach(item => {
-      const owned = isAvatarOwned(item.key);
-      const equipped = state.avatar === item.key;
-      const locked = !owned;
+    AVATARS.forEach(item => {
+      const owned = isOwned('avatar', item.key);
+      const rankOk = rank >= item.rank;
+      const equipped = equip.avatar === item.key;
 
       const card = document.createElement('div');
+
       card.className =
         'equip-card' +
         (equipped ? ' equipped' : '') +
-        (locked ? ' locked' : '');
+        (!owned || !rankOk ? ' locked' : '');
 
       card.innerHTML = `
-        ${avatarIcon(item, locked)}
+        <div class="equip-card-icon ${!owned || !rankOk ? 'lock-icon' : ''}">
+          ${itemImageHtml(item, 'avatar')}
+        </div>
+
         <div class="equip-card-body">
           <div class="equip-card-name">${item.name}</div>
-          <div class="equip-card-desc">${item.desc || '能力変化なし'}</div>
-          <div class="equip-card-spec">${owned ? '所持中' : '未所持'}</div>
-          <div class="equip-card-price">${equipped ? '現在装備中' : '装備メニュー'}</div>
+          <div class="equip-card-desc">見た目変更のみ / 能力影響なし</div>
+          <div class="equip-card-price">${rankOk ? '所持アイテム' : `Rank${item.rank}で解放`}</div>
+          <div class="equip-card-spec">${owned ? '所持中' : '未所持'} ${equipped ? '/ 装備中' : ''}</div>
         </div>
+
         <div class="equip-card-actions">
-          <button type="button" class="equip-card-btn ${equipped ? 'equipped' : ''}" ${locked || equipped ? 'disabled' : ''}>
-            ${equipped ? '装備中' : locked ? 'LOCK' : '装備'}
+          <button type="button" class="equip-card-btn ${equipped ? 'equipped' : ''}" ${!owned || !rankOk || equipped ? 'disabled' : ''}>
+            ${equipped ? '装備中' : owned && rankOk ? '装備' : 'LOCK'}
           </button>
         </div>
       `;
 
       const btn = card.querySelector('.equip-card-btn');
 
-      if (btn && owned && !equipped) {
+      if (btn && owned && rankOk && !equipped) {
         btn.addEventListener('click', function(){
-          equipAvatar(item.key);
+          equip.avatar = item.key;
+          saveEquipState(equip);
+          updateMainPlayerImage();
+          render();
+          window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
         });
       }
 
@@ -210,49 +415,63 @@
     });
   }
 
-  function renderRecord(){
+  function renderRecordList(){
     const list = $('equipList');
     if (!list) return;
 
-    const state = loadState();
-    const records =
-      window.MobShotShop && window.MobShotShop.RECORD_MASTER
-        ? window.MobShotShop.RECORD_MASTER
-        : [];
+    const save = getSave();
+    const rank = Number(save.rank || 1);
+    const equip = loadEquipState();
 
     list.innerHTML = '';
 
-    records.forEach(item => {
-      const owned = isRecordOwned(item.key);
-      const equipped = state.record === item.key;
-      const locked = !owned;
+    RECORDS.forEach(item => {
+      const owned = isOwned('record', item.key);
+      const rankOk = rank >= item.rank;
+      const equipped = equip.record === item.key;
+
+      const specs = [];
+
+      if (item.power) specs.push(`POWER +${item.power}`);
+      if (item.rapid) specs.push(`攻撃速度 +${item.rapid}`);
+      if (item.hp) specs.push(`HP +${item.hp}`);
+      if (!specs.length) specs.push('効果なし');
 
       const card = document.createElement('div');
+
       card.className =
         'equip-card' +
         (equipped ? ' equipped' : '') +
-        (locked ? ' locked' : '');
+        (!owned || !rankOk ? ' locked' : '');
 
       card.innerHTML = `
-        ${recordIcon(item, locked)}
+        <div class="equip-card-icon record-icon ${!owned || !rankOk ? 'lock-icon' : ''}">
+          ${itemImageHtml(item, 'record')}
+        </div>
+
         <div class="equip-card-body">
           <div class="equip-card-name">${item.name}</div>
-          <div class="equip-card-desc">${item.desc || '効果なし'}</div>
-          <div class="equip-card-spec">${owned ? '所持中' : '未所持'}</div>
-          <div class="equip-card-price">${equipped ? '現在装備中' : '装備メニュー'}</div>
+          <div class="equip-card-desc">弾画像: ${item.bulletImage || '通常弾'}</div>
+          <div class="equip-card-price">${rankOk ? '所持アイテム' : `Rank${item.rank}で解放`}</div>
+          <div class="equip-card-spec">${specs.join(' / ')}</div>
+          <div class="equip-card-spec">${owned ? '所持中' : '未所持'} ${equipped ? '/ 装備中' : ''}</div>
         </div>
+
         <div class="equip-card-actions">
-          <button type="button" class="equip-card-btn ${equipped ? 'equipped' : ''}" ${locked || equipped ? 'disabled' : ''}>
-            ${equipped ? '装備中' : locked ? 'LOCK' : '装備'}
+          <button type="button" class="equip-card-btn ${equipped ? 'equipped' : ''}" ${!owned || !rankOk || equipped ? 'disabled' : ''}>
+            ${equipped ? '装備中' : owned && rankOk ? '装備' : 'LOCK'}
           </button>
         </div>
       `;
 
       const btn = card.querySelector('.equip-card-btn');
 
-      if (btn && owned && !equipped) {
+      if (btn && owned && rankOk && !equipped) {
         btn.addEventListener('click', function(){
-          equipRecord(item.key);
+          equip.record = item.key;
+          saveEquipState(equip);
+          render();
+          window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
         });
       }
 
@@ -260,58 +479,101 @@
     });
   }
 
-  function renderSkill(){
+  function renderSkillList(){
     const list = $('equipList');
     if (!list) return;
 
     list.innerHTML = '';
 
-    const card = document.createElement('div');
-    card.className = 'equip-card locked';
+    if (!window.MobShotSkills || !window.MobShotSkills.SKILL_MASTER) {
+      list.innerHTML = '<div class="equip-card"><div class="equip-card-body"><div class="equip-card-name">スキル未読み込み</div></div></div>';
+      return;
+    }
 
-    card.innerHTML = `
-      <div class="equip-card-icon lock-icon">
-        <span style="font-size:20px;font-weight:1000;">SKILL</span>
-      </div>
-      <div class="equip-card-body">
-        <div class="equip-card-name">スキル装備</div>
-        <div class="equip-card-desc">後日実装予定</div>
-        <div class="equip-card-spec">現在は未実装です</div>
-        <div class="equip-card-price">COMING SOON</div>
-      </div>
-      <div class="equip-card-actions">
-        <button type="button" class="equip-card-btn" disabled>未実装</button>
-      </div>
-    `;
+    const state = window.MobShotSkills.loadState();
+    const equipped = state.equipped || [];
 
-    list.appendChild(card);
+    window.MobShotSkills.SKILL_MASTER.forEach(skill => {
+      const item = state.skills[skill.key] || {};
+      const owned = !!item.owned;
+      const isEquipped = equipped.includes(skill.key);
+      const runtime = window.MobShotSkills.getSkillRuntimeData(skill.key);
+      const cost = owned ? window.MobShotSkills.upgradeCost(skill.key) : 0;
+
+      const card = document.createElement('div');
+
+      card.className =
+        'equip-card' +
+        (isEquipped ? ' equipped' : '') +
+        (!owned ? ' locked' : '');
+
+      card.innerHTML = `
+        <div class="equip-card-icon ${!owned ? 'lock-icon' : ''}">
+          ${itemImageHtml(skill, 'skill')}
+        </div>
+
+        <div class="equip-card-body">
+          <div class="equip-card-name">${skill.name}</div>
+          <div class="equip-card-desc">${skill.desc}</div>
+          <div class="equip-card-price">${owned ? skillSpecText(skill) : 'ガチャで入手'}</div>
+          <div class="equip-card-spec">${runtime ? `装備効果: CT${runtime.cooldown}秒` : '未所持'}</div>
+          <div class="equip-card-spec">${isEquipped ? '装備中' : owned ? '所持中' : '未所持'}</div>
+        </div>
+
+        <div class="equip-card-actions">
+          <button type="button" class="equip-card-btn ${isEquipped ? 'equipped' : ''}" ${!owned ? 'disabled' : ''}>
+            ${isEquipped ? '外す' : owned ? '装備' : 'LOCK'}
+          </button>
+
+          <button type="button" class="pet-upgrade-btn" ${!owned || item.level >= 99 ? 'disabled' : ''}>
+            強化<br>${owned && item.level < 99 ? cost.toLocaleString() : 'MAX'}
+          </button>
+        </div>
+      `;
+
+      const equipBtn = card.querySelector('.equip-card-btn');
+      const upgradeBtn = card.querySelector('.pet-upgrade-btn');
+
+      if (equipBtn && owned) {
+        equipBtn.addEventListener('click', function(){
+          window.MobShotSkills.equipSkill(skill.key);
+        });
+      }
+
+      if (upgradeBtn && owned && item.level < 99) {
+        upgradeBtn.addEventListener('click', function(){
+          window.MobShotSkills.upgradeSkill(skill.key);
+        });
+      }
+
+      list.appendChild(card);
+    });
   }
 
   function render(){
+    const tabAvatar = $('equipTabAvatar');
+    const tabRecord = $('equipTabRecord');
+    const tabSkill = $('equipTabSkill');
+
+    if (tabAvatar) tabAvatar.classList.toggle('active', currentTab === 'avatar');
+    if (tabRecord) tabRecord.classList.toggle('active', currentTab === 'record');
+    if (tabSkill) tabSkill.classList.toggle('active', currentTab === 'skill');
+
     if (currentTab === 'avatar') {
-      renderAvatar();
-      return;
+      renderAvatarList();
     }
 
     if (currentTab === 'record') {
-      renderRecord();
-      return;
+      renderRecordList();
     }
 
-    renderSkill();
+    if (currentTab === 'skill') {
+      renderSkillList();
+    }
   }
 
   function setTab(tab){
     currentTab = tab;
-
-    const avatar = $('equipTabAvatar');
-    const record = $('equipTabRecord');
-    const skill = $('equipTabSkill');
-
-    if (avatar) avatar.classList.toggle('active', tab === 'avatar');
-    if (record) record.classList.toggle('active', tab === 'record');
-    if (skill) skill.classList.toggle('active', tab === 'skill');
-
     render();
   }
 
@@ -319,8 +581,7 @@
     const modal = $('equipModal');
     if (!modal) return;
 
-    setTab(currentTab || 'avatar');
-    updateMainPlayerImage();
+    render();
     modal.classList.remove('hidden');
   }
 
@@ -368,17 +629,23 @@
 
     if (tabAvatar && !tabAvatar.__mobEquipTabBound) {
       tabAvatar.__mobEquipTabBound = true;
-      tabAvatar.addEventListener('click', function(){ setTab('avatar'); });
+      tabAvatar.addEventListener('click', function(){
+        setTab('avatar');
+      });
     }
 
     if (tabRecord && !tabRecord.__mobEquipTabBound) {
       tabRecord.__mobEquipTabBound = true;
-      tabRecord.addEventListener('click', function(){ setTab('record'); });
+      tabRecord.addEventListener('click', function(){
+        setTab('record');
+      });
     }
 
     if (tabSkill && !tabSkill.__mobEquipTabBound) {
       tabSkill.__mobEquipTabBound = true;
-      tabSkill.addEventListener('click', function(){ setTab('skill'); });
+      tabSkill.addEventListener('click', function(){
+        setTab('skill');
+      });
     }
 
     const modal = $('equipModal');
@@ -396,6 +663,18 @@
 
   function init(){
     bind();
+
+    const equip = loadEquipState();
+
+    if (!equip.avatar) {
+      equip.avatar = 'pink';
+    }
+
+    if (!equip.record) {
+      equip.record = 'iron';
+    }
+
+    saveEquipState(equip);
     updateMainPlayerImage();
     render();
   }
@@ -403,17 +682,17 @@
   document.addEventListener('DOMContentLoaded', init);
 
   window.MobShotEquip = {
+    AVATARS,
+    RECORDS,
     init,
     open,
     close,
     render,
-    loadState,
-    saveState,
-    equipAvatar,
-    equipRecord,
     getEquippedAvatar,
     getEquippedRecord,
     getEquipmentBonus,
-    updateMainPlayerImage
+    updateMainPlayerImage,
+    loadEquipState,
+    saveEquipState
   };
 })();
