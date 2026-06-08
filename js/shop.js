@@ -128,9 +128,9 @@
       rank: 10,
       ownedDefault: false,
       power: 2,
-      rapid: 2,
+      rapid: 0.2,
       hp: 0,
-      desc: 'RANK10 / POWER+2 / 攻撃速度+2'
+      desc: 'RANK10 / POWER+2 / 攻撃速度+0.2'
     },
     {
       key: 'garagara',
@@ -139,9 +139,9 @@
       rank: 10,
       ownedDefault: false,
       power: 3,
-      rapid: 2,
+      rapid: 0.2,
       hp: 0,
-      desc: 'RANK10 / POWER+3 / 攻撃速度+2'
+      desc: 'RANK10 / POWER+3 / 攻撃速度+0.2'
     },
     {
       key: 'book',
@@ -150,9 +150,9 @@
       rank: 10,
       ownedDefault: false,
       power: 3,
-      rapid: 1,
+      rapid: 0.1,
       hp: 50,
-      desc: 'RANK10 / POWER+3 / 攻撃速度+1 / HP+50'
+      desc: 'RANK10 / POWER+3 / 攻撃速度+0.1 / HP+50'
     },
     {
       key: 'mobrpg',
@@ -194,9 +194,9 @@
       rank: 20,
       ownedDefault: false,
       power: 1,
-      rapid: 4,
+      rapid: 0.4,
       hp: 0,
-      desc: 'RANK20 / POWER+1 / 攻撃速度+4'
+      desc: 'RANK20 / POWER+1 / 攻撃速度+0.4'
     },
     {
       key: 'pb2',
@@ -205,9 +205,9 @@
       rank: 20,
       ownedDefault: false,
       power: 2,
-      rapid: 3,
+      rapid: 0.3,
       hp: 100,
-      desc: 'RANK20 / POWER+2 / 攻撃速度+3 / HP+100'
+      desc: 'RANK20 / POWER+2 / 攻撃速度+0.3 / HP+100'
     }
   ];
 
@@ -230,8 +230,8 @@
       key: 'rapid',
       name: '攻撃速度',
       max: 30,
-      effectText: '攻撃速度 +0.5',
-      desc: '連射速度を上げる'
+      effectText: '攻撃速度 +0.1',
+      desc: '連射速度を少し上げる'
     },
     {
       key: 'hp',
@@ -335,11 +335,6 @@
     return Number(save.rank || 1);
   }
 
-  function coin(){
-    const save = getSave();
-    return Number(save.coin || 0);
-  }
-
   function canUnlock(item){
     return playerRank() >= Number(item.rank || 1);
   }
@@ -372,12 +367,12 @@
     }
 
     if (key === 'rapid') {
-      if (nextLv === 1) return 500;
-      if (nextLv === 2) return 1000;
-      if (nextLv === 3) return 1500;
-      if (nextLv === 4) return 3000;
-      if (nextLv === 5) return 5000;
-      return 5000 + (nextLv - 5) * 2000;
+      if (nextLv === 1) return 1500;
+      if (nextLv === 2) return 3000;
+      if (nextLv === 3) return 5000;
+      if (nextLv === 4) return 8000;
+      if (nextLv === 5) return 12000;
+      return 12000 + (nextLv - 5) * 4000;
     }
 
     if (key === 'hp') {
@@ -820,7 +815,7 @@
     return {
       power: Number(up.power || 0) * 0.5,
       range: Number(up.range || 0) * 0.5,
-      rapid: Number(up.rapid || 0) * 0.5,
+      rapid: Number(up.rapid || 0) * 0.1,
       hp: Number(up.hp || 0) * 10
     };
   }
