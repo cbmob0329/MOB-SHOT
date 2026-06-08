@@ -107,8 +107,21 @@
       bestScore: 0,
       coin: 0,
       diamond: 0,
-      rank: 1
+      rank: 1,
+      stageProgress: {
+        currentAreaIndex: 0,
+        currentStageNo: 1
+      }
     };
+  }
+
+  function currentStageText(){
+    if (window.MobShotStorage && window.MobShotStorage.getCurrentStage) {
+      const stage = window.MobShotStorage.getCurrentStage();
+      return `${stage.areaName} ${stage.id}`;
+    }
+
+    return '草原 1-1';
   }
 
   function refreshMainHud(){
@@ -128,6 +141,12 @@
 
     if (coin) {
       coin.textContent = Number(save.coin || 0).toLocaleString();
+    }
+
+    const sortieBtn = $('sortieBtn');
+
+    if (sortieBtn) {
+      sortieBtn.setAttribute('data-stage', currentStageText());
     }
   }
 
@@ -432,7 +451,7 @@
       e.stopPropagation();
 
       const ok = confirm(
-        'セーブデータを削除しますか？\nコイン・スコア・ランク・ペット・ショップ・装備・ミッション状態などが初期化されます。'
+        'セーブデータを削除しますか？\nコイン・スコア・ランク・ステージ進行・ペット・ショップ・装備・ミッション状態などが初期化されます。'
       );
 
       if (!ok) return;
