@@ -8,17 +8,46 @@
   let skillBullets = [];
   let skillEffects = [];
   let inputReadyFrame = 0;
+  let frameCount = 0;
+
+  const PRELOAD_IMAGES = [
+    'skill/rocket barrage.png',
+    'skill/energyrush.png',
+    'skill/double missile.png',
+    'skill/shadowclone.png',
+    'skill/thunderbolt.png',
+    'skill/arcane barrier.png',
+    'skill/dark oblivion.png',
+    'atk/rocket.png',
+    'atk/enetama.png',
+    'atk/tuibi.png',
+    'atk/kaminari.png'
+  ];
 
   function img(src){
     if (!src) return null;
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=skill_manual_only_20260608';
+      image.src = src + '?v=skill_fx_20260608';
       images.set(src, image);
     }
 
     return images.get(src);
+  }
+
+  function preload(){
+    PRELOAD_IMAGES.forEach(src => img(src));
+
+    if (
+      window.MobShotSkills &&
+      window.MobShotSkills.SKILL_MASTER
+    ) {
+      window.MobShotSkills.SKILL_MASTER.forEach(skill => {
+        img(skill.image);
+        img(skill.bulletImage);
+      });
+    }
   }
 
   function imageReady(image){
@@ -30,7 +59,10 @@
     skillBullets.length = 0;
     skillEffects.length = 0;
     slots.length = 0;
+    frameCount = 0;
     inputReadyFrame = performance.now() + 500;
+
+    preload();
 
     if (!window.MobShotSkills || !window.MobShotSkills.getEquippedSkills) return;
 
@@ -103,6 +135,8 @@
   function update(){
     if (!gameState) return;
 
+    frameCount++;
+
     updateEffects();
     updateCooldowns();
     updateBullets();
@@ -123,6 +157,8 @@
   function activate(slot){
     const skill = slot.skill;
 
+    showSkillText(skill.name);
+
     if (skill.type === 'rocket') fireRocket(skill);
     if (skill.type === 'energyRush') fireEnergyRush(skill);
     if (skill.type === 'twinMissile') fireTwinMissile(skill);
@@ -130,6 +166,16 @@
     if (skill.type === 'thunderbolt') startThunderbolt(skill);
     if (skill.type === 'arcaneBarrier') startArcaneBarrier(skill);
     if (skill.type === 'darkPower') startDarkPower(skill);
+  }
+
+  function showSkillText(text){
+    skillEffects.push({
+      type: 'skillText',
+      text,
+      x: gameState.player.x,
+      y: gameState.player.y - 85,
+      timer: 42
+    });
   }
 
   function playerPower(){
@@ -157,11 +203,12 @@
       skillBullets.push({
         type: 'rocket',
         skill,
-        x: gameState.player.x + (i - (count - 1) / 2) * 28,
-        y: gameState.player.y - 36 - i * 18,
+        x: gameState.player.x + (i - (count - 1) / 2) * 32,
+        y: gameState.player.y - 38 - i * 20,
         vx: 0,
-        vy: -7.4,
-        r: 18,
+        vy: -5.2,
+        r: 22,
+        smokeTick: 0,
         dead: false
       });
     }
@@ -170,29 +217,36 @@
   function fireEnergyRush(skill){
     const count = Math.max(1, Number(skill.count || 10));
 
+    skillEffects.push({
+      type: 'muzzleFlash',
+      x: gameState.player.x,
+      y: gameState.player.y - 45,
+      timer: 16
+    });
+
     for (let i = 0; i < count; i++) {
       const dir = Math.floor(Math.random() * 3);
       let vx = 0;
-      let vy = -8.2;
+      let vy = -6.2;
 
       if (dir === 1) {
-        vx = -2.8;
-        vy = -7.4;
+        vx = -2.3;
+        vy = -5.8;
       }
 
       if (dir === 2) {
-        vx = 2.8;
-        vy = -7.4;
+        vx = 2.3;
+        vy = -5.8;
       }
 
       skillBullets.push({
         type: 'energyRush',
         skill,
-        x: gameState.player.x,
-        y: gameState.player.y - 36,
+        x: gameState.player.x + Math.random() * 16 - 8,
+        y: gameState.player.y - 38,
         vx,
         vy,
-        r: 9,
+        r: 15,
         delay: i * 3,
         dead: false
       });
@@ -203,15 +257,19 @@
     const count = Math.max(1, Number(skill.count || 2));
 
     for (let i = 0; i < count; i++) {
+      const side = i % 2 === 0 ? -1 : 1;
+
       skillBullets.push({
         type: 'twinMissile',
         skill,
-        x: gameState.player.x + (i - (count - 1) / 2) * 22,
-        y: gameState.player.y - 20,
-        vx: 0,
-        vy: -3.8,
-        r: 12,
+        x: gameState.player.x + side * 18,
+        y: gameState.player.y - 24,
+        vx: side * 4.8,
+        vy: -3.2,
+        r: 14,
+        openTimer: 24,
         target: findStrongestTarget(),
+        smokeTick: 0,
         dead: false
       });
     }
@@ -240,7 +298,8 @@
       skill,
       timer: Math.floor(Number(skill.duration || 5) * 60),
       damage: Number(skill.barrierDamage || 0),
-      hitCd: 0
+      hitCd: 0,
+      rot: 0
     });
   }
 
@@ -250,6 +309,13 @@
       skill,
       timer: Math.floor(Number(skill.duration || 5) * 60),
       rate: Number(skill.darkPowerRate || 0.5)
+    });
+
+    skillEffects.push({
+      type: 'darkBurst',
+      x: gameState.player.x,
+      y: gameState.player.y,
+      timer: 36
     });
   }
 
@@ -261,13 +327,14 @@
         effect.tick--;
 
         if (effect.tick <= 0) {
-          effect.tick = 12;
-          dropThunder(effect.skill);
+          effect.tick = 18;
+          createThunder(effect.skill);
         }
       }
 
       if (effect.type === 'arcaneBarrier') {
         effect.hitCd--;
+        effect.rot += 0.08;
       }
     }
 
@@ -290,13 +357,28 @@
         bullet.y += bullet.vy;
       }
 
+      if (bullet.type === 'rocket' || bullet.type === 'twinMissile') {
+        bullet.smokeTick--;
+
+        if (bullet.smokeTick <= 0) {
+          bullet.smokeTick = 5;
+          skillEffects.push({
+            type: 'smoke',
+            x: bullet.x,
+            y: bullet.y + 12,
+            radius: bullet.type === 'rocket' ? 18 : 10,
+            timer: 20
+          });
+        }
+      }
+
       checkBulletHit(bullet);
 
       if (
-        bullet.y < -120 ||
-        bullet.y > window.innerHeight + 120 ||
-        bullet.x < -120 ||
-        bullet.x > window.innerWidth + 120
+        bullet.y < -140 ||
+        bullet.y > window.innerHeight + 140 ||
+        bullet.x < -140 ||
+        bullet.x > window.innerWidth + 140
       ) {
         bullet.dead = true;
       }
@@ -306,6 +388,13 @@
   }
 
   function updateMissile(bullet){
+    if (bullet.openTimer > 0) {
+      bullet.openTimer--;
+      bullet.y += bullet.vy;
+      bullet.x += bullet.vx;
+      return;
+    }
+
     if (!bullet.target || bullet.target.dead) {
       bullet.target = findStrongestTarget();
     }
@@ -315,11 +404,11 @@
       const dy = bullet.target.y - bullet.y;
       const d = Math.max(1, Math.hypot(dx, dy));
 
-      bullet.vx += (dx / d) * 0.42;
-      bullet.vy += (dy / d) * 0.42;
+      bullet.vx += (dx / d) * 0.26;
+      bullet.vy += (dy / d) * 0.26;
 
       const sp = Math.hypot(bullet.vx, bullet.vy);
-      const maxSp = 7.2;
+      const maxSp = 5.4;
 
       if (sp > maxSp) {
         bullet.vx = bullet.vx / sp * maxSp;
@@ -381,6 +470,13 @@
 
       if (bullet.type === 'energyRush') {
         damageEntity(e, playerPower() * bullet.skill.powerRate.bullet + plusDamage(bullet.skill));
+
+        skillEffects.push({
+          type: 'energyHit',
+          x: bullet.x,
+          y: bullet.y,
+          timer: 10
+        });
       }
 
       if (bullet.type === 'twinMissile') {
@@ -394,14 +490,22 @@
   }
 
   function explode(x, y, skill){
-    const radius = Math.min(window.innerWidth, window.innerHeight) * 0.42;
+    const radius = Math.min(window.innerWidth, window.innerHeight) * 0.55;
 
     skillEffects.push({
       type: 'explosion',
       x,
       y,
       radius,
-      timer: 18
+      timer: 32
+    });
+
+    skillEffects.push({
+      type: 'boomText',
+      text: 'BOOM!!',
+      x,
+      y: y - 20,
+      timer: 34
     });
 
     gameState.entities.forEach(e => {
@@ -420,14 +524,14 @@
   }
 
   function smallExplode(x, y, skill){
-    const radius = 68;
+    const radius = 88;
 
     skillEffects.push({
       type: 'smallExplosion',
       x,
       y,
       radius,
-      timer: 12
+      timer: 18
     });
 
     gameState.entities.forEach(e => {
@@ -445,7 +549,7 @@
     });
   }
 
-  function dropThunder(skill){
+  function createThunder(skill){
     const targets = gameState.entities.filter(e =>
       !e.dead &&
       e.kind !== 'gate' &&
@@ -455,16 +559,35 @@
     if (!targets.length) return;
 
     const target = targets[Math.floor(Math.random() * targets.length)];
+    const startY = -60;
 
     skillEffects.push({
-      type: 'thunderHit',
+      type: 'thunderFall',
+      skill,
       image: skill.bulletImage,
       x: target.x,
-      y: target.y,
-      timer: 14
+      y: startY,
+      targetY: target.y,
+      timer: 18,
+      total: 18,
+      target
+    });
+  }
+
+  function thunderImpact(effect){
+    const target = effect.target;
+
+    skillEffects.push({
+      type: 'thunderImpact',
+      image: effect.image,
+      x: effect.x,
+      y: effect.targetY,
+      timer: 30
     });
 
-    damageEntity(target, playerPower() * skill.powerRate.thunder + plusDamage(skill));
+    if (target && !target.dead) {
+      damageEntity(target, playerPower() * effect.skill.powerRate.thunder + plusDamage(effect.skill));
+    }
   }
 
   function updateBarrierDamage(){
@@ -475,7 +598,7 @@
     barrier.hitCd = 18;
 
     const p = gameState.player;
-    const radius = 64;
+    const radius = 72;
 
     gameState.entities.forEach(e => {
       if (
@@ -552,8 +675,8 @@
         cdEl.classList.remove('hidden');
         cdEl.textContent = '-';
         slotEl.classList.remove('ready');
-        ringEl.style.setProperty('--skill-rate', '0deg');
-        continue;
+        ringEl.style.setProperty('--skill-rate', '0%');
+        return;
       }
 
       imgEl.style.display = 'block';
@@ -564,11 +687,11 @@
         ? Math.max(0, Math.min(1, 1 - (slot.cd / slot.maxCd)))
         : 1;
 
-      ringEl.style.setProperty('--skill-rate', `${rate * 360}deg`);
+      ringEl.style.setProperty('--skill-rate', `${rate * 100}%`);
 
       if (ready) {
-        cdEl.classList.add('hidden');
-        cdEl.textContent = '';
+        cdEl.classList.remove('hidden');
+        cdEl.textContent = 'READY';
         slotEl.classList.add('ready');
       } else {
         cdEl.classList.remove('hidden');
@@ -588,9 +711,9 @@
 
       if (imageReady(image)) {
         const size =
-          bullet.type === 'rocket' ? 42 :
-          bullet.type === 'twinMissile' ? 28 :
-          22;
+          bullet.type === 'rocket' ? 54 :
+          bullet.type === 'twinMissile' ? 34 :
+          34;
 
         ctx.drawImage(
           image,
@@ -614,49 +737,240 @@
     const p = gameState.player;
 
     skillEffects.forEach(effect => {
-      if (effect.type === 'explosion' || effect.type === 'smallExplosion') {
-        const alpha = Math.max(0, effect.timer / 18);
+      if (effect.type === 'smoke') {
+        const alpha = Math.max(0, effect.timer / 20);
 
-        ctx.globalAlpha = alpha * 0.55;
-        ctx.fillStyle = '#ff9d2d';
+        ctx.globalAlpha = alpha * 0.38;
+        ctx.fillStyle = '#777';
         ctx.beginPath();
-        ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+        ctx.arc(effect.x, effect.y, effect.radius * (1.2 - alpha * .2), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      if (effect.type === 'muzzleFlash') {
+        const alpha = effect.timer / 16;
+
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#9deeff';
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, 34 * alpha, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      if (effect.type === 'energyHit') {
+        const alpha = effect.timer / 10;
+
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#9deeff';
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, 24 * (1 - alpha + .25), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      if (effect.type === 'explosion') {
+        const alpha = Math.max(0, effect.timer / 32);
+        const grow = 1 - alpha;
+
+        ctx.globalAlpha = alpha * 0.25;
+        ctx.fillStyle = '#ff3b00';
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, effect.radius * (.65 + grow * .25), 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.globalAlpha = alpha * 0.75;
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 5;
+        ctx.globalAlpha = alpha * 0.42;
+        ctx.fillStyle = '#ffb02e';
         ctx.beginPath();
-        ctx.arc(effect.x, effect.y, effect.radius * 0.72, 0, Math.PI * 2);
+        ctx.arc(effect.x, effect.y, effect.radius * (.42 + grow * .18), 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.globalAlpha = alpha * 0.70;
+        ctx.fillStyle = '#fff6a8';
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, effect.radius * (.18 + grow * .08), 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, effect.radius * (.25 + grow * .65), 0, Math.PI * 2);
         ctx.stroke();
 
         ctx.globalAlpha = 1;
       }
 
-      if (effect.type === 'thunderHit') {
-        const image = img(effect.image);
+      if (effect.type === 'smallExplosion') {
+        const alpha = effect.timer / 18;
 
-        if (imageReady(image)) {
-          ctx.drawImage(image, effect.x - 32, effect.y - 68, 64, 96);
+        ctx.globalAlpha = alpha * 0.75;
+        ctx.fillStyle = '#ffb02e';
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, effect.radius * (1 - alpha * .25), 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, effect.radius * (1 - alpha * .5), 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.globalAlpha = 1;
+      }
+
+      if (effect.type === 'boomText') {
+        const alpha = effect.timer / 34;
+
+        ctx.globalAlpha = alpha;
+        ctx.font = '900 34px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ffe66b';
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 6;
+        ctx.strokeText(effect.text, effect.x, effect.y - (1 - alpha) * 28);
+        ctx.fillText(effect.text, effect.x, effect.y - (1 - alpha) * 28);
+        ctx.globalAlpha = 1;
+      }
+
+      if (effect.type === 'skillText') {
+        const alpha = effect.timer / 42;
+
+        ctx.globalAlpha = alpha;
+        ctx.font = '900 20px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ffe66b';
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 5;
+        ctx.strokeText(effect.text, effect.x, effect.y - (1 - alpha) * 18);
+        ctx.fillText(effect.text, effect.x, effect.y - (1 - alpha) * 18);
+        ctx.globalAlpha = 1;
+      }
+
+      if (effect.type === 'thunderFall') {
+        const progress = 1 - effect.timer / effect.total;
+        const y = effect.y + (effect.targetY - effect.y) * progress;
+
+        ctx.globalAlpha = 0.95;
+        ctx.strokeStyle = '#fff36b';
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(effect.x, -40);
+        ctx.lineTo(effect.x - 16, y - 30);
+        ctx.lineTo(effect.x + 12, y - 42);
+        ctx.lineTo(effect.x, y);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#9deeff';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(effect.x + 18, -20);
+        ctx.lineTo(effect.x + 4, y - 25);
+        ctx.lineTo(effect.x + 24, y - 4);
+        ctx.stroke();
+
+        ctx.globalAlpha = 1;
+
+        if (effect.timer <= 1) {
+          thunderImpact(effect);
         }
       }
 
+      if (effect.type === 'thunderImpact') {
+        const alpha = effect.timer / 30;
+
+        ctx.globalAlpha = alpha * 0.65;
+        ctx.fillStyle = '#fff36b';
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, 54 * (1 - alpha * .35), 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = '#9deeff';
+        ctx.lineWidth = 4;
+
+        for (let i = 0; i < 6; i++) {
+          const a = (Math.PI * 2 / 6) * i + frameCount * 0.08;
+          ctx.beginPath();
+          ctx.moveTo(effect.x, effect.y);
+          ctx.lineTo(
+            effect.x + Math.cos(a) * 62,
+            effect.y + Math.sin(a) * 62
+          );
+          ctx.stroke();
+        }
+
+        ctx.globalAlpha = 1;
+      }
+
       if (effect.type === 'arcaneBarrier') {
-        ctx.globalAlpha = 0.55;
+        const r1 = 72 + Math.sin(frameCount * 0.12) * 4;
+        const r2 = 88 + Math.cos(frameCount * 0.1) * 4;
+
+        ctx.globalAlpha = 0.72;
         ctx.strokeStyle = '#9deeff';
         ctx.lineWidth = 6;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 64, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, r1, 0, Math.PI * 2);
         ctx.stroke();
+
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r2, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#60d9ff';
+        ctx.lineWidth = 3;
+
+        for (let i = 0; i < 8; i++) {
+          const a = effect.rot + (Math.PI * 2 / 8) * i;
+          ctx.beginPath();
+          ctx.moveTo(
+            p.x + Math.cos(a) * 60,
+            p.y + Math.sin(a) * 60
+          );
+          ctx.lineTo(
+            p.x + Math.cos(a + .18) * 88,
+            p.y + Math.sin(a + .18) * 88
+          );
+          ctx.stroke();
+        }
+
         ctx.globalAlpha = 1;
       }
 
       if (effect.type === 'darkPower') {
-        ctx.globalAlpha = 0.45;
-        ctx.fillStyle = '#2b004f';
+        const pulse = 1 + Math.sin(frameCount * 0.12) * 0.08;
+
+        ctx.globalAlpha = 0.55;
+        ctx.fillStyle = '#20002f';
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 58, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, 78 * pulse, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.globalAlpha = 0.42;
+        ctx.strokeStyle = '#b45cff';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 94 * pulse, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.globalAlpha = 1;
+      }
+
+      if (effect.type === 'darkBurst') {
+        const alpha = effect.timer / 36;
+        const radius = 120 * (1 - alpha);
+
+        ctx.globalAlpha = alpha * 0.55;
+        ctx.strokeStyle = '#b45cff';
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
+        ctx.stroke();
         ctx.globalAlpha = 1;
       }
 
@@ -664,10 +978,10 @@
         ctx.globalAlpha = 0.28;
         ctx.fillStyle = '#7cff8a';
         ctx.beginPath();
-        ctx.arc(p.x - 38, p.y, 24, 0, Math.PI * 2);
+        ctx.arc(p.x - 42, p.y, 28, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(p.x + 38, p.y, 24, 0, Math.PI * 2);
+        ctx.arc(p.x + 42, p.y, 28, 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
       }
