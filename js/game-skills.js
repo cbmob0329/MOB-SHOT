@@ -7,13 +7,14 @@
   let slots = [];
   let skillBullets = [];
   let skillEffects = [];
+  let inputReadyFrame = 0;
 
   function img(src){
     if (!src) return null;
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=skill_20260608';
+      image.src = src + '?v=skill_manual_only_20260608';
       images.set(src, image);
     }
 
@@ -29,6 +30,7 @@
     skillBullets.length = 0;
     skillEffects.length = 0;
     slots.length = 0;
+    inputReadyFrame = performance.now() + 500;
 
     if (!window.MobShotSkills || !window.MobShotSkills.getEquippedSkills) return;
 
@@ -39,9 +41,95 @@
         skill,
         slotIndex: index,
         cd: 0,
+        maxCd: Math.floor(skill.cooldown * 60),
         ready: true
       });
     });
+
+    bindSkillButtons();
+    updateHud();
+  }
+
+  function bindSkillButtons(){
+    const hud = document.getElementById('skillHud');
+
+    if (hud && !hud.__mobSkillInputBound) {
+      hud.__mobSkillInputBound = true;
+
+      hud.addEventListener('pointerdown', blockMoveInput, { passive:false });
+      hud.addEventListener('touchstart', blockMoveInput, { passive:false });
+      hud.addEventListener('click', blockMoveInput, { passive:false });
+    }
+
+    for (let i = 0; i < 3; i++) {
+      const slotEl = document.getElementById(`skillSlot${i}`);
+
+      if (!slotEl || slotEl.__mobSkillTapBound) continue;
+
+      slotEl.__mobSkillTapBound = true;
+
+      slotEl.addEventListener('pointerup', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (performance.now() < inputReadyFrame) return;
+
+        useSlot(i);
+      }, { passive:false });
+    }
+  }
+
+  function blockMoveInput(e){
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
+  function useSlot(index){
+    const slot = slots[index];
+
+    if (!slot || !slot.skill) return;
+    if (slot.cd > 0) return;
+
+    activate(slot);
+
+    slot.cd = slot.maxCd;
+    slot.ready = false;
+
+    updateHud();
+  }
+
+  function update(){
+    if (!gameState) return;
+
+    updateEffects();
+    updateCooldowns();
+    updateBullets();
+    updateBarrierDamage();
+    updateHud();
+  }
+
+  function updateCooldowns(){
+    slots.forEach(slot => {
+      if (slot.cd > 0) {
+        slot.cd--;
+      }
+
+      slot.ready = slot.cd <= 0;
+    });
+  }
+
+  function activate(slot){
+    const skill = slot.skill;
+
+    if (skill.type === 'rocket') fireRocket(skill);
+    if (skill.type === 'energyRush') fireEnergyRush(skill);
+    if (skill.type === 'twinMissile') fireTwinMissile(skill);
+    if (skill.type === 'shadowClone') startShadowClone(skill);
+    if (skill.type === 'thunderbolt') startThunderbolt(skill);
+    if (skill.type === 'arcaneBarrier') startArcaneBarrier(skill);
+    if (skill.type === 'darkPower') startDarkPower(skill);
   }
 
   function playerPower(){
@@ -60,59 +148,6 @@
 
   function plusDamage(skill){
     return Number(skill.plus || 0);
-  }
-
-  function update(){
-    if (!gameState) return;
-
-    updateEffects();
-    updateSlots();
-    updateBullets();
-    updateBarrierDamage();
-  }
-
-  function updateSlots(){
-    slots.forEach(slot => {
-      slot.cd--;
-
-      if (slot.cd <= 0) {
-        activate(slot);
-        slot.cd = Math.floor(slot.skill.cooldown * 60);
-        slot.ready = false;
-      }
-    });
-  }
-
-  function activate(slot){
-    const skill = slot.skill;
-
-    if (skill.type === 'rocket') {
-      fireRocket(skill);
-    }
-
-    if (skill.type === 'energyRush') {
-      fireEnergyRush(skill);
-    }
-
-    if (skill.type === 'twinMissile') {
-      fireTwinMissile(skill);
-    }
-
-    if (skill.type === 'shadowClone') {
-      startShadowClone(skill);
-    }
-
-    if (skill.type === 'thunderbolt') {
-      startThunderbolt(skill);
-    }
-
-    if (skill.type === 'arcaneBarrier') {
-      startArcaneBarrier(skill);
-    }
-
-    if (skill.type === 'darkPower') {
-      startDarkPower(skill);
-    }
   }
 
   function fireRocket(skill){
@@ -183,45 +218,37 @@
   }
 
   function startShadowClone(skill){
-    const duration = Math.floor(Number(skill.duration || 5) * 60);
-
     skillEffects.push({
       type: 'shadowClone',
-      timer: duration,
+      timer: Math.floor(Number(skill.duration || 5) * 60),
       wideBonus: Number(skill.wideBonus || 3)
     });
   }
 
   function startThunderbolt(skill){
-    const duration = Math.floor(Number(skill.duration || 5) * 60);
-
     skillEffects.push({
       type: 'thunderbolt',
       skill,
-      timer: duration,
+      timer: Math.floor(Number(skill.duration || 5) * 60),
       tick: 0
     });
   }
 
   function startArcaneBarrier(skill){
-    const duration = Math.floor(Number(skill.duration || 5) * 60);
-
     skillEffects.push({
       type: 'arcaneBarrier',
       skill,
-      timer: duration,
+      timer: Math.floor(Number(skill.duration || 5) * 60),
       damage: Number(skill.barrierDamage || 0),
       hitCd: 0
     });
   }
 
   function startDarkPower(skill){
-    const duration = Math.floor(Number(skill.duration || 5) * 60);
-
     skillEffects.push({
       type: 'darkPower',
       skill,
-      timer: duration,
+      timer: Math.floor(Number(skill.duration || 5) * 60),
       rate: Number(skill.darkPowerRate || 0.5)
     });
   }
@@ -386,9 +413,7 @@
         return;
       }
 
-      const d = Math.hypot(e.x - x, e.y - y);
-
-      if (d <= radius) {
+      if (Math.hypot(e.x - x, e.y - y) <= radius) {
         damageEntity(e, playerPower() * skill.powerRate.explosion + plusDamage(skill));
       }
     });
@@ -414,9 +439,7 @@
         return;
       }
 
-      const d = Math.hypot(e.x - x, e.y - y);
-
-      if (d <= radius) {
+      if (Math.hypot(e.x - x, e.y - y) <= radius) {
         damageEntity(e, playerPower() * 0.8 + plusDamage(skill));
       }
     });
@@ -447,11 +470,7 @@
   function updateBarrierDamage(){
     const barrier = skillEffects.find(e => e.type === 'arcaneBarrier');
 
-    if (!barrier) return;
-
-    if (barrier.damage <= 0) return;
-
-    if (barrier.hitCd > 0) return;
+    if (!barrier || barrier.damage <= 0 || barrier.hitCd > 0) return;
 
     barrier.hitCd = 18;
 
@@ -467,9 +486,7 @@
         return;
       }
 
-      const d = Math.hypot(e.x - p.x, e.y - p.y);
-
-      if (d <= radius + (e.r || 28)) {
+      if (Math.hypot(e.x - p.x, e.y - p.y) <= radius + (e.r || 28)) {
         damageEntity(e, barrier.damage);
       }
     });
@@ -518,6 +535,47 @@
     }
 
     return false;
+  }
+
+  function updateHud(){
+    for (let i = 0; i < 3; i++) {
+      const slot = slots[i];
+      const slotEl = document.getElementById(`skillSlot${i}`);
+      const imgEl = document.getElementById(`skillSlotImg${i}`);
+      const cdEl = document.getElementById(`skillCd${i}`);
+      const ringEl = document.getElementById(`skillRing${i}`);
+
+      if (!slotEl || !imgEl || !cdEl || !ringEl) continue;
+
+      if (!slot || !slot.skill) {
+        imgEl.style.display = 'none';
+        cdEl.classList.remove('hidden');
+        cdEl.textContent = '-';
+        slotEl.classList.remove('ready');
+        ringEl.style.setProperty('--skill-rate', '0deg');
+        continue;
+      }
+
+      imgEl.style.display = 'block';
+      imgEl.src = slot.skill.image;
+
+      const ready = slot.cd <= 0;
+      const rate = slot.maxCd > 0
+        ? Math.max(0, Math.min(1, 1 - (slot.cd / slot.maxCd)))
+        : 1;
+
+      ringEl.style.setProperty('--skill-rate', `${rate * 360}deg`);
+
+      if (ready) {
+        cdEl.classList.add('hidden');
+        cdEl.textContent = '';
+        slotEl.classList.add('ready');
+      } else {
+        cdEl.classList.remove('hidden');
+        cdEl.textContent = Math.ceil(slot.cd / 60);
+        slotEl.classList.remove('ready');
+      }
+    }
   }
 
   function draw(ctx){
@@ -580,15 +638,6 @@
 
         if (imageReady(image)) {
           ctx.drawImage(image, effect.x - 32, effect.y - 68, 64, 96);
-        } else {
-          ctx.strokeStyle = '#fff36b';
-          ctx.lineWidth = 6;
-          ctx.beginPath();
-          ctx.moveTo(effect.x, effect.y - 80);
-          ctx.lineTo(effect.x - 16, effect.y - 30);
-          ctx.lineTo(effect.x + 10, effect.y - 34);
-          ctx.lineTo(effect.x - 4, effect.y + 28);
-          ctx.stroke();
         }
       }
 
