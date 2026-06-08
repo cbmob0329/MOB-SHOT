@@ -29,7 +29,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=skill_fx_20260608';
+      image.src = src + '?v=skill_fx_bar_20260608';
       images.set(src, image);
     }
 
@@ -570,11 +570,16 @@
       targetY: target.y,
       timer: 18,
       total: 18,
-      target
+      target,
+      impacted: false
     });
   }
 
   function thunderImpact(effect){
+    if (effect.impacted) return;
+
+    effect.impacted = true;
+
     const target = effect.target;
 
     skillEffects.push({
@@ -676,7 +681,7 @@
         cdEl.textContent = '-';
         slotEl.classList.remove('ready');
         ringEl.style.setProperty('--skill-rate', '0%');
-        return;
+        continue;
       }
 
       imgEl.style.display = 'block';
