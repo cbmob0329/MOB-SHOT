@@ -115,8 +115,11 @@ button{font-family:inherit;touch-action:manipulation}
 .phase-banner.show{animation:bannerPop 1.35s ease forwards}
 @keyframes bannerPop{0%{opacity:0;transform:translateX(-50%) scale(.68)}16%{opacity:1;transform:translateX(-50%) scale(1.08)}75%{opacity:1;transform:translateX(-50%) scale(1)}100%{opacity:0;transform:translateX(-50%) scale(.94)}}
 
-.skill-dummies{position:absolute;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));z-index:26;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;pointer-events:auto}
-.skill-dummy{height:58px;border:0;border-radius:17px;background:linear-gradient(#31405f,#172037);border:3px solid rgba(255,255,255,.30);box-shadow:0 6px 0 rgba(0,0,0,.34),inset 0 2px 0 rgba(255,255,255,.16);color:#fff;font-size:15px;font-weight:1000;text-shadow:0 2px 0 rgba(0,0,0,.35);opacity:.88}
+.skillHud{position:absolute;right:10px;bottom:max(10px,env(safe-area-inset-bottom));z-index:31;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;pointer-events:none}
+.skillSlot{width:58px;height:58px;position:relative;border-radius:17px;background:linear-gradient(#31405f,#172037);border:3px solid rgba(255,255,255,.30);box-shadow:0 6px 0 rgba(0,0,0,.34),inset 0 2px 0 rgba(255,255,255,.16);overflow:hidden}
+.skillSlot img{width:100%;height:100%;object-fit:cover;display:block}
+.skillCd{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);color:#fff;font-size:18px;font-weight:1000;text-shadow:0 2px 0 #000}
+.skillCd.hidden{display:none}
 
 .back-btn{position:absolute;left:10px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:27;border:0;border-radius:999px;background:rgba(12,18,32,.82);color:#fff;border:2px solid rgba(255,255,255,.28);padding:9px 14px;font-size:14px;font-weight:1000;box-shadow:0 4px 0 rgba(0,0,0,.28)}
 
@@ -147,4 +150,5 @@ button{font-family:inherit;touch-action:manipulation}
   .main-float-pet img{width:28px;height:28px}
   .mission-tabs{gap:4px}
   .mission-tab{font-size:10px;padding:8px 1px}
+  .skillSlot{width:50px;height:50px}
 }
