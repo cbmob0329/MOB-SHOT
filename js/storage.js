@@ -18,7 +18,7 @@
       bestScore: 0,
       coin: 100000,
       diamond: 0,
-      rank: 1,
+      rank: 10,
 
       stageProgress: {
         currentAreaIndex: 0,
