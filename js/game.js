@@ -26,7 +26,6 @@
   let frame = 0;
   let scroll = 0;
   let runCommitted = false;
-  let clearedStageInfo = null;
 
   const images = new Map();
 
@@ -35,6 +34,7 @@
     maxHp: 50,
     power: 1,
     range: 3,
+    baseWide: 1,
     wide: 1,
     attackSpeed: 1,
     playerImage: 'play/playpink.png',
@@ -67,7 +67,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260607_stage_progress_test_clear';
+      image.src = src + '?v=20260608_skill_connect';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -235,7 +235,6 @@
     frame = 0;
     scroll = 0;
     runCommitted = false;
-    clearedStageInfo = null;
 
     const shopBonus = getShopBonus();
     const equipBonus = getEquipBonus();
@@ -247,7 +246,8 @@
 
     state.power = D.player.power + shopBonus.power + equipBonus.power;
     state.range = D.player.range + shopBonus.range;
-    state.wide = D.player.wide;
+    state.baseWide = D.player.wide;
+    state.wide = state.baseWide;
     state.attackSpeed = D.player.attackSpeed + shopBonus.rapid + equipBonus.rapid;
 
     state.playerImage = avatar ? avatar.backImage : D.player.image;
@@ -276,6 +276,12 @@
     if (window.MobShotPetBattle && window.MobShotPetBattle.init) {
       window.MobShotPetBattle.init(state);
     }
+
+    if (window.MobShotGameSkills && window.MobShotGameSkills.init) {
+      window.MobShotGameSkills.init(state);
+    }
+
+    updateSkillHudImages();
 
     if (resultPanel) {
       resultPanel.classList.add('hidden');
@@ -481,6 +487,22 @@
     }
   }
 
+  function updateSkillState(){
+    let bonusWide = 0;
+
+    if (window.MobShotGameSkills && window.MobShotGameSkills.update) {
+      window.MobShotGameSkills.update();
+    }
+
+    if (window.MobShotGameSkills && window.MobShotGameSkills.getWideBonus) {
+      bonusWide = window.MobShotGameSkills.getWideBonus();
+    }
+
+    state.wide = state.baseWide + bonusWide;
+
+    updateSkillHudCooldowns();
+  }
+
   function update(){
     if (!running) return;
 
@@ -488,6 +510,7 @@
     scroll += 2.2;
 
     updateFlow();
+    updateSkillState();
 
     window.MobShotCombat.shoot(makeTools());
 
@@ -544,8 +567,6 @@
 
   function commitStageClear(){
     const info = getCurrentStageInfo();
-
-    clearedStageInfo = info;
 
     if (window.MobShotStorage && window.MobShotStorage.recordStageClear) {
       window.MobShotStorage.recordStageClear(info.areaKey, info.stageNo);
@@ -664,6 +685,46 @@
     gameScreen.appendChild(btn);
   }
 
+  function updateSkillHudImages(){
+    if (!window.MobShotSkills || !window.MobShotSkills.getEquippedSkills) return;
+
+    const equipped = window.MobShotSkills.getEquippedSkills();
+
+    for (let i = 0; i < 3; i++) {
+      const imgEl = document.getElementById(`skillSlotImg${i}`);
+      const cdEl = document.getElementById(`skillCd${i}`);
+      const skill = equipped[i];
+
+      if (imgEl) {
+        if (skill && skill.image) {
+          imgEl.src = skill.image;
+          imgEl.style.display = 'block';
+        } else {
+          imgEl.removeAttribute('src');
+          imgEl.style.display = 'none';
+        }
+      }
+
+      if (cdEl) {
+        cdEl.textContent = '';
+        cdEl.classList.add('hidden');
+      }
+    }
+  }
+
+  function updateSkillHudCooldowns(){
+    if (!window.MobShotGameSkills || !window.MobShotSkills) return;
+
+    for (let i = 0; i < 3; i++) {
+      const cdEl = document.getElementById(`skillCd${i}`);
+
+      if (!cdEl) continue;
+
+      cdEl.textContent = '';
+      cdEl.classList.add('hidden');
+    }
+  }
+
   function goMainFromResult(){
     running = false;
     stopLoopOnly();
@@ -758,6 +819,10 @@
   function draw(){
     if (window.MobShotRender && window.MobShotRender.drawAll) {
       window.MobShotRender.drawAll(makeRenderTools());
+    }
+
+    if (window.MobShotGameSkills && window.MobShotGameSkills.draw) {
+      window.MobShotGameSkills.draw(ctx);
     }
   }
 
