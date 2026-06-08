@@ -16,6 +16,7 @@
   const resultText = document.getElementById('resultText');
   const resultScore = document.getElementById('resultScore');
   const resultCoin = document.getElementById('resultCoin');
+  const resultRetryBtn = document.getElementById('resultRetryBtn');
 
   let W = 0;
   let H = 0;
@@ -25,6 +26,7 @@
   let frame = 0;
   let scroll = 0;
   let runCommitted = false;
+  let clearedStageInfo = null;
 
   const images = new Map();
 
@@ -65,7 +67,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260607_mission';
+      image.src = src + '?v=20260607_stage_progress';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -148,32 +150,22 @@
     return null;
   }
 
-  function getStageAreaKey(){
-    const stage = D.stage || {};
-    const area = String(stage.areaKey || stage.areaType || stage.name || '').toLowerCase();
+  function getCurrentStageInfo(){
+    if (window.MobShotStorage && window.MobShotStorage.getCurrentStage) {
+      return window.MobShotStorage.getCurrentStage();
+    }
 
-    if (area.includes('草原') || area.includes('grass')) return 'grass';
-    if (area.includes('砂漠') || area.includes('desert')) return 'desert';
-    if (area.includes('田舎') || area.includes('town')) return 'town';
-    if (area.includes('ネオン') || area.includes('neon')) return 'neon';
-    if (area.includes('マグマ') || area.includes('magma')) return 'magma';
-    if (area.includes('魔王') || area.includes('castle')) return 'castle';
-
-    return 'grass';
-  }
-
-  function getStageNo(){
     const stage = D.stage || {};
 
-    if (stage.stageNo != null) return Number(stage.stageNo || 1);
-    if (stage.no != null) return Number(stage.no || 1);
-    if (stage.number != null) return Number(stage.number || 1);
-
-    const id = String(stage.id || '1-1');
-    const parts = id.split('-');
-    const last = Number(parts[parts.length - 1] || 1);
-
-    return Math.max(1, last || 1);
+    return {
+      areaKey: stage.areaKey || 'grass',
+      areaName: stage.areaName || '草原',
+      areaNo: Number(stage.areaNo || 1),
+      stageNo: Number(stage.stageNo || 1),
+      id: stage.id || '1-1',
+      difficulty: stage.difficulty || 'EASY',
+      isStrongBoss: !!stage.isStrongBoss
+    };
   }
 
   function makeTools(){
@@ -243,6 +235,7 @@
     frame = 0;
     scroll = 0;
     runCommitted = false;
+    clearedStageInfo = null;
 
     const shopBonus = getShopBonus();
     const equipBonus = getEquipBonus();
@@ -286,6 +279,10 @@
 
     if (resultPanel) {
       resultPanel.classList.add('hidden');
+    }
+
+    if (resultRetryBtn) {
+      resultRetryBtn.textContent = 'もう一度';
     }
 
     const ev = flow.start();
@@ -544,22 +541,40 @@
     window.MobShotCombat.killEntity(e, makeTools());
   }
 
+  function commitStageClear(){
+    const info = getCurrentStageInfo();
+
+    clearedStageInfo = info;
+
+    if (window.MobShotStorage && window.MobShotStorage.recordStageClear) {
+      window.MobShotStorage.recordStageClear(info.areaKey, info.stageNo);
+    }
+
+    if (window.MobShotMission && window.MobShotMission.onStageClear) {
+      window.MobShotMission.onStageClear(info.areaKey, info.stageNo);
+    }
+
+    if (window.MobShotStorage && window.MobShotStorage.advanceStage) {
+      window.MobShotStorage.advanceStage();
+    }
+
+    return info;
+  }
+
   function finishRun(clear){
     if (runCommitted) return;
 
     runCommitted = true;
     running = false;
 
-    if (clear && window.MobShotMission && window.MobShotMission.onStageClear) {
-      window.MobShotMission.onStageClear(getStageAreaKey(), getStageNo());
+    let clearInfo = null;
+
+    if (clear) {
+      clearInfo = commitStageClear();
     }
 
     if (window.MobShotStorage) {
       window.MobShotStorage.addRunResult(state.score, state.coin);
-    }
-
-    if (window.MobShotMission && window.MobShotMission.addEarnedCoin) {
-      window.MobShotMission.addEarnedCoin(state.coin);
     }
 
     if (window.MobShotMain && window.MobShotMain.refreshMainHud) {
@@ -568,11 +583,34 @@
 
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
 
-    if (resultTitle) resultTitle.textContent = clear ? 'CLEAR!' : 'GAME OVER';
-    if (resultText) resultText.textContent = clear ? 'ボス撃破！ステージクリア' : 'ライフがなくなりました';
-    if (resultScore) resultScore.textContent = state.score.toLocaleString();
-    if (resultCoin) resultCoin.textContent = state.coin.toLocaleString();
-    if (resultPanel) resultPanel.classList.remove('hidden');
+    if (resultTitle) {
+      resultTitle.textContent = clear ? 'CLEAR!' : 'GAME OVER';
+    }
+
+    if (resultText) {
+      if (clear && clearInfo) {
+        resultText.textContent =
+          `${clearInfo.areaName} ${clearInfo.id} クリア！`;
+      } else {
+        resultText.textContent = 'ライフがなくなりました';
+      }
+    }
+
+    if (resultScore) {
+      resultScore.textContent = state.score.toLocaleString();
+    }
+
+    if (resultCoin) {
+      resultCoin.textContent = state.coin.toLocaleString();
+    }
+
+    if (resultRetryBtn) {
+      resultRetryBtn.textContent = clear ? 'NEXT STAGE' : 'もう一度';
+    }
+
+    if (resultPanel) {
+      resultPanel.classList.remove('hidden');
+    }
   }
 
   function goMainFromResult(){
@@ -624,10 +662,23 @@
   }
 
   function updateHud(){
-    if (hudStage) hudStage.textContent = D.stage.id;
-    if (hudScore) hudScore.textContent = Math.floor(state.score).toLocaleString();
-    if (hudCoin) hudCoin.textContent = Math.floor(state.coin).toLocaleString();
-    if (hudLife) hudLife.textContent = Math.max(0, Math.ceil(state.hp));
+    const info = getCurrentStageInfo();
+
+    if (hudStage) {
+      hudStage.textContent = `${info.id}`;
+    }
+
+    if (hudScore) {
+      hudScore.textContent = Math.floor(state.score).toLocaleString();
+    }
+
+    if (hudCoin) {
+      hudCoin.textContent = Math.floor(state.coin).toLocaleString();
+    }
+
+    if (hudLife) {
+      hudLife.textContent = Math.max(0, Math.ceil(state.hp));
+    }
   }
 
   function addText(text, x, y, color){
