@@ -16,7 +16,7 @@
     return {
       totalScore: 0,
       bestScore: 0,
-      coin: 10000,
+      coin: 100000,
       diamond: 0,
       rank: 1,
 
