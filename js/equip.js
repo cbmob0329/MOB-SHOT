@@ -79,7 +79,7 @@
       initial: true
     },
     {
-      key: 'hinotama',
+      key: 'fireball',
       name: '火の玉',
       rank: 1,
       price: 1000,
@@ -99,7 +99,7 @@
       bulletImage: 'atk/record.png'
     },
     {
-      key: 'rainbow',
+      key: 'rainbowfire',
       name: 'レインボーファイア',
       rank: 5,
       price: 3000,
@@ -114,7 +114,7 @@
       rank: 10,
       price: 0,
       power: 2,
-      rapid: 2,
+      rapid: 0.2,
       hp: 0,
       bulletImage: 'atk/wata.png'
     },
@@ -124,7 +124,7 @@
       rank: 10,
       price: 0,
       power: 3,
-      rapid: 2,
+      rapid: 0.2,
       hp: 0,
       bulletImage: 'atk/garagara.png'
     },
@@ -134,12 +134,12 @@
       rank: 10,
       price: 0,
       power: 3,
-      rapid: 1,
+      rapid: 0.1,
       hp: 50,
       bulletImage: 'atk/book.png'
     },
     {
-      key: 'rpg',
+      key: 'mobrpg',
       name: 'MOB RPG',
       rank: 10,
       price: 0,
@@ -149,7 +149,7 @@
       bulletImage: 'atk/rpg.png'
     },
     {
-      key: 'iyo',
+      key: 'iyonokuni',
       name: '伊予ノ国',
       rank: 20,
       price: 0,
@@ -174,7 +174,7 @@
       rank: 20,
       price: 0,
       power: 1,
-      rapid: 4,
+      rapid: 0.4,
       hp: 0,
       bulletImage: 'atk/portal.png'
     },
@@ -184,7 +184,7 @@
       rank: 20,
       price: 0,
       power: 2,
-      rapid: 3,
+      rapid: 0.3,
       hp: 100,
       bulletImage: 'atk/pb2.png'
     }
