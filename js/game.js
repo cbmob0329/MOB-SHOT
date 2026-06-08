@@ -67,7 +67,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260607_stage_progress';
+      image.src = src + '?v=20260607_stage_progress_test_clear';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -291,6 +291,7 @@
 
   function start(){
     resize();
+    createTestClearButton();
     stopLoopOnly();
     running = true;
     resetRun();
@@ -613,6 +614,56 @@
     }
   }
 
+  function testClearNow(){
+    if (!running || runCommitted) return;
+
+    addText('TEST CLEAR', state.player.x, state.player.y - 90, '#9dff73');
+    finishRun(true);
+  }
+
+  function createTestClearButton(){
+    const gameScreen = document.getElementById('gameScreen');
+
+    if (!gameScreen) return;
+
+    let btn = document.getElementById('testClearBtn');
+
+    if (btn) return;
+
+    btn = document.createElement('button');
+    btn.id = 'testClearBtn';
+    btn.type = 'button';
+    btn.textContent = 'テストクリア';
+
+    btn.style.position = 'absolute';
+    btn.style.left = '96px';
+    btn.style.bottom = 'calc(78px + env(safe-area-inset-bottom))';
+    btn.style.zIndex = '27';
+    btn.style.border = '0';
+    btn.style.borderRadius = '999px';
+    btn.style.background = 'linear-gradient(#9dff73,#26b63e)';
+    btn.style.color = '#07370f';
+    btn.style.border = '2px solid rgba(255,255,255,.45)';
+    btn.style.padding = '9px 14px';
+    btn.style.fontSize = '14px';
+    btn.style.fontWeight = '1000';
+    btn.style.boxShadow = '0 4px 0 rgba(0,0,0,.28)';
+
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      testClearNow();
+    }, { passive:false });
+
+    btn.addEventListener('pointerup', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      testClearNow();
+    }, { passive:false });
+
+    gameScreen.appendChild(btn);
+  }
+
   function goMainFromResult(){
     running = false;
     stopLoopOnly();
@@ -730,9 +781,13 @@
   });
 
   window.addEventListener('resize', resize);
-  window.addEventListener('DOMContentLoaded', bindResultButtons);
+  window.addEventListener('DOMContentLoaded', function(){
+    bindResultButtons();
+    createTestClearButton();
+  });
 
   bindResultButtons();
+  createTestClearButton();
 
   window.MobShotGameCore = {
     killEntity,
@@ -743,6 +798,7 @@
     start,
     stop,
     showBanner,
-    goMainFromResult
+    goMainFromResult,
+    testClearNow
   };
 })();
