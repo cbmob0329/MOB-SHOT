@@ -67,7 +67,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260608_skill_connect';
+      image.src = src + '?v=20260608_skill_manual_input_fix';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -79,6 +79,20 @@
 
   function getPlayerBaseY(){
     return Math.max(H * 0.58, H - 148);
+  }
+
+  function isSkillInput(e){
+    if (!e) return false;
+
+    if (
+      e.target &&
+      e.target.closest &&
+      e.target.closest('#skillHud')
+    ) {
+      return true;
+    }
+
+    return false;
   }
 
   function rand(a, b){
@@ -499,8 +513,6 @@
     }
 
     state.wide = state.baseWide + bonusWide;
-
-    updateSkillHudCooldowns();
   }
 
   function update(){
@@ -693,6 +705,8 @@
     for (let i = 0; i < 3; i++) {
       const imgEl = document.getElementById(`skillSlotImg${i}`);
       const cdEl = document.getElementById(`skillCd${i}`);
+      const ringEl = document.getElementById(`skillRing${i}`);
+      const slotEl = document.getElementById(`skillSlot${i}`);
       const skill = equipped[i];
 
       if (imgEl) {
@@ -709,19 +723,14 @@
         cdEl.textContent = '';
         cdEl.classList.add('hidden');
       }
-    }
-  }
 
-  function updateSkillHudCooldowns(){
-    if (!window.MobShotGameSkills || !window.MobShotSkills) return;
+      if (ringEl) {
+        ringEl.style.setProperty('--skill-rate', '360deg');
+      }
 
-    for (let i = 0; i < 3; i++) {
-      const cdEl = document.getElementById(`skillCd${i}`);
-
-      if (!cdEl) continue;
-
-      cdEl.textContent = '';
-      cdEl.classList.add('hidden');
+      if (slotEl) {
+        slotEl.classList.toggle('ready', !!skill);
+      }
     }
   }
 
@@ -836,11 +845,15 @@
   }
 
   canvas.addEventListener('pointerdown', e => {
+    if (isSkillInput(e)) return;
+
     state.player.targetX = e.clientX;
     state.player.targetY = getPlayerBaseY();
   });
 
   canvas.addEventListener('pointermove', e => {
+    if (isSkillInput(e)) return;
+
     state.player.targetX = e.clientX;
     state.player.targetY = getPlayerBaseY();
   });
