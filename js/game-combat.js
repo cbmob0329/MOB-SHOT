@@ -1,6 +1,17 @@
 'use strict';
 
 (function(){
+  function isSkillInvincible(entity){
+    if (
+      window.MobShotGameSkills &&
+      window.MobShotGameSkills.isInvincibleAgainst
+    ) {
+      return window.MobShotGameSkills.isInvincibleAgainst(entity);
+    }
+
+    return false;
+  }
+
   function applyGate(gate, tools){
     const state = tools.state;
     const addText = tools.addText;
@@ -23,7 +34,8 @@
     }
 
     if (gate.type === 'wide') {
-      state.wide += gate.value;
+      state.baseWide += gate.value;
+      state.wide = state.baseWide;
     }
 
     if (window.MobShotMission && window.MobShotMission.onGateTaken) {
@@ -145,6 +157,13 @@
       if (e.kind === 'enemyBullet') {
         if (Math.hypot(p.x - e.x, p.y - e.y) < p.r + e.r) {
           e.dead = true;
+
+          if (isSkillInvincible(e)) {
+            addText('GUARD', p.x, p.y - 50, '#9deeff');
+            burst(p.x, p.y, '#9deeff', 10);
+            continue;
+          }
+
           state.hp -= e.dmg;
           addText(`-${e.dmg}`, p.x, p.y - 50, '#ff5b5b');
           burst(p.x, p.y, '#ff5b5b', 16);
@@ -159,6 +178,13 @@
           e.hitPlayerCd <= 0
         ) {
           e.hitPlayerCd = 90;
+
+          if (isSkillInvincible(e)) {
+            addText('GUARD', p.x, p.y - 50, '#9deeff');
+            burst(p.x, p.y, '#9deeff', 14);
+            continue;
+          }
+
           state.hp -= e.contactDmg;
           addText(`-${e.contactDmg}`, p.x, p.y - 50, '#ff5b5b');
           burst(p.x, p.y, '#ff5b5b', 20);
@@ -178,6 +204,13 @@
 
       if (hit) {
         e.dead = true;
+
+        if (isSkillInvincible(e)) {
+          addText('GUARD', p.x, p.y - 50, '#9deeff');
+          burst(p.x, p.y, '#9deeff', 12);
+          continue;
+        }
+
         const dmg = Math.max(1, Math.ceil(e.hp));
         state.hp -= dmg;
         addText(`-${dmg}`, p.x, p.y - 50, '#ff5b5b');
