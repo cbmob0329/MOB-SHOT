@@ -115,15 +115,15 @@ button{font-family:inherit;touch-action:manipulation}
 .phase-banner.show{animation:bannerPop 1.35s ease forwards}
 @keyframes bannerPop{0%{opacity:0;transform:translateX(-50%) scale(.68)}16%{opacity:1;transform:translateX(-50%) scale(1.08)}75%{opacity:1;transform:translateX(-50%) scale(1)}100%{opacity:0;transform:translateX(-50%) scale(.94)}}
 
-.skillHud{position:absolute;right:8px;bottom:max(8px,env(safe-area-inset-bottom));z-index:31;display:flex;flex-direction:column;gap:10px;pointer-events:auto}
-.skillSlot{position:relative;width:110px;height:110px;padding:0;border:none;background:none;overflow:hidden;border-radius:24px;cursor:pointer;pointer-events:auto;touch-action:manipulation}
-.skillSlot img{position:absolute;inset:5px;width:100px;height:100px;object-fit:cover;border-radius:21px;border:3px solid rgba(255,255,255,.38);background:#111;z-index:2}
-.skillSlot.ready img{border-color:#ffe66b;box-shadow:0 0 12px #ffe66b,0 0 24px #ffe66b,0 0 36px rgba(255,230,107,.68)}
-.skillRing{position:absolute;left:8px;right:8px;bottom:8px;height:14px;border-radius:999px;z-index:8;background:rgba(0,0,0,.65);border:2px solid rgba(255,255,255,.38);overflow:hidden}
+.skillHud{position:absolute;right:7px;bottom:max(7px,env(safe-area-inset-bottom));z-index:31;display:flex;flex-direction:column;gap:8px;pointer-events:auto}
+.skillSlot{position:relative;width:84px;height:84px;padding:0;border:none;background:none;overflow:hidden;border-radius:19px;cursor:pointer;pointer-events:auto;touch-action:manipulation}
+.skillSlot img{position:absolute;inset:4px;width:76px;height:76px;object-fit:cover;border-radius:17px;border:3px solid rgba(255,255,255,.38);background:#111;z-index:2}
+.skillSlot.ready img{border-color:#ffe66b;box-shadow:0 0 8px #ffe66b,0 0 15px rgba(255,230,107,.9),0 0 22px rgba(255,230,107,.55)}
+.skillRing{position:absolute;left:7px;right:7px;bottom:6px;height:10px;border-radius:999px;z-index:8;background:rgba(0,0,0,.68);border:1px solid rgba(255,255,255,.42);overflow:hidden}
 .skillRing::after{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--skill-rate,100%);border-radius:999px;background:linear-gradient(90deg,#1774ee,#60d9ff)}
-.skillSlot.ready .skillRing::after{background:linear-gradient(90deg,#ff9418,#ffe66b,#fff6a8);box-shadow:0 0 12px #ffe66b}
-.skillCd{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;color:#fff;font-size:40px;font-weight:1000;text-shadow:0 0 7px #000,0 2px 0 #000,0 5px 0 #000;letter-spacing:.02em;pointer-events:none}
-.skillSlot.ready .skillCd{font-size:24px;color:#ffe66b;text-shadow:0 0 8px #000,0 0 12px #ffe66b,0 3px 0 #000}
+.skillSlot.ready .skillRing::after{background:linear-gradient(90deg,#ff9418,#ffe66b,#fff6a8);box-shadow:0 0 9px #ffe66b}
+.skillCd{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;color:#fff;font-size:30px;font-weight:1000;text-shadow:0 0 7px #000,0 2px 0 #000,0 4px 0 #000;letter-spacing:.02em;pointer-events:none}
+.skillSlot.ready .skillCd{font-size:18px;color:#ffe66b;text-shadow:0 0 7px #000,0 0 10px #ffe66b,0 3px 0 #000}
 .skillCd.hidden{display:none}
 .skillSlot:active{transform:scale(.94)}
 .skillSlot:not(.ready) img{filter:brightness(.58) saturate(.75)}
@@ -157,8 +157,9 @@ button{font-family:inherit;touch-action:manipulation}
   .main-float-pet img{width:28px;height:28px}
   .mission-tabs{gap:4px}
   .mission-tab{font-size:10px;padding:8px 1px}
-  .skillSlot{width:92px;height:92px}
-  .skillSlot img{inset:5px;width:82px;height:82px}
-  .skillCd{font-size:34px}
-  .skillSlot.ready .skillCd{font-size:20px}
+  .skillSlot{width:72px;height:72px}
+  .skillSlot img{inset:4px;width:64px;height:64px}
+  .skillCd{font-size:26px}
+  .skillSlot.ready .skillCd{font-size:16px}
+  .skillRing{height:8px;left:6px;right:6px;bottom:5px}
 }
