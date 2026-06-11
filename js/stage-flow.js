@@ -391,6 +391,7 @@
     this.phase = 'idle';
     this.phaseFrame = 0;
     this.area = 0;
+    this.gate = 0;
     this.boss = 0;
     this.midBoss = 0;
     this.finished = false;
@@ -418,7 +419,7 @@
       phase: this.phase,
       phaseFrame: this.phaseFrame,
       area: this.area,
-      gate: 0,
+      gate: this.gate,
       midBoss: this.midBoss,
       boss: this.boss,
       finished: this.finished,
@@ -432,26 +433,26 @@
   };
 
   MobShotStageFlow.prototype.completeArea = function(){
-    if (this.area < 3) {
-      this.area++;
-      this.setPhase('area');
-
-      return {
-        type: 'areaStart',
-        text: `AREA ${this.area}`
-      };
-    }
-
-    this.boss++;
-    this.setPhase('boss');
+    this.gate = Number(this.gate || 0) + 1;
+    this.setPhase('gate');
 
     return {
-      type: 'bossStart',
-      text: this.stageInfo.isStrongBoss || this.stageInfo.isLegend ? '強力ボス出現！' : 'BOSS!'
+      type: 'gateStart',
+      text: 'GATE!'
     };
   };
 
   MobShotStageFlow.prototype.completeGate = function(){
+    if (this.gate === 2 || this.gate === 3) {
+      this.midBoss++;
+      this.setPhase('midBoss');
+
+      return {
+        type: 'midBossStart',
+        text: '中ボス出現！'
+      };
+    }
+
     this.area++;
 
     if (this.area > 3) {
