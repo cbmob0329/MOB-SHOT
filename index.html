@@ -49,6 +49,10 @@
           <span>出撃</span>
         </button>
 
+        <button id="testSortieBtn" class="image-button test-sortie" type="button">
+          <span style="display:block;">テスト<br>出撃</span>
+        </button>
+
         <button id="openShopBtn" class="image-button" type="button">
           <img id="shopImg" src="mt/menushop.png" alt="SHOP" />
           <span>SHOP</span>
@@ -82,23 +86,31 @@
         </button>
       </nav>
 
+      <div id="testStageModal" class="test-stage-modal hidden">
+        <div class="test-stage-card">
+          <div class="test-stage-head">
+            <h2>テスト出撃</h2>
+            <button id="testStageCloseBtn" type="button">閉じる</button>
+          </div>
+          <p class="test-stage-help">
+            好きなステージを選んでテスト出撃できます。テスト出撃は通常進行を進めません。
+          </p>
+          <div id="testStageList" class="test-stage-list"></div>
+        </div>
+      </div>
+
       <div id="shopModal" class="shop-modal hidden">
         <div class="shop-modal-card">
           <div class="shop-modal-head">
             <h2>SHOP</h2>
             <button id="shopCloseBtn" type="button">閉じる</button>
           </div>
-
           <div class="shop-tabs">
             <button id="shopTabAvatar" class="shop-tab active" type="button">アバター</button>
             <button id="shopTabRecord" class="shop-tab" type="button">レコード</button>
             <button id="shopTabUpgrade" class="shop-tab" type="button">強化</button>
           </div>
-
-          <p id="shopHelpText" class="shop-help">
-            アイテム購入と強化ができます。装備は装備メニューで行います。
-          </p>
-
+          <p id="shopHelpText" class="shop-help">アイテム購入と強化ができます。装備は装備メニューで行います。</p>
           <div id="shopList" class="shop-list"></div>
         </div>
       </div>
@@ -109,17 +121,12 @@
             <h2>装備</h2>
             <button id="equipCloseBtn" type="button">閉じる</button>
           </div>
-
           <div class="equip-tabs">
             <button id="equipTabAvatar" class="equip-tab active" type="button">アバター</button>
             <button id="equipTabRecord" class="equip-tab" type="button">レコード</button>
             <button id="equipTabSkill" class="equip-tab" type="button">スキル</button>
           </div>
-
-          <p id="equipHelpText" class="equip-help">
-            所持しているアイテムを装備できます。
-          </p>
-
+          <p id="equipHelpText" class="equip-help">所持しているアイテムを装備できます。</p>
           <div id="equipList" class="equip-list"></div>
         </div>
       </div>
@@ -130,7 +137,6 @@
             <h2>ミッション</h2>
             <button id="missionCloseBtn" type="button">閉じる</button>
           </div>
-
           <div class="mission-tabs">
             <button id="missionTabStage" class="mission-tab active" type="button">ステージ</button>
             <button id="missionTabDestroy" class="mission-tab" type="button">撃破</button>
@@ -138,11 +144,7 @@
             <button id="missionTabRank" class="mission-tab" type="button">ランク</button>
             <button id="missionTabCoin" class="mission-tab" type="button">コイン</button>
           </div>
-
-          <p id="missionHelpText" class="mission-help">
-            条件達成後に「受け取る」で報酬を獲得できます。
-          </p>
-
+          <p id="missionHelpText" class="mission-help">条件達成後に「受け取る」で報酬を獲得できます。</p>
           <div id="missionList" class="mission-list"></div>
         </div>
       </div>
@@ -153,11 +155,7 @@
             <h2>ペット装備</h2>
             <button id="petModalCloseBtn" type="button">閉じる</button>
           </div>
-
-          <p class="pet-modal-help">
-            ペットを購入・強化・装備できます。最大3体まで装備可能です。
-          </p>
-
+          <p class="pet-modal-help">ペットを購入・強化・装備できます。最大3体まで装備可能です。</p>
           <div id="petOwnedList" class="pet-owned-list"></div>
         </div>
       </div>
@@ -171,17 +169,14 @@
           <img id="hudStageImg" src="mt/stagestage.png" alt="STAGE" />
           <span id="hudStage">1-1</span>
         </div>
-
         <div class="hud-item">
           <img id="hudScoreImg" src="mt/stagescore.png" alt="SCORE" />
           <span id="hudScore">0</span>
         </div>
-
         <div class="hud-item">
           <img id="hudCoinImg" src="mt/stagecoin.png" alt="COIN" />
           <span id="hudCoin">0</span>
         </div>
-
         <div class="hud-item">
           <img id="hudLifeImg" src="mt/stagelife.png" alt="LIFE" />
           <span id="hudLife">50</span>
@@ -189,7 +184,6 @@
       </div>
 
       <div id="phaseBanner" class="phase-banner"></div>
-
       <button id="gameBackBtn" class="back-btn" type="button">メインへ</button>
 
       <div id="skillHud" class="skillHud">
@@ -198,13 +192,11 @@
           <div id="skillCd0" class="skillCd hidden"></div>
           <div id="skillRing0" class="skillRing"></div>
         </button>
-
         <button class="skillSlot" id="skillSlot1" type="button">
           <img id="skillSlotImg1" alt="SKILL 2" />
           <div id="skillCd1" class="skillCd hidden"></div>
           <div id="skillRing1" class="skillRing"></div>
         </button>
-
         <button class="skillSlot" id="skillSlot2" type="button">
           <img id="skillSlotImg2" alt="SKILL 3" />
           <div id="skillCd2" class="skillCd hidden"></div>
@@ -216,17 +208,8 @@
         <div class="result-card">
           <h1 id="resultTitle">CLEAR!</h1>
           <p id="resultText">ボス撃破！ステージクリア</p>
-
-          <div class="result-row">
-            <span>SCORE</span>
-            <b id="resultScore">0</b>
-          </div>
-
-          <div class="result-row">
-            <span>COIN</span>
-            <b id="resultCoin">0</b>
-          </div>
-
+          <div class="result-row"><span>SCORE</span><b id="resultScore">0</b></div>
+          <div class="result-row"><span>COIN</span><b id="resultCoin">0</b></div>
           <button id="resultRetryBtn" type="button">もう一度</button>
           <button id="resultHomeBtn" type="button">メインへ戻る</button>
         </div>
@@ -253,5 +236,6 @@
   <script src="js/game.js"></script>
 
   <script src="js/main.js"></script>
+  <script src="js/test-stage.js"></script>
 </body>
 </html>
