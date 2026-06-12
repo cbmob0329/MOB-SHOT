@@ -26,7 +26,7 @@
     }
 
     if (gate.type === 'rapid') {
-      state.attackSpeed += 0.25 * gate.value;
+      state.attackSpeed += 0.12 * gate.value;
     }
 
     if (gate.type === 'life') {
@@ -83,7 +83,7 @@
     );
 
     const count = Math.max(1, state.wide);
-    const maxTravel = 150 + state.range * 45;
+    const maxTravel = 150 + state.range * 20;
 
     for (let i = 0; i < count; i++) {
       const offset = (i - (count - 1) / 2) * 26;
@@ -122,12 +122,22 @@
 
     for (const e of state.entities) {
       if (e.dead) continue;
-
       if (e.kind !== 'enemyBullet') continue;
 
       if (e.homing) {
+        if (e.y > state.player.y - 40) {
+          e.dead = true;
+          continue;
+        }
+
         const dx = state.player.x - e.x;
         const dy = state.player.y - e.y;
+
+        if (dy <= 0) {
+          e.dead = true;
+          continue;
+        }
+
         const len = Math.max(1, Math.sqrt(dx * dx + dy * dy));
         const speed = e.homingSpeed || Math.max(2.8, Math.sqrt((e.vx || 0) * (e.vx || 0) + (e.vy || 0) * (e.vy || 0)));
         const targetVx = dx / len * speed;
@@ -141,6 +151,16 @@
       e.x += e.vx || 0;
       e.y += e.vy || 0;
 
+      if (e.vy < 0 && e.y < state.player.y) {
+        e.dead = true;
+        continue;
+      }
+
+      if (e.y > state.player.y + 78) {
+        e.dead = true;
+        continue;
+      }
+
       if (e.life != null) {
         e.life--;
         if (e.life <= 0) {
@@ -152,7 +172,7 @@
         e.x < -140 ||
         e.x > W + 140 ||
         e.y < -160 ||
-        e.y > H + 160
+        e.y > H + 120
       ) {
         e.dead = true;
       }
@@ -384,7 +404,11 @@
   }
 
   function isBreakableEnemyBullet(e){
-    return Number(e.hp || 0) > 0;
+    return (
+      e.kind === 'enemyBullet' &&
+      e.breakable &&
+      Number(e.hp || 0) > 0
+    );
   }
 
   function hasBarrier(e){
