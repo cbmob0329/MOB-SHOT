@@ -366,7 +366,7 @@
         if (window.MobShotSpawn && window.MobShotSpawn.spawnGatePair) {
           window.MobShotSpawn.spawnGatePair(tools);
         }
-        state.gateEndAt = frame + 280;
+        state.gateEndAt = frame + 520;
       }
 
       if (ev.type === 'midBossStart') {
