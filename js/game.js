@@ -18,6 +18,9 @@
   const resultCoin = document.getElementById('resultCoin');
   const resultRetryBtn = document.getElementById('resultRetryBtn');
 
+  const SCROLL_SPEED = 1.15;
+  const FIELD_ENTITY_SPEED = 0.72;
+
   let W = 0;
   let H = 0;
   let DPR = 1;
@@ -68,7 +71,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260612_ai_safe';
+      image.src = src + '?v=20260612_scroll_fix';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -505,8 +508,8 @@
       e.dashCd = Number(e.dashCd || 90) - 1;
 
       if (e.dashCd <= 0) {
-        e.vy += 1.25;
-        e.dashCd = 90;
+        e.vy += 0.8;
+        e.dashCd = 110;
       }
     }
 
@@ -515,7 +518,7 @@
 
       if (e.teleportCd <= 0) {
         e.x = rand(W * 0.18, W * 0.82);
-        e.teleportCd = 120;
+        e.teleportCd = 140;
         addText('瞬間移動', e.x, e.y - 30, '#b78cff');
       }
     }
@@ -528,11 +531,19 @@
     }
 
     if (e.canShoot) {
-      e.shootCd = Number(e.shootCd || e.baseShootCd || 150) - 1;
+      const canShootFromFront =
+        e.y > 0 &&
+        e.y < state.player.y - 110;
+
+      if (!canShootFromFront) {
+        return;
+      }
+
+      e.shootCd = Number(e.shootCd || e.baseShootCd || 190) - 1;
 
       if (e.shootCd <= 0) {
         enemyZakoShot(e);
-        e.shootCd = Number(e.baseShootCd || 150);
+        e.shootCd = Number(e.baseShootCd || 190);
       }
     }
   }
@@ -546,9 +557,14 @@
     for (let i = 0; i < count; i++) {
       const dx = state.player.x - e.x;
       const dy = state.player.y - e.y;
+
+      if (dy <= 0) {
+        continue;
+      }
+
       const base = Math.atan2(dy, dx);
       const angle = base + (i - (count - 1) / 2) * 0.25;
-      const speed = e.burstShot ? 3.2 : 2.9;
+      const speed = e.burstShot ? 2.8 : 2.55;
 
       state.entities.push({
         kind: 'enemyBullet',
@@ -563,7 +579,8 @@
         breakable: true,
         dead: false,
         bob: 0,
-        color
+        color,
+        life: 360
       });
     }
   }
@@ -644,7 +661,7 @@
           updateEnemyAI(e);
         }
 
-        e.y += e.vy || 0;
+        e.y += (e.vy || 0) * FIELD_ENTITY_SPEED;
 
         if (e.kind === 'enemy') {
           e.x += e.vx || 0;
@@ -652,14 +669,6 @@
           if (e.x < W * 0.16 || e.x > W * 0.84) {
             e.vx = -(e.vx || 0.8);
           }
-        }
-
-        if (e.kind === 'gate') {
-          e.y += e.vy || 0;
-        }
-
-        if (e.kind === 'gimmick' || e.kind === 'chest') {
-          e.y += e.vy || 0;
         }
       }
 
@@ -705,7 +714,7 @@
     if (!running) return;
 
     frame++;
-    scroll += 1.7;
+    scroll += SCROLL_SPEED;
 
     updateFlow();
     updateSkillState();
