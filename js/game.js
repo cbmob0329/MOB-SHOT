@@ -26,6 +26,7 @@
   let frame = 0;
   let scroll = 0;
   let runCommitted = false;
+  let aiErrorCount = 0;
 
   const images = new Map();
 
@@ -67,7 +68,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260608_skill_manual_input_fix';
+      image.src = src + '?v=20260612_ai_safe';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -82,17 +83,12 @@
   }
 
   function isSkillInput(e){
-    if (!e) return false;
-
-    if (
+    return !!(
+      e &&
       e.target &&
       e.target.closest &&
       e.target.closest('#skillHud')
-    ) {
-      return true;
-    }
-
-    return false;
+    );
   }
 
   function rand(a, b){
@@ -104,6 +100,7 @@
   }
 
   function pick(arr){
+    if (!arr || !arr.length) return null;
     return arr[Math.floor(Math.random() * arr.length)];
   }
 
@@ -112,6 +109,8 @@
   }
 
   function weightedPick(list){
+    if (!list || !list.length) return null;
+
     const total = list.reduce((sum, item) => sum + (item.weight || 1), 0);
     let roll = Math.random() * total;
 
@@ -128,12 +127,7 @@
       return window.MobShotShop.getUpgradeBonus();
     }
 
-    return {
-      power: 0,
-      range: 0,
-      rapid: 0,
-      hp: 0
-    };
+    return { power: 0, range: 0, rapid: 0, hp: 0 };
   }
 
   function getEquipBonus(){
@@ -141,11 +135,7 @@
       return window.MobShotEquip.getEquipmentBonus();
     }
 
-    return {
-      power: 0,
-      rapid: 0,
-      hp: 0
-    };
+    return { power: 0, rapid: 0, hp: 0 };
   }
 
   function getEquippedAvatar(){
@@ -172,13 +162,16 @@
     const stage = D.stage || {};
 
     return {
+      index: 0,
       areaKey: stage.areaKey || 'grass',
       areaName: stage.areaName || '草原',
       areaNo: Number(stage.areaNo || 1),
       stageNo: Number(stage.stageNo || 1),
       id: stage.id || '1-1',
       difficulty: stage.difficulty || 'EASY',
-      isStrongBoss: !!stage.isStrongBoss
+      isStrongBoss: !!stage.isStrongBoss,
+      isLegend: !!stage.isLegend,
+      isTest: !!stage.isTest
     };
   }
 
@@ -209,11 +202,24 @@
   function makeBossTools(){
     return {
       state,
+      D,
+      flow,
       W,
       H,
+      ctx,
+      scroll,
+      frame: function(){
+        return frame;
+      },
       rand,
+      intRand,
+      pick,
       clamp,
-      addText
+      weightedPick,
+      addText,
+      burst,
+      killEntity,
+      applyGate
     };
   }
 
@@ -249,6 +255,7 @@
     frame = 0;
     scroll = 0;
     runCommitted = false;
+    aiErrorCount = 0;
 
     const shopBonus = getShopBonus();
     const equipBonus = getEquipBonus();
@@ -319,10 +326,7 @@
   }
 
   function stopLoopOnly(){
-    if (raf) {
-      cancelAnimationFrame(raf);
-    }
-
+    if (raf) cancelAnimationFrame(raf);
     raf = 0;
   }
 
@@ -347,97 +351,127 @@
 
     const tools = makeTools();
 
-    if (ev.type === 'areaStart') {
-      state.areaSpawn.nextEnemy = frame + 40;
-      state.areaSpawn.nextGimmick = frame + 80;
-      state.areaSpawn.nextChest = frame + 150;
-      state.areaSpawn.endAt = frame + 430;
-    }
+    try {
+      if (ev.type === 'areaStart') {
+        state.areaSpawn.nextEnemy = frame + 40;
+        state.areaSpawn.nextGimmick = frame + 80;
+        state.areaSpawn.nextChest = frame + 150;
+        state.areaSpawn.endAt = frame + 430;
+      }
 
-    if (ev.type === 'gateStart') {
-      window.MobShotSpawn.spawnGatePair(tools);
-      state.gateEndAt = frame + 280;
-    }
+      if (ev.type === 'gateStart') {
+        if (window.MobShotSpawn && window.MobShotSpawn.spawnGatePair) {
+          window.MobShotSpawn.spawnGatePair(tools);
+        }
+        state.gateEndAt = frame + 280;
+      }
 
-    if (ev.type === 'midBossStart') {
-      window.MobShotSpawn.spawnMidBoss(tools);
-    }
+      if (ev.type === 'midBossStart') {
+        if (window.MobShotSpawn && window.MobShotSpawn.spawnMidBoss) {
+          window.MobShotSpawn.spawnMidBoss(tools);
+        }
+      }
 
-    if (ev.type === 'bossStart') {
-      window.MobShotSpawn.spawnBoss(tools);
-    }
+      if (ev.type === 'bossStart') {
+        if (window.MobShotSpawn && window.MobShotSpawn.spawnBoss) {
+          window.MobShotSpawn.spawnBoss(tools);
+        }
+      }
 
-    if (ev.type === 'clear') {
-      finishRun(true);
+      if (ev.type === 'clear') {
+        finishRun(true);
+      }
+    } catch (err) {
+      console.error('Flow event error:', ev.type, err);
+      addText('FLOW ERROR', W / 2, H * 0.25, '#ff5b5b');
+
+      if (ev.type === 'gateStart') {
+        handleFlowEvent(flow.completeGate());
+      } else if (ev.type === 'midBossStart') {
+        handleFlowEvent(flow.completeMidBoss());
+      } else if (ev.type === 'bossStart') {
+        handleFlowEvent(flow.completeBoss());
+      }
     }
   }
 
   function updateFlow(){
-    flow.update();
-    const snap = flow.snapshot();
-    const tools = makeTools();
+    try {
+      flow.update();
 
-    if (snap.phase === 'area') {
-      if (frame >= state.areaSpawn.nextEnemy) {
-        window.MobShotSpawn.spawnEnemy(tools);
-        state.areaSpawn.nextEnemy = frame + intRand(90, 145);
-      }
+      const snap = flow.snapshot();
+      const tools = makeTools();
 
-      if (frame >= state.areaSpawn.nextGimmick) {
-        window.MobShotSpawn.spawnGimmick(tools);
-        state.areaSpawn.nextGimmick = frame + intRand(115, 175);
-      }
-
-      if (frame >= state.areaSpawn.nextChest) {
-        if (Math.random() < 0.42) {
-          window.MobShotSpawn.spawnChest(tools);
+      if (snap.phase === 'area') {
+        if (frame >= state.areaSpawn.nextEnemy) {
+          if (window.MobShotSpawn && window.MobShotSpawn.spawnEnemy) {
+            window.MobShotSpawn.spawnEnemy(tools);
+          }
+          state.areaSpawn.nextEnemy = frame + intRand(90, 145);
         }
 
-        state.areaSpawn.nextChest = frame + intRand(230, 350);
-      }
-
-      if (frame >= state.areaSpawn.endAt) {
-        handleFlowEvent(flow.completeArea());
-      }
-    }
-
-    if (snap.phase === 'gate') {
-      const gatesAlive = state.entities.some(e =>
-        e.kind === 'gate' &&
-        !e.dead
-      );
-
-      if (!gatesAlive || frame >= state.gateEndAt) {
-        state.entities.forEach(e => {
-          if (e.kind === 'gate') {
-            e.dead = true;
+        if (frame >= state.areaSpawn.nextGimmick) {
+          if (window.MobShotSpawn && window.MobShotSpawn.spawnGimmick) {
+            window.MobShotSpawn.spawnGimmick(tools);
           }
-        });
+          state.areaSpawn.nextGimmick = frame + intRand(115, 175);
+        }
 
-        handleFlowEvent(flow.completeGate());
+        if (frame >= state.areaSpawn.nextChest) {
+          if (Math.random() < 0.42) {
+            if (window.MobShotSpawn && window.MobShotSpawn.spawnChest) {
+              window.MobShotSpawn.spawnChest(tools);
+            }
+          }
+          state.areaSpawn.nextChest = frame + intRand(230, 350);
+        }
+
+        if (frame >= state.areaSpawn.endAt) {
+          handleFlowEvent(flow.completeArea());
+        }
       }
-    }
 
-    if (snap.phase === 'midBoss') {
-      const alive = state.entities.some(e =>
-        e.kind === 'midBoss' &&
-        !e.dead
-      );
+      if (snap.phase === 'gate') {
+        const gatesAlive = state.entities.some(e =>
+          e.kind === 'gate' &&
+          !e.dead
+        );
 
-      if (!alive && snap.phaseFrame > 60) {
-        handleFlowEvent(flow.completeMidBoss());
+        if (!gatesAlive || frame >= state.gateEndAt) {
+          state.entities.forEach(e => {
+            if (e.kind === 'gate') {
+              e.dead = true;
+            }
+          });
+
+          handleFlowEvent(flow.completeGate());
+        }
       }
-    }
 
-    if (snap.phase === 'boss') {
-      const alive = state.entities.some(e =>
-        e.kind === 'boss' &&
-        !e.dead
-      );
+      if (snap.phase === 'midBoss') {
+        const alive = state.entities.some(e =>
+          e.kind === 'midBoss' &&
+          !e.dead
+        );
 
-      if (!alive && snap.phaseFrame > 60) {
-        handleFlowEvent(flow.completeBoss());
+        if (!alive && snap.phaseFrame > 60) {
+          handleFlowEvent(flow.completeMidBoss());
+        }
       }
+
+      if (snap.phase === 'boss') {
+        const alive = state.entities.some(e =>
+          e.kind === 'boss' &&
+          !e.dead
+        );
+
+        if (!alive && snap.phaseFrame > 60) {
+          handleFlowEvent(flow.completeBoss());
+        }
+      }
+    } catch (err) {
+      console.error('updateFlow error:', err);
+      addText('FLOW SAFE', W / 2, H * 0.22, '#ff5b5b');
     }
   }
 
@@ -451,6 +485,102 @@
     p.y = getPlayerBaseY();
   }
 
+  function updateEnemyAI(e){
+    e.aiTimer = Number(e.aiTimer || 0) + 1;
+
+    if (e.aiType === 'hop' || e.aiType === 'fastHop' || e.aiType === 'wideHop') {
+      e.x += Math.sin(e.aiTimer * 0.16) * (e.aiType === 'fastHop' ? 2.2 : 1.25);
+      e.y += Math.sin(e.aiTimer * 0.22) * 0.35;
+    }
+
+    if (e.aiType === 'sway') {
+      e.x += Math.sin(e.aiTimer * 0.08) * 1.6;
+    }
+
+    if (e.aiType === 'fastSide') {
+      e.x += Math.sin(e.aiTimer * 0.16) * 2.2;
+    }
+
+    if (e.aiType === 'shortDash') {
+      e.dashCd = Number(e.dashCd || 90) - 1;
+
+      if (e.dashCd <= 0) {
+        e.vy += 1.25;
+        e.dashCd = 90;
+      }
+    }
+
+    if (e.aiType === 'teleport') {
+      e.teleportCd = Number(e.teleportCd || 120) - 1;
+
+      if (e.teleportCd <= 0) {
+        e.x = rand(W * 0.18, W * 0.82);
+        e.teleportCd = 120;
+        addText('瞬間移動', e.x, e.y - 30, '#b78cff');
+      }
+    }
+
+    if (e.aiType === 'enlargeLowHp' && !e.enlarged && e.hp <= e.maxHp * 0.45) {
+      e.enlarged = true;
+      e.r = Math.ceil((e.r || 32) * 1.25);
+      e.hp = Math.ceil(e.hp * 1.2);
+      addText('巨大化！', e.x, e.y - 30, '#b78cff');
+    }
+
+    if (e.canShoot) {
+      e.shootCd = Number(e.shootCd || e.baseShootCd || 150) - 1;
+
+      if (e.shootCd <= 0) {
+        enemyZakoShot(e);
+        e.shootCd = Number(e.baseShootCd || 150);
+      }
+    }
+  }
+
+  function enemyZakoShot(e){
+    const count = e.burstShot ? 2 : e.aiType === 'wideShot' ? 3 : 1;
+    const color = e.bulletColor || '#ff4aff';
+    const r = e.bulletLarge ? 14 : 10;
+    const hp = e.bulletLarge ? 10 : 6;
+
+    for (let i = 0; i < count; i++) {
+      const dx = state.player.x - e.x;
+      const dy = state.player.y - e.y;
+      const base = Math.atan2(dy, dx);
+      const angle = base + (i - (count - 1) / 2) * 0.25;
+      const speed = e.burstShot ? 3.2 : 2.9;
+
+      state.entities.push({
+        kind: 'enemyBullet',
+        x: e.x,
+        y: e.y + 24,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        r,
+        dmg: Math.ceil(r * 0.9),
+        hp,
+        maxHp: hp,
+        breakable: true,
+        dead: false,
+        bob: 0,
+        color
+      });
+    }
+  }
+
+  function fallbackBossMove(e){
+    if (e.y < e.targetY) {
+      e.y += e.vy || 1.5;
+      return;
+    }
+
+    e.x += e.vx || 1.2;
+
+    if (e.x < W * 0.18 || e.x > W * 0.82) {
+      e.vx = -(e.vx || 1.2);
+    }
+  }
+
   function updateEntities(){
     const bossTools = makeBossTools();
 
@@ -462,27 +592,79 @@
         e.kind === 'midBoss' ||
         e.kind === 'boss'
       ) {
-        e.bob += 0.06;
+        e.bob = Number(e.bob || 0) + 0.06;
       }
 
       if (e.kind === 'midBoss') {
         if (window.MobShotBoss && window.MobShotBoss.updateMidBoss) {
-          window.MobShotBoss.updateMidBoss(e, bossTools);
+          try {
+            window.MobShotBoss.updateMidBoss(e, bossTools);
+          } catch (err) {
+            aiErrorCount++;
+            console.error('中ボスAIエラー:', e.name, err);
+
+            if (!e.__aiErrorShown) {
+              e.__aiErrorShown = true;
+              addText('AI SAFE', e.x, e.y - 60, '#ff5b5b');
+            }
+
+            fallbackBossMove(e);
+
+            if (aiErrorCount > 20) {
+              e.dead = true;
+            }
+          }
+        } else {
+          fallbackBossMove(e);
         }
       } else if (e.kind === 'boss') {
         if (window.MobShotBoss && window.MobShotBoss.updateBoss) {
-          window.MobShotBoss.updateBoss(e, bossTools);
+          try {
+            window.MobShotBoss.updateBoss(e, bossTools);
+          } catch (err) {
+            aiErrorCount++;
+            console.error('ボスAIエラー:', e.name, err);
+
+            if (!e.__aiErrorShown) {
+              e.__aiErrorShown = true;
+              addText('AI SAFE', e.x, e.y - 80, '#ff5b5b');
+            }
+
+            fallbackBossMove(e);
+
+            if (aiErrorCount > 30) {
+              e.dead = true;
+            }
+          }
+        } else {
+          fallbackBossMove(e);
         }
       } else {
-        e.y += e.vy;
+        if (e.kind === 'enemy') {
+          updateEnemyAI(e);
+        }
+
+        e.y += e.vy || 0;
 
         if (e.kind === 'enemy') {
           e.x += e.vx || 0;
 
           if (e.x < W * 0.16 || e.x > W * 0.84) {
-            e.vx *= -1;
+            e.vx = -(e.vx || 0.8);
           }
         }
+
+        if (e.kind === 'gate') {
+          e.y += e.vy || 0;
+        }
+
+        if (e.kind === 'gimmick' || e.kind === 'chest') {
+          e.y += e.vy || 0;
+        }
+      }
+
+      if (e.barrierTimer > 0) {
+        e.barrierTimer--;
       }
     }
   }
@@ -504,15 +686,19 @@
   function updateSkillState(){
     let bonusWide = 0;
 
-    if (window.MobShotGameSkills && window.MobShotGameSkills.update) {
-      window.MobShotGameSkills.update();
-    }
+    try {
+      if (window.MobShotGameSkills && window.MobShotGameSkills.update) {
+        window.MobShotGameSkills.update();
+      }
 
-    if (window.MobShotGameSkills && window.MobShotGameSkills.getWideBonus) {
-      bonusWide = window.MobShotGameSkills.getWideBonus();
-    }
+      if (window.MobShotGameSkills && window.MobShotGameSkills.getWideBonus) {
+        bonusWide = window.MobShotGameSkills.getWideBonus();
+      }
 
-    state.wide = state.baseWide + bonusWide;
+      state.wide = state.baseWide + bonusWide;
+    } catch (err) {
+      console.error('Skill update error:', err);
+    }
   }
 
   function update(){
@@ -524,18 +710,41 @@
     updateFlow();
     updateSkillState();
 
-    window.MobShotCombat.shoot(makeTools());
+    try {
+      if (window.MobShotCombat && window.MobShotCombat.shoot) {
+        window.MobShotCombat.shoot(makeTools());
+      }
+    } catch (err) {
+      console.error('shoot error:', err);
+    }
 
-    if (window.MobShotPetBattle && window.MobShotPetBattle.update) {
-      window.MobShotPetBattle.update();
+    try {
+      if (window.MobShotPetBattle && window.MobShotPetBattle.update) {
+        window.MobShotPetBattle.update();
+      }
+    } catch (err) {
+      console.error('pet update error:', err);
     }
 
     updatePlayer();
     updateEntities();
 
-    window.MobShotCombat.updateBullets(makeTools());
-    window.MobShotCombat.collideBullets(makeTools());
-    window.MobShotCombat.collidePlayer(makeTools());
+    try {
+      if (window.MobShotCombat && window.MobShotCombat.updateBullets) {
+        window.MobShotCombat.updateBullets(makeTools());
+      }
+
+      if (window.MobShotCombat && window.MobShotCombat.collideBullets) {
+        window.MobShotCombat.collideBullets(makeTools());
+      }
+
+      if (window.MobShotCombat && window.MobShotCombat.collidePlayer) {
+        window.MobShotCombat.collidePlayer(makeTools());
+      }
+    } catch (err) {
+      console.error('combat error:', err);
+      addText('COMBAT SAFE', state.player.x, state.player.y - 80, '#ff5b5b');
+    }
 
     updateParticles();
     cleanup();
@@ -549,15 +758,16 @@
   function cleanup(){
     state.entities = state.entities.filter(e =>
       !e.dead &&
-      e.y < H + 240 &&
-      e.y > -330 &&
-      e.x > -210 &&
-      e.x < W + 210
+      e.y < H + 260 &&
+      e.y > -360 &&
+      e.x > -240 &&
+      e.x < W + 240
     );
 
     state.bullets = state.bullets.filter(b =>
       !b.dead &&
-      b.y > -80
+      b.y > -90 &&
+      b.y < H + 90
     );
 
     state.particles = state.particles.filter(p =>
@@ -570,11 +780,15 @@
   }
 
   function applyGate(gate){
-    window.MobShotCombat.applyGate(gate, makeTools());
+    if (window.MobShotCombat && window.MobShotCombat.applyGate) {
+      window.MobShotCombat.applyGate(gate, makeTools());
+    }
   }
 
   function killEntity(e){
-    window.MobShotCombat.killEntity(e, makeTools());
+    if (window.MobShotCombat && window.MobShotCombat.killEntity) {
+      window.MobShotCombat.killEntity(e, makeTools());
+    }
   }
 
   function commitStageClear(){
@@ -725,7 +939,7 @@
       }
 
       if (ringEl) {
-        ringEl.style.setProperty('--skill-rate', '360deg');
+        ringEl.style.setProperty('--skill-rate', '100%');
       }
 
       if (slotEl) {
@@ -826,18 +1040,27 @@
   }
 
   function draw(){
-    if (window.MobShotRender && window.MobShotRender.drawAll) {
-      window.MobShotRender.drawAll(makeRenderTools());
-    }
+    try {
+      if (window.MobShotRender && window.MobShotRender.drawAll) {
+        window.MobShotRender.drawAll(makeRenderTools());
+      }
 
-    if (window.MobShotGameSkills && window.MobShotGameSkills.draw) {
-      window.MobShotGameSkills.draw(ctx);
+      if (window.MobShotGameSkills && window.MobShotGameSkills.draw) {
+        window.MobShotGameSkills.draw(ctx);
+      }
+    } catch (err) {
+      console.error('draw error:', err);
     }
   }
 
   function loop(){
-    update();
-    draw();
+    try {
+      update();
+      draw();
+    } catch (err) {
+      console.error('main loop error:', err);
+      addText('SAFE MODE', W / 2, H * 0.5, '#ff5b5b');
+    }
 
     if (running) {
       raf = requestAnimationFrame(loop);
@@ -859,6 +1082,7 @@
   });
 
   window.addEventListener('resize', resize);
+
   window.addEventListener('DOMContentLoaded', function(){
     bindResultButtons();
     createTestClearButton();
