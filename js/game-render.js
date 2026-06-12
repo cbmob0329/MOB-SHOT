@@ -173,18 +173,19 @@
     if(!entity.hp || entity.hp <= 0) return;
 
     const text = String(Math.ceil(entity.hp));
+    const y = entity.y + (entity.r || 10) + 18;
 
     ctx.save();
 
     ctx.fillStyle = '#fff';
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 5;
-    ctx.font = '900 16px system-ui';
+    ctx.font = '900 15px system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    ctx.strokeText(text,entity.x,entity.y);
-    ctx.fillText(text,entity.x,entity.y);
+    ctx.strokeText(text,entity.x,y);
+    ctx.fillText(text,entity.x,y);
 
     ctx.restore();
   }
