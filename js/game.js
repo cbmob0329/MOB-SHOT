@@ -705,7 +705,7 @@
     if (!running) return;
 
     frame++;
-    scroll += 2.2;
+    scroll += 1.7;
 
     updateFlow();
     updateSkillState();
