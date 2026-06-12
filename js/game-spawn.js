@@ -1,250 +1,217 @@
 'use strict';
 
 (function(){
-  const ENEMY_AI = {
-    'スラモブ': {
-      type: 'hop',
-      r: 31,
-      vxMin: -1.15,
-      vxMax: 1.15,
-      vyBonus: 0.05
-    },
-    'モブロック': {
-      type: 'heavy',
-      r: 36,
-      vxMin: -0.45,
-      vxMax: 0.45,
-      vyBonus: -0.08,
-      hpRate: 1.2
-    },
-    'モブ盗賊': {
-      type: 'ambush',
-      r: 31,
-      vxMin: -0.9,
-      vxMax: 0.9,
-      vyBonus: 0.08
-    },
-    'モブドワーフ': {
-      type: 'sway',
-      r: 32,
-      vxMin: -1.05,
-      vxMax: 1.05,
-      vyBonus: 0
-    },
-    'モブバード': {
-      type: 'fast',
-      r: 30,
-      vxMin: -1.25,
-      vxMax: 1.25,
-      vyBonus: 0.32
-    },
-    'モブファル': {
-      type: 'shortDash',
-      r: 31,
-      vxMin: -0.85,
-      vxMax: 0.85,
-      vyBonus: 0.15,
-      dashCd: 90
-    },
-    'ナーガモブ': {
-      type: 'hide',
-      r: 32,
-      vxMin: -0.85,
-      vxMax: 0.85,
-      vyBonus: 0
-    },
-    'モブグリズリー': {
-      type: 'heavy',
-      r: 38,
-      vxMin: -0.55,
-      vxMax: 0.55,
-      vyBonus: -0.05,
-      hpRate: 1.25
-    },
-    'モブマグトカゲ': {
-      type: 'hop',
-      r: 32,
-      vxMin: -1.25,
-      vxMax: 1.25,
-      vyBonus: 0.08
-    },
-    'モブマグプテラ': {
-      type: 'fastSide',
-      r: 31,
-      vxMin: -1.75,
-      vxMax: 1.75,
-      vyBonus: 0.18
-    },
-    'ダークゴブモブ': {
-      type: 'coverDash',
-      r: 31,
-      vxMin: -1.55,
-      vxMax: 1.55,
-      vyBonus: 0.1,
-      dashCd: 75
-    },
-    'モブアサシン': {
-      type: 'fastSide',
-      r: 30,
-      vxMin: -1.9,
-      vxMax: 1.9,
-      vyBonus: 0.14
-    },
-
-    'モブテツ': {
-      type: 'legendShot',
-      r: 32,
-      vxMin: -1.2,
-      vxMax: 1.2,
-      vyBonus: 0.08,
-      canShoot: true,
-      shootCd: 150,
-      bulletColor: '#b8c4d8'
-    },
-    'マルモブ': {
-      type: 'spin',
-      r: 33,
-      vxMin: -1.0,
-      vxMax: 1.0,
-      vyBonus: 0.12,
-      canShoot: true,
-      shootCd: 170,
-      bulletColor: '#d8d8ff'
-    },
-    'モブサラ': {
-      type: 'legendShot',
-      r: 31,
-      vxMin: -1.35,
-      vxMax: 1.35,
-      vyBonus: 0.12,
-      canShoot: true,
-      shootCd: 145,
-      bulletColor: '#60d9ff'
-    },
-    'モブシノ': {
-      type: 'rapidShot',
-      r: 31,
-      vxMin: -1.25,
-      vxMax: 1.25,
-      vyBonus: 0.1,
-      canShoot: true,
-      shootCd: 125,
-      burstShot: true,
-      bulletColor: '#b78cff'
-    },
-    'ウミシモブ': {
-      type: 'wideHop',
-      r: 32,
-      vxMin: -1.8,
-      vxMax: 1.8,
-      vyBonus: 0.14,
-      canShoot: true,
-      shootCd: 155,
-      bulletColor: '#60d9ff'
-    },
-    'バブモブ': {
-      type: 'freeMove',
-      r: 31,
-      vxMin: -1.6,
-      vxMax: 1.6,
-      vyBonus: 0.1,
-      canShoot: true,
-      shootCd: 150,
-      bulletColor: '#9deeff'
-    },
-    'ネオスラモブ': {
-      type: 'fastHop',
-      r: 30,
-      vxMin: -2.0,
-      vxMax: 2.0,
-      vyBonus: 0.2,
-      canShoot: true,
-      shootCd: 135,
-      bulletColor: '#60d9ff'
-    },
-    'モブネオレム': {
-      type: 'enlargeLowHp',
-      r: 34,
-      vxMin: -0.95,
-      vxMax: 0.95,
-      vyBonus: 0.06,
-      canShoot: true,
-      shootCd: 150,
-      bulletColor: '#b78cff'
-    },
-    'モブデビブルー': {
-      type: 'wideShot',
-      r: 31,
-      vxMin: -1.35,
-      vxMax: 1.35,
-      vyBonus: 0.14,
-      canShoot: true,
-      shootCd: 120,
-      bulletColor: '#4bb8ff'
-    },
-    'モブデビピンク': {
-      type: 'bombShot',
-      r: 31,
-      vxMin: -1.1,
-      vxMax: 1.1,
-      vyBonus: 0.1,
-      canShoot: true,
-      shootCd: 145,
-      bulletColor: '#ff4aa4'
-    },
-    'モブデビパープル': {
-      type: 'fastSide',
-      r: 30,
-      vxMin: -2.0,
-      vxMax: 2.0,
-      vyBonus: 0.13,
-      canShoot: true,
-      shootCd: 140,
-      bulletColor: '#b78cff'
-    },
-    'モブデビイエロー': {
-      type: 'rapidShot',
-      r: 30,
-      vxMin: -1.45,
-      vxMax: 1.45,
-      vyBonus: 0.14,
-      canShoot: true,
-      shootCd: 110,
-      burstShot: true,
-      bulletColor: '#ffe66b'
-    },
-    'モブデーモンレッド': {
-      type: 'coverShot',
-      r: 32,
-      vxMin: -1.0,
-      vxMax: 1.0,
-      vyBonus: 0.1,
-      canShoot: true,
-      shootCd: 135,
-      bulletColor: '#ff5b5b',
-      bulletLarge: true
-    },
-    'モブデーモンパープル': {
-      type: 'teleport',
-      r: 31,
-      vxMin: -1.4,
-      vxMax: 1.4,
-      vyBonus: 0.12,
-      canShoot: true,
-      shootCd: 135,
-      teleportCd: 120,
-      bulletColor: '#b78cff'
-    }
-  };
-
-  function enemyAI(name){
-    return ENEMY_AI[name] || {
-      type: 'normal',
-      r: 31,
-      vxMin: -0.85,
-      vxMax: 0.85,
-      vyBonus: 0
+  function enemyProfile(name){
+    const profile = {
+      aiType: '',
+      canShoot: false,
+      baseShootCd: 190,
+      burstShot: false,
+      bulletLarge: false,
+      bulletColor: '#ff4aff',
+      vxMul: 1,
+      vyMul: 1,
+      rAdd: 0,
+      hpMul: 1
     };
+
+    if (name === 'スラモブ') {
+      profile.aiType = 'hop';
+      profile.vxMul = 0.8;
+    }
+
+    if (name === 'モブロック') {
+      profile.aiType = 'sway';
+      profile.rAdd = 5;
+      profile.hpMul = 1.25;
+      profile.vxMul = 0.45;
+    }
+
+    if (name === 'モブ盗賊') {
+      profile.aiType = 'shortDash';
+      profile.vyMul = 1.05;
+    }
+
+    if (name === 'モブドワーフ') {
+      profile.aiType = 'sway';
+      profile.vxMul = 0.8;
+      profile.hpMul = 1.1;
+    }
+
+    if (name === 'モブバード') {
+      profile.aiType = 'fastSide';
+      profile.vxMul = 1.35;
+      profile.vyMul = 1.12;
+    }
+
+    if (name === 'モブファル') {
+      profile.aiType = 'shortDash';
+      profile.vxMul = 1.15;
+      profile.vyMul = 1.05;
+    }
+
+    if (name === 'ナーガモブ') {
+      profile.aiType = 'sway';
+      profile.hpMul = 1.15;
+      profile.vxMul = 0.9;
+    }
+
+    if (name === 'モブグリズリー') {
+      profile.aiType = 'sway';
+      profile.rAdd = 7;
+      profile.hpMul = 1.35;
+      profile.vxMul = 0.55;
+      profile.vyMul = 0.92;
+    }
+
+    if (name === 'モブマグトカゲ') {
+      profile.aiType = 'hop';
+      profile.vxMul = 1.05;
+      profile.hpMul = 1.1;
+    }
+
+    if (name === 'モブマグプテラ') {
+      profile.aiType = 'fastSide';
+      profile.vxMul = 1.45;
+      profile.vyMul = 1.08;
+    }
+
+    if (name === 'ダークゴブモブ') {
+      profile.aiType = 'teleport';
+      profile.vxMul = 1.25;
+      profile.vyMul = 1.05;
+    }
+
+    if (name === 'モブアサシン') {
+      profile.aiType = 'fastSide';
+      profile.vxMul = 1.65;
+      profile.vyMul = 1.08;
+    }
+
+    if (name === 'モブテツ') {
+      profile.aiType = 'sway';
+      profile.canShoot = true;
+      profile.baseShootCd = 210;
+      profile.bulletLarge = true;
+      profile.hpMul = 1.35;
+      profile.rAdd = 5;
+      profile.bulletColor = '#bfc7d5';
+    }
+
+    if (name === 'マルモブ') {
+      profile.aiType = 'wideHop';
+      profile.canShoot = true;
+      profile.baseShootCd = 230;
+      profile.bulletLarge = true;
+      profile.bulletColor = '#ffcf5b';
+    }
+
+    if (name === 'モブサラ') {
+      profile.aiType = 'sway';
+      profile.canShoot = true;
+      profile.baseShootCd = 205;
+      profile.bulletLarge = true;
+      profile.bulletColor = '#ff8cff';
+    }
+
+    if (name === 'モブシノ') {
+      profile.aiType = 'fastSide';
+      profile.canShoot = true;
+      profile.baseShootCd = 180;
+      profile.burstShot = true;
+      profile.bulletColor = '#b78cff';
+      profile.vxMul = 1.45;
+    }
+
+    if (name === 'ウミシモブ') {
+      profile.aiType = 'wideHop';
+      profile.canShoot = true;
+      profile.baseShootCd = 220;
+      profile.bulletLarge = true;
+      profile.bulletColor = '#6be6ff';
+      profile.vxMul = 1.35;
+    }
+
+    if (name === 'バブモブ') {
+      profile.aiType = 'fastSide';
+      profile.canShoot = true;
+      profile.baseShootCd = 235;
+      profile.bulletLarge = true;
+      profile.bulletColor = '#9deeff';
+      profile.vxMul = 1.6;
+      profile.vyMul = 1.08;
+    }
+
+    if (name === 'ネオスラモブ') {
+      profile.aiType = 'fastHop';
+      profile.canShoot = true;
+      profile.baseShootCd = 210;
+      profile.bulletColor = '#60d9ff';
+      profile.vxMul = 1.55;
+    }
+
+    if (name === 'モブネオレム') {
+      profile.aiType = 'enlargeLowHp';
+      profile.canShoot = true;
+      profile.baseShootCd = 230;
+      profile.bulletLarge = true;
+      profile.hpMul = 1.35;
+      profile.rAdd = 5;
+      profile.bulletColor = '#7bffea';
+    }
+
+    if (name === 'モブデビブルー') {
+      profile.aiType = 'wideShot';
+      profile.canShoot = true;
+      profile.baseShootCd = 195;
+      profile.bulletLarge = true;
+      profile.bulletColor = '#4bb8ff';
+    }
+
+    if (name === 'モブデビピンク') {
+      profile.aiType = 'sway';
+      profile.canShoot = true;
+      profile.baseShootCd = 215;
+      profile.bulletLarge = true;
+      profile.bulletColor = '#ff4aa4';
+      profile.hpMul = 1.15;
+    }
+
+    if (name === 'モブデビパープル') {
+      profile.aiType = 'fastSide';
+      profile.canShoot = true;
+      profile.baseShootCd = 220;
+      profile.bulletColor = '#b78cff';
+      profile.vxMul = 1.55;
+    }
+
+    if (name === 'モブデビイエロー') {
+      profile.aiType = 'fastSide';
+      profile.canShoot = true;
+      profile.baseShootCd = 175;
+      profile.burstShot = true;
+      profile.bulletColor = '#ffe66b';
+      profile.vxMul = 1.45;
+    }
+
+    if (name === 'モブデーモンレッド') {
+      profile.aiType = 'sway';
+      profile.canShoot = true;
+      profile.baseShootCd = 225;
+      profile.bulletLarge = true;
+      profile.hpMul = 1.25;
+      profile.bulletColor = '#ff5b5b';
+    }
+
+    if (name === 'モブデーモンパープル') {
+      profile.aiType = 'teleport';
+      profile.canShoot = true;
+      profile.baseShootCd = 220;
+      profile.bulletColor = '#b78cff';
+      profile.vxMul = 1.35;
+    }
+
+    return profile;
   }
 
   function spawnEnemy(tools){
@@ -255,49 +222,37 @@
     const rand = tools.rand;
     const pick = tools.pick;
 
-    if (!D.enemies || !D.enemies.zako || !D.enemies.zako.length) return;
-
     const def = pick(D.enemies.zako);
-    const ai = enemyAI(def.name);
-    const scale = 1 + flow.area * 0.08;
-    const hpRate = ai.hpRate || 1;
+    if (!def) return;
 
-    const hp = Math.ceil(Number(def.hp || 1) * scale * hpRate);
+    const profile = enemyProfile(def.name);
+    const scale = 1 + flow.area * 0.08;
+    const hp = Math.ceil(def.hp * scale * profile.hpMul);
 
     state.entities.push({
       kind: 'enemy',
       name: def.name,
       image: def.image,
-
       x: rand(W * 0.18, W * 0.82),
       y: -78,
-
-      vx: rand(ai.vxMin, ai.vxMax),
-      vy: 2.15 + flow.area * 0.08 + (ai.vyBonus || 0),
-
-      r: ai.r || 31,
-
+      vx: rand(-0.85, 0.85) * profile.vxMul,
+      vy: (2.15 + flow.area * 0.08) * profile.vyMul,
+      r: (def.name === 'モブロック' ? 34 : 31) + profile.rAdd,
       hp,
       maxHp: hp,
-
-      score: Number(def.score || 10),
-      coinMin: Number(def.coinMin || 1),
-      coinMax: Number(def.coinMax || 3),
-
-      aiType: ai.type,
-      canShoot: !!(def.canShoot || ai.canShoot),
-      shootCd: ai.shootCd || 160,
-      baseShootCd: ai.shootCd || 160,
-      burstShot: !!ai.burstShot,
-      bulletColor: ai.bulletColor || '#ff4aff',
-      bulletLarge: !!ai.bulletLarge,
-
-      dashCd: ai.dashCd || 0,
-      teleportCd: ai.teleportCd || 0,
-      aiTimer: 0,
-
+      score: def.score,
+      coinMin: def.coinMin,
+      coinMax: def.coinMax,
       dead: false,
-      bob: rand(0, Math.PI * 2)
+      bob: rand(0, Math.PI * 2),
+
+      aiType: profile.aiType,
+      canShoot: profile.canShoot,
+      baseShootCd: profile.baseShootCd,
+      shootCd: profile.baseShootCd + Math.floor(rand(0, 70)),
+      burstShot: profile.burstShot,
+      bulletLarge: profile.bulletLarge,
+      bulletColor: profile.bulletColor
     });
   }
 
@@ -309,33 +264,26 @@
     const rand = tools.rand;
     const pick = tools.pick;
 
-    if (!D.gimmicks || !D.gimmicks.length) return;
-
     const def = pick(D.gimmicks);
+    if (!def) return;
+
     const scale = 1 + flow.area * 0.1;
-    const hp = Math.ceil(Number(def.hp || 1) * scale);
 
     state.entities.push({
       kind: 'gimmick',
       name: def.name,
       image: def.image,
-
       x: rand(W * 0.18, W * 0.82),
       y: -80,
-
       vx: 0,
       vy: 2.05,
-
       w: 82,
       h: 82,
-
-      hp,
-      maxHp: hp,
-
-      score: Number(def.score || 10),
-      coinMin: Number(def.coinMin || 1),
-      coinMax: Number(def.coinMax || 3),
-
+      hp: Math.ceil(def.hp * scale),
+      maxHp: Math.ceil(def.hp * scale),
+      score: def.score,
+      coinMin: def.coinMin,
+      coinMax: def.coinMax,
       dead: false,
       bob: 0
     });
@@ -348,31 +296,24 @@
     const rand = tools.rand;
     const pick = tools.pick;
 
-    if (!D.chests || !D.chests.length) return;
-
     const def = pick(D.chests);
+    if (!def) return;
 
     state.entities.push({
       kind: 'chest',
       name: def.name,
       image: def.image,
-
       x: rand(W * 0.2, W * 0.8),
       y: -76,
-
       vx: 0,
       vy: 2.0,
-
       w: 64,
       h: 58,
-
-      hp: Number(def.hp || 1),
-      maxHp: Number(def.hp || 1),
-
-      score: Number(def.score || 20),
-      coinMin: Number(def.coinMin || 10),
-      coinMax: Number(def.coinMax || 20),
-
+      hp: def.hp,
+      maxHp: def.hp,
+      score: def.score,
+      coinMin: def.coinMin,
+      coinMax: def.coinMax,
       dead: false,
       bob: 0
     });
@@ -386,14 +327,9 @@
     const frame = tools.frame();
     const weightedPick = tools.weightedPick;
 
-    if (!D.gates || !D.gates.length) return;
-
     let pool;
-    const stageInfo = flow.stageInfo || {};
-    const chapter = Number(stageInfo.chapter || 1);
-    const allowRare = chapter >= 3 || flow.gate >= 3;
 
-    if (!allowRare) {
+    if (flow.gate < 7) {
       pool = D.gates.filter(g =>
         g.type !== 'wide' &&
         g.type !== 'skillmax'
@@ -401,25 +337,24 @@
     } else {
       pool = D.gates.map(g => {
         if (g.type === 'wide') {
-          return Object.assign({}, g, { weight: g.weight || 0.05 });
+          return Object.assign({}, g, { weight: 0.05 });
         }
 
         if (g.type === 'skillmax') {
-          return Object.assign({}, g, { weight: g.weight || 0.02 });
+          return Object.assign({}, g, { weight: 0.02 });
         }
 
         return g;
       });
     }
 
-    pool = pool.filter(g => !g.minRank || g.minRank <= Number(stageInfo.chapter || 1) * 10);
-
-    if (pool.length < 2) {
-      pool = D.gates.slice();
-    }
+    pool = pool.filter(g => !g.minRank || g.minRank <= 1);
 
     const a = weightedPick(pool);
     let b = weightedPick(pool);
+
+    if (!a || !b) return;
+
     let guard = 0;
 
     while (b.type === a.type && guard < 20) {
@@ -438,24 +373,156 @@
       kind: 'gate',
       name: def.label,
       image: def.image,
-
       type: def.type,
       value: def.value,
       color: def.color,
-
       x,
       y: -86,
-
       w: 116,
       h: 116,
-
       vy: 2.25,
-
       pair,
       dead: false,
       used: false,
       bob: 0
     };
+  }
+
+  function midBossProfile(name){
+    const profile = {
+      vx: 1.35,
+      vy: 2.25,
+      r: 64,
+      contactDmg: 13,
+      shootCd: 95,
+      attackCd: 125,
+      hpMul: 1
+    };
+
+    if (name === 'モブプテラ') {
+      profile.vx = 1.35;
+      profile.r = 64;
+      profile.shootCd = 100;
+      profile.attackCd = 135;
+    }
+
+    if (name === 'モブデュアル') {
+      profile.vx = 1.65;
+      profile.r = 66;
+      profile.shootCd = 90;
+      profile.attackCd = 125;
+    }
+
+    if (name === 'モブピー') {
+      profile.vx = 1.85;
+      profile.r = 58;
+      profile.shootCd = 80;
+      profile.attackCd = 120;
+    }
+
+    if (name === 'モブギドラ') {
+      profile.vx = 1.25;
+      profile.r = 72;
+      profile.shootCd = 95;
+      profile.attackCd = 130;
+      profile.hpMul = 1.1;
+    }
+
+    if (name === 'マグモブレム') {
+      profile.vx = 0.95;
+      profile.r = 76;
+      profile.shootCd = 125;
+      profile.attackCd = 150;
+      profile.hpMul = 1.25;
+      profile.contactDmg = 16;
+    }
+
+    if (name === 'グラディモブ') {
+      profile.vx = 1.55;
+      profile.r = 70;
+      profile.shootCd = 105;
+      profile.attackCd = 125;
+      profile.contactDmg = 17;
+    }
+
+    if (name === 'モブニコ') {
+      profile.vx = 1.4;
+      profile.r = 64;
+    }
+
+    if (name === 'モブラス') {
+      profile.vx = 1.2;
+      profile.r = 70;
+      profile.hpMul = 1.15;
+    }
+
+    if (name === 'ガトリモブ') {
+      profile.vx = 1.8;
+      profile.r = 64;
+      profile.shootCd = 78;
+    }
+
+    if (name === 'ジェイモブ') {
+      profile.vx = 1.65;
+      profile.r = 62;
+      profile.attackCd = 115;
+    }
+
+    if (name === 'モブサメ') {
+      profile.vx = 1.8;
+      profile.r = 72;
+      profile.contactDmg = 18;
+    }
+
+    if (name === 'モブシャチ') {
+      profile.vx = 1.45;
+      profile.r = 78;
+      profile.hpMul = 1.2;
+      profile.contactDmg = 19;
+    }
+
+    if (name === 'モブコード') {
+      profile.vx = 1.55;
+      profile.r = 66;
+      profile.shootCd = 85;
+    }
+
+    if (name === 'モブケーブル') {
+      profile.vx = 1.35;
+      profile.r = 70;
+      profile.attackCd = 120;
+    }
+
+    if (name === 'モブマグシャー') {
+      profile.vx = 1.2;
+      profile.r = 76;
+      profile.hpMul = 1.2;
+      profile.contactDmg = 18;
+    }
+
+    if (name === 'モブガラド') {
+      profile.vx = 1.4;
+      profile.r = 74;
+      profile.hpMul = 1.18;
+    }
+
+    if (name === 'モブメルト') {
+      profile.vx = 1.25;
+      profile.r = 74;
+      profile.hpMul = 1.22;
+      profile.contactDmg = 18;
+    }
+
+    if (name === 'モブリリス') {
+      profile.vx = 1.55;
+      profile.r = 78;
+      profile.shootCd = 82;
+      profile.attackCd = 115;
+      profile.hpMul = 1.25;
+      profile.contactDmg = 18;
+    }
+
+    return profile;
   }
 
   function spawnMidBoss(tools){
@@ -464,256 +531,190 @@
     const flow = tools.flow;
     const W = tools.W;
     const H = tools.H;
+    const pick = tools.pick;
 
-    if (!D.enemies || !D.enemies.midBoss || !D.enemies.midBoss.length) return;
+    const def = pick(D.enemies.midBoss);
+    if (!def) return;
 
-    const list = D.enemies.midBoss;
-    const index = Math.max(
-      0,
-      Math.min(list.length - 1, Number(flow.midBoss || 1) - 1)
-    );
-
-    const def = list[index] || list[0];
-    const hpRate = flow.midBoss === 2 ? 1.35 : 1;
-    const hp = Math.ceil(Number(def.hp || 100) * hpRate);
+    const profile = midBossProfile(def.name);
+    const hp = Math.ceil(def.hp * (flow.midBoss === 2 ? 1.35 : 1) * profile.hpMul);
 
     state.entities.push({
       kind: 'midBoss',
       name: def.name,
       image: def.image,
-
       x: W / 2,
       y: -150,
-
       baseY: H * 0.25,
       targetY: H * 0.25,
-
-      vx: midBossVx(def.name),
-      vy: 2.35,
-
-      r: midBossRadius(def.name),
-
+      vx: profile.vx,
+      vy: profile.vy,
+      r: profile.r,
       hp,
       maxHp: hp,
-
-      score: Number(def.score || 300),
-      coin: Number(def.coin || 30),
-
+      score: def.score,
+      coin: def.coin,
       dead: false,
-
-      shootCd: midBossShootCd(def.name),
-      actionCd: midBossActionCd(def.name),
-      attackCd: midBossActionCd(def.name),
-      attackStep: 0,
-
+      shootCd: profile.shootCd,
+      attackCd: profile.attackCd,
       diveMode: false,
       diveReturn: false,
       diveVx: 0,
       diveVy: 0,
-
-      contactDmg: midBossContactDmg(def.name),
+      contactDmg: profile.contactDmg,
       hitPlayerCd: 0,
-
-      aiTimer: 0,
-      bossType: 'mid',
-
       bob: 0
     });
+  }
+
+  function bossProfile(name){
+    const profile = {
+      vx: 1.35,
+      vy: 1.55,
+      r: 106,
+      shootCd: 80,
+      attackCd: 145,
+      contactDmg: 18,
+      hpMul: 1
+    };
+
+    if (name.indexOf('Ⅱ') >= 0) {
+      profile.vx = 1.5;
+      profile.r = 112;
+      profile.shootCd = 78;
+      profile.attackCd = 138;
+      profile.contactDmg = 22;
+      profile.hpMul = 1.1;
+    }
+
+    if (name === 'ミラモブ' || name === 'ミラモブⅡ') {
+      profile.vx = 1.8;
+      profile.r = 104;
+      profile.shootCd = 75;
+    }
+
+    if (name === '番人' || name === '番人Ⅱ') {
+      profile.vx = 1.15;
+      profile.r = 112;
+      profile.hpMul = name === '番人Ⅱ' ? 1.2 : 1.1;
+    }
+
+    if (name === 'ネオンモブ' || name === 'ネオンモブⅡ') {
+      profile.vx = 1.95;
+      profile.r = 104;
+      profile.shootCd = 72;
+    }
+
+    if (name === 'ドラゴンモブ' || name === 'ドラゴンモブⅡ') {
+      profile.vx = 1.25;
+      profile.r = 124;
+      profile.hpMul = name === 'ドラゴンモブⅡ' ? 1.25 : 1.15;
+      profile.contactDmg = 24;
+    }
+
+    if (name === 'モブリリス') {
+      profile.vx = 1.8;
+      profile.r = 112;
+      profile.shootCd = 70;
+      profile.attackCd = 125;
+      profile.contactDmg = 22;
+      profile.hpMul = 1.12;
+    }
+
+    if (name === 'モブ魔王') {
+      profile.vx = 1.55;
+      profile.r = 132;
+      profile.shootCd = 68;
+      profile.attackCd = 120;
+      profile.contactDmg = 28;
+      profile.hpMul = 1.35;
+    }
+
+    if (name === 'モブメイル') {
+      profile.vx = 1.45;
+      profile.r = 118;
+      profile.shootCd = 72;
+      profile.attackCd = 125;
+      profile.hpMul = 1.18;
+    }
+
+    if (name === 'モブスミス') {
+      profile.vx = 2.0;
+      profile.r = 108;
+      profile.shootCd = 66;
+      profile.attackCd = 118;
+    }
+
+    if (name === 'モブネプ') {
+      profile.vx = 1.7;
+      profile.r = 116;
+      profile.shootCd = 68;
+      profile.attackCd = 118;
+    }
+
+    if (name === 'ブルネオモブ' || name === 'パルネオモブ') {
+      profile.vx = 2.05;
+      profile.r = 104;
+      profile.shootCd = 66;
+      profile.attackCd = 120;
+    }
+
+    if (name === '閻魔モブ') {
+      profile.vx = 1.5;
+      profile.r = 128;
+      profile.shootCd = 68;
+      profile.attackCd = 118;
+      profile.hpMul = 1.3;
+      profile.contactDmg = 30;
+    }
+
+    if (name === 'ウルモブリリス') {
+      profile.vx = 1.9;
+      profile.r = 126;
+      profile.shootCd = 60;
+      profile.attackCd = 108;
+      profile.hpMul = 1.35;
+      profile.contactDmg = 30;
+    }
+
+    return profile;
   }
 
   function spawnBoss(tools){
     const state = tools.state;
     const D = tools.D;
-    const flow = tools.flow;
     const W = tools.W;
     const H = tools.H;
-
-    if (!D.enemies || !D.enemies.boss) return;
 
     const def = D.enemies.boss;
-    const stageInfo = flow.stageInfo || {};
-    const areaKey = stageInfo.areaKey || '';
+    if (!def) return;
 
-    if (areaKey === 'neonHighway' && def.name === 'パルネオモブ') {
-      spawnNeonHighwayDoubleBoss(tools, def);
-      return;
-    }
+    const profile = bossProfile(def.name);
+    const hp = Math.ceil(def.hp * profile.hpMul);
 
-    state.entities.push(makeBossEntity(def, tools, {
+    state.entities.push({
+      kind: 'boss',
+      name: def.name,
+      image: def.image,
       x: W / 2,
       y: -240,
-      hpRate: 1,
-      nameOverride: null,
-      imageOverride: null
-    }));
-  }
-
-  function spawnNeonHighwayDoubleBoss(tools, def){
-    const state = tools.state;
-    const W = tools.W;
-
-    const hpBase = Math.ceil(Number(def.hp || 3000) * 0.5);
-    const scoreBase = Math.ceil(Number(def.score || 13000) * 0.5);
-    const coinBase = Math.ceil(Number(def.coin || 2000) * 0.5);
-
-    const blue = Object.assign({}, def, {
-      name: 'ブルネオモブ',
-      image: 'boss/bossneonblue.png',
-      hp: hpBase,
-      score: scoreBase,
-      coin: coinBase,
-      strong: true,
-      isLegendBoss: true
-    });
-
-    const purple = Object.assign({}, def, {
-      name: 'パルネオモブ',
-      image: 'boss/bossneonpur.png',
-      hp: hpBase,
-      score: scoreBase,
-      coin: coinBase,
-      strong: true,
-      isLegendBoss: true
-    });
-
-    state.entities.push(makeBossEntity(blue, tools, {
-      x: W * 0.35,
-      y: -240
-    }));
-
-    state.entities.push(makeBossEntity(purple, tools, {
-      x: W * 0.65,
-      y: -300
-    }));
-  }
-
-  function makeBossEntity(def, tools, opt){
-    const W = tools.W;
-    const H = tools.H;
-
-    const hp = Math.ceil(Number(def.hp || 500) * Number(opt.hpRate || 1));
-
-    return {
-      kind: 'boss',
-      name: opt.nameOverride || def.name,
-      image: opt.imageOverride || def.image,
-
-      x: opt.x != null ? opt.x : W / 2,
-      y: opt.y != null ? opt.y : -240,
-
       baseY: H * 0.21,
       targetY: H * 0.21,
-
-      vx: bossVx(def.name),
-      vy: 1.6,
-
-      r: bossRadius(def.name),
-
+      vx: profile.vx,
+      vy: profile.vy,
+      r: profile.r,
       hp,
       maxHp: hp,
-
-      score: Number(def.score || 500),
-      coin: Number(def.coin || 100),
-
-      strong: !!def.strong,
-      isLegendBoss: !!def.isLegendBoss,
-
+      score: def.score,
+      coin: def.coin,
       dead: false,
-
-      shootCd: bossShootCd(def.name),
-      actionCd: bossActionCd(def.name),
-      attackCd: bossActionCd(def.name),
+      shootCd: profile.shootCd,
+      attackCd: profile.attackCd,
       attackStep: 0,
-
-      contactDmg: bossContactDmg(def.name),
+      contactDmg: profile.contactDmg,
       hitPlayerCd: 0,
-
-      diveMode: false,
-      diveReturn: false,
-      diveVx: 0,
-      diveVy: 0,
-
-      barrierTimer: 0,
-      barrierHp: 0,
-
-      aiTimer: 0,
-      bossType: 'boss',
-
       bob: 0
-    };
-  }
-
-  function midBossVx(name){
-    if (name === 'モブピー') return 1.75;
-    if (name === 'モブギドラ') return 1.9;
-    if (name === 'グラディモブ') return 1.35;
-    if (name === 'マグモブレム') return 1.05;
-    return 1.45;
-  }
-
-  function midBossRadius(name){
-    if (name === 'マグモブレム') return 72;
-    if (name === 'グラディモブ') return 66;
-    return 64;
-  }
-
-  function midBossShootCd(name){
-    if (name === 'モブギドラ') return 54;
-    if (name === 'グラディモブ') return 58;
-    if (name === 'モブピー') return 66;
-    return 76;
-  }
-
-  function midBossActionCd(name){
-    if (name === 'モブギドラ') return 95;
-    if (name === 'モブピー') return 105;
-    if (name === 'グラディモブ') return 100;
-    return 120;
-  }
-
-  function midBossContactDmg(name){
-    if (name === 'マグモブレム') return 18;
-    if (name === 'モブギドラ') return 15;
-    return 13;
-  }
-
-  function bossVx(name){
-    if ((name || '').includes('スミス')) return 2.1;
-    if ((name || '').includes('ネプ')) return 2.0;
-    if ((name || '').includes('ネオン')) return 1.9;
-    if ((name || '').includes('魔王')) return 1.75;
-    if ((name || '').includes('リリス')) return 1.65;
-    return 1.55;
-  }
-
-  function bossRadius(name){
-    if ((name || '').includes('ウルモブ')) return 122;
-    if ((name || '').includes('魔王')) return 116;
-    if ((name || '').includes('ドラゴン')) return 116;
-    if ((name || '').includes('メイル')) return 112;
-    return 106;
-  }
-
-  function bossShootCd(name){
-    if ((name || '').includes('ウルモブ')) return 38;
-    if ((name || '').includes('魔王')) return 40;
-    if ((name || '').includes('リリス')) return 42;
-    if ((name || '').includes('ネオン')) return 44;
-    return 50;
-  }
-
-  function bossActionCd(name){
-    if ((name || '').includes('ウルモブ')) return 78;
-    if ((name || '').includes('魔王')) return 82;
-    if ((name || '').includes('リリス')) return 86;
-    return 95;
-  }
-
-  function bossContactDmg(name){
-    if ((name || '').includes('ウルモブ')) return 26;
-    if ((name || '').includes('魔王')) return 24;
-    if ((name || '').includes('ドラゴン')) return 22;
-    return 18;
+    });
   }
 
   window.MobShotSpawn = {
