@@ -44,7 +44,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=skill_fix_20260613';
+      image.src = src + '?v=skill_fix_20260613_dark_gold';
       images.set(src, image);
     }
 
@@ -379,7 +379,9 @@
       skill,
       timer: Math.floor(Number(skill.duration || 5) * 60),
       attackAdd: Number(skill.darkPowerAttackAdd || 5),
-      ghostTick: 0
+      ghostTick: 0,
+      auraTick: 0,
+      auraShotCd: 30
     });
 
     skillEffects.push({
@@ -468,6 +470,7 @@
       type: 'goldRush',
       skill,
       timer: Math.floor(Number(skill.duration || 10) * 60),
+      total: Math.floor(Number(skill.duration || 10) * 60),
       multiplier: Number(skill.coinMultiplier || 1.5)
     });
   }
@@ -582,6 +585,13 @@
             timer: 24
           });
         }
+
+        effect.auraShotCd--;
+
+        if (effect.auraShotCd <= 0) {
+          effect.auraShotCd = 30;
+          fireDarkAuraWave(effect);
+        }
       }
 
       if (effect.type === 'rosePulse') {
@@ -620,6 +630,42 @@
     skillEffects = skillEffects.filter(effect => effect.timer > 0);
   }
 
+  function fireDarkAuraWave(effect){
+    const p = gameState.player;
+    const damage = playerPower();
+    const speed = 5.0;
+
+    const dirs = [
+      { vx: 0, vy: -speed },
+      { vx: 0, vy: speed },
+      { vx: -speed, vy: 0 },
+      { vx: speed, vy: 0 }
+    ];
+
+    dirs.forEach((d, i) => {
+      skillBullets.push({
+        type: 'darkAura',
+        skill: effect.skill,
+        x: p.x,
+        y: p.y - 6,
+        vx: d.vx,
+        vy: d.vy,
+        r: 34,
+        damage,
+        timer: 46,
+        rot: i * Math.PI / 2,
+        dead: false
+      });
+    });
+
+    skillEffects.push({
+      type: 'darkAuraPulse',
+      x: p.x,
+      y: p.y,
+      timer: 18
+    });
+  }
+
   function updateBullets(){
     for (const bullet of skillBullets) {
       if (bullet.dead) continue;
@@ -634,6 +680,16 @@
       } else {
         bullet.x += bullet.vx;
         bullet.y += bullet.vy;
+      }
+
+      if (bullet.type === 'darkAura') {
+        bullet.timer--;
+        bullet.rot += 0.18;
+
+        if (bullet.timer <= 0) {
+          bullet.dead = true;
+          continue;
+        }
       }
 
       if (bullet.type === 'rocket' || bullet.type === 'twinMissile') {
@@ -746,6 +802,11 @@
         damageEntity(e, playerPower() * Number((bullet.skill.powerRate && bullet.skill.powerRate.darkThunder) || 3) + plusDamage(bullet.skill));
         addDarkDot(e, bullet.skill);
         skillEffects.push({ type:'darkThunderHit', x:bullet.x, y:bullet.y, timer:18 });
+      }
+
+      if (bullet.type === 'darkAura') {
+        damageEntity(e, Number(bullet.damage || basePlayerPower()));
+        skillEffects.push({ type:'darkHit', x:bullet.x, y:bullet.y, timer:20 });
       }
 
       if (bullet.type === 'sisterBlue' || bullet.type === 'sisterYellow') {
@@ -1138,6 +1199,14 @@
     return gold ? Number(gold.multiplier || 1.5) : 1;
   }
 
+  function playerBulletScale(){
+    return skillEffects.some(e => e.type === 'darkPower') ? 3 : 1;
+  }
+
+  function playerBulletDamageAdd(){
+    return skillEffects.some(e => e.type === 'darkPower') ? 5 : 0;
+  }
+
   function reduceCooldownAll(sec){
     const frames = Math.floor(Number(sec || 1) * 60);
 
@@ -1227,8 +1296,27 @@
     if (bullet.type === 'twinMissile') size = 34;
     if (bullet.type === 'rosePulse') size = 58;
     if (bullet.type === 'darkThunder') size = 44;
+    if (bullet.type === 'darkAura') size = 76;
     if (bullet.type === 'sisterRed') size = 38;
     if (bullet.type === 'sisterBlue' || bullet.type === 'sisterYellow') size = 28;
+
+    const hasDark = skillEffects.some(e => e.type === 'darkPower');
+
+    if (
+      hasDark &&
+      (
+        bullet.type === 'rocket' ||
+        bullet.type === 'energyRush' ||
+        bullet.type === 'twinMissile'
+      )
+    ) {
+      size *= 1.75;
+    }
+
+    if (bullet.type === 'darkAura') {
+      drawDarkAuraBullet(ctx, bullet, size);
+      return;
+    }
 
     if (imageReady(image)) {
       ctx.save();
@@ -1253,6 +1341,34 @@
       ctx.arc(bullet.x, bullet.y, bullet.r, 0, Math.PI * 2);
       ctx.fill();
     }
+  }
+
+  function drawDarkAuraBullet(ctx, bullet, size){
+    ctx.save();
+    ctx.translate(bullet.x, bullet.y);
+    ctx.rotate(bullet.rot || 0);
+
+    ctx.globalAlpha = 0.65;
+    ctx.fillStyle = '#08000d';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size * 0.45, size * 0.22, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = '#36004f';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size * 0.38, size * 0.17, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.72;
+    ctx.strokeStyle = '#b45cff';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size * 0.48, size * 0.24, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.globalAlpha = 1;
+    ctx.restore();
   }
 
   function drawDarkThunderStuck(ctx){
@@ -1340,6 +1456,10 @@
         ctx.globalAlpha = 1;
       }
 
+      if (effect.type === 'goldRush') {
+        drawGoldRushCounter(ctx, effect);
+      }
+
       if (effect.type === 'smoke') {
         const alpha = Math.max(0, effect.timer / 20);
         ctx.globalAlpha = alpha * 0.38;
@@ -1364,18 +1484,19 @@
         effect.type === 'energyHit' ||
         effect.type === 'roseHit' ||
         effect.type === 'darkThunderHit' ||
-        effect.type === 'dotHit'
+        effect.type === 'dotHit' ||
+        effect.type === 'darkHit'
       ) {
-        const alpha = effect.timer / 18;
+        const alpha = effect.timer / 20;
 
         ctx.globalAlpha = alpha;
         ctx.fillStyle =
           effect.type === 'roseHit' ? '#ff8cff' :
-          effect.type === 'darkThunderHit' || effect.type === 'dotHit' ? '#b45cff' :
+          effect.type === 'darkHit' || effect.type === 'darkThunderHit' || effect.type === 'dotHit' ? '#b45cff' :
           '#9deeff';
 
         ctx.beginPath();
-        ctx.arc(effect.x, effect.y, 34 * (1 - alpha + .25), 0, Math.PI * 2);
+        ctx.arc(effect.x, effect.y, 42 * (1 - alpha + .25), 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
       }
@@ -1398,6 +1519,26 @@
           );
           ctx.stroke();
         }
+
+        ctx.restore();
+      }
+
+      if (effect.type === 'darkAuraPulse') {
+        const alpha = effect.timer / 18;
+
+        ctx.save();
+        ctx.globalAlpha = alpha * 0.5;
+        ctx.strokeStyle = '#b45cff';
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, 92 * (1 - alpha * 0.35), 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.globalAlpha = alpha * 0.22;
+        ctx.fillStyle = '#08000d';
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, 74 * (1 - alpha * 0.15), 0, Math.PI * 2);
+        ctx.fill();
 
         ctx.restore();
       }
@@ -1606,6 +1747,36 @@
     });
   }
 
+  function drawGoldRushCounter(ctx, effect){
+    const sec = Math.max(0, Math.ceil(effect.timer / 60));
+    const pulse = 1 + Math.sin(frameCount * 0.22) * 0.04;
+    const x = window.innerWidth / 2;
+    const y = 92;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(pulse, pulse);
+
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = '#ffcf5b';
+    ctx.beginPath();
+    ctx.roundRect(-104, -28, 208, 48, 18);
+    ctx.fill();
+
+    ctx.globalAlpha = 1;
+    ctx.font = '900 26px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 8;
+    ctx.fillStyle = '#ffd93d';
+
+    ctx.strokeText(`RUSH中!! ${sec}`, 0, 0);
+    ctx.fillText(`RUSH中!! ${sec}`, 0, 0);
+
+    ctx.restore();
+  }
+
   function drawArcaneBarrier(ctx, effect, p){
     const r1 = 72 + Math.sin(frameCount * 0.12) * 4;
     const r2 = 88 + Math.cos(frameCount * 0.1) * 4;
@@ -1668,37 +1839,64 @@
   }
 
   function drawDarkPower(ctx, effect, p){
-    const pulse = 1 + Math.sin(frameCount * 0.12) * 0.08;
+    const pulse = 1 + Math.sin(frameCount * 0.16) * 0.075;
+    const wobble = Math.sin(frameCount * 0.27) * 3;
 
     ctx.save();
 
-    ctx.globalAlpha = 0.42;
-    ctx.fillStyle = '#050008';
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = '#000000';
     ctx.beginPath();
-    ctx.ellipse(p.x, p.y - 8, 42 * pulse, 54 * pulse, 0, 0, Math.PI * 2);
+    ctx.ellipse(p.x, p.y - 8, 54 * pulse, 68 * pulse, wobble * 0.02, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = 0.32;
-    ctx.strokeStyle = '#b45cff';
-    ctx.lineWidth = 7;
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = '#17001f';
     ctx.beginPath();
-    ctx.ellipse(p.x, p.y - 8, 48 * pulse, 62 * pulse, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.globalAlpha = 0.45;
-    ctx.fillStyle = '#20002f';
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 78 * pulse, 0, Math.PI * 2);
+    ctx.ellipse(p.x, p.y - 8, 68 * pulse, 82 * pulse, -wobble * 0.018, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = 0.42;
-    ctx.strokeStyle = '#b45cff';
-    ctx.lineWidth = 5;
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = '#3a005a';
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 94 * pulse, 0, Math.PI * 2);
+    ctx.ellipse(p.x, p.y - 8, 84 * pulse, 98 * pulse, wobble * 0.015, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.34;
+    ctx.strokeStyle = '#b45cff';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y - 8, 90 * pulse, 104 * pulse, 0, 0, Math.PI * 2);
     ctx.stroke();
+
+    ctx.globalAlpha = 0.24;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y - 8, 72 * pulse, 86 * pulse, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    for (let i = 0; i < 8; i++) {
+      const a = frameCount * 0.08 + (Math.PI * 2 / 8) * i;
+      const r = 84 + Math.sin(frameCount * 0.16 + i) * 12;
+
+      ctx.globalAlpha = 0.26;
+      ctx.strokeStyle = '#5b008c';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(
+        p.x + Math.cos(a) * 42,
+        p.y - 8 + Math.sin(a) * 48
+      );
+      ctx.lineTo(
+        p.x + Math.cos(a) * r,
+        p.y - 8 + Math.sin(a) * r
+      );
+      ctx.stroke();
+    }
 
     ctx.restore();
+    ctx.globalAlpha = 1;
   }
 
   function drawShadowClone(ctx, effect, p){
@@ -1816,6 +2014,8 @@
     isInvincibleAgainst,
     isTimeStopped,
     coinMultiplier,
+    playerBulletScale,
+    playerBulletDamageAdd,
     reduceCooldownAll,
     fillAll
   };
