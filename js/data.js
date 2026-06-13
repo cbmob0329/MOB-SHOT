@@ -15,7 +15,7 @@ window.MOBSHOT_DATA = {
     bulletImage: 'mt/atk.png',
     maxHp: 50,
     power: 1,
-    range: 3,
+    range: 5,
     wide: 1,
     attackSpeed: 1
   },
