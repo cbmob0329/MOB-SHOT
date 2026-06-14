@@ -5,6 +5,132 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
   <title>MOB SHOT</title>
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .main-bg{
+      position:absolute;
+      inset:0;
+      background:url("mt/mainback.png") center center / cover no-repeat !important;
+    }
+
+    .event-modal{
+      position:absolute;
+      inset:0;
+      z-index:80;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:rgba(0,0,0,.62);
+    }
+
+    .event-modal.hidden{
+      display:none;
+    }
+
+    .event-modal-card{
+      width:min(94vw,520px);
+      max-height:84vh;
+      overflow:auto;
+      border-radius:24px;
+      padding:16px;
+      background:linear-gradient(180deg,rgba(20,18,45,.98),rgba(5,8,22,.98));
+      border:3px solid rgba(255,255,255,.35);
+      box-shadow:0 16px 40px rgba(0,0,0,.55);
+    }
+
+    .event-modal-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:10px;
+    }
+
+    .event-modal-head h2{
+      margin:0;
+      font-size:24px;
+      font-weight:1000;
+      letter-spacing:.05em;
+      color:#fff;
+      text-shadow:0 3px 0 #000;
+    }
+
+    .event-modal-head button,
+    .event-play-btn{
+      border:0;
+      border-radius:999px;
+      padding:9px 14px;
+      font-weight:1000;
+      color:#151000;
+      background:linear-gradient(#ffe66b,#ffb423);
+      box-shadow:0 4px 0 rgba(0,0,0,.35);
+    }
+
+    .event-help{
+      margin:0 0 12px;
+      font-size:13px;
+      line-height:1.55;
+      color:#dfe8ff;
+      font-weight:800;
+    }
+
+    .event-lock{
+      margin:0 0 12px;
+      padding:10px 12px;
+      border-radius:16px;
+      background:rgba(255,80,100,.18);
+      border:2px solid rgba(255,120,140,.45);
+      color:#fff;
+      font-weight:1000;
+      font-size:13px;
+    }
+
+    .event-list{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+    }
+
+    .event-card{
+      display:grid;
+      grid-template-columns:76px 1fr;
+      gap:12px;
+      align-items:center;
+      padding:10px;
+      border-radius:18px;
+      background:rgba(255,255,255,.10);
+      border:2px solid rgba(255,255,255,.22);
+    }
+
+    .event-icon{
+      width:76px;
+      height:76px;
+      object-fit:contain;
+      border-radius:16px;
+      background:rgba(0,0,0,.26);
+    }
+
+    .event-info h3{
+      margin:0 0 4px;
+      font-size:17px;
+      font-weight:1000;
+      color:#fff;
+      text-shadow:0 2px 0 #000;
+    }
+
+    .event-info p{
+      margin:0 0 8px;
+      font-size:12px;
+      line-height:1.45;
+      color:#dfe8ff;
+      font-weight:800;
+    }
+
+    .event-play-btn:disabled{
+      opacity:.45;
+      filter:grayscale(1);
+    }
+  </style>
 </head>
 <body>
   <div id="app">
@@ -53,6 +179,11 @@
           <span style="display:block;">テスト<br>出撃</span>
         </button>
 
+        <button id="openEventBtn" class="image-button" type="button">
+          <img src="mt/menuevent.png" alt="イベント" />
+          <span>イベント</span>
+        </button>
+
         <button id="openShopBtn" class="image-button" type="button">
           <img id="shopImg" src="mt/menushop.png" alt="SHOP" />
           <span>SHOP</span>
@@ -86,15 +217,25 @@
         </button>
       </nav>
 
+      <div id="eventModal" class="event-modal hidden">
+        <div class="event-modal-card">
+          <div class="event-modal-head">
+            <h2>イベント</h2>
+            <button id="eventCloseBtn" type="button">閉じる</button>
+          </div>
+          <p class="event-help">ランク10で解放。イベント専用ステージに挑戦できます。</p>
+          <div id="eventLockText" class="event-lock hidden">ランク10で解放されます。</div>
+          <div id="eventList" class="event-list"></div>
+        </div>
+      </div>
+
       <div id="testStageModal" class="test-stage-modal hidden">
         <div class="test-stage-card">
           <div class="test-stage-head">
             <h2>テスト出撃</h2>
             <button id="testStageCloseBtn" type="button">閉じる</button>
           </div>
-          <p class="test-stage-help">
-            好きなステージを選んでテスト出撃できます。テスト出撃は通常進行を進めません。
-          </p>
+          <p class="test-stage-help">好きなステージを選んでテスト出撃できます。テスト出撃は通常進行を進めません。</p>
           <div id="testStageList" class="test-stage-list"></div>
         </div>
       </div>
@@ -243,6 +384,7 @@
   <script src="js/game-render.js"></script>
   <script src="js/game.js"></script>
 
+  <script src="js/events.js"></script>
   <script src="js/main.js"></script>
   <script src="js/test-stage.js"></script>
 </body>
