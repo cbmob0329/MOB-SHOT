@@ -3,6 +3,9 @@
 (function(){
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
   const GOLD_CLEAR_KEY = 'mobshot_gold_stage_clear_v1';
+  const EVENT_ITEM_KEY = 'mobshot_event_items_v1';
+
+  const TEST_GOLD_TICKET_START = 10;
 
   const GOLD_DIFFICULTIES = [
     { key:'easy', name:'イージー', firstCoin:3000, firstDiamond:5, clearCoin:300, chestMul:0.55, bossHpMul:0.7, bossCoinMul:0.7, showMidBoss:false },
@@ -13,30 +16,10 @@
   ];
 
   const EVENTS = [
-    {
-      key: 'gold',
-      name: 'GOLD STAGE',
-      image: 'mt/event_gold.png',
-      desc: 'ボスと戦いながらコインを稼ごう！'
-    },
-    {
-      key: 'scoreAttack',
-      name: 'スコアアタック',
-      image: 'mt/event_score.png',
-      desc: '歴代ボスを順番に倒してハイスコアを目指すイベント。'
-    },
-    {
-      key: 'doubleBoss',
-      name: 'ダブルボス',
-      image: 'mt/event_double.png',
-      desc: 'COMING SOON'
-    },
-    {
-      key: 'secretBoss',
-      name: 'シークレットボス',
-      image: 'mt/event_secret.png',
-      desc: 'COMING SOON'
-    }
+    { key:'gold', name:'GOLD STAGE', image:'mt/event_gold.png', desc:'チケットを使ってコインを稼ぐイベント。' },
+    { key:'scoreAttack', name:'スコアアタック', image:'mt/event_score.png', desc:'歴代ボスを順番に倒してハイスコアを目指すイベント。' },
+    { key:'doubleBoss', name:'ダブルボス', image:'mt/event_double.png', desc:'COMING SOON' },
+    { key:'secretBoss', name:'シークレットボス', image:'mt/event_secret.png', desc:'COMING SOON' }
   ];
 
   function qs(id){
@@ -62,6 +45,85 @@
 
   function isUnlocked(){
     return getRank() >= 10;
+  }
+
+  function defaultItems(){
+    return {
+      goldTicket: TEST_GOLD_TICKET_START,
+      __testInitialized: true
+    };
+  }
+
+  function loadItems(){
+    let items = null;
+
+    try {
+      items = JSON.parse(localStorage.getItem(EVENT_ITEM_KEY)) || null;
+    } catch(e) {
+      items = null;
+    }
+
+    if (!items || !items.__testInitialized) {
+      items = defaultItems();
+      saveItems(items);
+    }
+
+    items.goldTicket = Math.max(0, Number(items.goldTicket || 0));
+
+    return items;
+  }
+
+  function saveItems(items){
+    try {
+      localStorage.setItem(EVENT_ITEM_KEY, JSON.stringify(items || defaultItems()));
+    } catch(e) {}
+  }
+
+  function getGoldTicket(){
+    return loadItems().goldTicket;
+  }
+
+  function addGoldTicket(amount){
+    const items = loadItems();
+
+    items.goldTicket = Math.max(0, Number(items.goldTicket || 0) + Number(amount || 0));
+
+    saveItems(items);
+    render();
+
+    window.dispatchEvent(new CustomEvent('mobshot:eventItemsUpdated'));
+
+    return items.goldTicket;
+  }
+
+  function consumeGoldTicket(amount){
+    const need = Math.max(1, Number(amount || 1));
+    const items = loadItems();
+
+    if (Number(items.goldTicket || 0) < need) {
+      return false;
+    }
+
+    items.goldTicket = Number(items.goldTicket || 0) - need;
+
+    saveItems(items);
+    render();
+
+    window.dispatchEvent(new CustomEvent('mobshot:eventItemsUpdated'));
+
+    return true;
+  }
+
+  function resetTestTickets(){
+    const items = loadItems();
+
+    items.goldTicket = TEST_GOLD_TICKET_START;
+    items.__testInitialized = true;
+
+    saveItems(items);
+    render();
+
+    window.dispatchEvent(new CustomEvent('mobshot:eventItemsUpdated'));
   }
 
   function getDifficulty(key){
@@ -95,14 +157,17 @@
 
   function openModal(){
     const modal = qs('eventModal');
+
     if (!modal) return;
 
+    clearCurrentEvent();
     render();
     modal.classList.remove('hidden');
   }
 
   function closeModal(){
     const modal = qs('eventModal');
+
     if (!modal) return;
 
     modal.classList.add('hidden');
@@ -164,6 +229,16 @@
   }
 
   function renderGoldButtons(parent, unlocked){
+    const ticket = getGoldTicket();
+
+    const ticketText = document.createElement('div');
+    ticketText.style.marginTop = '8px';
+    ticketText.style.fontWeight = '1000';
+    ticketText.style.color = '#ffcf5b';
+    ticketText.textContent = `GOLD TICKET: ${ticket}`;
+
+    parent.appendChild(ticketText);
+
     const wrap = document.createElement('div');
     wrap.style.display = 'grid';
     wrap.style.gridTemplateColumns = '1fr';
@@ -174,7 +249,7 @@
       const row = document.createElement('button');
       row.type = 'button';
       row.className = 'event-play-btn';
-      row.disabled = !unlocked;
+      row.disabled = !unlocked || ticket <= 0;
       row.style.width = '100%';
       row.style.textAlign = 'left';
       row.style.borderRadius = '14px';
@@ -183,18 +258,28 @@
 
       const cleared = hasGoldCleared(diff.key);
       const rewardText = cleared
-        ? `クリア報酬 ${diff.clearCoin.toLocaleString()} COIN`
-        : `初回 ${diff.firstCoin.toLocaleString()} COIN + ${diff.firstDiamond} DIAMOND`;
+        ? `クリア報酬 ${diff.clearCoin.toLocaleString()} COIN / チケット1枚`
+        : `初回 ${diff.firstCoin.toLocaleString()} COIN + ${diff.firstDiamond} DIAMOND / チケット1枚`;
 
-      row.innerHTML = unlocked
-        ? `<b>${diff.name}</b><br><small>${rewardText}</small>`
-        : `<b>${diff.name}</b><br><small>LOCK</small>`;
+      if (!unlocked) {
+        row.innerHTML = `<b>${diff.name}</b><br><small>LOCK</small>`;
+      } else if (ticket <= 0) {
+        row.innerHTML = `<b>${diff.name}</b><br><small>チケット不足</small>`;
+      } else {
+        row.innerHTML = `<b>${diff.name}</b><br><small>${rewardText}</small>`;
+      }
 
       row.addEventListener('click', function(e){
         e.preventDefault();
         e.stopPropagation();
 
         if (!unlocked) return;
+
+        if (getGoldTicket() <= 0) {
+          alert('GOLD TICKETがありません。通常ステージの宝箱からまれに入手できます。');
+          render();
+          return;
+        }
 
         startEvent('gold', diff.key);
       });
@@ -207,6 +292,7 @@
 
   function renderScoreAttackButton(parent, unlocked){
     const btn = document.createElement('button');
+
     btn.className = 'event-play-btn';
     btn.type = 'button';
     btn.disabled = !unlocked;
@@ -226,6 +312,14 @@
   }
 
   function startEvent(key, difficultyKey){
+    if (key === 'gold') {
+      if (!consumeGoldTicket(1)) {
+        alert('GOLD TICKETがありません。通常ステージの宝箱からまれに入手できます。');
+        render();
+        return;
+      }
+    }
+
     const eventData = {
       key,
       difficulty: difficultyKey || '',
@@ -330,26 +424,44 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', bind);
-  bind();
+  function init(){
+    loadItems();
+    bind();
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+  init();
 
   window.MobShotEvents = {
     EVENTS,
     GOLD_DIFFICULTIES,
     EVENT_SAVE_KEY,
     GOLD_CLEAR_KEY,
+    EVENT_ITEM_KEY,
+    TEST_GOLD_TICKET_START,
+
     openModal,
     closeModal,
     render,
     startEvent,
     getCurrentEvent,
     clearCurrentEvent,
+
     isGoldStage,
     isScoreAttack,
     isUnlocked,
+
     getDifficulty,
     getCurrentGoldDifficulty,
+
     hasGoldCleared,
-    markGoldCleared
+    markGoldCleared,
+
+    loadItems,
+    saveItems,
+    getGoldTicket,
+    addGoldTicket,
+    consumeGoldTicket,
+    resetTestTickets
   };
 })();
