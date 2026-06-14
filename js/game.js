@@ -20,6 +20,7 @@
 
   const SCROLL_SPEED = 1.15;
   const FIELD_ENTITY_SPEED = 0.72;
+  const GOLD_STAGE_SECONDS = 120;
 
   let W = 0;
   let H = 0;
@@ -60,6 +61,15 @@
       endAt: 0
     },
     gateEndAt: 0,
+    eventMode: {
+      active: false,
+      key: '',
+      endFrame: 0,
+      nextChest: 0,
+      nextBoss: 0,
+      nextBonusEnemy: 0,
+      bossCount: 0
+    },
     entities: [],
     bullets: [],
     particles: [],
@@ -71,7 +81,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260612_scroll_fix';
+      image.src = src + '?v=20260614_gold_stage';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -178,6 +188,14 @@
     };
   }
 
+  function isGoldStageRun(){
+    return !!(
+      state.eventMode &&
+      state.eventMode.active &&
+      state.eventMode.key === 'gold'
+    );
+  }
+
   function makeTools(){
     return {
       state,
@@ -203,27 +221,7 @@
   }
 
   function makeBossTools(){
-    return {
-      state,
-      D,
-      flow,
-      W,
-      H,
-      ctx,
-      scroll,
-      frame: function(){
-        return frame;
-      },
-      rand,
-      intRand,
-      pick,
-      clamp,
-      weightedPick,
-      addText,
-      burst,
-      killEntity,
-      applyGate
-    };
+    return makeTools();
   }
 
   function makeRenderTools(){
@@ -295,6 +293,14 @@
     state.particles.length = 0;
     state.texts.length = 0;
 
+    state.eventMode.active = false;
+    state.eventMode.key = '';
+    state.eventMode.endFrame = 0;
+    state.eventMode.nextChest = 0;
+    state.eventMode.nextBoss = 0;
+    state.eventMode.nextBonusEnemy = 0;
+    state.eventMode.bossCount = 0;
+
     flow.reset();
 
     if (window.MobShotPetBattle && window.MobShotPetBattle.init) {
@@ -315,8 +321,32 @@
       resultRetryBtn.textContent = 'もう一度';
     }
 
+    if (
+      window.MobShotEvents &&
+      window.MobShotEvents.isGoldStage &&
+      window.MobShotEvents.isGoldStage()
+    ) {
+      startGoldStageMode();
+      return;
+    }
+
     const ev = flow.start();
     handleFlowEvent(ev);
+  }
+
+  function startGoldStageMode(){
+    state.eventMode.active = true;
+    state.eventMode.key = 'gold';
+    state.eventMode.endFrame = frame + GOLD_STAGE_SECONDS * 60;
+    state.eventMode.nextChest = frame + 35;
+    state.eventMode.nextBoss = frame + 60;
+    state.eventMode.nextBonusEnemy = frame + 130;
+    state.eventMode.bossCount = 0;
+
+    showBanner('GOLD STAGE!');
+    addText('120秒でコインを稼げ！', W / 2, H * 0.28, '#ffcf5b');
+
+    spawnGoldChestWave(3);
   }
 
   function start(){
@@ -399,6 +429,11 @@
   }
 
   function updateFlow(){
+    if (isGoldStageRun()) {
+      updateGoldStageMode();
+      return;
+    }
+
     try {
       flow.update();
 
@@ -476,6 +511,110 @@
       console.error('updateFlow error:', err);
       addText('FLOW SAFE', W / 2, H * 0.22, '#ff5b5b');
     }
+  }
+
+  function updateGoldStageMode(){
+    const remain = Math.max(0, state.eventMode.endFrame - frame);
+
+    if (remain <= 0) {
+      finishRun(true);
+      return;
+    }
+
+    if (frame >= state.eventMode.nextChest) {
+      spawnGoldChestWave(intRand(1, 3));
+      state.eventMode.nextChest = frame + intRand(75, 125);
+    }
+
+    if (frame >= state.eventMode.nextBonusEnemy) {
+      spawnGoldBonusEnemy();
+      state.eventMode.nextBonusEnemy = frame + intRand(150, 230);
+    }
+
+    const bossAlive = state.entities.some(e =>
+      !e.dead &&
+      e.kind === 'boss'
+    );
+
+    if (!bossAlive && frame >= state.eventMode.nextBoss) {
+      spawnGoldBoss();
+      state.eventMode.nextBoss = frame + 999999;
+    }
+  }
+
+  function spawnGoldBoss(){
+    if (!window.MobShotSpawn || !window.MobShotSpawn.spawnBoss) return;
+
+    const tools = makeTools();
+
+    window.MobShotSpawn.spawnBoss(tools);
+
+    state.eventMode.bossCount++;
+
+    state.entities.forEach(e => {
+      if (e.kind !== 'boss') return;
+      if (e.__goldStageBoss) return;
+
+      e.__goldStageBoss = true;
+      e.name = `${e.name}`;
+      e.hp = Math.ceil(Number(e.hp || 1) * (0.65 + state.eventMode.bossCount * 0.08));
+      e.maxHp = e.hp;
+      e.score = Math.ceil(Number(e.score || 0) * 0.75);
+      e.coin = Math.ceil(Number(e.coin || 0) * 2.5);
+    });
+
+    showBanner(`GOLD BOSS ${state.eventMode.bossCount}`);
+  }
+
+  function spawnGoldChestWave(count){
+    for (let i = 0; i < count; i++) {
+      spawnGoldChest(i);
+    }
+  }
+
+  function spawnGoldChest(i){
+    const gold = Math.random() < 0.38;
+
+    const def = gold
+      ? { name:'金の宝箱', image:'gimi/takagol.png', hp:8, score:80, coinMin:40, coinMax:90 }
+      : { name:'銀の宝箱', image:'gimi/takagin.png', hp:5, score:40, coinMin:20, coinMax:50 };
+
+    state.entities.push({
+      kind: 'chest',
+      name: def.name,
+      image: def.image,
+      x: rand(W * 0.18, W * 0.82),
+      y: -80 - i * 58,
+      vx: 0,
+      vy: 2.05,
+      w: 68,
+      h: 62,
+      hp: def.hp,
+      maxHp: def.hp,
+      score: def.score,
+      coinMin: def.coinMin,
+      coinMax: def.coinMax,
+      dead: false,
+      bob: 0,
+      __goldStageChest: true
+    });
+  }
+
+  function spawnGoldBonusEnemy(){
+    if (!window.MobShotSpawn || !window.MobShotSpawn.spawnEnemy) return;
+
+    window.MobShotSpawn.spawnEnemy(makeTools());
+
+    state.entities.forEach(e => {
+      if (e.kind !== 'enemy') return;
+      if (e.__goldStageEnemy) return;
+
+      e.__goldStageEnemy = true;
+      e.hp = Math.ceil(Number(e.hp || 1) * 0.75);
+      e.maxHp = e.hp;
+      e.coinMin = Math.ceil(Number(e.coinMin || 1) * 2);
+      e.coinMax = Math.ceil(Number(e.coinMax || 3) * 2);
+    });
   }
 
   function updatePlayer(){
@@ -558,9 +697,7 @@
       const dx = state.player.x - e.x;
       const dy = state.player.y - e.y;
 
-      if (dy <= 0) {
-        continue;
-      }
+      if (dy <= 0) continue;
 
       const base = Math.atan2(dy, dx);
       const angle = base + (i - (count - 1) / 2) * 0.25;
@@ -600,6 +737,10 @@
 
   function updateEntities(){
     const bossTools = makeBossTools();
+    const timeStopped =
+      window.MobShotGameSkills &&
+      window.MobShotGameSkills.isTimeStopped &&
+      window.MobShotGameSkills.isTimeStopped();
 
     for (const e of state.entities) {
       if (e.dead) continue;
@@ -610,6 +751,15 @@
         e.kind === 'boss'
       ) {
         e.bob = Number(e.bob || 0) + 0.06;
+      }
+
+      if (timeStopped && (
+        e.kind === 'enemy' ||
+        e.kind === 'midBoss' ||
+        e.kind === 'boss' ||
+        e.kind === 'enemyBullet'
+      )) {
+        continue;
       }
 
       if (e.kind === 'midBoss') {
@@ -795,6 +945,13 @@
   }
 
   function killEntity(e){
+    if (isGoldStageRun() && e) {
+      if (e.kind === 'boss') {
+        state.eventMode.nextBoss = frame + 75;
+        spawnGoldChestWave(2);
+      }
+    }
+
     if (window.MobShotCombat && window.MobShotCombat.killEntity) {
       window.MobShotCombat.killEntity(e, makeTools());
     }
@@ -821,12 +978,14 @@
   function finishRun(clear){
     if (runCommitted) return;
 
+    const wasGold = isGoldStageRun();
+
     runCommitted = true;
     running = false;
 
     let clearInfo = null;
 
-    if (clear) {
+    if (clear && !wasGold) {
       clearInfo = commitStageClear();
     }
 
@@ -838,6 +997,10 @@
       window.MobShotMain.refreshMainHud();
     }
 
+    if (wasGold && window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
+      window.MobShotEvents.clearCurrentEvent();
+    }
+
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
 
     if (resultTitle) {
@@ -845,9 +1008,12 @@
     }
 
     if (resultText) {
-      if (clear && clearInfo) {
-        resultText.textContent =
-          `${clearInfo.areaName} ${clearInfo.id} クリア！`;
+      if (wasGold && clear) {
+        resultText.textContent = 'GOLD STAGE 完了！コインを獲得しました';
+      } else if (wasGold && !clear) {
+        resultText.textContent = 'GOLD STAGE 失敗';
+      } else if (clear && clearInfo) {
+        resultText.textContent = `${clearInfo.areaName} ${clearInfo.id} クリア！`;
       } else {
         resultText.textContent = 'ライフがなくなりました';
       }
@@ -862,7 +1028,7 @@
     }
 
     if (resultRetryBtn) {
-      resultRetryBtn.textContent = clear ? 'NEXT STAGE' : 'もう一度';
+      resultRetryBtn.textContent = wasGold ? 'メインへ' : clear ? 'NEXT STAGE' : 'もう一度';
     }
 
     if (resultPanel) {
@@ -961,6 +1127,14 @@
     running = false;
     stopLoopOnly();
 
+    if (state.eventMode && state.eventMode.active) {
+      state.eventMode.active = false;
+    }
+
+    if (window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
+      window.MobShotEvents.clearCurrentEvent();
+    }
+
     if (resultPanel) {
       resultPanel.classList.add('hidden');
     }
@@ -984,7 +1158,7 @@
   }
 
   function bindResultButtons(){
-    ['resultHomeBtn', 'gameBackBtn', 'backBtn'].forEach(id => {
+    ['resultHomeBtn', 'gameBackBtn', 'backBtn', 'resultRetryBtn'].forEach(id => {
       const btn = document.getElementById(id);
 
       if (!btn || btn.__mobShotBound) return;
@@ -1009,7 +1183,12 @@
     const info = getCurrentStageInfo();
 
     if (hudStage) {
-      hudStage.textContent = `${info.id}`;
+      if (isGoldStageRun()) {
+        const remain = Math.max(0, Math.ceil((state.eventMode.endFrame - frame) / 60));
+        hudStage.textContent = `GOLD ${remain}`;
+      } else {
+        hudStage.textContent = `${info.id}`;
+      }
     }
 
     if (hudScore) {
