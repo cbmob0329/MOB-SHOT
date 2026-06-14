@@ -25,6 +25,62 @@
   const EVENT_MAX_AGE_MS = 1000 * 60 * 15;
   const GOLD_TICKET_DROP_RATE = 0.08;
 
+  const BOSS_IMAGE_BY_NAME = {
+    'ホークモブ': 'boss/hawks.png',
+    'ミラモブ': 'boss/miraboss.png',
+    'モブガーディアン': 'boss/bossban.png',
+    '番人': 'boss/bossban.png',
+    'ネオンモブ': 'boss/bossneon.png',
+    'ドラゴンモブ': 'boss/bossdragoon.png',
+    'ドラゴンモブⅡ': 'boss/bossdragoon2.png',
+    'ドラゴンモブII': 'boss/bossdragoon2.png',
+    'モブリリス': 'boss/bossriris.png',
+    'ホークモブⅡ': 'boss/hawks2.png',
+    'ホークモブII': 'boss/hawks2.png',
+    'ミラモブⅡ': 'boss/bossmira2.png',
+    'ミラモブII': 'boss/bossmira2.png',
+    '番人Ⅱ': 'boss/bossban2.png',
+    '番人II': 'boss/bossban2.png',
+    'ネオンモブⅡ': 'boss/bossneon2.png',
+    'ネオンモブII': 'boss/bossneon2.png',
+    'モブ魔王': 'boss/bossmaoh.png',
+    'モブメイル': 'boss/bossmeiru.png',
+    'モブスミス': 'boss/bosssmith.png',
+    'モブネプ': 'boss/bossmobnep.png',
+    'ブルネオモブ': 'boss/bossneonblue.png',
+    'パルネオモブ': 'boss/bossneonpur.png',
+    '閻魔モブ': 'boss/bossenmob.png',
+    'ウルモブリリス': 'boss/bossulriri.png'
+  };
+
+  const BOSS_TYPE_BY_NAME = {
+    'ホークモブ': 'hawk',
+    'ホークモブⅡ': 'hawk',
+    'ホークモブII': 'hawk',
+    'ミラモブ': 'mira',
+    'ミラモブⅡ': 'mira',
+    'ミラモブII': 'mira',
+    'モブガーディアン': 'guardian',
+    '番人': 'guardian',
+    '番人Ⅱ': 'guardian',
+    '番人II': 'guardian',
+    'ネオンモブ': 'neon',
+    'ネオンモブⅡ': 'neon',
+    'ネオンモブII': 'neon',
+    'ドラゴンモブ': 'dragon',
+    'ドラゴンモブⅡ': 'dragon',
+    'ドラゴンモブII': 'dragon',
+    'モブリリス': 'lilith',
+    'ウルモブリリス': 'ultraLilith',
+    'モブ魔王': 'maoh',
+    'モブメイル': 'mail',
+    'モブスミス': 'smith',
+    'モブネプ': 'nep',
+    'ブルネオモブ': 'blueNeo',
+    'パルネオモブ': 'purpleNeo',
+    '閻魔モブ': 'enma'
+  };
+
   const ORIGINAL_DATA = JSON.parse(JSON.stringify({
     stage: D.stage,
     enemies: D.enemies,
@@ -105,7 +161,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260614_double_fix';
+      image.src = src + '?v=20260614_boss_image_fix';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -402,23 +458,70 @@
     phaseBanner.classList.add('show');
   }
 
-  function getStageAreaData(areaKey){
-    const areaData = window.MOBSHOT_STAGE_DATA || {};
-    return areaData[areaKey] || null;
-  }
-
   function normalizeName(name){
     return String(name || '')
       .replace(/\s/g, '')
+      .replace(/　/g, '')
       .replace(/Ⅱ/g, 'II')
       .replace(/Ⅲ/g, 'III')
-      .replace(/２/g, '2')
       .replace(/Ⅰ/g, 'I')
+      .replace(/２/g, '2')
+      .replace(/１/g, '1')
       .toLowerCase();
   }
 
   function bossNameMatch(a, b){
     return normalizeName(a) === normalizeName(b);
+  }
+
+  function bossImageFromName(name){
+    const raw = String(name || '').replace(/\s/g, '').replace(/　/g, '');
+
+    if (BOSS_IMAGE_BY_NAME[raw]) return BOSS_IMAGE_BY_NAME[raw];
+
+    const normalized = normalizeName(raw);
+
+    for (const key in BOSS_IMAGE_BY_NAME) {
+      if (normalizeName(key) === normalized) {
+        return BOSS_IMAGE_BY_NAME[key];
+      }
+    }
+
+    return '';
+  }
+
+  function typeFromName(name){
+    const raw = String(name || '').replace(/\s/g, '').replace(/　/g, '');
+
+    if (BOSS_TYPE_BY_NAME[raw]) return BOSS_TYPE_BY_NAME[raw];
+
+    const normalized = normalizeName(raw);
+
+    for (const key in BOSS_TYPE_BY_NAME) {
+      if (normalizeName(key) === normalized) {
+        return BOSS_TYPE_BY_NAME[key];
+      }
+    }
+
+    if (normalized.includes('ミラ')) return 'mira';
+    if (normalized.includes('ガーディアン') || normalized.includes('番人')) return 'guardian';
+    if (normalized.includes('ネオン')) return 'neon';
+    if (normalized.includes('ドラゴン')) return 'dragon';
+    if (normalized.includes('ウル') && normalized.includes('リリス')) return 'ultraLilith';
+    if (normalized.includes('リリス')) return 'lilith';
+    if (normalized.includes('魔王')) return 'maoh';
+    if (normalized.includes('メイル') || normalized.includes('メール')) return 'mail';
+    if (normalized.includes('スミス')) return 'smith';
+    if (normalized.includes('ネプ')) return 'nep';
+    if (normalized.includes('閻魔') || normalized.includes('エンマ')) return 'enma';
+    if (normalized.includes('ホーク')) return 'hawk';
+
+    return 'hawk';
+  }
+
+  function getStageAreaData(areaKey){
+    const areaData = window.MOBSHOT_STAGE_DATA || {};
+    return areaData[areaKey] || null;
   }
 
   function allBossCandidates(){
@@ -428,11 +531,11 @@
     Object.keys(areaData).forEach(key => {
       const area = areaData[key];
 
-      ['boss','boss2','bossA','bossB'].forEach(prop => {
+      ['boss','boss2','bossA','bossB','strongBoss','legendBoss'].forEach(prop => {
         if (area && area[prop]) list.push(clone(area[prop]));
       });
 
-      ['bosses','extraBosses','bossList'].forEach(prop => {
+      ['bosses','extraBosses','bossList','doubleBosses'].forEach(prop => {
         if (area && Array.isArray(area[prop])) {
           area[prop].forEach(b => {
             if (b) list.push(clone(b));
@@ -450,55 +553,17 @@
     return list;
   }
 
-  function typeFromName(name){
-    const n = normalizeName(name);
-
-    if (n.includes('ミラ')) return 'mira';
-    if (n.includes('ガーディアン')) return 'guardian';
-    if (n.includes('ネオン')) return 'neon';
-    if (n.includes('ドラゴン')) return 'dragon';
-    if (n.includes('リリス') && n.includes('ウル')) return 'ultraLilith';
-    if (n.includes('リリス')) return 'lilith';
-    if (n.includes('魔王')) return 'maoh';
-    if (n.includes('メイル') || n.includes('メール')) return 'mail';
-    if (n.includes('スミス')) return 'smith';
-    if (n.includes('ネプ')) return 'nep';
-    if (n.includes('閻魔') || n.includes('エンマ')) return 'enma';
-    if (n.includes('ホーク')) return 'hawk';
-
-    return 'hawk';
-  }
-
-  function imageFromType(type){
-    const map = {
-      hawk:'boss/hawk.png',
-      mira:'boss/mira.png',
-      guardian:'boss/guardian.png',
-      neon:'boss/neon.png',
-      dragon:'boss/dragon.png',
-      lilith:'boss/lilith.png',
-      ultraLilith:'boss/ultralilith.png',
-      maoh:'boss/maoh.png',
-      mail:'boss/mail.png',
-      smith:'boss/smith.png',
-      nep:'boss/nep.png',
-      enma:'boss/enma.png'
-    };
-
-    return map[type] || '';
-  }
-
   function getBossDefByName(area, bossName){
     const name = String(bossName || '');
 
     if (area) {
       const areaCandidates = [];
 
-      ['boss','boss2','bossA','bossB'].forEach(prop => {
+      ['boss','boss2','bossA','bossB','strongBoss','legendBoss'].forEach(prop => {
         if (area[prop]) areaCandidates.push(clone(area[prop]));
       });
 
-      ['bosses','extraBosses','bossList'].forEach(prop => {
+      ['bosses','extraBosses','bossList','doubleBosses'].forEach(prop => {
         if (Array.isArray(area[prop])) {
           area[prop].forEach(b => {
             if (b) areaCandidates.push(clone(b));
@@ -507,22 +572,34 @@
       });
 
       const exact = areaCandidates.find(b => bossNameMatch(b.name, name));
-      if (exact) return exact;
+      if (exact) {
+        exact.image = exact.image || bossImageFromName(name);
+        exact.type = exact.type || typeFromName(name);
+        exact.name = exact.name || name;
+        return exact;
+      }
     }
 
     const all = allBossCandidates();
     const found = all.find(b => bossNameMatch(b.name, name));
-    if (found) return found;
+
+    if (found) {
+      found.image = found.image || bossImageFromName(name);
+      found.type = found.type || typeFromName(name);
+      found.name = found.name || name;
+      return found;
+    }
 
     return getFallbackBossDef(name);
   }
 
   function getFallbackBossDef(name){
     const type = typeFromName(name);
+    const image = bossImageFromName(name);
 
     return {
       name: name || 'BOSS',
-      image: imageFromType(type),
+      image,
       hp: type === 'ultraLilith' ? 900 : type === 'enma' ? 780 : type === 'maoh' ? 700 : 520,
       score: type === 'ultraLilith' ? 4500 : type === 'enma' ? 3800 : 2200,
       coin: type === 'ultraLilith' ? 700 : type === 'enma' ? 600 : 260,
@@ -753,7 +830,7 @@
     const e = {
       kind:'boss',
       name:def.name,
-      image:def.image,
+      image:def.image || bossImageFromName(def.name),
       x,
       y:-190 - side * 60,
       vx:(side === 0 ? 1 : -1) * Number(def.moveSpeed || 1.25),
