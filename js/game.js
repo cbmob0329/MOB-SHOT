@@ -69,7 +69,13 @@
       nextChest: 0,
       nextBoss: 0,
       nextBonusEnemy: 0,
-      bossCount: 0
+      nextEnemy: 0,
+      nextGate: 0,
+      bossCount: 0,
+      scoreBossIndex: 0,
+      scoreBossList: [],
+      currentAreaKey: '',
+      currentAreaName: ''
     },
     entities: [],
     bullets: [],
@@ -82,7 +88,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260614_gold_difficulty';
+      image.src = src + '?v=20260614_score_attack';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -97,34 +103,16 @@
   }
 
   function isSkillInput(e){
-    return !!(
-      e &&
-      e.target &&
-      e.target.closest &&
-      e.target.closest('#skillHud')
-    );
+    return !!(e && e.target && e.target.closest && e.target.closest('#skillHud'));
   }
 
-  function rand(a, b){
-    return a + Math.random() * (b - a);
-  }
-
-  function intRand(a, b){
-    return Math.floor(rand(a, b + 1));
-  }
-
-  function pick(arr){
-    if (!arr || !arr.length) return null;
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
-
-  function clamp(v, a, b){
-    return Math.max(a, Math.min(b, v));
-  }
+  function rand(a, b){ return a + Math.random() * (b - a); }
+  function intRand(a, b){ return Math.floor(rand(a, b + 1)); }
+  function pick(arr){ return arr && arr.length ? arr[Math.floor(Math.random() * arr.length)] : null; }
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
 
   function weightedPick(list){
     if (!list || !list.length) return null;
-
     const total = list.reduce((sum, item) => sum + (item.weight || 1), 0);
     let roll = Math.random() * total;
 
@@ -136,11 +124,14 @@
     return list[list.length - 1];
   }
 
+  function clone(obj){
+    return JSON.parse(JSON.stringify(obj));
+  }
+
   function getShopBonus(){
     if (window.MobShotShop && window.MobShotShop.getUpgradeBonus) {
       return window.MobShotShop.getUpgradeBonus();
     }
-
     return { power: 0, range: 0, rapid: 0, hp: 0 };
   }
 
@@ -148,7 +139,6 @@
     if (window.MobShotEquip && window.MobShotEquip.getEquipmentBonus) {
       return window.MobShotEquip.getEquipmentBonus();
     }
-
     return { power: 0, rapid: 0, hp: 0 };
   }
 
@@ -156,7 +146,6 @@
     if (window.MobShotEquip && window.MobShotEquip.getEquippedAvatar) {
       return window.MobShotEquip.getEquippedAvatar();
     }
-
     return null;
   }
 
@@ -164,7 +153,6 @@
     if (window.MobShotEquip && window.MobShotEquip.getEquippedRecord) {
       return window.MobShotEquip.getEquippedRecord();
     }
-
     return null;
   }
 
@@ -190,11 +178,11 @@
   }
 
   function isGoldStageRun(){
-    return !!(
-      state.eventMode &&
-      state.eventMode.active &&
-      state.eventMode.key === 'gold'
-    );
+    return state.eventMode.active && state.eventMode.key === 'gold';
+  }
+
+  function isScoreAttackRun(){
+    return state.eventMode.active && state.eventMode.key === 'scoreAttack';
   }
 
   function makeTools(){
@@ -206,9 +194,7 @@
       H,
       ctx,
       scroll,
-      frame: function(){
-        return frame;
-      },
+      frame: function(){ return frame; },
       rand,
       intRand,
       pick,
@@ -253,6 +239,23 @@
     if (!state.player.targetX) state.player.targetX = W / 2;
   }
 
+  function resetEventMode(){
+    state.eventMode.active = false;
+    state.eventMode.key = '';
+    state.eventMode.difficulty = null;
+    state.eventMode.endFrame = 0;
+    state.eventMode.nextChest = 0;
+    state.eventMode.nextBoss = 0;
+    state.eventMode.nextBonusEnemy = 0;
+    state.eventMode.nextEnemy = 0;
+    state.eventMode.nextGate = 0;
+    state.eventMode.bossCount = 0;
+    state.eventMode.scoreBossIndex = 0;
+    state.eventMode.scoreBossList = [];
+    state.eventMode.currentAreaKey = '';
+    state.eventMode.currentAreaName = '';
+  }
+
   function resetRun(){
     frame = 0;
     scroll = 0;
@@ -294,15 +297,7 @@
     state.particles.length = 0;
     state.texts.length = 0;
 
-    state.eventMode.active = false;
-    state.eventMode.key = '';
-    state.eventMode.difficulty = null;
-    state.eventMode.endFrame = 0;
-    state.eventMode.nextChest = 0;
-    state.eventMode.nextBoss = 0;
-    state.eventMode.nextBonusEnemy = 0;
-    state.eventMode.bossCount = 0;
-
+    resetEventMode();
     flow.reset();
 
     if (window.MobShotPetBattle && window.MobShotPetBattle.init) {
@@ -315,20 +310,16 @@
 
     updateSkillHudImages();
 
-    if (resultPanel) {
-      resultPanel.classList.add('hidden');
-    }
+    if (resultPanel) resultPanel.classList.add('hidden');
+    if (resultRetryBtn) resultRetryBtn.textContent = 'もう一度';
 
-    if (resultRetryBtn) {
-      resultRetryBtn.textContent = 'もう一度';
-    }
-
-    if (
-      window.MobShotEvents &&
-      window.MobShotEvents.isGoldStage &&
-      window.MobShotEvents.isGoldStage()
-    ) {
+    if (window.MobShotEvents && window.MobShotEvents.isGoldStage && window.MobShotEvents.isGoldStage()) {
       startGoldStageMode();
+      return;
+    }
+
+    if (window.MobShotEvents && window.MobShotEvents.isScoreAttack && window.MobShotEvents.isScoreAttack()) {
+      startScoreAttackMode();
       return;
     }
 
@@ -336,10 +327,36 @@
     handleFlowEvent(ev);
   }
 
+  function start(){
+    resize();
+    createTestClearButton();
+    stopLoopOnly();
+    running = true;
+    resetRun();
+    loop();
+  }
+
+  function stopLoopOnly(){
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+  }
+
+  function stop(){
+    running = false;
+    stopLoopOnly();
+  }
+
+  function showBanner(text){
+    if (!phaseBanner) return;
+    phaseBanner.textContent = text;
+    phaseBanner.classList.remove('show');
+    void phaseBanner.offsetWidth;
+    phaseBanner.classList.add('show');
+  }
+
   function startGoldStageMode(){
     const diff =
-      window.MobShotEvents &&
-      window.MobShotEvents.getCurrentGoldDifficulty
+      window.MobShotEvents && window.MobShotEvents.getCurrentGoldDifficulty
         ? window.MobShotEvents.getCurrentGoldDifficulty()
         : {
             key: 'easy',
@@ -368,32 +385,183 @@
     spawnGoldChestWave(1);
   }
 
-  function start(){
-    resize();
-    createTestClearButton();
-    stopLoopOnly();
-    running = true;
-    resetRun();
-    loop();
+  function buildScoreBossList(){
+    const areaData = window.MOBSHOT_STAGE_DATA || {};
+    const order = [
+      'grass',
+      'desert',
+      'town',
+      'neon',
+      'magma',
+      'castle',
+      'prison',
+      'matrix',
+      'seaRail',
+      'neonHighway',
+      'makai',
+      'last'
+    ];
+
+    const list = [];
+
+    order.forEach((key, index) => {
+      const area = areaData[key];
+
+      if (!area || !area.boss) return;
+
+      const boss = clone(area.boss);
+      boss.__scoreAreaKey = key;
+      boss.__scoreAreaName = area.name || key;
+      boss.__scoreBackground = area.background || 'sta/backsougen.png';
+      boss.__scoreScale = 0.8 + index * 0.14;
+
+      list.push(boss);
+    });
+
+    if (!list.length && D.enemies && D.enemies.boss) {
+      const boss = clone(D.enemies.boss);
+      boss.__scoreAreaKey = 'grass';
+      boss.__scoreAreaName = '草原';
+      boss.__scoreBackground = D.stage.background || 'sta/backsougen.png';
+      boss.__scoreScale = 1;
+      list.push(boss);
+    }
+
+    return list;
   }
 
-  function stopLoopOnly(){
-    if (raf) cancelAnimationFrame(raf);
-    raf = 0;
+  function applyScoreArea(areaKey){
+    const areaData = window.MOBSHOT_STAGE_DATA || {};
+    const area = areaData[areaKey];
+
+    if (!area || !D) return;
+
+    D.stage = Object.assign(D.stage || {}, {
+      id: 'SCORE',
+      areaKey,
+      areaName: area.name || 'スコアアタック',
+      areaType: area.name || 'スコアアタック',
+      difficulty: 'SCORE ATTACK',
+      background: area.background || 'sta/backsougen.png',
+      isStrongBoss: true,
+      isLegend: true
+    });
+
+    D.enemies = D.enemies || {};
+    D.enemies.zako = clone(area.zako || D.enemies.zako || []);
+    D.enemies.midBoss = clone(area.midBoss || D.enemies.midBoss || []);
+    D.gimmicks = clone(area.gimmicks || D.gimmicks || []);
   }
 
-  function stop(){
-    running = false;
-    stopLoopOnly();
+  function startScoreAttackMode(){
+    state.eventMode.active = true;
+    state.eventMode.key = 'scoreAttack';
+    state.eventMode.scoreBossList = buildScoreBossList();
+    state.eventMode.scoreBossIndex = 0;
+    state.eventMode.nextEnemy = frame + 110;
+    state.eventMode.nextGate = frame + 20 * 60;
+    state.eventMode.currentAreaKey = 'grass';
+    state.eventMode.currentAreaName = '草原';
+
+    applyScoreArea('grass');
+
+    showBanner('SCORE ATTACK!');
+    addText('歴代ボスを倒せ！', W / 2, H * 0.28, '#6be6ff');
+
+    spawnScoreAttackBoss();
   }
 
-  function showBanner(text){
-    if (!phaseBanner) return;
+  function spawnScoreAttackBoss(){
+    const list = state.eventMode.scoreBossList;
+    const index = state.eventMode.scoreBossIndex;
 
-    phaseBanner.textContent = text;
-    phaseBanner.classList.remove('show');
-    void phaseBanner.offsetWidth;
-    phaseBanner.classList.add('show');
+    if (!list.length || index >= list.length) {
+      finishRun(true);
+      return;
+    }
+
+    const boss = clone(list[index]);
+    const areaKey = boss.__scoreAreaKey || 'grass';
+    const areaName = boss.__scoreAreaName || '草原';
+    const scale = Number(boss.__scoreScale || 1);
+
+    state.eventMode.currentAreaKey = areaKey;
+    state.eventMode.currentAreaName = areaName;
+
+    applyScoreArea(areaKey);
+
+    boss.hp = Math.ceil(Number(boss.hp || 1) * scale);
+    boss.score = Math.ceil(Number(boss.score || 0) * (1.2 + index * 0.18));
+    boss.coin = Math.ceil(Number(boss.coin || 0) * 0.25);
+
+    D.enemies.boss = boss;
+
+    if (window.MobShotSpawn && window.MobShotSpawn.spawnBoss) {
+      window.MobShotSpawn.spawnBoss(makeTools());
+    }
+
+    state.entities.forEach(e => {
+      if (e.kind !== 'boss') return;
+      if (e.__scoreAttackBoss) return;
+
+      e.__scoreAttackBoss = true;
+      e.__scoreBossIndex = index;
+      e.hp = Math.ceil(Number(e.hp || 1));
+      e.maxHp = e.hp;
+      e.score = boss.score;
+      e.coin = boss.coin;
+    });
+
+    showBanner(`${index + 1}/${list.length} ${boss.name}`);
+  }
+
+  function updateScoreAttackMode(){
+    const bossAlive = state.entities.some(e => !e.dead && e.kind === 'boss');
+
+    if (!bossAlive) {
+      state.eventMode.scoreBossIndex++;
+
+      if (state.eventMode.scoreBossIndex >= state.eventMode.scoreBossList.length) {
+        finishRun(true);
+        return;
+      }
+
+      state.entities = state.entities.filter(e =>
+        e.kind !== 'enemyBullet' &&
+        e.kind !== 'enemy'
+      );
+
+      state.eventMode.nextEnemy = frame + 80;
+      state.eventMode.nextGate = frame + 20 * 60;
+
+      spawnScoreAttackBoss();
+      return;
+    }
+
+    if (frame >= state.eventMode.nextEnemy) {
+      if (window.MobShotSpawn && window.MobShotSpawn.spawnEnemy) {
+        window.MobShotSpawn.spawnEnemy(makeTools());
+      }
+      state.eventMode.nextEnemy = frame + intRand(120, 180);
+    }
+
+    if (frame >= state.eventMode.nextGate) {
+      if (window.MobShotSpawn && window.MobShotSpawn.spawnGatePair) {
+        window.MobShotSpawn.spawnGatePair(makeTools());
+      }
+      state.gateEndAt = frame + 520;
+      state.eventMode.nextGate = frame + 20 * 60;
+      showBanner('BONUS GATE!');
+    }
+
+    const gatesAlive = state.entities.some(e => e.kind === 'gate' && !e.dead);
+
+    if (!gatesAlive && state.gateEndAt && frame > state.gateEndAt) {
+      state.entities.forEach(e => {
+        if (e.kind === 'gate') e.dead = true;
+      });
+      state.gateEndAt = 0;
+    }
   }
 
   function handleFlowEvent(ev){
@@ -453,6 +621,11 @@
       return;
     }
 
+    if (isScoreAttackRun()) {
+      updateScoreAttackMode();
+      return;
+    }
+
     try {
       flow.update();
 
@@ -489,16 +662,11 @@
       }
 
       if (snap.phase === 'gate') {
-        const gatesAlive = state.entities.some(e =>
-          e.kind === 'gate' &&
-          !e.dead
-        );
+        const gatesAlive = state.entities.some(e => e.kind === 'gate' && !e.dead);
 
         if (!gatesAlive || frame >= state.gateEndAt) {
           state.entities.forEach(e => {
-            if (e.kind === 'gate') {
-              e.dead = true;
-            }
+            if (e.kind === 'gate') e.dead = true;
           });
 
           handleFlowEvent(flow.completeGate());
@@ -506,10 +674,7 @@
       }
 
       if (snap.phase === 'midBoss') {
-        const alive = state.entities.some(e =>
-          e.kind === 'midBoss' &&
-          !e.dead
-        );
+        const alive = state.entities.some(e => e.kind === 'midBoss' && !e.dead);
 
         if (!alive && snap.phaseFrame > 60) {
           handleFlowEvent(flow.completeMidBoss());
@@ -517,10 +682,7 @@
       }
 
       if (snap.phase === 'boss') {
-        const alive = state.entities.some(e =>
-          e.kind === 'boss' &&
-          !e.dead
-        );
+        const alive = state.entities.some(e => e.kind === 'boss' && !e.dead);
 
         if (!alive && snap.phaseFrame > 60) {
           handleFlowEvent(flow.completeBoss());
@@ -560,10 +722,7 @@
       }
     }
 
-    const bossAlive = state.entities.some(e =>
-      !e.dead &&
-      e.kind === 'boss'
-    );
+    const bossAlive = state.entities.some(e => !e.dead && e.kind === 'boss');
 
     if (!bossAlive && frame >= state.eventMode.nextBoss) {
       spawnGoldBoss();
@@ -574,10 +733,9 @@
   function spawnGoldBoss(){
     if (!window.MobShotSpawn || !window.MobShotSpawn.spawnBoss) return;
 
-    const tools = makeTools();
     const diff = state.eventMode.difficulty || {};
 
-    window.MobShotSpawn.spawnBoss(tools);
+    window.MobShotSpawn.spawnBoss(makeTools());
 
     state.eventMode.bossCount++;
 
@@ -631,6 +789,8 @@
       ? { name:'金の宝箱', image:'gimi/takagol.png', hp:10, score:60, coinMin:18, coinMax:42 }
       : { name:'銀の宝箱', image:'gimi/takagin.png', hp:6, score:30, coinMin:8, coinMax:22 };
 
+    const hp = Math.ceil(def.hp * (0.9 + chestMul * 0.25));
+
     state.entities.push({
       kind: 'chest',
       name: def.name,
@@ -641,8 +801,8 @@
       vy: 2.05,
       w: 68,
       h: 62,
-      hp: Math.ceil(def.hp * (0.9 + chestMul * 0.25)),
-      maxHp: Math.ceil(def.hp * (0.9 + chestMul * 0.25)),
+      hp,
+      maxHp: hp,
       score: def.score,
       coinMin: Math.ceil(def.coinMin * chestMul),
       coinMax: Math.ceil(def.coinMax * chestMul),
@@ -689,17 +849,11 @@
       e.y += Math.sin(e.aiTimer * 0.22) * 0.35;
     }
 
-    if (e.aiType === 'sway') {
-      e.x += Math.sin(e.aiTimer * 0.08) * 1.6;
-    }
-
-    if (e.aiType === 'fastSide') {
-      e.x += Math.sin(e.aiTimer * 0.16) * 2.2;
-    }
+    if (e.aiType === 'sway') e.x += Math.sin(e.aiTimer * 0.08) * 1.6;
+    if (e.aiType === 'fastSide') e.x += Math.sin(e.aiTimer * 0.16) * 2.2;
 
     if (e.aiType === 'shortDash') {
       e.dashCd = Number(e.dashCd || 90) - 1;
-
       if (e.dashCd <= 0) {
         e.vy += 0.8;
         e.dashCd = 110;
@@ -708,7 +862,6 @@
 
     if (e.aiType === 'teleport') {
       e.teleportCd = Number(e.teleportCd || 120) - 1;
-
       if (e.teleportCd <= 0) {
         e.x = rand(W * 0.18, W * 0.82);
         e.teleportCd = 140;
@@ -724,13 +877,8 @@
     }
 
     if (e.canShoot) {
-      const canShootFromFront =
-        e.y > 0 &&
-        e.y < state.player.y - 110;
-
-      if (!canShootFromFront) {
-        return;
-      }
+      const canShootFromFront = e.y > 0 && e.y < state.player.y - 110;
+      if (!canShootFromFront) return;
 
       e.shootCd = Number(e.shootCd || e.baseShootCd || 190) - 1;
 
@@ -750,7 +898,6 @@
     for (let i = 0; i < count; i++) {
       const dx = state.player.x - e.x;
       const dy = state.player.y - e.y;
-
       if (dy <= 0) continue;
 
       const base = Math.atan2(dy, dx);
@@ -799,11 +946,7 @@
     for (const e of state.entities) {
       if (e.dead) continue;
 
-      if (
-        e.kind === 'enemy' ||
-        e.kind === 'midBoss' ||
-        e.kind === 'boss'
-      ) {
+      if (e.kind === 'enemy' || e.kind === 'midBoss' || e.kind === 'boss') {
         e.bob = Number(e.bob || 0) + 0.06;
       }
 
@@ -823,17 +966,12 @@
           } catch (err) {
             aiErrorCount++;
             console.error('中ボスAIエラー:', e.name, err);
-
             if (!e.__aiErrorShown) {
               e.__aiErrorShown = true;
               addText('AI SAFE', e.x, e.y - 60, '#ff5b5b');
             }
-
             fallbackBossMove(e);
-
-            if (aiErrorCount > 20) {
-              e.dead = true;
-            }
+            if (aiErrorCount > 20) e.dead = true;
           }
         } else {
           fallbackBossMove(e);
@@ -845,40 +983,30 @@
           } catch (err) {
             aiErrorCount++;
             console.error('ボスAIエラー:', e.name, err);
-
             if (!e.__aiErrorShown) {
               e.__aiErrorShown = true;
               addText('AI SAFE', e.x, e.y - 80, '#ff5b5b');
             }
-
             fallbackBossMove(e);
-
-            if (aiErrorCount > 30) {
-              e.dead = true;
-            }
+            if (aiErrorCount > 30) e.dead = true;
           }
         } else {
           fallbackBossMove(e);
         }
       } else {
-        if (e.kind === 'enemy') {
-          updateEnemyAI(e);
-        }
+        if (e.kind === 'enemy') updateEnemyAI(e);
 
         e.y += (e.vy || 0) * FIELD_ENTITY_SPEED;
 
         if (e.kind === 'enemy') {
           e.x += e.vx || 0;
-
           if (e.x < W * 0.16 || e.x > W * 0.84) {
             e.vx = -(e.vx || 0.8);
           }
         }
       }
 
-      if (e.barrierTimer > 0) {
-        e.barrierTimer--;
-      }
+      if (e.barrierTimer > 0) e.barrierTimer--;
     }
   }
 
@@ -983,13 +1111,8 @@
       b.y < H + 90
     );
 
-    state.particles = state.particles.filter(p =>
-      p.life > 0
-    );
-
-    state.texts = state.texts.filter(t =>
-      t.life > 0
-    );
+    state.particles = state.particles.filter(p => p.life > 0);
+    state.texts = state.texts.filter(t => t.life > 0);
   }
 
   function applyGate(gate){
@@ -1002,16 +1125,16 @@
     if (isGoldStageRun() && e) {
       if (e.kind === 'boss') {
         state.eventMode.nextBoss = frame + 95;
-        if (Math.random() < 0.7) {
-          spawnGoldChestWave(1);
-        }
+        if (Math.random() < 0.7) spawnGoldChestWave(1);
       }
 
       if (e.kind === 'midBoss') {
-        if (Math.random() < 0.6) {
-          spawnGoldChestWave(1);
-        }
+        if (Math.random() < 0.6) spawnGoldChestWave(1);
       }
+    }
+
+    if (isScoreAttackRun() && e && e.kind === 'boss') {
+      addText('NEXT BOSS!', e.x, e.y - 70, '#6be6ff');
     }
 
     if (window.MobShotCombat && window.MobShotCombat.killEntity) {
@@ -1046,13 +1169,8 @@
       window.MobShotEvents.hasGoldCleared &&
       window.MobShotEvents.hasGoldCleared(key);
 
-    const coinReward = cleared
-      ? Number(diff.clearCoin || 300)
-      : Number(diff.firstCoin || 3000);
-
-    const diamondReward = cleared
-      ? 0
-      : Number(diff.firstDiamond || 0);
+    const coinReward = cleared ? Number(diff.clearCoin || 300) : Number(diff.firstCoin || 3000);
+    const diamondReward = cleared ? 0 : Number(diff.firstDiamond || 0);
 
     state.coin += coinReward;
 
@@ -1087,6 +1205,7 @@
     if (runCommitted) return;
 
     const wasGold = isGoldStageRun();
+    const wasScoreAttack = isScoreAttackRun();
     let goldReward = null;
 
     runCommitted = true;
@@ -1098,7 +1217,7 @@
       goldReward = applyGoldStageClearReward();
     }
 
-    if (clear && !wasGold) {
+    if (clear && !wasGold && !wasScoreAttack) {
       clearInfo = commitStageClear();
     }
 
@@ -1110,7 +1229,7 @@
       window.MobShotMain.refreshMainHud();
     }
 
-    if (wasGold && window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
+    if ((wasGold || wasScoreAttack) && window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
       window.MobShotEvents.clearCurrentEvent();
     }
 
@@ -1130,6 +1249,10 @@
         resultText.textContent = `GOLD STAGE ${diff.name || ''} 完了！ ${rewardText}`;
       } else if (wasGold && !clear) {
         resultText.textContent = 'GOLD STAGE 失敗';
+      } else if (wasScoreAttack && clear) {
+        resultText.textContent = `スコアアタック制覇！ ${state.eventMode.scoreBossList.length}体撃破`;
+      } else if (wasScoreAttack && !clear) {
+        resultText.textContent = `スコアアタック終了 / ${state.eventMode.scoreBossIndex}体撃破`;
       } else if (clear && clearInfo) {
         resultText.textContent = `${clearInfo.areaName} ${clearInfo.id} クリア！`;
       } else {
@@ -1137,44 +1260,33 @@
       }
     }
 
-    if (resultScore) {
-      resultScore.textContent = state.score.toLocaleString();
-    }
-
-    if (resultCoin) {
-      resultCoin.textContent = state.coin.toLocaleString();
-    }
+    if (resultScore) resultScore.textContent = state.score.toLocaleString();
+    if (resultCoin) resultCoin.textContent = state.coin.toLocaleString();
 
     if (resultRetryBtn) {
-      resultRetryBtn.textContent = wasGold ? 'メインへ' : clear ? 'NEXT STAGE' : 'もう一度';
+      resultRetryBtn.textContent = wasGold || wasScoreAttack ? 'メインへ' : clear ? 'NEXT STAGE' : 'もう一度';
     }
 
-    if (resultPanel) {
-      resultPanel.classList.remove('hidden');
-    }
+    if (resultPanel) resultPanel.classList.remove('hidden');
   }
 
   function testClearNow(){
     if (!running || runCommitted) return;
-
     addText('TEST CLEAR', state.player.x, state.player.y - 90, '#9dff73');
     finishRun(true);
   }
 
   function createTestClearButton(){
     const gameScreen = document.getElementById('gameScreen');
-
     if (!gameScreen) return;
 
     let btn = document.getElementById('testClearBtn');
-
     if (btn) return;
 
     btn = document.createElement('button');
     btn.id = 'testClearBtn';
     btn.type = 'button';
     btn.textContent = 'テストクリア';
-
     btn.style.position = 'absolute';
     btn.style.left = '96px';
     btn.style.bottom = 'calc(78px + env(safe-area-inset-bottom))';
@@ -1253,9 +1365,7 @@
       window.MobShotEvents.clearCurrentEvent();
     }
 
-    if (resultPanel) {
-      resultPanel.classList.add('hidden');
-    }
+    if (resultPanel) resultPanel.classList.add('hidden');
 
     if (window.MobShotMain && window.MobShotMain.goMain) {
       window.MobShotMain.goMain();
@@ -1266,13 +1376,9 @@
       screen.classList.remove('active');
     });
 
-    const main =
-      document.getElementById('mainScreen') ||
-      document.getElementById('mainView');
+    const main = document.getElementById('mainScreen') || document.getElementById('mainView');
 
-    if (main) {
-      main.classList.add('active');
-    }
+    if (main) main.classList.add('active');
   }
 
   function bindResultButtons(){
@@ -1305,32 +1411,22 @@
         const remain = Math.max(0, Math.ceil((state.eventMode.endFrame - frame) / 60));
         const diff = state.eventMode.difficulty || {};
         hudStage.textContent = `GOLD ${diff.name || ''} ${remain}`;
+      } else if (isScoreAttackRun()) {
+        const now = Math.min(state.eventMode.scoreBossIndex + 1, state.eventMode.scoreBossList.length);
+        const max = state.eventMode.scoreBossList.length || 1;
+        hudStage.textContent = `SCORE ${now}/${max}`;
       } else {
         hudStage.textContent = `${info.id}`;
       }
     }
 
-    if (hudScore) {
-      hudScore.textContent = Math.floor(state.score).toLocaleString();
-    }
-
-    if (hudCoin) {
-      hudCoin.textContent = Math.floor(state.coin).toLocaleString();
-    }
-
-    if (hudLife) {
-      hudLife.textContent = Math.max(0, Math.ceil(state.hp));
-    }
+    if (hudScore) hudScore.textContent = Math.floor(state.score).toLocaleString();
+    if (hudCoin) hudCoin.textContent = Math.floor(state.coin).toLocaleString();
+    if (hudLife) hudLife.textContent = Math.max(0, Math.ceil(state.hp));
   }
 
   function addText(text, x, y, color){
-    state.texts.push({
-      text,
-      x,
-      y,
-      color,
-      life: 48
-    });
+    state.texts.push({ text, x, y, color, life: 48 });
   }
 
   function burst(x, y, color, n){
@@ -1369,21 +1465,17 @@
       addText('SAFE MODE', W / 2, H * 0.5, '#ff5b5b');
     }
 
-    if (running) {
-      raf = requestAnimationFrame(loop);
-    }
+    if (running) raf = requestAnimationFrame(loop);
   }
 
   canvas.addEventListener('pointerdown', e => {
     if (isSkillInput(e)) return;
-
     state.player.targetX = e.clientX;
     state.player.targetY = getPlayerBaseY();
   });
 
   canvas.addEventListener('pointermove', e => {
     if (isSkillInput(e)) return;
-
     state.player.targetX = e.clientX;
     state.player.targetY = getPlayerBaseY();
   });
