@@ -9,92 +9,27 @@
   const TEST_GOLD_TICKET_START = 10;
 
   const GOLD_DIFFICULTIES = [
-    { key:'easy', name:'イージー', firstCoin:3000, firstDiamond:5, clearCoin:300, chestMul:0.55, bossHpMul:0.7, bossCoinMul:0.7, showMidBoss:false },
-    { key:'hard', name:'ハード', firstCoin:5000, firstDiamond:5, clearCoin:500, chestMul:0.8, bossHpMul:0.95, bossCoinMul:0.9, showMidBoss:false },
-    { key:'veryHard', name:'ベリーハード', firstCoin:10000, firstDiamond:5, clearCoin:800, chestMul:1.1, bossHpMul:1.25, bossCoinMul:1.1, showMidBoss:false },
-    { key:'inferno', name:'インフェルノ', firstCoin:15000, firstDiamond:10, clearCoin:1000, chestMul:1.4, bossHpMul:1.65, bossCoinMul:1.25, showMidBoss:true },
-    { key:'legend', name:'レジェンド', firstCoin:30000, firstDiamond:30, clearCoin:1500, chestMul:1.85, bossHpMul:2.2, bossCoinMul:1.45, showMidBoss:true }
+    { key:'easy', name:'イージー', color:'#9dff73', firstCoin:3000, firstDiamond:5, clearCoin:300, chestMul:0.55, bossHpMul:0.7, bossCoinMul:0.7, showMidBoss:false },
+    { key:'hard', name:'ハード', color:'#6be6ff', firstCoin:5000, firstDiamond:5, clearCoin:500, chestMul:0.8, bossHpMul:0.95, bossCoinMul:0.9, showMidBoss:false },
+    { key:'veryHard', name:'ベリーハード', color:'#ffcf5b', firstCoin:10000, firstDiamond:5, clearCoin:800, chestMul:1.1, bossHpMul:1.25, bossCoinMul:1.1, showMidBoss:false },
+    { key:'inferno', name:'インフェルノ', color:'#ff5b5b', firstCoin:15000, firstDiamond:10, clearCoin:1000, chestMul:1.4, bossHpMul:1.65, bossCoinMul:1.25, showMidBoss:true },
+    { key:'legend', name:'レジェンド', color:'#d86bff', firstCoin:30000, firstDiamond:30, clearCoin:1500, chestMul:1.85, bossHpMul:2.2, bossCoinMul:1.45, showMidBoss:true }
   ];
 
   const DOUBLE_DIFFICULTIES = [
-    { key:'veryHard', name:'ベリーハード', firstCoin:5000, firstDiamond:5, hpMul:1.35, scoreMul:1.25 },
-    { key:'inferno', name:'インフェルノ', firstCoin:10000, firstDiamond:10, hpMul:1.95, scoreMul:1.55 },
-    { key:'legend', name:'レジェンド', firstCoin:30000, firstDiamond:50, hpMul:2.75, scoreMul:2.1 }
+    { key:'veryHard', name:'ベリーハード', color:'#ffcf5b', firstCoin:5000, firstDiamond:5, hpMul:1.35, scoreMul:1.25 },
+    { key:'inferno', name:'インフェルノ', color:'#ff5b5b', firstCoin:10000, firstDiamond:10, hpMul:1.95, scoreMul:1.55 },
+    { key:'legend', name:'レジェンド', color:'#d86bff', firstCoin:30000, firstDiamond:50, hpMul:2.75, scoreMul:2.1 }
   ];
 
   const DOUBLE_STAGES = [
-    {
-      id:1,
-      areaKey:'grass',
-      areaName:'草原',
-      title:'草原',
-      bossA:'ホークモブ',
-      bossB:'ミラモブ',
-      allowed:['veryHard','inferno','legend'],
-      final:false
-    },
-    {
-      id:2,
-      areaKey:'desert',
-      areaName:'砂漠',
-      title:'砂漠',
-      bossA:'モブガーディアン',
-      bossB:'ネオンモブ',
-      allowed:['veryHard','inferno','legend'],
-      final:false
-    },
-    {
-      id:3,
-      areaKey:'neon',
-      areaName:'ネオン街',
-      title:'ネオン街',
-      bossA:'ドラゴンモブ',
-      bossB:'ドラゴンモブⅡ',
-      allowed:['veryHard','inferno','legend'],
-      final:false
-    },
-    {
-      id:4,
-      areaKey:'castle',
-      areaName:'魔王城',
-      title:'魔王城',
-      bossA:'モブリリス',
-      bossB:'モブ魔王',
-      allowed:['veryHard','inferno','legend'],
-      final:false
-    },
-    {
-      id:5,
-      areaKey:'prison',
-      areaName:'監獄',
-      title:'監獄',
-      bossA:'モブメイル',
-      bossB:'モブスミス',
-      allowed:['veryHard','inferno','legend'],
-      final:false
-    },
-    {
-      id:6,
-      areaKey:'seaRail',
-      areaName:'海の線路',
-      title:'海の線路',
-      bossA:'モブネプ',
-      bossB:'ホークモブⅡ',
-      allowed:['veryHard','inferno','legend'],
-      final:false
-    },
-    {
-      id:7,
-      areaKey:'last',
-      areaName:'魔王の間',
-      title:'魔王の間',
-      bossA:'閻魔モブ',
-      bossB:'ウルモブリリス',
-      allowed:['legend'],
-      final:true,
-      firstCoin:50000,
-      firstDiamond:100
-    }
+    { id:1, areaKey:'grass', areaName:'草原', title:'草原', bossA:'ホークモブ', bossB:'ミラモブ', allowed:['veryHard','inferno','legend'], final:false },
+    { id:2, areaKey:'desert', areaName:'砂漠', title:'砂漠', bossA:'モブガーディアン', bossB:'ネオンモブ', allowed:['veryHard','inferno','legend'], final:false },
+    { id:3, areaKey:'neon', areaName:'ネオン街', title:'ネオン街', bossA:'ドラゴンモブ', bossB:'ドラゴンモブⅡ', allowed:['veryHard','inferno','legend'], final:false },
+    { id:4, areaKey:'castle', areaName:'魔王城', title:'魔王城', bossA:'モブリリス', bossB:'モブ魔王', allowed:['veryHard','inferno','legend'], final:false },
+    { id:5, areaKey:'prison', areaName:'監獄', title:'監獄', bossA:'モブメイル', bossB:'モブスミス', allowed:['veryHard','inferno','legend'], final:false },
+    { id:6, areaKey:'seaRail', areaName:'海の線路', title:'海の線路', bossA:'モブネプ', bossB:'ホークモブⅡ', allowed:['veryHard','inferno','legend'], final:false },
+    { id:7, areaKey:'last', areaName:'魔王の間', title:'魔王の間', bossA:'閻魔モブ', bossB:'ウルモブリリス', allowed:['legend'], final:true, firstCoin:50000, firstDiamond:100 }
   ];
 
   const EVENTS = [
@@ -121,8 +56,7 @@
   }
 
   function getRank(){
-    const save = getSave();
-    return Number(save.rank || 1);
+    return Number(getSave().rank || 1);
   }
 
   function isUnlocked(){
@@ -224,8 +158,7 @@
   }
 
   function hasGoldCleared(difficultyKey){
-    const data = loadGoldClear();
-    return !!data[difficultyKey];
+    return !!loadGoldClear()[difficultyKey];
   }
 
   function markGoldCleared(difficultyKey){
@@ -253,8 +186,7 @@
   }
 
   function hasDoubleCleared(difficultyKey, stageId){
-    const data = loadDoubleClear();
-    return !!data[doubleClearKey(difficultyKey, stageId)];
+    return !!loadDoubleClear()[doubleClearKey(difficultyKey, stageId)];
   }
 
   function markDoubleCleared(difficultyKey, stageId){
@@ -294,6 +226,57 @@
     const modal = qs('eventModal');
     if (!modal) return;
     modal.classList.add('hidden');
+  }
+
+  function rewardTextGold(diff){
+    const cleared = hasGoldCleared(diff.key);
+
+    if (cleared) {
+      return `クリア報酬：${diff.clearCoin.toLocaleString()} COIN`;
+    }
+
+    return `初回報酬：${diff.firstCoin.toLocaleString()} COIN + ${diff.firstDiamond} DIAMOND`;
+  }
+
+  function rewardTextDouble(diff, stage){
+    const cleared = hasDoubleCleared(diff.key, stage.id);
+
+    if (cleared) {
+      return 'クリア済み：初回報酬なし';
+    }
+
+    const coin = stage.final ? stage.firstCoin : diff.firstCoin;
+    const diamond = stage.final ? stage.firstDiamond : diff.firstDiamond;
+
+    return `初回報酬：${coin.toLocaleString()} COIN + ${diamond} DIAMOND`;
+  }
+
+  function confirmStart(title, rewardText, extra){
+    const lines = [
+      `${title}に出撃しますか？`,
+      '',
+      rewardText
+    ];
+
+    if (extra) {
+      lines.push('');
+      lines.push(extra);
+    }
+
+    return window.confirm(lines.join('\n'));
+  }
+
+  function styleModeButton(btn, color){
+    btn.style.width = '100%';
+    btn.style.textAlign = 'center';
+    btn.style.borderRadius = '18px';
+    btn.style.padding = '14px 12px';
+    btn.style.fontSize = '18px';
+    btn.style.lineHeight = '1.25';
+    btn.style.color = '#10070a';
+    btn.style.background = `linear-gradient(180deg,#ffffff,${color})`;
+    btn.style.border = `3px solid ${color}`;
+    btn.style.boxShadow = '0 5px 0 rgba(0,0,0,.36)';
   }
 
   function render(){
@@ -367,34 +350,26 @@
     const wrap = document.createElement('div');
     wrap.style.display = 'grid';
     wrap.style.gridTemplateColumns = '1fr';
-    wrap.style.gap = '7px';
-    wrap.style.marginTop = '8px';
+    wrap.style.gap = '9px';
+    wrap.style.marginTop = '10px';
 
     GOLD_DIFFICULTIES.forEach(diff => {
-      const row = document.createElement('button');
-      row.type = 'button';
-      row.className = 'event-play-btn';
-      row.disabled = !unlocked || ticket <= 0;
-      row.style.width = '100%';
-      row.style.textAlign = 'left';
-      row.style.borderRadius = '14px';
-      row.style.padding = '9px 11px';
-      row.style.lineHeight = '1.35';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'event-play-btn';
+      btn.disabled = !unlocked || ticket <= 0;
 
-      const cleared = hasGoldCleared(diff.key);
-      const rewardText = cleared
-        ? `クリア報酬 ${diff.clearCoin.toLocaleString()} COIN / チケット1枚`
-        : `初回 ${diff.firstCoin.toLocaleString()} COIN + ${diff.firstDiamond} DIAMOND / チケット1枚`;
+      styleModeButton(btn, diff.color);
 
       if (!unlocked) {
-        row.innerHTML = `<b>${diff.name}</b><br><small>LOCK</small>`;
+        btn.innerHTML = `<b>${diff.name}</b><br><small>LOCK</small>`;
       } else if (ticket <= 0) {
-        row.innerHTML = `<b>${diff.name}</b><br><small>チケット不足</small>`;
+        btn.innerHTML = `<b>${diff.name}</b><br><small>チケット不足</small>`;
       } else {
-        row.innerHTML = `<b>${diff.name}</b><br><small>${rewardText}</small>`;
+        btn.innerHTML = `<b>${diff.name}</b>`;
       }
 
-      row.addEventListener('click', function(e){
+      btn.addEventListener('click', function(e){
         e.preventDefault();
         e.stopPropagation();
 
@@ -406,10 +381,18 @@
           return;
         }
 
+        const ok = confirmStart(
+          `GOLD STAGE ${diff.name}`,
+          rewardTextGold(diff),
+          '消費：GOLD TICKET 1枚'
+        );
+
+        if (!ok) return;
+
         startEvent('gold', diff.key);
       });
 
-      wrap.appendChild(row);
+      wrap.appendChild(btn);
     });
 
     parent.appendChild(wrap);
@@ -427,7 +410,17 @@
     btn.addEventListener('click', function(e){
       e.preventDefault();
       e.stopPropagation();
+
       if (!unlocked) return;
+
+      const ok = confirmStart(
+        'スコアアタック',
+        '報酬：スコア記録のみ',
+        'ボス連戦に挑戦します。'
+      );
+
+      if (!ok) return;
+
       startEvent('scoreAttack', '');
     });
 
@@ -446,7 +439,8 @@
 
       const title = document.createElement('div');
       title.style.fontWeight = '1000';
-      title.style.color = diffUnlocked ? '#ffe66b' : '#9aa4bd';
+      title.style.color = diffUnlocked ? diff.color : '#9aa4bd';
+      title.style.fontSize = '18px';
       title.style.marginTop = '4px';
       title.textContent = diffUnlocked ? diff.name : `${diff.name} LOCK`;
 
@@ -461,25 +455,26 @@
         btn.type = 'button';
         btn.className = 'event-play-btn';
         btn.disabled = !diffUnlocked;
-        btn.style.width = '100%';
-        btn.style.textAlign = 'left';
-        btn.style.borderRadius = '14px';
-        btn.style.padding = '9px 11px';
-        btn.style.lineHeight = '1.35';
 
-        const coin = stage.final ? stage.firstCoin : diff.firstCoin;
-        const diamond = stage.final ? stage.firstDiamond : diff.firstDiamond;
+        styleModeButton(btn, diff.color);
 
         btn.innerHTML =
-          `<b>${stage.id}. ${stage.title}</b><br>` +
-          `<small>${stage.bossA} & ${stage.bossB}</small><br>` +
-          `<small>${cleared ? 'クリア済み' : `初回 ${coin.toLocaleString()} COIN + ${diamond} DIAMOND`}</small>`;
+          `<b>${stage.id}. ${stage.title}</b>` +
+          `<br><small>${cleared ? 'CLEAR' : 'NEW'}</small>`;
 
         btn.addEventListener('click', function(e){
           e.preventDefault();
           e.stopPropagation();
 
           if (!diffUnlocked) return;
+
+          const ok = confirmStart(
+            `ダブルボス ${diff.name} / ${stage.title}`,
+            rewardTextDouble(diff, stage),
+            'ボス2体が同時に出現します。'
+          );
+
+          if (!ok) return;
 
           startEvent('doubleBoss', diff.key, stage.id);
         });
@@ -560,10 +555,7 @@
     const difficulty = getDoubleDifficulty(ev && ev.difficulty ? ev.difficulty : 'veryHard');
     const stage = getDoubleStage(ev && ev.stageId ? ev.stageId : 1);
 
-    return {
-      difficulty,
-      stage
-    };
+    return { difficulty, stage };
   }
 
   function clearCurrentEvent(){
