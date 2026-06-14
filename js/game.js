@@ -21,6 +21,15 @@
   const SCROLL_SPEED = 1.15;
   const FIELD_ENTITY_SPEED = 0.72;
   const GOLD_STAGE_SECONDS = 120;
+  const EVENT_MAX_AGE_MS = 1000 * 60 * 15;
+  const GOLD_TICKET_DROP_RATE = 0.08;
+
+  const ORIGINAL_DATA = JSON.parse(JSON.stringify({
+    stage: D.stage,
+    enemies: D.enemies,
+    gimmicks: D.gimmicks,
+    chests: D.chests
+  }));
 
   let W = 0;
   let H = 0;
@@ -46,36 +55,25 @@
     bulletImage: 'mt/atk.png',
     score: 0,
     coin: 0,
-    player: {
-      x: 0,
-      y: 0,
-      targetX: 0,
-      targetY: 0,
-      r: 24
-    },
+    player: { x:0, y:0, targetX:0, targetY:0, r:24 },
     shootCd: 0,
-    areaSpawn: {
-      nextEnemy: 0,
-      nextGimmick: 0,
-      nextChest: 0,
-      endAt: 0
-    },
+    areaSpawn: { nextEnemy:0, nextGimmick:0, nextChest:0, endAt:0 },
     gateEndAt: 0,
     eventMode: {
-      active: false,
-      key: '',
-      difficulty: null,
-      endFrame: 0,
-      nextChest: 0,
-      nextBoss: 0,
-      nextBonusEnemy: 0,
-      nextEnemy: 0,
-      nextGate: 0,
-      bossCount: 0,
-      scoreBossIndex: 0,
-      scoreBossList: [],
-      currentAreaKey: '',
-      currentAreaName: ''
+      active:false,
+      key:'',
+      difficulty:null,
+      endFrame:0,
+      nextChest:0,
+      nextBoss:0,
+      nextBonusEnemy:0,
+      nextEnemy:0,
+      nextGate:0,
+      bossCount:0,
+      scoreBossIndex:0,
+      scoreBossList:[],
+      currentAreaKey:'',
+      currentAreaName:''
     },
     entities: [],
     bullets: [],
@@ -83,12 +81,25 @@
     texts: []
   };
 
+  function clone(obj){
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  function restoreBaseData(){
+    if (!D) return;
+
+    D.stage = clone(ORIGINAL_DATA.stage);
+    D.enemies = clone(ORIGINAL_DATA.enemies);
+    D.gimmicks = clone(ORIGINAL_DATA.gimmicks);
+    D.chests = clone(ORIGINAL_DATA.chests);
+  }
+
   function getImage(src){
     if (!src) return null;
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260614_score_attack';
+      image.src = src + '?v=20260614_event_fix_ticket';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -106,13 +117,14 @@
     return !!(e && e.target && e.target.closest && e.target.closest('#skillHud'));
   }
 
-  function rand(a, b){ return a + Math.random() * (b - a); }
-  function intRand(a, b){ return Math.floor(rand(a, b + 1)); }
+  function rand(a,b){ return a + Math.random() * (b - a); }
+  function intRand(a,b){ return Math.floor(rand(a, b + 1)); }
   function pick(arr){ return arr && arr.length ? arr[Math.floor(Math.random() * arr.length)] : null; }
-  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
 
   function weightedPick(list){
     if (!list || !list.length) return null;
+
     const total = list.reduce((sum, item) => sum + (item.weight || 1), 0);
     let roll = Math.random() * total;
 
@@ -124,28 +136,27 @@
     return list[list.length - 1];
   }
 
-  function clone(obj){
-    return JSON.parse(JSON.stringify(obj));
-  }
-
   function getShopBonus(){
     if (window.MobShotShop && window.MobShotShop.getUpgradeBonus) {
       return window.MobShotShop.getUpgradeBonus();
     }
-    return { power: 0, range: 0, rapid: 0, hp: 0 };
+
+    return { power:0, range:0, rapid:0, hp:0 };
   }
 
   function getEquipBonus(){
     if (window.MobShotEquip && window.MobShotEquip.getEquipmentBonus) {
       return window.MobShotEquip.getEquipmentBonus();
     }
-    return { power: 0, rapid: 0, hp: 0 };
+
+    return { power:0, rapid:0, hp:0 };
   }
 
   function getEquippedAvatar(){
     if (window.MobShotEquip && window.MobShotEquip.getEquippedAvatar) {
       return window.MobShotEquip.getEquippedAvatar();
     }
+
     return null;
   }
 
@@ -153,6 +164,7 @@
     if (window.MobShotEquip && window.MobShotEquip.getEquippedRecord) {
       return window.MobShotEquip.getEquippedRecord();
     }
+
     return null;
   }
 
@@ -164,17 +176,34 @@
     const stage = D.stage || {};
 
     return {
-      index: 0,
-      areaKey: stage.areaKey || 'grass',
-      areaName: stage.areaName || '草原',
-      areaNo: Number(stage.areaNo || 1),
-      stageNo: Number(stage.stageNo || 1),
-      id: stage.id || '1-1',
-      difficulty: stage.difficulty || 'EASY',
-      isStrongBoss: !!stage.isStrongBoss,
-      isLegend: !!stage.isLegend,
-      isTest: !!stage.isTest
+      index:0,
+      areaKey:stage.areaKey || 'grass',
+      areaName:stage.areaName || '草原',
+      areaNo:Number(stage.areaNo || 1),
+      stageNo:Number(stage.stageNo || 1),
+      id:stage.id || '1-1',
+      difficulty:stage.difficulty || 'EASY',
+      isStrongBoss:!!stage.isStrongBoss,
+      isLegend:!!stage.isLegend,
+      isTest:!!stage.isTest
     };
+  }
+
+  function readEventSafe(){
+    if (!window.MobShotEvents || !window.MobShotEvents.getCurrentEvent) return null;
+
+    const ev = window.MobShotEvents.getCurrentEvent();
+
+    if (!ev || !ev.key) return null;
+
+    if (ev.startedAt && Date.now() - Number(ev.startedAt) > EVENT_MAX_AGE_MS) {
+      if (window.MobShotEvents.clearCurrentEvent) {
+        window.MobShotEvents.clearCurrentEvent();
+      }
+      return null;
+    }
+
+    return ev;
   }
 
   function isGoldStageRun(){
@@ -194,7 +223,7 @@
       H,
       ctx,
       scroll,
-      frame: function(){ return frame; },
+      frame:function(){ return frame; },
       rand,
       intRand,
       pick,
@@ -207,20 +236,8 @@
     };
   }
 
-  function makeBossTools(){
-    return makeTools();
-  }
-
   function makeRenderTools(){
-    return {
-      ctx,
-      state,
-      D,
-      W,
-      H,
-      scroll,
-      getImage
-    };
+    return { ctx, state, D, W, H, scroll, getImage };
   }
 
   function resize(){
@@ -261,6 +278,8 @@
     scroll = 0;
     runCommitted = false;
     aiErrorCount = 0;
+
+    restoreBaseData();
 
     const shopBonus = getShopBonus();
     const equipBonus = getEquipBonus();
@@ -313,18 +332,24 @@
     if (resultPanel) resultPanel.classList.add('hidden');
     if (resultRetryBtn) resultRetryBtn.textContent = 'もう一度';
 
-    if (window.MobShotEvents && window.MobShotEvents.isGoldStage && window.MobShotEvents.isGoldStage()) {
+    const ev = readEventSafe();
+
+    if (ev && ev.key === 'gold') {
       startGoldStageMode();
       return;
     }
 
-    if (window.MobShotEvents && window.MobShotEvents.isScoreAttack && window.MobShotEvents.isScoreAttack()) {
+    if (ev && ev.key === 'scoreAttack') {
       startScoreAttackMode();
       return;
     }
 
-    const ev = flow.start();
-    handleFlowEvent(ev);
+    if (window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
+      window.MobShotEvents.clearCurrentEvent();
+    }
+
+    const flowEvent = flow.start();
+    handleFlowEvent(flowEvent);
   }
 
   function start(){
@@ -348,6 +373,7 @@
 
   function showBanner(text){
     if (!phaseBanner) return;
+
     phaseBanner.textContent = text;
     phaseBanner.classList.remove('show');
     void phaseBanner.offsetWidth;
@@ -359,24 +385,24 @@
       window.MobShotEvents && window.MobShotEvents.getCurrentGoldDifficulty
         ? window.MobShotEvents.getCurrentGoldDifficulty()
         : {
-            key: 'easy',
-            name: 'イージー',
-            clearCoin: 300,
-            firstCoin: 3000,
-            firstDiamond: 5,
-            chestMul: 0.55,
-            bossHpMul: 0.7,
-            bossCoinMul: 0.7,
-            showMidBoss: false
+            key:'easy',
+            name:'イージー',
+            clearCoin:300,
+            firstCoin:3000,
+            firstDiamond:5,
+            chestMul:0.55,
+            bossHpMul:0.7,
+            bossCoinMul:0.7,
+            showMidBoss:false
           };
 
     state.eventMode.active = true;
     state.eventMode.key = 'gold';
     state.eventMode.difficulty = diff;
     state.eventMode.endFrame = frame + GOLD_STAGE_SECONDS * 60;
-    state.eventMode.nextChest = frame + 95;
+    state.eventMode.nextChest = frame + 120;
     state.eventMode.nextBoss = frame + 70;
-    state.eventMode.nextBonusEnemy = frame + 170;
+    state.eventMode.nextBonusEnemy = frame + 200;
     state.eventMode.bossCount = 0;
 
     showBanner(`GOLD STAGE ${diff.name}`);
@@ -410,20 +436,23 @@
       if (!area || !area.boss) return;
 
       const boss = clone(area.boss);
+
       boss.__scoreAreaKey = key;
       boss.__scoreAreaName = area.name || key;
       boss.__scoreBackground = area.background || 'sta/backsougen.png';
-      boss.__scoreScale = 0.8 + index * 0.14;
+      boss.__scoreScale = 1.55 + index * 0.38;
 
       list.push(boss);
     });
 
     if (!list.length && D.enemies && D.enemies.boss) {
       const boss = clone(D.enemies.boss);
+
       boss.__scoreAreaKey = 'grass';
       boss.__scoreAreaName = '草原';
       boss.__scoreBackground = D.stage.background || 'sta/backsougen.png';
-      boss.__scoreScale = 1;
+      boss.__scoreScale = 1.8;
+
       list.push(boss);
     }
 
@@ -437,20 +466,20 @@
     if (!area || !D) return;
 
     D.stage = Object.assign(D.stage || {}, {
-      id: 'SCORE',
+      id:'SCORE',
       areaKey,
-      areaName: area.name || 'スコアアタック',
-      areaType: area.name || 'スコアアタック',
-      difficulty: 'SCORE ATTACK',
-      background: area.background || 'sta/backsougen.png',
-      isStrongBoss: true,
-      isLegend: true
+      areaName:area.name || 'スコアアタック',
+      areaType:area.name || 'スコアアタック',
+      difficulty:'SCORE ATTACK',
+      background:area.background || 'sta/backsougen.png',
+      isStrongBoss:true,
+      isLegend:true
     });
 
     D.enemies = D.enemies || {};
-    D.enemies.zako = clone(area.zako || D.enemies.zako || []);
-    D.enemies.midBoss = clone(area.midBoss || D.enemies.midBoss || []);
-    D.gimmicks = clone(area.gimmicks || D.gimmicks || []);
+    D.enemies.zako = clone(area.zako || []);
+    D.enemies.midBoss = clone(area.midBoss || []);
+    D.gimmicks = clone(area.gimmicks || []);
   }
 
   function startScoreAttackMode(){
@@ -458,7 +487,7 @@
     state.eventMode.key = 'scoreAttack';
     state.eventMode.scoreBossList = buildScoreBossList();
     state.eventMode.scoreBossIndex = 0;
-    state.eventMode.nextEnemy = frame + 110;
+    state.eventMode.nextEnemy = frame + 130;
     state.eventMode.nextGate = frame + 20 * 60;
     state.eventMode.currentAreaKey = 'grass';
     state.eventMode.currentAreaName = '草原';
@@ -466,7 +495,7 @@
     applyScoreArea('grass');
 
     showBanner('SCORE ATTACK!');
-    addText('歴代ボスを倒せ！', W / 2, H * 0.28, '#6be6ff');
+    addText('強化ボス連戦！', W / 2, H * 0.28, '#6be6ff');
 
     spawnScoreAttackBoss();
   }
@@ -483,7 +512,7 @@
     const boss = clone(list[index]);
     const areaKey = boss.__scoreAreaKey || 'grass';
     const areaName = boss.__scoreAreaName || '草原';
-    const scale = Number(boss.__scoreScale || 1);
+    const scale = Number(boss.__scoreScale || 1.5);
 
     state.eventMode.currentAreaKey = areaKey;
     state.eventMode.currentAreaName = areaName;
@@ -491,8 +520,8 @@
     applyScoreArea(areaKey);
 
     boss.hp = Math.ceil(Number(boss.hp || 1) * scale);
-    boss.score = Math.ceil(Number(boss.score || 0) * (1.2 + index * 0.18));
-    boss.coin = Math.ceil(Number(boss.coin || 0) * 0.25);
+    boss.score = Math.ceil(Number(boss.score || 0) * (1.8 + index * 0.35));
+    boss.coin = Math.ceil(Number(boss.coin || 0) * 0.15);
 
     D.enemies.boss = boss;
 
@@ -510,6 +539,8 @@
       e.maxHp = e.hp;
       e.score = boss.score;
       e.coin = boss.coin;
+      e.shootCd = Math.max(35, Math.floor(Number(e.shootCd || 80) * 0.78));
+      e.attackCd = Math.max(70, Math.floor(Number(e.attackCd || 140) * 0.8));
     });
 
     showBanner(`${index + 1}/${list.length} ${boss.name}`);
@@ -542,15 +573,18 @@
       if (window.MobShotSpawn && window.MobShotSpawn.spawnEnemy) {
         window.MobShotSpawn.spawnEnemy(makeTools());
       }
-      state.eventMode.nextEnemy = frame + intRand(120, 180);
+
+      state.eventMode.nextEnemy = frame + intRand(125, 185);
     }
 
     if (frame >= state.eventMode.nextGate) {
       if (window.MobShotSpawn && window.MobShotSpawn.spawnGatePair) {
         window.MobShotSpawn.spawnGatePair(makeTools());
       }
+
       state.gateEndAt = frame + 520;
       state.eventMode.nextGate = frame + 20 * 60;
+
       showBanner('BONUS GATE!');
     }
 
@@ -560,6 +594,7 @@
       state.entities.forEach(e => {
         if (e.kind === 'gate') e.dead = true;
       });
+
       state.gateEndAt = 0;
     }
   }
@@ -583,6 +618,7 @@
         if (window.MobShotSpawn && window.MobShotSpawn.spawnGatePair) {
           window.MobShotSpawn.spawnGatePair(tools);
         }
+
         state.gateEndAt = frame + 520;
       }
 
@@ -637,6 +673,7 @@
           if (window.MobShotSpawn && window.MobShotSpawn.spawnEnemy) {
             window.MobShotSpawn.spawnEnemy(tools);
           }
+
           state.areaSpawn.nextEnemy = frame + intRand(90, 145);
         }
 
@@ -644,16 +681,18 @@
           if (window.MobShotSpawn && window.MobShotSpawn.spawnGimmick) {
             window.MobShotSpawn.spawnGimmick(tools);
           }
+
           state.areaSpawn.nextGimmick = frame + intRand(115, 175);
         }
 
         if (frame >= state.areaSpawn.nextChest) {
-          if (Math.random() < 0.42) {
+          if (Math.random() < 0.32) {
             if (window.MobShotSpawn && window.MobShotSpawn.spawnChest) {
               window.MobShotSpawn.spawnChest(tools);
             }
           }
-          state.areaSpawn.nextChest = frame + intRand(230, 350);
+
+          state.areaSpawn.nextChest = frame + intRand(260, 390);
         }
 
         if (frame >= state.areaSpawn.endAt) {
@@ -704,20 +743,20 @@
     }
 
     if (frame >= state.eventMode.nextChest) {
-      const count = Math.random() < 0.22 ? 2 : 1;
+      const count = Math.random() < 0.16 ? 2 : 1;
       spawnGoldChestWave(count);
-      state.eventMode.nextChest = frame + intRand(145, 220);
+      state.eventMode.nextChest = frame + intRand(175, 270);
     }
 
     if (frame >= state.eventMode.nextBonusEnemy) {
       spawnGoldBonusEnemy();
-      state.eventMode.nextBonusEnemy = frame + intRand(210, 310);
+      state.eventMode.nextBonusEnemy = frame + intRand(230, 340);
     }
 
     if (diff.showMidBoss && state.eventMode.bossCount > 0 && state.eventMode.bossCount % 3 === 0) {
       const midAlive = state.entities.some(e => !e.dead && e.kind === 'midBoss');
 
-      if (!midAlive && Math.random() < 0.02) {
+      if (!midAlive && Math.random() < 0.018) {
         spawnGoldMidBoss();
       }
     }
@@ -783,32 +822,32 @@
   function spawnGoldChest(i){
     const diff = state.eventMode.difficulty || {};
     const chestMul = Number(diff.chestMul || 1);
-    const gold = Math.random() < 0.24;
+    const gold = Math.random() < 0.2;
 
     const def = gold
-      ? { name:'金の宝箱', image:'gimi/takagol.png', hp:10, score:60, coinMin:18, coinMax:42 }
-      : { name:'銀の宝箱', image:'gimi/takagin.png', hp:6, score:30, coinMin:8, coinMax:22 };
+      ? { name:'金の宝箱', image:'gimi/takagol.png', hp:10, score:60, coinMin:16, coinMax:34 }
+      : { name:'銀の宝箱', image:'gimi/takagin.png', hp:6, score:30, coinMin:7, coinMax:18 };
 
     const hp = Math.ceil(def.hp * (0.9 + chestMul * 0.25));
 
     state.entities.push({
-      kind: 'chest',
-      name: def.name,
-      image: def.image,
-      x: rand(W * 0.18, W * 0.82),
-      y: -80 - i * 58,
-      vx: 0,
-      vy: 2.05,
-      w: 68,
-      h: 62,
+      kind:'chest',
+      name:def.name,
+      image:def.image,
+      x:rand(W * 0.18, W * 0.82),
+      y:-80 - i * 58,
+      vx:0,
+      vy:2.05,
+      w:68,
+      h:62,
       hp,
-      maxHp: hp,
-      score: def.score,
-      coinMin: Math.ceil(def.coinMin * chestMul),
-      coinMax: Math.ceil(def.coinMax * chestMul),
-      dead: false,
-      bob: 0,
-      __goldStageChest: true
+      maxHp:hp,
+      score:def.score,
+      coinMin:Math.ceil(def.coinMin * chestMul),
+      coinMax:Math.ceil(def.coinMax * chestMul),
+      dead:false,
+      bob:0,
+      __goldStageChest:true
     });
   }
 
@@ -854,6 +893,7 @@
 
     if (e.aiType === 'shortDash') {
       e.dashCd = Number(e.dashCd || 90) - 1;
+
       if (e.dashCd <= 0) {
         e.vy += 0.8;
         e.dashCd = 110;
@@ -862,6 +902,7 @@
 
     if (e.aiType === 'teleport') {
       e.teleportCd = Number(e.teleportCd || 120) - 1;
+
       if (e.teleportCd <= 0) {
         e.x = rand(W * 0.18, W * 0.82);
         e.teleportCd = 140;
@@ -877,7 +918,10 @@
     }
 
     if (e.canShoot) {
-      const canShootFromFront = e.y > 0 && e.y < state.player.y - 110;
+      const canShootFromFront =
+        e.y > 0 &&
+        e.y < state.player.y - 110;
+
       if (!canShootFromFront) return;
 
       e.shootCd = Number(e.shootCd || e.baseShootCd || 190) - 1;
@@ -898,6 +942,7 @@
     for (let i = 0; i < count; i++) {
       const dx = state.player.x - e.x;
       const dy = state.player.y - e.y;
+
       if (dy <= 0) continue;
 
       const base = Math.atan2(dy, dx);
@@ -905,20 +950,20 @@
       const speed = e.burstShot ? 2.8 : 2.55;
 
       state.entities.push({
-        kind: 'enemyBullet',
-        x: e.x,
-        y: e.y + 24,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
+        kind:'enemyBullet',
+        x:e.x,
+        y:e.y + 24,
+        vx:Math.cos(angle) * speed,
+        vy:Math.sin(angle) * speed,
         r,
-        dmg: Math.ceil(r * 0.9),
+        dmg:Math.ceil(r * 0.9),
         hp,
-        maxHp: hp,
-        breakable: true,
-        dead: false,
-        bob: 0,
+        maxHp:hp,
+        breakable:true,
+        dead:false,
+        bob:0,
         color,
-        life: 360
+        life:360
       });
     }
   }
@@ -937,7 +982,7 @@
   }
 
   function updateEntities(){
-    const bossTools = makeBossTools();
+    const bossTools = makeTools();
     const timeStopped =
       window.MobShotGameSkills &&
       window.MobShotGameSkills.isTimeStopped &&
@@ -966,11 +1011,14 @@
           } catch (err) {
             aiErrorCount++;
             console.error('中ボスAIエラー:', e.name, err);
+
             if (!e.__aiErrorShown) {
               e.__aiErrorShown = true;
               addText('AI SAFE', e.x, e.y - 60, '#ff5b5b');
             }
+
             fallbackBossMove(e);
+
             if (aiErrorCount > 20) e.dead = true;
           }
         } else {
@@ -983,11 +1031,14 @@
           } catch (err) {
             aiErrorCount++;
             console.error('ボスAIエラー:', e.name, err);
+
             if (!e.__aiErrorShown) {
               e.__aiErrorShown = true;
               addText('AI SAFE', e.x, e.y - 80, '#ff5b5b');
             }
+
             fallbackBossMove(e);
+
             if (aiErrorCount > 30) e.dead = true;
           }
         } else {
@@ -1000,6 +1051,7 @@
 
         if (e.kind === 'enemy') {
           e.x += e.vx || 0;
+
           if (e.x < W * 0.16 || e.x > W * 0.84) {
             e.vx = -(e.vx || 0.8);
           }
@@ -1121,15 +1173,29 @@
     }
   }
 
+  function tryDropGoldTicket(e){
+    if (!e || e.kind !== 'chest') return;
+    if (isGoldStageRun() || isScoreAttackRun()) return;
+    if (Math.random() > GOLD_TICKET_DROP_RATE) return;
+
+    if (window.MobShotEvents && window.MobShotEvents.addGoldTicket) {
+      window.MobShotEvents.addGoldTicket(1);
+      addText('GOLD TICKET +1', e.x, e.y - 38, '#ffcf5b');
+      burst(e.x, e.y, '#ffcf5b', 30);
+    }
+  }
+
   function killEntity(e){
+    tryDropGoldTicket(e);
+
     if (isGoldStageRun() && e) {
       if (e.kind === 'boss') {
         state.eventMode.nextBoss = frame + 95;
-        if (Math.random() < 0.7) spawnGoldChestWave(1);
+        if (Math.random() < 0.55) spawnGoldChestWave(1);
       }
 
       if (e.kind === 'midBoss') {
-        if (Math.random() < 0.6) spawnGoldChestWave(1);
+        if (Math.random() < 0.45) spawnGoldChestWave(1);
       }
     }
 
@@ -1233,6 +1299,8 @@
       window.MobShotEvents.clearCurrentEvent();
     }
 
+    restoreBaseData();
+
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
 
     if (resultTitle) {
@@ -1272,21 +1340,25 @@
 
   function testClearNow(){
     if (!running || runCommitted) return;
+
     addText('TEST CLEAR', state.player.x, state.player.y - 90, '#9dff73');
     finishRun(true);
   }
 
   function createTestClearButton(){
     const gameScreen = document.getElementById('gameScreen');
+
     if (!gameScreen) return;
 
     let btn = document.getElementById('testClearBtn');
+
     if (btn) return;
 
     btn = document.createElement('button');
     btn.id = 'testClearBtn';
     btn.type = 'button';
     btn.textContent = 'テストクリア';
+
     btn.style.position = 'absolute';
     btn.style.left = '96px';
     btn.style.bottom = 'calc(78px + env(safe-area-inset-bottom))';
@@ -1357,9 +1429,8 @@
     running = false;
     stopLoopOnly();
 
-    if (state.eventMode && state.eventMode.active) {
-      state.eventMode.active = false;
-    }
+    resetEventMode();
+    restoreBaseData();
 
     if (window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
       window.MobShotEvents.clearCurrentEvent();
@@ -1410,10 +1481,12 @@
       if (isGoldStageRun()) {
         const remain = Math.max(0, Math.ceil((state.eventMode.endFrame - frame) / 60));
         const diff = state.eventMode.difficulty || {};
+
         hudStage.textContent = `GOLD ${diff.name || ''} ${remain}`;
       } else if (isScoreAttackRun()) {
         const now = Math.min(state.eventMode.scoreBossIndex + 1, state.eventMode.scoreBossList.length);
         const max = state.eventMode.scoreBossList.length || 1;
+
         hudStage.textContent = `SCORE ${now}/${max}`;
       } else {
         hudStage.textContent = `${info.id}`;
@@ -1426,7 +1499,7 @@
   }
 
   function addText(text, x, y, color){
-    state.texts.push({ text, x, y, color, life: 48 });
+    state.texts.push({ text, x, y, color, life:48 });
   }
 
   function burst(x, y, color, n){
@@ -1434,10 +1507,10 @@
       state.particles.push({
         x,
         y,
-        vx: rand(-4, 4),
-        vy: rand(-5, 2),
+        vx:rand(-4, 4),
+        vy:rand(-5, 2),
         color,
-        life: intRand(18, 34)
+        life:intRand(18, 34)
       });
     }
   }
@@ -1465,17 +1538,21 @@
       addText('SAFE MODE', W / 2, H * 0.5, '#ff5b5b');
     }
 
-    if (running) raf = requestAnimationFrame(loop);
+    if (running) {
+      raf = requestAnimationFrame(loop);
+    }
   }
 
   canvas.addEventListener('pointerdown', e => {
     if (isSkillInput(e)) return;
+
     state.player.targetX = e.clientX;
     state.player.targetY = getPlayerBaseY();
   });
 
   canvas.addEventListener('pointermove', e => {
     if (isSkillInput(e)) return;
+
     state.player.targetX = e.clientX;
     state.player.targetY = getPlayerBaseY();
   });
