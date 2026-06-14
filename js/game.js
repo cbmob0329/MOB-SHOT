@@ -73,7 +73,11 @@
       scoreBossIndex:0,
       scoreBossList:[],
       currentAreaKey:'',
-      currentAreaName:''
+      currentAreaName:'',
+      doubleStage:null,
+      doubleDifficulty:null,
+      doubleIntroTimer:0,
+      doubleClearReady:false
     },
     entities: [],
     bullets: [],
@@ -99,7 +103,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260614_event_fix_ticket';
+      image.src = src + '?v=20260614_double_boss';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -140,7 +144,6 @@
     if (window.MobShotShop && window.MobShotShop.getUpgradeBonus) {
       return window.MobShotShop.getUpgradeBonus();
     }
-
     return { power:0, range:0, rapid:0, hp:0 };
   }
 
@@ -148,7 +151,6 @@
     if (window.MobShotEquip && window.MobShotEquip.getEquipmentBonus) {
       return window.MobShotEquip.getEquipmentBonus();
     }
-
     return { power:0, rapid:0, hp:0 };
   }
 
@@ -156,7 +158,6 @@
     if (window.MobShotEquip && window.MobShotEquip.getEquippedAvatar) {
       return window.MobShotEquip.getEquippedAvatar();
     }
-
     return null;
   }
 
@@ -164,7 +165,6 @@
     if (window.MobShotEquip && window.MobShotEquip.getEquippedRecord) {
       return window.MobShotEquip.getEquippedRecord();
     }
-
     return null;
   }
 
@@ -212,6 +212,10 @@
 
   function isScoreAttackRun(){
     return state.eventMode.active && state.eventMode.key === 'scoreAttack';
+  }
+
+  function isDoubleBossRun(){
+    return state.eventMode.active && state.eventMode.key === 'doubleBoss';
   }
 
   function makeTools(){
@@ -271,6 +275,10 @@
     state.eventMode.scoreBossList = [];
     state.eventMode.currentAreaKey = '';
     state.eventMode.currentAreaName = '';
+    state.eventMode.doubleStage = null;
+    state.eventMode.doubleDifficulty = null;
+    state.eventMode.doubleIntroTimer = 0;
+    state.eventMode.doubleClearReady = false;
   }
 
   function resetRun(){
@@ -344,6 +352,11 @@
       return;
     }
 
+    if (ev && ev.key === 'doubleBoss') {
+      startDoubleBossMode();
+      return;
+    }
+
     if (window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
       window.MobShotEvents.clearCurrentEvent();
     }
@@ -380,6 +393,81 @@
     phaseBanner.classList.add('show');
   }
 
+  function getStageAreaData(areaKey){
+    const areaData = window.MOBSHOT_STAGE_DATA || {};
+    return areaData[areaKey] || null;
+  }
+
+  function getBossDefByName(area, bossName){
+    if (!area) return null;
+
+    if (area.boss && area.boss.name === bossName) {
+      return clone(area.boss);
+    }
+
+    if (Array.isArray(area.bosses)) {
+      const found = area.bosses.find(b => b && b.name === bossName);
+      if (found) return clone(found);
+    }
+
+    if (Array.isArray(area.extraBosses)) {
+      const found = area.extraBosses.find(b => b && b.name === bossName);
+      if (found) return clone(found);
+    }
+
+    return null;
+  }
+
+  function getFallbackBossDef(name){
+    const all = window.MOBSHOT_STAGE_DATA || {};
+
+    for (const key in all) {
+      const area = all[key];
+      const found = getBossDefByName(area, name);
+      if (found) return found;
+    }
+
+    if (D.enemies && D.enemies.boss) {
+      const boss = clone(D.enemies.boss);
+      boss.name = name || boss.name || 'BOSS';
+      return boss;
+    }
+
+    return {
+      name: name || 'BOSS',
+      image: '',
+      hp: 300,
+      score: 1000,
+      coin: 100,
+      type: 'hawk',
+      shootCd: 130,
+      attackCd: 220,
+      moveSpeed: 1.2
+    };
+  }
+
+  function setupStageArea(areaKey, label){
+    const area = getStageAreaData(areaKey);
+
+    if (!area) return;
+
+    D.stage = Object.assign(D.stage || {}, {
+      id: label || 'EVENT',
+      areaKey,
+      areaName: area.name || label || areaKey,
+      areaType: area.name || label || areaKey,
+      difficulty: label || 'EVENT',
+      background: area.background || D.stage.background,
+      isStrongBoss: true,
+      isLegend: true
+    });
+
+    D.enemies = D.enemies || {};
+    D.enemies.zako = clone(area.zako || []);
+    D.enemies.midBoss = clone(area.midBoss || []);
+    D.gimmicks = clone(area.gimmicks || []);
+  }
+
   function startGoldStageMode(){
     const diff =
       window.MobShotEvents && window.MobShotEvents.getCurrentGoldDifficulty
@@ -414,18 +502,8 @@
   function buildScoreBossList(){
     const areaData = window.MOBSHOT_STAGE_DATA || {};
     const order = [
-      'grass',
-      'desert',
-      'town',
-      'neon',
-      'magma',
-      'castle',
-      'prison',
-      'matrix',
-      'seaRail',
-      'neonHighway',
-      'makai',
-      'last'
+      'grass','desert','town','neon','magma','castle',
+      'prison','matrix','seaRail','neonHighway','makai','last'
     ];
 
     const list = [];
@@ -460,26 +538,7 @@
   }
 
   function applyScoreArea(areaKey){
-    const areaData = window.MOBSHOT_STAGE_DATA || {};
-    const area = areaData[areaKey];
-
-    if (!area || !D) return;
-
-    D.stage = Object.assign(D.stage || {}, {
-      id:'SCORE',
-      areaKey,
-      areaName:area.name || 'スコアアタック',
-      areaType:area.name || 'スコアアタック',
-      difficulty:'SCORE ATTACK',
-      background:area.background || 'sta/backsougen.png',
-      isStrongBoss:true,
-      isLegend:true
-    });
-
-    D.enemies = D.enemies || {};
-    D.enemies.zako = clone(area.zako || []);
-    D.enemies.midBoss = clone(area.midBoss || []);
-    D.gimmicks = clone(area.gimmicks || []);
+    setupStageArea(areaKey, 'SCORE ATTACK');
   }
 
   function startScoreAttackMode(){
@@ -546,6 +605,333 @@
     showBanner(`${index + 1}/${list.length} ${boss.name}`);
   }
 
+  function startDoubleBossMode(){
+    const info =
+      window.MobShotEvents && window.MobShotEvents.getCurrentDoubleBoss
+        ? window.MobShotEvents.getCurrentDoubleBoss()
+        : {
+            difficulty:{ key:'veryHard', name:'ベリーハード', firstCoin:5000, firstDiamond:5, hpMul:1.35, scoreMul:1.25 },
+            stage:{ id:1, areaKey:'grass', areaName:'草原', title:'草原', bossA:'ホークモブ', bossB:'ミラモブ' }
+          };
+
+    const stage = info.stage;
+    const diff = info.difficulty;
+
+    state.eventMode.active = true;
+    state.eventMode.key = 'doubleBoss';
+    state.eventMode.doubleStage = stage;
+    state.eventMode.doubleDifficulty = diff;
+    state.eventMode.currentAreaKey = stage.areaKey;
+    state.eventMode.currentAreaName = stage.areaName;
+    state.eventMode.nextGate = frame + 20 * 60;
+    state.eventMode.doubleIntroTimer = 120;
+    state.eventMode.doubleClearReady = false;
+
+    setupStageArea(stage.areaKey, 'DOUBLE BOSS');
+
+    showBanner(`DOUBLE BOSS ${diff.name}`);
+    addText(`${stage.bossA}`, W * 0.33, H * 0.26, '#ffe66b');
+    addText('VS', W * 0.5, H * 0.30, '#ff5bff');
+    addText(`${stage.bossB}`, W * 0.67, H * 0.26, '#6be6ff');
+
+    doubleBossEntranceEffect(stage, diff);
+
+    setTimeout(function(){
+      if (!running || !isDoubleBossRun() || runCommitted) return;
+      spawnDoubleBosses(stage, diff);
+    }, 900);
+  }
+
+  function doubleBossEntranceEffect(stage, diff){
+    const cx = W / 2;
+    const cy = H * 0.24;
+
+    for (let i = 0; i < 80; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 1.5 + Math.random() * 7;
+
+      state.particles.push({
+        x: cx,
+        y: cy,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp,
+        color: i % 2 ? '#ff5bff' : '#6be6ff',
+        life: intRand(34, 72)
+      });
+    }
+
+    skillFlash('DOUBLE BOSS!!', cx, cy - 25, '#ffffff', 84);
+  }
+
+  function skillFlash(text, x, y, color, life){
+    state.texts.push({
+      text,
+      x,
+      y,
+      color,
+      life: life || 60,
+      big: true
+    });
+  }
+
+  function spawnDoubleBosses(stage, diff){
+    const area = getStageAreaData(stage.areaKey);
+
+    const bossA = getBossDefByName(area, stage.bossA) || getFallbackBossDef(stage.bossA);
+    const bossB = getBossDefByName(area, stage.bossB) || getFallbackBossDef(stage.bossB);
+
+    spawnDoubleBossEntity(bossA, diff, 0);
+    spawnDoubleBossEntity(bossB, diff, 1);
+
+    showBanner(`${stage.bossA} & ${stage.bossB}`);
+  }
+
+  function spawnDoubleBossEntity(def, diff, side){
+    const hpMul = Number(diff.hpMul || 1.35);
+    const scoreMul = Number(diff.scoreMul || 1.25);
+
+    const x = side === 0 ? W * 0.32 : W * 0.68;
+    const targetY = H * 0.22 + side * 18;
+    const hp = Math.ceil(Number(def.hp || 300) * hpMul);
+
+    const e = {
+      kind:'boss',
+      name:def.name,
+      image:def.image,
+      x,
+      y:-190 - side * 60,
+      vx:(side === 0 ? 1 : -1) * Number(def.moveSpeed || 1.25),
+      vy:1.9,
+      r:Number(def.r || 76),
+      hp,
+      maxHp:hp,
+      score:Math.ceil(Number(def.score || 1000) * scoreMul),
+      coin:Math.ceil(Number(def.coin || 100) * 0.25),
+      type:def.type,
+      shootCd:Math.max(45, Math.floor(Number(def.shootCd || 130) * 0.72)),
+      attackCd:Math.max(95, Math.floor(Number(def.attackCd || 220) * 0.82)),
+      targetY,
+      baseY:targetY,
+      contactDmg:Number(def.contactDmg || 18),
+      dead:false,
+      bob:rand(0, Math.PI * 2),
+      __doubleBoss:true,
+      __doubleSide:side
+    };
+
+    state.entities.push(e);
+
+    for (let i = 0; i < 42; i++) {
+      state.particles.push({
+        x,
+        y:targetY,
+        vx:rand(-5, 5),
+        vy:rand(-6, 3),
+        color:side === 0 ? '#ffe66b' : '#6be6ff',
+        life:intRand(28, 58)
+      });
+    }
+
+    addText('出現!!', x, targetY - 86, side === 0 ? '#ffe66b' : '#6be6ff');
+  }
+
+  function updateDoubleBossMode(){
+    if (state.eventMode.doubleIntroTimer > 0) {
+      state.eventMode.doubleIntroTimer--;
+    }
+
+    if (frame >= state.eventMode.nextGate) {
+      if (window.MobShotSpawn && window.MobShotSpawn.spawnGatePair) {
+        window.MobShotSpawn.spawnGatePair(makeTools());
+        showBanner('DOUBLE BONUS GATE!');
+      }
+
+      state.gateEndAt = frame + 520;
+      state.eventMode.nextGate = frame + 20 * 60;
+    }
+
+    const gatesAlive = state.entities.some(e => e.kind === 'gate' && !e.dead);
+
+    if (!gatesAlive && state.gateEndAt && frame > state.gateEndAt) {
+      state.entities.forEach(e => {
+        if (e.kind === 'gate') e.dead = true;
+      });
+      state.gateEndAt = 0;
+    }
+
+    const aliveBosses = state.entities.filter(e =>
+      !e.dead &&
+      e.kind === 'boss' &&
+      e.__doubleBoss
+    );
+
+    const spawned = state.entities.some(e => e.__doubleBoss || e.__doubleBossDead);
+
+    if (spawned && aliveBosses.length <= 0 && !state.eventMode.doubleClearReady) {
+      state.eventMode.doubleClearReady = true;
+      doubleBossClearEffect();
+
+      setTimeout(function(){
+        if (!running || runCommitted) return;
+        finishRun(true);
+      }, 900);
+    }
+  }
+
+  function doubleBossClearEffect(){
+    showBanner('DOUBLE BOSS CLEAR!');
+    skillFlash('DOUBLE CLEAR!!', W / 2, H * 0.28, '#ffe66b', 90);
+
+    for (let i = 0; i < 120; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 2 + Math.random() * 8;
+
+      state.particles.push({
+        x:W / 2,
+        y:H * 0.28,
+        vx:Math.cos(a) * sp,
+        vy:Math.sin(a) * sp,
+        color:i % 3 === 0 ? '#ffe66b' : i % 3 === 1 ? '#ff5bff' : '#6be6ff',
+        life:intRand(36, 84)
+      });
+    }
+  }
+
+  function handleFlowEvent(ev){
+    if (!ev) return;
+
+    showBanner(ev.text);
+
+    const tools = makeTools();
+
+    try {
+      if (ev.type === 'areaStart') {
+        state.areaSpawn.nextEnemy = frame + 40;
+        state.areaSpawn.nextGimmick = frame + 80;
+        state.areaSpawn.nextChest = frame + 150;
+        state.areaSpawn.endAt = frame + 430;
+      }
+
+      if (ev.type === 'gateStart') {
+        if (window.MobShotSpawn && window.MobShotSpawn.spawnGatePair) {
+          window.MobShotSpawn.spawnGatePair(tools);
+        }
+        state.gateEndAt = frame + 520;
+      }
+
+      if (ev.type === 'midBossStart') {
+        if (window.MobShotSpawn && window.MobShotSpawn.spawnMidBoss) {
+          window.MobShotSpawn.spawnMidBoss(tools);
+        }
+      }
+
+      if (ev.type === 'bossStart') {
+        if (window.MobShotSpawn && window.MobShotSpawn.spawnBoss) {
+          window.MobShotSpawn.spawnBoss(tools);
+        }
+      }
+
+      if (ev.type === 'clear') {
+        finishRun(true);
+      }
+    } catch (err) {
+      console.error('Flow event error:', ev.type, err);
+      addText('FLOW ERROR', W / 2, H * 0.25, '#ff5b5b');
+
+      if (ev.type === 'gateStart') {
+        handleFlowEvent(flow.completeGate());
+      } else if (ev.type === 'midBossStart') {
+        handleFlowEvent(flow.completeMidBoss());
+      } else if (ev.type === 'bossStart') {
+        handleFlowEvent(flow.completeBoss());
+      }
+    }
+  }
+
+  function updateFlow(){
+    if (isGoldStageRun()) {
+      updateGoldStageMode();
+      return;
+    }
+
+    if (isScoreAttackRun()) {
+      updateScoreAttackMode();
+      return;
+    }
+
+    if (isDoubleBossRun()) {
+      updateDoubleBossMode();
+      return;
+    }
+
+    try {
+      flow.update();
+
+      const snap = flow.snapshot();
+      const tools = makeTools();
+
+      if (snap.phase === 'area') {
+        if (frame >= state.areaSpawn.nextEnemy) {
+          if (window.MobShotSpawn && window.MobShotSpawn.spawnEnemy) {
+            window.MobShotSpawn.spawnEnemy(tools);
+          }
+          state.areaSpawn.nextEnemy = frame + intRand(90, 145);
+        }
+
+        if (frame >= state.areaSpawn.nextGimmick) {
+          if (window.MobShotSpawn && window.MobShotSpawn.spawnGimmick) {
+            window.MobShotSpawn.spawnGimmick(tools);
+          }
+          state.areaSpawn.nextGimmick = frame + intRand(115, 175);
+        }
+
+        if (frame >= state.areaSpawn.nextChest) {
+          if (Math.random() < 0.32) {
+            if (window.MobShotSpawn && window.MobShotSpawn.spawnChest) {
+              window.MobShotSpawn.spawnChest(tools);
+            }
+          }
+          state.areaSpawn.nextChest = frame + intRand(260, 390);
+        }
+
+        if (frame >= state.areaSpawn.endAt) {
+          handleFlowEvent(flow.completeArea());
+        }
+      }
+
+      if (snap.phase === 'gate') {
+        const gatesAlive = state.entities.some(e => e.kind === 'gate' && !e.dead);
+
+        if (!gatesAlive || frame >= state.gateEndAt) {
+          state.entities.forEach(e => {
+            if (e.kind === 'gate') e.dead = true;
+          });
+
+          handleFlowEvent(flow.completeGate());
+        }
+      }
+
+      if (snap.phase === 'midBoss') {
+        const alive = state.entities.some(e => e.kind === 'midBoss' && !e.dead);
+
+        if (!alive && snap.phaseFrame > 60) {
+          handleFlowEvent(flow.completeMidBoss());
+        }
+      }
+
+      if (snap.phase === 'boss') {
+        const alive = state.entities.some(e => e.kind === 'boss' && !e.dead);
+
+        if (!alive && snap.phaseFrame > 60) {
+          handleFlowEvent(flow.completeBoss());
+        }
+      }
+    } catch (err) {
+      console.error('updateFlow error:', err);
+      addText('FLOW SAFE', W / 2, H * 0.22, '#ff5b5b');
+    }
+  }
+
   function updateScoreAttackMode(){
     const bossAlive = state.entities.some(e => !e.dead && e.kind === 'boss');
 
@@ -596,140 +982,6 @@
       });
 
       state.gateEndAt = 0;
-    }
-  }
-
-  function handleFlowEvent(ev){
-    if (!ev) return;
-
-    showBanner(ev.text);
-
-    const tools = makeTools();
-
-    try {
-      if (ev.type === 'areaStart') {
-        state.areaSpawn.nextEnemy = frame + 40;
-        state.areaSpawn.nextGimmick = frame + 80;
-        state.areaSpawn.nextChest = frame + 150;
-        state.areaSpawn.endAt = frame + 430;
-      }
-
-      if (ev.type === 'gateStart') {
-        if (window.MobShotSpawn && window.MobShotSpawn.spawnGatePair) {
-          window.MobShotSpawn.spawnGatePair(tools);
-        }
-
-        state.gateEndAt = frame + 520;
-      }
-
-      if (ev.type === 'midBossStart') {
-        if (window.MobShotSpawn && window.MobShotSpawn.spawnMidBoss) {
-          window.MobShotSpawn.spawnMidBoss(tools);
-        }
-      }
-
-      if (ev.type === 'bossStart') {
-        if (window.MobShotSpawn && window.MobShotSpawn.spawnBoss) {
-          window.MobShotSpawn.spawnBoss(tools);
-        }
-      }
-
-      if (ev.type === 'clear') {
-        finishRun(true);
-      }
-    } catch (err) {
-      console.error('Flow event error:', ev.type, err);
-      addText('FLOW ERROR', W / 2, H * 0.25, '#ff5b5b');
-
-      if (ev.type === 'gateStart') {
-        handleFlowEvent(flow.completeGate());
-      } else if (ev.type === 'midBossStart') {
-        handleFlowEvent(flow.completeMidBoss());
-      } else if (ev.type === 'bossStart') {
-        handleFlowEvent(flow.completeBoss());
-      }
-    }
-  }
-
-  function updateFlow(){
-    if (isGoldStageRun()) {
-      updateGoldStageMode();
-      return;
-    }
-
-    if (isScoreAttackRun()) {
-      updateScoreAttackMode();
-      return;
-    }
-
-    try {
-      flow.update();
-
-      const snap = flow.snapshot();
-      const tools = makeTools();
-
-      if (snap.phase === 'area') {
-        if (frame >= state.areaSpawn.nextEnemy) {
-          if (window.MobShotSpawn && window.MobShotSpawn.spawnEnemy) {
-            window.MobShotSpawn.spawnEnemy(tools);
-          }
-
-          state.areaSpawn.nextEnemy = frame + intRand(90, 145);
-        }
-
-        if (frame >= state.areaSpawn.nextGimmick) {
-          if (window.MobShotSpawn && window.MobShotSpawn.spawnGimmick) {
-            window.MobShotSpawn.spawnGimmick(tools);
-          }
-
-          state.areaSpawn.nextGimmick = frame + intRand(115, 175);
-        }
-
-        if (frame >= state.areaSpawn.nextChest) {
-          if (Math.random() < 0.32) {
-            if (window.MobShotSpawn && window.MobShotSpawn.spawnChest) {
-              window.MobShotSpawn.spawnChest(tools);
-            }
-          }
-
-          state.areaSpawn.nextChest = frame + intRand(260, 390);
-        }
-
-        if (frame >= state.areaSpawn.endAt) {
-          handleFlowEvent(flow.completeArea());
-        }
-      }
-
-      if (snap.phase === 'gate') {
-        const gatesAlive = state.entities.some(e => e.kind === 'gate' && !e.dead);
-
-        if (!gatesAlive || frame >= state.gateEndAt) {
-          state.entities.forEach(e => {
-            if (e.kind === 'gate') e.dead = true;
-          });
-
-          handleFlowEvent(flow.completeGate());
-        }
-      }
-
-      if (snap.phase === 'midBoss') {
-        const alive = state.entities.some(e => e.kind === 'midBoss' && !e.dead);
-
-        if (!alive && snap.phaseFrame > 60) {
-          handleFlowEvent(flow.completeMidBoss());
-        }
-      }
-
-      if (snap.phase === 'boss') {
-        const alive = state.entities.some(e => e.kind === 'boss' && !e.dead);
-
-        if (!alive && snap.phaseFrame > 60) {
-          handleFlowEvent(flow.completeBoss());
-        }
-      }
-    } catch (err) {
-      console.error('updateFlow error:', err);
-      addText('FLOW SAFE', W / 2, H * 0.22, '#ff5b5b');
     }
   }
 
@@ -918,9 +1170,7 @@
     }
 
     if (e.canShoot) {
-      const canShootFromFront =
-        e.y > 0 &&
-        e.y < state.player.y - 110;
+      const canShootFromFront = e.y > 0 && e.y < state.player.y - 110;
 
       if (!canShootFromFront) return;
 
@@ -1175,7 +1425,7 @@
 
   function tryDropGoldTicket(e){
     if (!e || e.kind !== 'chest') return;
-    if (isGoldStageRun() || isScoreAttackRun()) return;
+    if (isGoldStageRun() || isScoreAttackRun() || isDoubleBossRun()) return;
     if (Math.random() > GOLD_TICKET_DROP_RATE) return;
 
     if (window.MobShotEvents && window.MobShotEvents.addGoldTicket) {
@@ -1185,8 +1435,33 @@
     }
   }
 
+  function bossDeathEffect(e){
+    const color = e.__doubleSide === 0 ? '#ffe66b' : '#6be6ff';
+
+    skillFlash('撃破!!', e.x, e.y - 90, color, 70);
+
+    for (let i = 0; i < 80; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 1.5 + Math.random() * 8;
+
+      state.particles.push({
+        x:e.x,
+        y:e.y,
+        vx:Math.cos(a) * sp,
+        vy:Math.sin(a) * sp,
+        color:i % 2 ? color : '#ffffff',
+        life:intRand(30, 80)
+      });
+    }
+  }
+
   function killEntity(e){
     tryDropGoldTicket(e);
+
+    if (isDoubleBossRun() && e && e.kind === 'boss' && e.__doubleBoss) {
+      e.__doubleBossDead = true;
+      bossDeathEffect(e);
+    }
 
     if (isGoldStageRun() && e) {
       if (e.kind === 'boss') {
@@ -1226,6 +1501,24 @@
     return info;
   }
 
+  function addDiamond(amount){
+    if (!amount) return;
+
+    try {
+      const save = window.MobShotStorage && window.MobShotStorage.load
+        ? window.MobShotStorage.load()
+        : JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
+
+      save.diamond = Number(save.diamond || 0) + Number(amount || 0);
+
+      if (window.MobShotStorage && window.MobShotStorage.save) {
+        window.MobShotStorage.save(save);
+      } else {
+        localStorage.setItem('mobshot_split_v1', JSON.stringify(save));
+      }
+    } catch(e) {}
+  }
+
   function applyGoldStageClearReward(){
     const diff = state.eventMode.difficulty || {};
     const key = diff.key || 'easy';
@@ -1239,32 +1532,41 @@
     const diamondReward = cleared ? 0 : Number(diff.firstDiamond || 0);
 
     state.coin += coinReward;
-
-    if (diamondReward > 0) {
-      try {
-        const save = window.MobShotStorage && window.MobShotStorage.load
-          ? window.MobShotStorage.load()
-          : JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
-
-        save.diamond = Number(save.diamond || 0) + diamondReward;
-
-        if (window.MobShotStorage && window.MobShotStorage.save) {
-          window.MobShotStorage.save(save);
-        } else {
-          localStorage.setItem('mobshot_split_v1', JSON.stringify(save));
-        }
-      } catch(e) {}
-    }
+    addDiamond(diamondReward);
 
     if (window.MobShotEvents && window.MobShotEvents.markGoldCleared) {
       window.MobShotEvents.markGoldCleared(key);
     }
 
-    return {
-      coin: coinReward,
-      diamond: diamondReward,
-      first: !cleared
-    };
+    return { coin: coinReward, diamond: diamondReward, first: !cleared };
+  }
+
+  function applyDoubleBossClearReward(){
+    const stage = state.eventMode.doubleStage || {};
+    const diff = state.eventMode.doubleDifficulty || {};
+    const difficultyKey = diff.key || 'veryHard';
+    const stageId = Number(stage.id || 1);
+
+    const cleared =
+      window.MobShotEvents &&
+      window.MobShotEvents.hasDoubleCleared &&
+      window.MobShotEvents.hasDoubleCleared(difficultyKey, stageId);
+
+    if (cleared) {
+      return { coin:0, diamond:0, first:false };
+    }
+
+    const coinReward = Number(stage.final ? stage.firstCoin : diff.firstCoin || 0);
+    const diamondReward = Number(stage.final ? stage.firstDiamond : diff.firstDiamond || 0);
+
+    state.coin += coinReward;
+    addDiamond(diamondReward);
+
+    if (window.MobShotEvents && window.MobShotEvents.markDoubleCleared) {
+      window.MobShotEvents.markDoubleCleared(difficultyKey, stageId);
+    }
+
+    return { coin:coinReward, diamond:diamondReward, first:true };
   }
 
   function finishRun(clear){
@@ -1272,7 +1574,10 @@
 
     const wasGold = isGoldStageRun();
     const wasScoreAttack = isScoreAttackRun();
+    const wasDoubleBoss = isDoubleBossRun();
+
     let goldReward = null;
+    let doubleReward = null;
 
     runCommitted = true;
     running = false;
@@ -1283,7 +1588,11 @@
       goldReward = applyGoldStageClearReward();
     }
 
-    if (clear && !wasGold && !wasScoreAttack) {
+    if (clear && wasDoubleBoss) {
+      doubleReward = applyDoubleBossClearReward();
+    }
+
+    if (clear && !wasGold && !wasScoreAttack && !wasDoubleBoss) {
       clearInfo = commitStageClear();
     }
 
@@ -1295,7 +1604,7 @@
       window.MobShotMain.refreshMainHud();
     }
 
-    if ((wasGold || wasScoreAttack) && window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
+    if ((wasGold || wasScoreAttack || wasDoubleBoss) && window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
       window.MobShotEvents.clearCurrentEvent();
     }
 
@@ -1317,6 +1626,16 @@
         resultText.textContent = `GOLD STAGE ${diff.name || ''} 完了！ ${rewardText}`;
       } else if (wasGold && !clear) {
         resultText.textContent = 'GOLD STAGE 失敗';
+      } else if (wasDoubleBoss && clear) {
+        const stage = state.eventMode.doubleStage || {};
+        const diff = state.eventMode.doubleDifficulty || {};
+        const rewardText = doubleReward && doubleReward.first
+          ? `初回報酬 +${doubleReward.coin.toLocaleString()} COIN / +${doubleReward.diamond} DIAMOND`
+          : 'クリア済み報酬なし';
+
+        resultText.textContent = `ダブルボス ${diff.name || ''} ${stage.title || ''} クリア！ ${rewardText}`;
+      } else if (wasDoubleBoss && !clear) {
+        resultText.textContent = 'ダブルボス失敗';
       } else if (wasScoreAttack && clear) {
         resultText.textContent = `スコアアタック制覇！ ${state.eventMode.scoreBossList.length}体撃破`;
       } else if (wasScoreAttack && !clear) {
@@ -1332,7 +1651,7 @@
     if (resultCoin) resultCoin.textContent = state.coin.toLocaleString();
 
     if (resultRetryBtn) {
-      resultRetryBtn.textContent = wasGold || wasScoreAttack ? 'メインへ' : clear ? 'NEXT STAGE' : 'もう一度';
+      resultRetryBtn.textContent = wasGold || wasScoreAttack || wasDoubleBoss ? 'メインへ' : clear ? 'NEXT STAGE' : 'もう一度';
     }
 
     if (resultPanel) resultPanel.classList.remove('hidden');
@@ -1347,11 +1666,9 @@
 
   function createTestClearButton(){
     const gameScreen = document.getElementById('gameScreen');
-
     if (!gameScreen) return;
 
     let btn = document.getElementById('testClearBtn');
-
     if (btn) return;
 
     btn = document.createElement('button');
@@ -1481,12 +1798,14 @@
       if (isGoldStageRun()) {
         const remain = Math.max(0, Math.ceil((state.eventMode.endFrame - frame) / 60));
         const diff = state.eventMode.difficulty || {};
-
         hudStage.textContent = `GOLD ${diff.name || ''} ${remain}`;
+      } else if (isDoubleBossRun()) {
+        const stage = state.eventMode.doubleStage || {};
+        const diff = state.eventMode.doubleDifficulty || {};
+        hudStage.textContent = `DOUBLE ${diff.name || ''} ${stage.id || ''}`;
       } else if (isScoreAttackRun()) {
         const now = Math.min(state.eventMode.scoreBossIndex + 1, state.eventMode.scoreBossList.length);
         const max = state.eventMode.scoreBossList.length || 1;
-
         hudStage.textContent = `SCORE ${now}/${max}`;
       } else {
         hudStage.textContent = `${info.id}`;
@@ -1521,12 +1840,40 @@
         window.MobShotRender.drawAll(makeRenderTools());
       }
 
+      if (isDoubleBossRun()) {
+        drawDoubleBossOverlay();
+      }
+
       if (window.MobShotGameSkills && window.MobShotGameSkills.draw) {
         window.MobShotGameSkills.draw(ctx);
       }
     } catch (err) {
       console.error('draw error:', err);
     }
+  }
+
+  function drawDoubleBossOverlay(){
+    const t = state.eventMode.doubleIntroTimer;
+
+    if (t <= 0) return;
+
+    const alpha = Math.min(0.8, t / 120);
+
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.38;
+    ctx.fillStyle = '#160018';
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.globalAlpha = alpha;
+    ctx.textAlign = 'center';
+    ctx.font = '900 32px system-ui';
+    ctx.fillStyle = '#ffe66b';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 7;
+    ctx.strokeText('DOUBLE BOSS', W / 2, H * 0.20);
+    ctx.fillText('DOUBLE BOSS', W / 2, H * 0.20);
+
+    ctx.restore();
   }
 
   function loop(){
