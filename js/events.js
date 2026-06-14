@@ -1,32 +1,91 @@
-'use strict';
+　'use strict';
 
 (function(){
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
+  const GOLD_CLEAR_KEY = 'mobshot_gold_stage_clear_v1';
+
+  const GOLD_DIFFICULTIES = [
+    {
+      key: 'easy',
+      name: 'イージー',
+      firstCoin: 3000,
+      firstDiamond: 5,
+      clearCoin: 300,
+      chestMul: 0.55,
+      bossHpMul: 0.7,
+      bossCoinMul: 0.7,
+      showMidBoss: false
+    },
+    {
+      key: 'hard',
+      name: 'ハード',
+      firstCoin: 5000,
+      firstDiamond: 5,
+      clearCoin: 500,
+      chestMul: 0.8,
+      bossHpMul: 0.95,
+      bossCoinMul: 0.9,
+      showMidBoss: false
+    },
+    {
+      key: 'veryHard',
+      name: 'ベリーハード',
+      firstCoin: 10000,
+      firstDiamond: 5,
+      clearCoin: 800,
+      chestMul: 1.1,
+      bossHpMul: 1.25,
+      bossCoinMul: 1.1,
+      showMidBoss: false
+    },
+    {
+      key: 'inferno',
+      name: 'インフェルノ',
+      firstCoin: 15000,
+      firstDiamond: 10,
+      clearCoin: 1000,
+      chestMul: 1.4,
+      bossHpMul: 1.65,
+      bossCoinMul: 1.25,
+      showMidBoss: true
+    },
+    {
+      key: 'legend',
+      name: 'レジェンド',
+      firstCoin: 30000,
+      firstDiamond: 30,
+      clearCoin: 1500,
+      chestMul: 1.85,
+      bossHpMul: 2.2,
+      bossCoinMul: 1.45,
+      showMidBoss: true
+    }
+  ];
 
   const EVENTS = [
     {
       key: 'gold',
       name: 'GOLD STAGE',
       image: 'mt/event_gold.png',
-      desc: '120秒間、宝箱とボスを倒してコインを稼ぐイベントステージ。'
+      desc: 'ボスと戦いながらコインを稼ごう！'
     },
     {
       key: 'scoreAttack',
       name: 'スコアアタック',
       image: 'mt/event_score.png',
-      desc: 'COMING SOON'
+      desc: '歴代の敵が登場！最高得点を目指せ！'
     },
     {
       key: 'doubleBoss',
       name: 'ダブルボス',
       image: 'mt/event_double.png',
-      desc: 'COMING SOON'
+      desc: '2体のボスが同時に登場！最高戦力で挑め！'
     },
     {
       key: 'secretBoss',
       name: 'シークレットボス',
       image: 'mt/event_secret.png',
-      desc: 'COMING SOON'
+      desc: 'まだ見ぬ強敵が登場..!!'
     }
   ];
 
@@ -55,8 +114,38 @@
     return getRank() >= 10;
   }
 
+  function getDifficulty(key){
+    return GOLD_DIFFICULTIES.find(d => d.key === key) || GOLD_DIFFICULTIES[0];
+  }
+
+  function loadGoldClear(){
+    try {
+      return JSON.parse(localStorage.getItem(GOLD_CLEAR_KEY)) || {};
+    } catch(e) {
+      return {};
+    }
+  }
+
+  function saveGoldClear(data){
+    try {
+      localStorage.setItem(GOLD_CLEAR_KEY, JSON.stringify(data || {}));
+    } catch(e) {}
+  }
+
+  function hasGoldCleared(difficultyKey){
+    const data = loadGoldClear();
+    return !!data[difficultyKey];
+  }
+
+  function markGoldCleared(difficultyKey){
+    const data = loadGoldClear();
+    data[difficultyKey] = true;
+    saveGoldClear(data);
+  }
+
   function openModal(){
     const modal = qs('eventModal');
+
     if (!modal) return;
 
     render();
@@ -65,6 +154,7 @@
 
   function closeModal(){
     const modal = qs('eventModal');
+
     if (!modal) return;
 
     modal.classList.add('hidden');
@@ -103,35 +193,19 @@
       const desc = document.createElement('p');
       desc.textContent = ev.desc;
 
-      const btn = document.createElement('button');
-      btn.className = 'event-play-btn';
-      btn.type = 'button';
-
-      const comingSoon = ev.key !== 'gold';
-
-      if (!unlocked) {
-        btn.textContent = 'LOCK';
-        btn.disabled = true;
-      } else if (comingSoon) {
-        btn.textContent = 'COMING SOON';
-        btn.disabled = true;
-      } else {
-        btn.textContent = '挑戦する';
-        btn.disabled = false;
-      }
-
-      btn.addEventListener('click', function(e){
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (!unlocked || comingSoon) return;
-
-        startEvent(ev.key);
-      });
-
       info.appendChild(title);
       info.appendChild(desc);
-      info.appendChild(btn);
+
+      if (ev.key === 'gold') {
+        renderGoldButtons(info, unlocked);
+      } else {
+        const btn = document.createElement('button');
+        btn.className = 'event-play-btn';
+        btn.type = 'button';
+        btn.textContent = unlocked ? 'COMING SOON' : 'LOCK';
+        btn.disabled = true;
+        info.appendChild(btn);
+      }
 
       card.appendChild(icon);
       card.appendChild(info);
@@ -140,9 +214,52 @@
     });
   }
 
-  function startEvent(key){
+  function renderGoldButtons(parent, unlocked){
+    const wrap = document.createElement('div');
+    wrap.style.display = 'grid';
+    wrap.style.gridTemplateColumns = '1fr';
+    wrap.style.gap = '7px';
+    wrap.style.marginTop = '8px';
+
+    GOLD_DIFFICULTIES.forEach(diff => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'event-play-btn';
+      row.disabled = !unlocked;
+      row.style.width = '100%';
+      row.style.textAlign = 'left';
+      row.style.borderRadius = '14px';
+      row.style.padding = '9px 11px';
+      row.style.lineHeight = '1.35';
+
+      const cleared = hasGoldCleared(diff.key);
+      const rewardText = cleared
+        ? `クリア報酬 ${diff.clearCoin.toLocaleString()} COIN`
+        : `初回 ${diff.firstCoin.toLocaleString()} COIN + ${diff.firstDiamond} DIAMOND`;
+
+      row.innerHTML = unlocked
+        ? `<b>${diff.name}</b><br><small>${rewardText}</small>`
+        : `<b>${diff.name}</b><br><small>LOCK</small>`;
+
+      row.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!unlocked) return;
+
+        startEvent('gold', diff.key);
+      });
+
+      wrap.appendChild(row);
+    });
+
+    parent.appendChild(wrap);
+  }
+
+  function startEvent(key, difficultyKey){
     const eventData = {
       key,
+      difficulty: difficultyKey || 'easy',
       startedAt: Date.now()
     };
 
@@ -179,6 +296,16 @@
   function isGoldStage(){
     const ev = getCurrentEvent();
     return !!(ev && ev.key === 'gold');
+  }
+
+  function getCurrentGoldDifficulty(){
+    const ev = getCurrentEvent();
+
+    if (!ev || ev.key !== 'gold') {
+      return getDifficulty('easy');
+    }
+
+    return getDifficulty(ev.difficulty || 'easy');
   }
 
   function clearCurrentEvent(){
@@ -234,7 +361,9 @@
 
   window.MobShotEvents = {
     EVENTS,
+    GOLD_DIFFICULTIES,
     EVENT_SAVE_KEY,
+    GOLD_CLEAR_KEY,
     openModal,
     closeModal,
     render,
@@ -242,6 +371,10 @@
     getCurrentEvent,
     clearCurrentEvent,
     isGoldStage,
-    isUnlocked
+    isUnlocked,
+    getDifficulty,
+    getCurrentGoldDifficulty,
+    hasGoldCleared,
+    markGoldCleared
   };
 })();
