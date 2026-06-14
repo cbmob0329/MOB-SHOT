@@ -8,25 +8,25 @@
       key: 'gold',
       name: 'GOLD STAGE',
       image: 'mt/event_gold.png',
-      desc: 'コインを多く獲得できるイベントステージ。'
+      desc: '120秒間、宝箱とボスを倒してコインを稼ぐイベントステージ。'
     },
     {
       key: 'scoreAttack',
       name: 'スコアアタック',
       image: 'mt/event_score.png',
-      desc: 'ハイスコアを狙うイベントステージ。'
+      desc: 'COMING SOON'
     },
     {
       key: 'doubleBoss',
       name: 'ダブルボス',
       image: 'mt/event_double.png',
-      desc: 'ボス級の敵が多く出現する高難度イベント。'
+      desc: 'COMING SOON'
     },
     {
       key: 'secretBoss',
       name: 'シークレットボス',
       image: 'mt/event_secret.png',
-      desc: '特別なボスに挑戦するイベント。'
+      desc: 'COMING SOON'
     }
   ];
 
@@ -57,7 +57,6 @@
 
   function openModal(){
     const modal = qs('eventModal');
-
     if (!modal) return;
 
     render();
@@ -66,7 +65,6 @@
 
   function closeModal(){
     const modal = qs('eventModal');
-
     if (!modal) return;
 
     modal.classList.add('hidden');
@@ -91,13 +89,10 @@
       const card = document.createElement('div');
       card.className = 'event-card';
 
-      const img = document.createElement('img');
-      img.className = 'event-icon';
-      img.src = ev.image;
-      img.alt = ev.name;
-      img.onerror = function(){
-        img.style.display = 'none';
-      };
+      const icon = document.createElement('img');
+      icon.className = 'event-icon';
+      icon.src = ev.image;
+      icon.alt = ev.name;
 
       const info = document.createElement('div');
       info.className = 'event-info';
@@ -111,12 +106,26 @@
       const btn = document.createElement('button');
       btn.className = 'event-play-btn';
       btn.type = 'button';
-      btn.textContent = unlocked ? '挑戦する' : 'LOCK';
-      btn.disabled = !unlocked;
+
+      const comingSoon = ev.key !== 'gold';
+
+      if (!unlocked) {
+        btn.textContent = 'LOCK';
+        btn.disabled = true;
+      } else if (comingSoon) {
+        btn.textContent = 'COMING SOON';
+        btn.disabled = true;
+      } else {
+        btn.textContent = '挑戦する';
+        btn.disabled = false;
+      }
 
       btn.addEventListener('click', function(e){
         e.preventDefault();
         e.stopPropagation();
+
+        if (!unlocked || comingSoon) return;
+
         startEvent(ev.key);
       });
 
@@ -124,7 +133,7 @@
       info.appendChild(desc);
       info.appendChild(btn);
 
-      card.appendChild(img);
+      card.appendChild(icon);
       card.appendChild(info);
 
       list.appendChild(card);
@@ -132,10 +141,14 @@
   }
 
   function startEvent(key){
-    localStorage.setItem(EVENT_SAVE_KEY, JSON.stringify({
+    const eventData = {
       key,
       startedAt: Date.now()
-    }));
+    };
+
+    try {
+      localStorage.setItem(EVENT_SAVE_KEY, JSON.stringify(eventData));
+    } catch(e) {}
 
     closeModal();
 
@@ -161,6 +174,11 @@
     } catch(e) {
       return null;
     }
+  }
+
+  function isGoldStage(){
+    const ev = getCurrentEvent();
+    return !!(ev && ev.key === 'gold');
   }
 
   function clearCurrentEvent(){
@@ -220,8 +238,10 @@
     openModal,
     closeModal,
     render,
+    startEvent,
     getCurrentEvent,
     clearCurrentEvent,
+    isGoldStage,
     isUnlocked
   };
 })();
