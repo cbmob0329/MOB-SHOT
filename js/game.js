@@ -64,6 +64,7 @@
     eventMode: {
       active: false,
       key: '',
+      difficulty: null,
       endFrame: 0,
       nextChest: 0,
       nextBoss: 0,
@@ -81,7 +82,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260614_gold_stage';
+      image.src = src + '?v=20260614_gold_difficulty';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -295,6 +296,7 @@
 
     state.eventMode.active = false;
     state.eventMode.key = '';
+    state.eventMode.difficulty = null;
     state.eventMode.endFrame = 0;
     state.eventMode.nextChest = 0;
     state.eventMode.nextBoss = 0;
@@ -335,18 +337,35 @@
   }
 
   function startGoldStageMode(){
+    const diff =
+      window.MobShotEvents &&
+      window.MobShotEvents.getCurrentGoldDifficulty
+        ? window.MobShotEvents.getCurrentGoldDifficulty()
+        : {
+            key: 'easy',
+            name: 'イージー',
+            clearCoin: 300,
+            firstCoin: 3000,
+            firstDiamond: 5,
+            chestMul: 0.55,
+            bossHpMul: 0.7,
+            bossCoinMul: 0.7,
+            showMidBoss: false
+          };
+
     state.eventMode.active = true;
     state.eventMode.key = 'gold';
+    state.eventMode.difficulty = diff;
     state.eventMode.endFrame = frame + GOLD_STAGE_SECONDS * 60;
-    state.eventMode.nextChest = frame + 35;
-    state.eventMode.nextBoss = frame + 60;
-    state.eventMode.nextBonusEnemy = frame + 130;
+    state.eventMode.nextChest = frame + 95;
+    state.eventMode.nextBoss = frame + 70;
+    state.eventMode.nextBonusEnemy = frame + 170;
     state.eventMode.bossCount = 0;
 
-    showBanner('GOLD STAGE!');
-    addText('120秒でコインを稼げ！', W / 2, H * 0.28, '#ffcf5b');
+    showBanner(`GOLD STAGE ${diff.name}`);
+    addText(`${diff.name} / 120秒`, W / 2, H * 0.28, '#ffcf5b');
 
-    spawnGoldChestWave(3);
+    spawnGoldChestWave(1);
   }
 
   function start(){
@@ -515,6 +534,7 @@
 
   function updateGoldStageMode(){
     const remain = Math.max(0, state.eventMode.endFrame - frame);
+    const diff = state.eventMode.difficulty || {};
 
     if (remain <= 0) {
       finishRun(true);
@@ -522,13 +542,22 @@
     }
 
     if (frame >= state.eventMode.nextChest) {
-      spawnGoldChestWave(intRand(1, 3));
-      state.eventMode.nextChest = frame + intRand(75, 125);
+      const count = Math.random() < 0.22 ? 2 : 1;
+      spawnGoldChestWave(count);
+      state.eventMode.nextChest = frame + intRand(145, 220);
     }
 
     if (frame >= state.eventMode.nextBonusEnemy) {
       spawnGoldBonusEnemy();
-      state.eventMode.nextBonusEnemy = frame + intRand(150, 230);
+      state.eventMode.nextBonusEnemy = frame + intRand(210, 310);
+    }
+
+    if (diff.showMidBoss && state.eventMode.bossCount > 0 && state.eventMode.bossCount % 3 === 0) {
+      const midAlive = state.entities.some(e => !e.dead && e.kind === 'midBoss');
+
+      if (!midAlive && Math.random() < 0.02) {
+        spawnGoldMidBoss();
+      }
     }
 
     const bossAlive = state.entities.some(e =>
@@ -546,6 +575,7 @@
     if (!window.MobShotSpawn || !window.MobShotSpawn.spawnBoss) return;
 
     const tools = makeTools();
+    const diff = state.eventMode.difficulty || {};
 
     window.MobShotSpawn.spawnBoss(tools);
 
@@ -556,14 +586,34 @@
       if (e.__goldStageBoss) return;
 
       e.__goldStageBoss = true;
-      e.name = `${e.name}`;
-      e.hp = Math.ceil(Number(e.hp || 1) * (0.65 + state.eventMode.bossCount * 0.08));
+      e.hp = Math.ceil(Number(e.hp || 1) * Number(diff.bossHpMul || 1));
       e.maxHp = e.hp;
-      e.score = Math.ceil(Number(e.score || 0) * 0.75);
-      e.coin = Math.ceil(Number(e.coin || 0) * 2.5);
+      e.score = Math.ceil(Number(e.score || 0) * 0.55);
+      e.coin = Math.ceil(Number(e.coin || 0) * Number(diff.bossCoinMul || 1));
     });
 
     showBanner(`GOLD BOSS ${state.eventMode.bossCount}`);
+  }
+
+  function spawnGoldMidBoss(){
+    if (!window.MobShotSpawn || !window.MobShotSpawn.spawnMidBoss) return;
+
+    const diff = state.eventMode.difficulty || {};
+
+    window.MobShotSpawn.spawnMidBoss(makeTools());
+
+    state.entities.forEach(e => {
+      if (e.kind !== 'midBoss') return;
+      if (e.__goldStageMidBoss) return;
+
+      e.__goldStageMidBoss = true;
+      e.hp = Math.ceil(Number(e.hp || 1) * Number(diff.bossHpMul || 1));
+      e.maxHp = e.hp;
+      e.score = Math.ceil(Number(e.score || 0) * 0.45);
+      e.coin = Math.ceil(Number(e.coin || 0) * Number(diff.bossCoinMul || 1));
+    });
+
+    showBanner('GOLD MID BOSS');
   }
 
   function spawnGoldChestWave(count){
@@ -573,11 +623,13 @@
   }
 
   function spawnGoldChest(i){
-    const gold = Math.random() < 0.38;
+    const diff = state.eventMode.difficulty || {};
+    const chestMul = Number(diff.chestMul || 1);
+    const gold = Math.random() < 0.24;
 
     const def = gold
-      ? { name:'金の宝箱', image:'gimi/takagol.png', hp:8, score:80, coinMin:40, coinMax:90 }
-      : { name:'銀の宝箱', image:'gimi/takagin.png', hp:5, score:40, coinMin:20, coinMax:50 };
+      ? { name:'金の宝箱', image:'gimi/takagol.png', hp:10, score:60, coinMin:18, coinMax:42 }
+      : { name:'銀の宝箱', image:'gimi/takagin.png', hp:6, score:30, coinMin:8, coinMax:22 };
 
     state.entities.push({
       kind: 'chest',
@@ -589,11 +641,11 @@
       vy: 2.05,
       w: 68,
       h: 62,
-      hp: def.hp,
-      maxHp: def.hp,
+      hp: Math.ceil(def.hp * (0.9 + chestMul * 0.25)),
+      maxHp: Math.ceil(def.hp * (0.9 + chestMul * 0.25)),
       score: def.score,
-      coinMin: def.coinMin,
-      coinMax: def.coinMax,
+      coinMin: Math.ceil(def.coinMin * chestMul),
+      coinMax: Math.ceil(def.coinMax * chestMul),
       dead: false,
       bob: 0,
       __goldStageChest: true
@@ -603,6 +655,8 @@
   function spawnGoldBonusEnemy(){
     if (!window.MobShotSpawn || !window.MobShotSpawn.spawnEnemy) return;
 
+    const diff = state.eventMode.difficulty || {};
+
     window.MobShotSpawn.spawnEnemy(makeTools());
 
     state.entities.forEach(e => {
@@ -610,10 +664,10 @@
       if (e.__goldStageEnemy) return;
 
       e.__goldStageEnemy = true;
-      e.hp = Math.ceil(Number(e.hp || 1) * 0.75);
+      e.hp = Math.ceil(Number(e.hp || 1) * 0.85);
       e.maxHp = e.hp;
-      e.coinMin = Math.ceil(Number(e.coinMin || 1) * 2);
-      e.coinMax = Math.ceil(Number(e.coinMax || 3) * 2);
+      e.coinMin = Math.ceil(Number(e.coinMin || 1) * Number(diff.chestMul || 1));
+      e.coinMax = Math.ceil(Number(e.coinMax || 3) * Number(diff.chestMul || 1));
     });
   }
 
@@ -947,8 +1001,16 @@
   function killEntity(e){
     if (isGoldStageRun() && e) {
       if (e.kind === 'boss') {
-        state.eventMode.nextBoss = frame + 75;
-        spawnGoldChestWave(2);
+        state.eventMode.nextBoss = frame + 95;
+        if (Math.random() < 0.7) {
+          spawnGoldChestWave(1);
+        }
+      }
+
+      if (e.kind === 'midBoss') {
+        if (Math.random() < 0.6) {
+          spawnGoldChestWave(1);
+        }
       }
     }
 
@@ -975,15 +1037,66 @@
     return info;
   }
 
+  function applyGoldStageClearReward(){
+    const diff = state.eventMode.difficulty || {};
+    const key = diff.key || 'easy';
+
+    const cleared =
+      window.MobShotEvents &&
+      window.MobShotEvents.hasGoldCleared &&
+      window.MobShotEvents.hasGoldCleared(key);
+
+    const coinReward = cleared
+      ? Number(diff.clearCoin || 300)
+      : Number(diff.firstCoin || 3000);
+
+    const diamondReward = cleared
+      ? 0
+      : Number(diff.firstDiamond || 0);
+
+    state.coin += coinReward;
+
+    if (diamondReward > 0) {
+      try {
+        const save = window.MobShotStorage && window.MobShotStorage.load
+          ? window.MobShotStorage.load()
+          : JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
+
+        save.diamond = Number(save.diamond || 0) + diamondReward;
+
+        if (window.MobShotStorage && window.MobShotStorage.save) {
+          window.MobShotStorage.save(save);
+        } else {
+          localStorage.setItem('mobshot_split_v1', JSON.stringify(save));
+        }
+      } catch(e) {}
+    }
+
+    if (window.MobShotEvents && window.MobShotEvents.markGoldCleared) {
+      window.MobShotEvents.markGoldCleared(key);
+    }
+
+    return {
+      coin: coinReward,
+      diamond: diamondReward,
+      first: !cleared
+    };
+  }
+
   function finishRun(clear){
     if (runCommitted) return;
 
     const wasGold = isGoldStageRun();
+    let goldReward = null;
 
     runCommitted = true;
     running = false;
 
     let clearInfo = null;
+
+    if (clear && wasGold) {
+      goldReward = applyGoldStageClearReward();
+    }
 
     if (clear && !wasGold) {
       clearInfo = commitStageClear();
@@ -1009,7 +1122,12 @@
 
     if (resultText) {
       if (wasGold && clear) {
-        resultText.textContent = 'GOLD STAGE 完了！コインを獲得しました';
+        const diff = state.eventMode.difficulty || {};
+        const rewardText = goldReward
+          ? `報酬 +${goldReward.coin.toLocaleString()} COIN${goldReward.diamond ? ` / +${goldReward.diamond} DIAMOND` : ''}`
+          : '';
+
+        resultText.textContent = `GOLD STAGE ${diff.name || ''} 完了！ ${rewardText}`;
       } else if (wasGold && !clear) {
         resultText.textContent = 'GOLD STAGE 失敗';
       } else if (clear && clearInfo) {
@@ -1185,7 +1303,8 @@
     if (hudStage) {
       if (isGoldStageRun()) {
         const remain = Math.max(0, Math.ceil((state.eventMode.endFrame - frame) / 60));
-        hudStage.textContent = `GOLD ${remain}`;
+        const diff = state.eventMode.difficulty || {};
+        hudStage.textContent = `GOLD ${diff.name || ''} ${remain}`;
       } else {
         hudStage.textContent = `${info.id}`;
       }
