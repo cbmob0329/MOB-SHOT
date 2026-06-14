@@ -1,65 +1,15 @@
-　'use strict';
+'use strict';
 
 (function(){
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
   const GOLD_CLEAR_KEY = 'mobshot_gold_stage_clear_v1';
 
   const GOLD_DIFFICULTIES = [
-    {
-      key: 'easy',
-      name: 'イージー',
-      firstCoin: 3000,
-      firstDiamond: 5,
-      clearCoin: 300,
-      chestMul: 0.55,
-      bossHpMul: 0.7,
-      bossCoinMul: 0.7,
-      showMidBoss: false
-    },
-    {
-      key: 'hard',
-      name: 'ハード',
-      firstCoin: 5000,
-      firstDiamond: 5,
-      clearCoin: 500,
-      chestMul: 0.8,
-      bossHpMul: 0.95,
-      bossCoinMul: 0.9,
-      showMidBoss: false
-    },
-    {
-      key: 'veryHard',
-      name: 'ベリーハード',
-      firstCoin: 10000,
-      firstDiamond: 5,
-      clearCoin: 800,
-      chestMul: 1.1,
-      bossHpMul: 1.25,
-      bossCoinMul: 1.1,
-      showMidBoss: false
-    },
-    {
-      key: 'inferno',
-      name: 'インフェルノ',
-      firstCoin: 15000,
-      firstDiamond: 10,
-      clearCoin: 1000,
-      chestMul: 1.4,
-      bossHpMul: 1.65,
-      bossCoinMul: 1.25,
-      showMidBoss: true
-    },
-    {
-      key: 'legend',
-      name: 'レジェンド',
-      firstCoin: 30000,
-      firstDiamond: 30,
-      clearCoin: 1500,
-      chestMul: 1.85,
-      bossHpMul: 2.2,
-      bossCoinMul: 1.45,
-      showMidBoss: true
-    }
+    { key:'easy', name:'イージー', firstCoin:3000, firstDiamond:5, clearCoin:300, chestMul:0.55, bossHpMul:0.7, bossCoinMul:0.7, showMidBoss:false },
+    { key:'hard', name:'ハード', firstCoin:5000, firstDiamond:5, clearCoin:500, chestMul:0.8, bossHpMul:0.95, bossCoinMul:0.9, showMidBoss:false },
+    { key:'veryHard', name:'ベリーハード', firstCoin:10000, firstDiamond:5, clearCoin:800, chestMul:1.1, bossHpMul:1.25, bossCoinMul:1.1, showMidBoss:false },
+    { key:'inferno', name:'インフェルノ', firstCoin:15000, firstDiamond:10, clearCoin:1000, chestMul:1.4, bossHpMul:1.65, bossCoinMul:1.25, showMidBoss:true },
+    { key:'legend', name:'レジェンド', firstCoin:30000, firstDiamond:30, clearCoin:1500, chestMul:1.85, bossHpMul:2.2, bossCoinMul:1.45, showMidBoss:true }
   ];
 
   const EVENTS = [
@@ -73,19 +23,19 @@
       key: 'scoreAttack',
       name: 'スコアアタック',
       image: 'mt/event_score.png',
-      desc: '歴代の敵が登場！最高得点を目指せ！'
+      desc: '歴代ボスを順番に倒してハイスコアを目指すイベント。'
     },
     {
       key: 'doubleBoss',
       name: 'ダブルボス',
       image: 'mt/event_double.png',
-      desc: '2体のボスが同時に登場！最高戦力で挑め！'
+      desc: 'COMING SOON'
     },
     {
       key: 'secretBoss',
       name: 'シークレットボス',
       image: 'mt/event_secret.png',
-      desc: 'まだ見ぬ強敵が登場..!!'
+      desc: 'COMING SOON'
     }
   ];
 
@@ -145,7 +95,6 @@
 
   function openModal(){
     const modal = qs('eventModal');
-
     if (!modal) return;
 
     render();
@@ -154,7 +103,6 @@
 
   function closeModal(){
     const modal = qs('eventModal');
-
     if (!modal) return;
 
     modal.classList.add('hidden');
@@ -198,6 +146,8 @@
 
       if (ev.key === 'gold') {
         renderGoldButtons(info, unlocked);
+      } else if (ev.key === 'scoreAttack') {
+        renderScoreAttackButton(info, unlocked);
       } else {
         const btn = document.createElement('button');
         btn.className = 'event-play-btn';
@@ -209,7 +159,6 @@
 
       card.appendChild(icon);
       card.appendChild(info);
-
       list.appendChild(card);
     });
   }
@@ -256,10 +205,30 @@
     parent.appendChild(wrap);
   }
 
+  function renderScoreAttackButton(parent, unlocked){
+    const btn = document.createElement('button');
+    btn.className = 'event-play-btn';
+    btn.type = 'button';
+    btn.disabled = !unlocked;
+    btn.textContent = unlocked ? '挑戦する' : 'LOCK';
+    btn.style.marginTop = '8px';
+
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!unlocked) return;
+
+      startEvent('scoreAttack', '');
+    });
+
+    parent.appendChild(btn);
+  }
+
   function startEvent(key, difficultyKey){
     const eventData = {
       key,
-      difficulty: difficultyKey || 'easy',
+      difficulty: difficultyKey || '',
       startedAt: Date.now()
     };
 
@@ -296,6 +265,11 @@
   function isGoldStage(){
     const ev = getCurrentEvent();
     return !!(ev && ev.key === 'gold');
+  }
+
+  function isScoreAttack(){
+    const ev = getCurrentEvent();
+    return !!(ev && ev.key === 'scoreAttack');
   }
 
   function getCurrentGoldDifficulty(){
@@ -371,6 +345,7 @@
     getCurrentEvent,
     clearCurrentEvent,
     isGoldStage,
+    isScoreAttack,
     isUnlocked,
     getDifficulty,
     getCurrentGoldDifficulty,
