@@ -525,7 +525,7 @@
         target,
         reward:{
           coin:target * 7000,
-          diamond:target <= 10 ? target * 2 : Math.floor(target * 1.6)
+          diamond:0
         }
       });
     });
@@ -549,7 +549,7 @@
           target,
           reward:{
             coin:target * (rarity === 'UR' ? 60000 : rarity === 'SSR' ? 30000 : rarity === 'SR' ? 15000 : 6000),
-            diamond:target * (rarity === 'UR' ? 15 : rarity === 'SSR' ? 8 : rarity === 'SR' ? 5 : 2)
+            diamond:0
           }
         });
       });
@@ -566,7 +566,7 @@
         target,
         reward:{
           coin:scaleCoin(target, 2000),
-          diamond:scaleDiamond(target * 20, 3)
+          diamond:0
         }
       });
     });
@@ -599,7 +599,7 @@
         target,
         reward:{
           coin:target * 25000,
-          diamond:target * 8
+          diamond:target * 1
         }
       });
     });
