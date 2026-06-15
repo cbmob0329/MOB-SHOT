@@ -16,8 +16,8 @@
   function fallbackConfig(isBoss){
     return {
       type: isBoss ? 'hawk' : 'ptera',
-      shootCd: isBoss ? 95 : 110,
-      attackCd: isBoss ? 165 : 145,
+      shootCd: isBoss ? 115 : 125,
+      attackCd: isBoss ? 195 : 185,
       moveSpeed: isBoss ? 1.3 : 1.2
     };
   }
@@ -26,6 +26,7 @@
     if (data() && data().getBossConfig) {
       return data().getBossConfig(e.name) || fallbackConfig(true);
     }
+
     return fallbackConfig(true);
   }
 
@@ -33,6 +34,7 @@
     if (data() && data().getMidBossConfig) {
       return data().getMidBossConfig(e.name) || fallbackConfig(false);
     }
+
     return fallbackConfig(false);
   }
 
@@ -41,8 +43,17 @@
 
     e.__bossAiInit = true;
     e.aiTimer = 0;
-    e.shootCd = Math.min(45, Math.max(20, Number(e.shootCd || config.shootCd || 120)));
-    e.attackCd = Math.max(90, Number(e.attackCd || config.attackCd || 190));
+
+    e.shootCd = Math.max(
+      45,
+      Number(e.shootCd || config.shootCd || 120)
+    );
+
+    e.attackCd = Math.max(
+      90,
+      Number(e.attackCd || config.attackCd || 190)
+    );
+
     e.attackStep = Number(e.attackStep || 0);
     e.pendingShots = [];
     e.specialMove = '';
@@ -65,6 +76,7 @@
       e.y += e.vy || 1.6;
       return true;
     }
+
     return false;
   }
 
@@ -73,16 +85,24 @@
 
     if (e.barrierTimer > 0) {
       e.barrierTimer--;
-      if (e.barrierTimer <= 0) e.barrierHp = 0;
+
+      if (e.barrierTimer <= 0) {
+        e.barrierHp = 0;
+      }
     }
 
     if (e.ghostTimer > 0) {
       e.ghostTimer--;
       e.alpha = 0.42;
-      if (e.ghostTimer <= 0) e.alpha = 1;
+
+      if (e.ghostTimer <= 0) {
+        e.alpha = 1;
+      }
     }
 
-    if (e.specialTimer > 0) e.specialTimer--;
+    if (e.specialTimer > 0) {
+      e.specialTimer--;
+    }
   }
 
   function moveBase(e, tools, config, isBoss){
@@ -90,7 +110,9 @@
     const right = isBoss ? tools.W * 0.82 : tools.W * 0.8;
     const speed = Number(config.moveSpeed || e.baseVx || 1.3);
 
-    if (!e.vx) e.vx = speed * (Math.random() < 0.5 ? -1 : 1);
+    if (!e.vx) {
+      e.vx = speed * (Math.random() < 0.5 ? -1 : 1);
+    }
 
     if (e.specialMove === 'sideRapid') {
       e.x += Number(e.specialVx || e.vx || speed);
@@ -147,7 +169,7 @@
     opt = opt || {};
 
     const speed = Number(opt.speed || 2.55);
-    const r = Number(opt.r || 11);
+    const r = Number(opt.r || 28);
     const hp = Number(opt.hp || 0);
 
     tools.state.entities.push({
@@ -156,8 +178,12 @@
       y: e.y + (opt.yOffset || 56),
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
+
       r,
-      dmg: Number(opt.dmg || (r + 2)),
+      visualR: Math.ceil(r * 1.08),
+      hitR: Math.ceil(r * 0.92),
+
+      dmg: Number(opt.dmg || Math.max(6, Math.ceil(r * 0.42))),
       hp,
       maxHp: hp,
       breakable: hp > 0,
@@ -167,7 +193,8 @@
       image: opt.image || null,
       flipY: !!opt.flipY,
       life: 420,
-      fromBoss: true
+      fromBoss: true,
+      glow: true
     });
   }
 
@@ -177,9 +204,13 @@
     const dx = tools.state.player.x - e.x;
     const dy = tools.state.player.y - e.y;
     const base = Math.atan2(dy, dx);
+    const safeCenter = !!opt.safeCenter;
 
     for (let i = 0; i < count; i++) {
+      if (safeCenter && i === Math.floor(count / 2)) continue;
+
       const angle = base + (i - (count - 1) / 2) * spread;
+
       directBullet(e, tools, angle, opt);
     }
   }
@@ -208,97 +239,207 @@
     const type = config.type;
 
     if (type === 'rapid') {
-      safeFireSpread(e, tools, 2, 0.22, { sizeType:'small', speed:2.65, hp:0, r:9 });
+      safeFireSpread(e, tools, 2, 0.22, {
+        sizeType: 'small',
+        speed: 2.65,
+        hp: 0
+      });
       return;
     }
 
     if (type === 'magma' || type === 'heavy') {
-      safeFireSpread(e, tools, 2, 0.20, { sizeType:'normal', speed:2.25, hp:10, r:13, image:'atk/dragon.png', flipY:false, color:'#ff7a35' });
+      safeFireSpread(e, tools, 2, 0.20, {
+        sizeType: 'normal',
+        speed: 2.25,
+        hp: 10,
+        image: 'atk/dragon.png',
+        flipY: false,
+        color: '#ff7a35'
+      });
       return;
     }
 
     if (type === 'thunder' || type === 'neon') {
-      safeFireSpread(e, tools, 3, 0.18, { sizeType:'small', speed:2.55, hp:0, r:9, image:'atk/kaminari.png', flipY:true, color:'#6be6ff', safeCenter:true });
+      safeFireSpread(e, tools, 3, 0.18, {
+        sizeType: 'small',
+        speed: 2.55,
+        hp: 0,
+        image: 'atk/kaminari.png',
+        flipY: true,
+        color: '#6be6ff',
+        safeCenter: true
+      });
       return;
     }
 
     if (type === 'blade' || type === 'dash') {
-      safeFireSpread(e, tools, 2, 0.26, { sizeType:'small', speed:2.75, hp:0, r:9 });
+      safeFireSpread(e, tools, 2, 0.26, {
+        sizeType: 'small',
+        speed: 2.75,
+        hp: 0
+      });
       return;
     }
 
     if (type === 'lilith') {
-      safeFireSpread(e, tools, 3, 0.20, { sizeType:'small', speed:2.55, hp:0, r:9, color:'#ff8cff' });
+      safeFireSpread(e, tools, 3, 0.20, {
+        sizeType: 'small',
+        speed: 2.55,
+        hp: 0,
+        color: '#ff8cff'
+      });
       return;
     }
 
-    safeFireSpread(e, tools, 2, 0.24, { sizeType:'small', speed:2.45, hp:0, r:9 });
+    safeFireSpread(e, tools, 2, 0.24, {
+      sizeType: 'small',
+      speed: 2.45,
+      hp: 0
+    });
   }
 
   function runBossNormal(e, tools, config){
     const type = config.type;
 
     if (type === 'hawk') {
-      safeFireSpread(e, tools, 3, 0.24, { sizeType:'normal', speed:2.45, hp:0, r:11, safeCenter:false });
+      safeFireSpread(e, tools, 3, 0.24, {
+        sizeType: 'normal',
+        speed: 2.45,
+        hp: 0,
+        safeCenter: false
+      });
       return;
     }
 
     if (type === 'mira') {
-      safeFireSpread(e, tools, 3, 0.20, { sizeType:'normal', speed:2.65, hp:0, r:11, color:'#b78cff' });
+      safeFireSpread(e, tools, 3, 0.20, {
+        sizeType: 'normal',
+        speed: 2.65,
+        hp: 0,
+        color: '#b78cff'
+      });
       return;
     }
 
     if (type === 'guardian') {
-      safeFireSpread(e, tools, 2, 0.28, { sizeType:'big', speed:2.05, hp:14, r:17, color:'#ff7a35' });
+      safeFireSpread(e, tools, 2, 0.28, {
+        sizeType: 'big',
+        speed: 2.05,
+        hp: 14,
+        color: '#ff7a35'
+      });
       return;
     }
 
     if (type === 'neon') {
-      safeFireSpread(e, tools, 3, 0.18, { sizeType:'normal', speed:2.75, hp:0, r:11, image:'atk/kaminari.png', flipY:true, color:'#6be6ff' });
+      safeFireSpread(e, tools, 3, 0.18, {
+        sizeType: 'normal',
+        speed: 2.75,
+        hp: 0,
+        image: 'atk/kaminari.png',
+        flipY: true,
+        color: '#6be6ff'
+      });
       return;
     }
 
     if (type === 'dragon') {
-      safeFireSpread(e, tools, 3, 0.22, { sizeType:'big', speed:2.25, hp:12, r:17, image:'atk/dragon.png', flipY:false, color:'#ff5b35' });
+      safeFireSpread(e, tools, 3, 0.22, {
+        sizeType: 'big',
+        speed: 2.25,
+        hp: 12,
+        image: 'atk/dragon.png',
+        flipY: false,
+        color: '#ff5b35'
+      });
       return;
     }
 
     if (type === 'lilith' || type === 'ultraLilith') {
-      safeFireSpread(e, tools, 3, 0.20, { sizeType:'normal', speed:2.5, hp:0, r:11, color:'#ff8cff' });
+      safeFireSpread(e, tools, 3, 0.20, {
+        sizeType: 'normal',
+        speed: 2.5,
+        hp: 0,
+        color: '#ff8cff'
+      });
       return;
     }
 
     if (type === 'maoh') {
-      safeFireSpread(e, tools, 4, 0.18, { sizeType:'normal', speed:2.45, hp:0, r:11, safeCenter:true, image:'atk/atkmaoh.png', flipY:true, color:'#ff4aff' });
+      safeFireSpread(e, tools, 4, 0.18, {
+        sizeType: 'normal',
+        speed: 2.45,
+        hp: 0,
+        safeCenter: true,
+        image: 'atk/atkmaoh.png',
+        flipY: true,
+        color: '#ff4aff'
+      });
       return;
     }
 
     if (type === 'mail') {
-      safeFireSpread(e, tools, 2, 0.28, { sizeType:'big', speed:2.05, hp:14, r:17, color:'#bfc7d5' });
+      safeFireSpread(e, tools, 2, 0.28, {
+        sizeType: 'big',
+        speed: 2.05,
+        hp: 14,
+        color: '#bfc7d5'
+      });
       return;
     }
 
     if (type === 'smith') {
-      safeFireSpread(e, tools, 3, 0.18, { sizeType:'normal', speed:2.65, hp:0, r:11, image:'atk/matrix.png', flipY:true, color:'#7bffea' });
+      safeFireSpread(e, tools, 3, 0.18, {
+        sizeType: 'normal',
+        speed: 2.65,
+        hp: 0,
+        image: 'atk/matrix.png',
+        flipY: true,
+        color: '#7bffea'
+      });
       return;
     }
 
     if (type === 'nep') {
-      safeFireSpread(e, tools, 3, 0.22, { sizeType:'normal', speed:2.45, hp:0, r:11, image:'atk/atknep.png', flipY:true, color:'#6be6ff' });
+      safeFireSpread(e, tools, 3, 0.22, {
+        sizeType: 'normal',
+        speed: 2.45,
+        hp: 0,
+        image: 'atk/atknep.png',
+        flipY: true,
+        color: '#6be6ff'
+      });
       return;
     }
 
     if (type === 'blueNeo' || type === 'purpleNeo') {
-      safeFireSpread(e, tools, 3, 0.18, { sizeType:'normal', speed:2.75, hp:0, r:11, image:'atk/neonring.png', flipY:true });
+      safeFireSpread(e, tools, 3, 0.18, {
+        sizeType: 'normal',
+        speed: 2.75,
+        hp: 0,
+        image: 'atk/neonring.png',
+        flipY: true
+      });
       return;
     }
 
     if (type === 'enma') {
-      safeFireSpread(e, tools, 3, 0.24, { sizeType:'big', speed:2.25, hp:12, r:17, image:'atk/enma.png', flipY:true, color:'#ff3b3b' });
+      safeFireSpread(e, tools, 3, 0.24, {
+        sizeType: 'big',
+        speed: 2.25,
+        hp: 12,
+        image: 'atk/enma.png',
+        flipY: true,
+        color: '#ff3b3b'
+      });
       return;
     }
 
-    safeFireSpread(e, tools, 3, 0.22, { sizeType:'normal', speed:2.45, hp:0, r:11 });
+    safeFireSpread(e, tools, 3, 0.22, {
+      sizeType: 'normal',
+      speed: 2.45,
+      hp: 0
+    });
   }
 
   function safeRunSkill(e, tools, config, isBoss){
@@ -336,7 +477,9 @@
     safeProcessPendingShots(e, tools);
 
     if (e.diveMode) {
-      if (skills() && skills().updateDive) skills().updateDive(e, tools);
+      if (skills() && skills().updateDive) {
+        skills().updateDive(e, tools);
+      }
       return;
     }
 
@@ -370,7 +513,9 @@
     safeProcessPendingShots(e, tools);
 
     if (e.diveMode) {
-      if (skills() && skills().updateDive) skills().updateDive(e, tools);
+      if (skills() && skills().updateDive) {
+        skills().updateDive(e, tools);
+      }
       return;
     }
 
@@ -392,15 +537,32 @@
       safeRunSkill(e, tools, config, true);
     }
 
-    if (e.name === 'モブリリス' && !e.healUsed && e.hp <= e.maxHp * 0.5) {
+    if (
+      e.name === 'モブリリス' &&
+      !e.healUsed &&
+      e.hp <= e.maxHp * 0.5
+    ) {
       e.healUsed = true;
-      if (skills() && skills().healBoss) skills().healBoss(e, tools, 0.08);
+
+      if (skills() && skills().healBoss) {
+        skills().healBoss(e, tools, 0.08);
+      }
     }
 
-    if (e.name === 'ウルモブリリス' && !e.healUsed && e.hp <= e.maxHp * 0.5) {
+    if (
+      e.name === 'ウルモブリリス' &&
+      !e.healUsed &&
+      e.hp <= e.maxHp * 0.5
+    ) {
       e.healUsed = true;
-      if (skills() && skills().healBoss) skills().healBoss(e, tools, 0.08);
-      if (skills() && skills().summonLilithSisters) skills().summonLilithSisters(e, tools);
+
+      if (skills() && skills().healBoss) {
+        skills().healBoss(e, tools, 0.08);
+      }
+
+      if (skills() && skills().summonLilithSisters) {
+        skills().summonLilithSisters(e, tools);
+      }
     }
   }
 
