@@ -1,92 +1,125 @@
 'use strict';
 
 (function(){
-  const MISSION_SAVE_KEY = 'mobshot_mission_state_v3';
+  const MISSION_SAVE_KEY = 'mobshot_mission_state_v4';
 
   let currentTab = 'stage';
 
   const EVENT_REWARD = {
-    small: { coin:500, diamond:3 },
-    medium:{ coin:3000, diamond:5 },
-    large:{ coin:10000, diamond:10 },
-    huge:{ coin:50000, diamond:15 }
+    small: { coin:1000, diamond:4 },
+    medium:{ coin:5000, diamond:8 },
+    large:{ coin:20000, diamond:15 },
+    huge:{ coin:80000, diamond:25 }
   };
 
   const COUNT_TARGETS_LONG = [
-    10,25,50,75,100,150,200,300,500,750,
-    1000,1500,2000,3000,5000,7500,10000,
-    15000,20000,30000,50000,75000,100000,
-    150000,200000,300000,500000,750000,1000000
+    1,3,5,10,15,20,25,30,40,50,75,
+    100,150,200,300,400,500,750,
+    1000,1500,2000,3000,4000,5000,7500,
+    10000,15000,20000,30000,40000,50000,75000,
+    100000,150000,200000,300000,400000,500000,750000,
+    1000000,1500000,2000000
   ];
 
   const COUNT_TARGETS_MID = [
-    1,3,5,10,20,30,50,75,100,150,200,300,500,750,1000
+    1,2,3,5,7,10,15,20,25,30,40,50,75,
+    100,150,200,300,400,500,750,1000,1500,2000
   ];
 
   const GATE_TARGETS = [
-    10,25,50,75,100,200,300,500,750,1000,1500,2000,3000,5000
+    1,3,5,10,15,20,25,30,50,75,100,150,200,300,500,750,
+    1000,1500,2000,3000,5000,7500,10000
   ];
 
   const COIN_TARGETS = [
-    1000,3000,5000,10000,30000,50000,100000,300000,500000,
-    1000000,3000000,5000000,10000000,30000000,50000000
+    100,300,500,1000,2000,3000,5000,7500,
+    10000,20000,30000,50000,75000,
+    100000,200000,300000,500000,750000,
+    1000000,2000000,3000000,5000000,7500000,
+    10000000,20000000,30000000,50000000,75000000,100000000
   ];
 
   const SCORE_TARGETS = [
-    1000,3000,5000,10000,30000,50000,100000,300000,500000,
-    1000000,3000000,5000000,10000000,30000000,50000000,100000000
+    1000,3000,5000,10000,20000,30000,50000,75000,
+    100000,200000,300000,500000,750000,
+    1000000,2000000,3000000,5000000,7500000,
+    10000000,20000000,30000000,50000000,75000000,
+    100000000,150000000,200000000
   ];
 
   const STAGE_CLEAR_TARGETS = [
-    1,3,5,10,15,20,25,30,40,50,60,70,80,90,100,110,120,126
+    1,2,3,5,7,10,12,15,18,20,25,30,35,40,45,50,
+    55,60,65,70,75,80,85,90,95,100,105,110,115,120,126
   ];
 
-  const RANK_TARGETS = [2,3,4,5,6,7,8,9,10];
+  const COLLECTION_COUNT_TARGETS = [
+    1,3,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85
+  ];
+
+  const COLLECTION_PLUS_TARGETS = [
+    1,3,5,10,20,30,50,75,100,150,200,300,500,750,
+    1000,1500,2000,3000,4000,5000
+  ];
+
+  const SKILL_COUNT_TARGETS = [
+    1,2,3,4,5,6,7,8,9,10,11,12,13,14
+  ];
+
+  const SKILL_PLUS_TARGETS = [
+    1,3,5,10,20,30,50,75,100,150,200,300,400
+  ];
+
+  const SKILL_USE_TARGETS = [
+    1,3,5,10,20,30,50,75,100,150,200,300,500,750,
+    1000,1500,2000,3000,5000,7500,10000
+  ];
+
+  const RARITIES = ['R','SR','SSR','UR'];
 
   const AREA_REACH_REWARDS = [
-    { id:'reach_1_3', stageId:'1-3', title:'草原突破', coin:5000, diamond:3 },
-    { id:'reach_1_6', stageId:'1-6', title:'砂漠突破', coin:10000, diamond:5 },
-    { id:'reach_1_9', stageId:'1-9', title:'田舎町突破', coin:15000, diamond:5 },
-    { id:'reach_2_3', stageId:'2-3', title:'ネオン街突破', coin:20000, diamond:7 },
-    { id:'reach_2_6', stageId:'2-6', title:'マグマ突破', coin:30000, diamond:8 },
-    { id:'reach_2_9', stageId:'2-9', title:'魔王城突破', coin:50000, diamond:10 },
-    { id:'reach_3_9', stageId:'3-9', title:'ハード前半突破', coin:80000, diamond:10 },
-    { id:'reach_4_9', stageId:'4-9', title:'ハード完全突破', coin:120000, diamond:15 },
-    { id:'reach_5_9', stageId:'5-9', title:'ベリーハード前半突破', coin:180000, diamond:15 },
-    { id:'reach_6_9', stageId:'6-9', title:'ベリーハード完全突破', coin:250000, diamond:20 },
-    { id:'reach_7_9', stageId:'7-9', title:'インフェルノ前半突破', coin:350000, diamond:25 },
-    { id:'reach_8_9', stageId:'8-9', title:'インフェルノ完全突破', coin:500000, diamond:30 },
-    { id:'reach_9_9', stageId:'9-9', title:'監獄突破', coin:700000, diamond:35 },
-    { id:'reach_10_9', stageId:'10-9', title:'マトリックス突破', coin:850000, diamond:40 },
-    { id:'reach_11_9', stageId:'11-9', title:'海の線路突破', coin:1000000, diamond:45 },
-    { id:'reach_12_9', stageId:'12-9', title:'ネオン高速突破', coin:1300000, diamond:50 },
-    { id:'reach_13_9', stageId:'13-9', title:'魔界突破', coin:1700000, diamond:60 },
-    { id:'reach_14_9', stageId:'14-9', title:'魔王の間突破', coin:2500000, diamond:100 }
+    { id:'reach_1_3', stageId:'1-3', title:'草原突破', coin:10000, diamond:5 },
+    { id:'reach_1_6', stageId:'1-6', title:'砂漠突破', coin:15000, diamond:7 },
+    { id:'reach_1_9', stageId:'1-9', title:'田舎町突破', coin:20000, diamond:8 },
+    { id:'reach_2_3', stageId:'2-3', title:'ネオン街突破', coin:30000, diamond:10 },
+    { id:'reach_2_6', stageId:'2-6', title:'マグマ突破', coin:50000, diamond:12 },
+    { id:'reach_2_9', stageId:'2-9', title:'魔王城突破', coin:80000, diamond:15 },
+    { id:'reach_3_9', stageId:'3-9', title:'ハード前半突破', coin:120000, diamond:18 },
+    { id:'reach_4_9', stageId:'4-9', title:'ハード完全突破', coin:180000, diamond:25 },
+    { id:'reach_5_9', stageId:'5-9', title:'ベリーハード前半突破', coin:260000, diamond:30 },
+    { id:'reach_6_9', stageId:'6-9', title:'ベリーハード完全突破', coin:360000, diamond:40 },
+    { id:'reach_7_9', stageId:'7-9', title:'インフェルノ前半突破', coin:500000, diamond:50 },
+    { id:'reach_8_9', stageId:'8-9', title:'インフェルノ完全突破', coin:750000, diamond:65 },
+    { id:'reach_9_9', stageId:'9-9', title:'監獄突破', coin:1000000, diamond:75 },
+    { id:'reach_10_9', stageId:'10-9', title:'マトリックス突破', coin:1300000, diamond:85 },
+    { id:'reach_11_9', stageId:'11-9', title:'海の線路突破', coin:1600000, diamond:95 },
+    { id:'reach_12_9', stageId:'12-9', title:'ネオン高速突破', coin:2000000, diamond:110 },
+    { id:'reach_13_9', stageId:'13-9', title:'魔界突破', coin:2600000, diamond:130 },
+    { id:'reach_14_9', stageId:'14-9', title:'魔王の間突破', coin:4000000, diamond:200 }
   ];
 
   const NORMAL_BOSS_FIRST = [
-    { key:'ホークモブ', coin:1000, diamond:1 },
-    { key:'ミラモブ', coin:1000, diamond:1 },
-    { key:'番人', coin:1000, diamond:1 },
-    { key:'ネオンモブ', coin:1500, diamond:2 },
-    { key:'ドラゴンモブ', coin:2000, diamond:2 },
-    { key:'モブリリス', coin:3000, diamond:3 }
+    { key:'ホークモブ', coin:3000, diamond:3 },
+    { key:'ミラモブ', coin:3000, diamond:3 },
+    { key:'番人', coin:4000, diamond:3 },
+    { key:'ネオンモブ', coin:6000, diamond:4 },
+    { key:'ドラゴンモブ', coin:8000, diamond:5 },
+    { key:'モブリリス', coin:12000, diamond:8 }
   ];
 
   const STRONG_BOSS_FIRST = [
-    { key:'ホークモブⅡ', coin:5000, diamond:5 },
-    { key:'ミラモブⅡ', coin:5000, diamond:5 },
-    { key:'番人Ⅱ', coin:7000, diamond:6 },
-    { key:'ネオンモブⅡ', coin:10000, diamond:7 },
-    { key:'ドラゴンモブⅡ', coin:15000, diamond:8 },
-    { key:'モブ魔王', coin:50000, diamond:20 },
-    { key:'モブメイル', coin:100000, diamond:20 },
-    { key:'モブスミス', coin:150000, diamond:25 },
-    { key:'モブネプ', coin:200000, diamond:30 },
-    { key:'ブルネオモブ', coin:250000, diamond:35 },
-    { key:'パルネオモブ', coin:300000, diamond:40 },
-    { key:'閻魔モブ', coin:500000, diamond:50 },
-    { key:'ウルモブリリス', coin:1000000, diamond:100 }
+    { key:'ホークモブⅡ', coin:15000, diamond:10 },
+    { key:'ミラモブⅡ', coin:15000, diamond:10 },
+    { key:'番人Ⅱ', coin:20000, diamond:12 },
+    { key:'ネオンモブⅡ', coin:30000, diamond:15 },
+    { key:'ドラゴンモブⅡ', coin:50000, diamond:18 },
+    { key:'モブ魔王', coin:100000, diamond:30 },
+    { key:'モブメイル', coin:150000, diamond:35 },
+    { key:'モブスミス', coin:200000, diamond:40 },
+    { key:'モブネプ', coin:300000, diamond:45 },
+    { key:'ブルネオモブ', coin:400000, diamond:55 },
+    { key:'パルネオモブ', coin:500000, diamond:65 },
+    { key:'閻魔モブ', coin:800000, diamond:85 },
+    { key:'ウルモブリリス', coin:1500000, diamond:150 }
   ];
 
   function $(id){
@@ -102,7 +135,6 @@
 
     try {
       const raw = localStorage.getItem(MISSION_SAVE_KEY);
-
       if (raw) {
         const parsed = JSON.parse(raw);
         state = Object.assign(state, parsed || {});
@@ -130,10 +162,7 @@
       rank:1,
       totalScore:0,
       bestScore:0,
-      stageProgress:{
-        highestStageIndex:-1,
-        clearedStageIds:{}
-      },
+      stageProgress:{ highestStageIndex:-1, clearedStageIds:{} },
       missionStats:{}
     };
   }
@@ -168,6 +197,26 @@
     };
   }
 
+  function getGachaState(){
+    if (window.MobShotGacha && window.MobShotGacha.loadState) {
+      return window.MobShotGacha.loadState();
+    }
+
+    try {
+      return JSON.parse(localStorage.getItem('mobshot_gacha_state_v1')) || { stones:{}, skills:{} };
+    } catch(e) {
+      return { stones:{}, skills:{} };
+    }
+  }
+
+  function allStones(){
+    if (window.MobShotGacha && window.MobShotGacha.allStones) {
+      return window.MobShotGacha.allStones();
+    }
+
+    return [];
+  }
+
   function stats(save){
     return save.missionStats || {};
   }
@@ -191,24 +240,20 @@
     );
   }
 
-  function eventDoubleKey(diff, stageId){
-    return `${diff}_${stageId}`;
-  }
-
   function eventReward(size){
     return EVENT_REWARD[size] || EVENT_REWARD.small;
+  }
+
+  function eventRewardByTier(tier){
+    const r = eventReward(tier);
+    return { coin:r.coin, diamond:r.diamond };
   }
 
   function rewardText(reward){
     const parts = [];
 
-    if (reward.diamond) {
-      parts.push(`${Number(reward.diamond).toLocaleString()}ダイヤ`);
-    }
-
-    if (reward.coin) {
-      parts.push(`${Number(reward.coin).toLocaleString()}コイン`);
-    }
+    if (reward.diamond) parts.push(`${Number(reward.diamond).toLocaleString()}ダイヤ`);
+    if (reward.coin) parts.push(`${Number(reward.coin).toLocaleString()}コイン`);
 
     return parts.join(' / ') || '報酬なし';
   }
@@ -222,19 +267,29 @@
     return Math.max(0, Math.min(100, Math.floor((current / target) * 100)));
   }
 
+  function rewardTierByTarget(target){
+    if (target >= 1000000) return 'huge';
+    if (target >= 50000) return 'large';
+    if (target >= 1000) return 'medium';
+    return 'small';
+  }
+
   function scaleCoin(target, base){
-    if (target <= 100) return base;
-    if (target <= 1000) return base * 2;
-    if (target <= 10000) return base * 5;
-    if (target <= 100000) return base * 12;
-    return base * 30;
+    if (target <= 10) return base;
+    if (target <= 100) return base * 2;
+    if (target <= 1000) return base * 4;
+    if (target <= 10000) return base * 8;
+    if (target <= 100000) return base * 18;
+    return base * 45;
   }
 
   function scaleDiamond(target, base){
-    if (target < 1000) return base;
-    if (target < 10000) return base + 1;
-    if (target < 100000) return base + 3;
-    return base + 8;
+    if (target <= 10) return base;
+    if (target <= 100) return base + 1;
+    if (target <= 1000) return base + 2;
+    if (target <= 10000) return base + 4;
+    if (target <= 100000) return base + 8;
+    return base + 15;
   }
 
   function makeStageMissions(){
@@ -265,8 +320,8 @@
         currentType:'totalStageClears',
         target,
         reward:{
-          coin:target * 1200,
-          diamond:target >= 30 ? Math.floor(target / 10) : 0
+          coin:target * 2500,
+          diamond:target <= 10 ? target : Math.floor(target / 3)
         }
       });
     });
@@ -287,7 +342,7 @@
         currentType:'enemyKills',
         target,
         reward:{
-          coin:scaleCoin(target, 150),
+          coin:scaleCoin(target, 400),
           diamond:scaleDiamond(target, 1)
         }
       });
@@ -303,7 +358,7 @@
         currentType:'obstacleKills',
         target,
         reward:{
-          coin:scaleCoin(target, 120),
+          coin:scaleCoin(target, 350),
           diamond:scaleDiamond(target, 1)
         }
       });
@@ -319,8 +374,8 @@
         currentType:'midBossKills',
         target,
         reward:{
-          coin:scaleCoin(target, 800),
-          diamond:scaleDiamond(target * 10, 1)
+          coin:scaleCoin(target, 2000),
+          diamond:scaleDiamond(target * 20, 2)
         }
       });
     });
@@ -335,8 +390,8 @@
         currentType:'bossKills',
         target,
         reward:{
-          coin:scaleCoin(target, 1500),
-          diamond:scaleDiamond(target * 20, 2)
+          coin:scaleCoin(target, 4000),
+          diamond:scaleDiamond(target * 30, 3)
         }
       });
     });
@@ -388,26 +443,40 @@
       currentType:'gateCount',
       target,
       reward:{
-        coin:scaleCoin(target, 100),
-        diamond:0
+        coin:scaleCoin(target, 500),
+        diamond:scaleDiamond(target, 1)
       }
     }));
   }
 
   function makeRankMissions(){
-    return RANK_TARGETS.map(target => ({
-      id:`rank_${target}`,
-      tab:'rank',
-      icon:'R',
-      title:`Rank${target}到達`,
-      desc:`Rank${target}に到達`,
-      currentType:'rank',
-      target,
-      reward:{
-        coin:target * 5000,
-        diamond:target >= 5 ? target : 0
-      }
-    }));
+    const missions = [];
+
+    for (let rank = 2; rank <= 100; rank++) {
+      const tier =
+        rank >= 90 ? 'huge' :
+        rank >= 60 ? 'large' :
+        rank >= 25 ? 'medium' :
+        'small';
+
+      const base = eventReward(tier);
+
+      missions.push({
+        id:`rank_${rank}`,
+        tab:'rank',
+        icon:'R',
+        title:`Rank${rank}到達`,
+        desc:`Rank${rank}に到達`,
+        currentType:'rank',
+        target:rank,
+        reward:{
+          coin:rank * 8000 + base.coin,
+          diamond:Math.max(3, Math.floor(rank / 2)) + base.diamond
+        }
+      });
+    }
+
+    return missions;
   }
 
   function makeCoinMissions(){
@@ -420,8 +489,8 @@
       currentType:'totalEarnedCoin',
       target,
       reward:{
-        coin:Math.max(500, Math.floor(target * 0.08)),
-        diamond:0
+        coin:Math.max(1000, Math.floor(target * 0.15)),
+        diamond:scaleDiamond(target, 1)
       }
     }));
   }
@@ -436,25 +505,151 @@
       currentType:'totalScore',
       target,
       reward:{
-        coin:Math.max(500, Math.floor(target * 0.03)),
-        diamond:target >= 1000000 ? Math.floor(Math.log10(target)) : 0
+        coin:Math.max(1000, Math.floor(target * 0.06)),
+        diamond:scaleDiamond(target, 2)
       }
     }));
   }
 
-  function eventRewardByTier(tier){
-    const r = eventReward(tier);
-    return { coin:r.coin, diamond:r.diamond };
+  function makeCollectionMissions(){
+    const missions = [];
+
+    COLLECTION_COUNT_TARGETS.forEach(target => {
+      missions.push({
+        id:`collection_owned_${target}`,
+        tab:'collection',
+        icon:'石',
+        title:`石板${target}枚所持`,
+        desc:'石板コレクションの所持枚数',
+        currentType:'collectionOwned',
+        target,
+        reward:{
+          coin:target * 7000,
+          diamond:target <= 10 ? target * 2 : Math.floor(target * 1.6)
+        }
+      });
+    });
+
+    RARITIES.forEach(rarity => {
+      const targets =
+        rarity === 'R' ? [1,3,5,10,15,20,25,30] :
+        rarity === 'SR' ? [1,3,5,10,15,20,25,30,35,40] :
+        rarity === 'SSR' ? [1,3,5,10,15,20] :
+        [1,2,3,5,7,8];
+
+      targets.forEach(target => {
+        missions.push({
+          id:`collection_${rarity}_${target}`,
+          tab:'collection',
+          icon:rarity,
+          title:`${rarity}石板${target}枚所持`,
+          desc:`${rarity}石板の所持枚数`,
+          currentType:'collectionRarityOwned',
+          rarity,
+          target,
+          reward:{
+            coin:target * (rarity === 'UR' ? 60000 : rarity === 'SSR' ? 30000 : rarity === 'SR' ? 15000 : 6000),
+            diamond:target * (rarity === 'UR' ? 15 : rarity === 'SSR' ? 8 : rarity === 'SR' ? 5 : 2)
+          }
+        });
+      });
+    });
+
+    COLLECTION_PLUS_TARGETS.forEach(target => {
+      missions.push({
+        id:`collection_plus_${target}`,
+        tab:'collection',
+        icon:'+',
+        title:`石板合計+${target}`,
+        desc:'所持石板の強化値合計',
+        currentType:'collectionTotalPlus',
+        target,
+        reward:{
+          coin:scaleCoin(target, 2000),
+          diamond:scaleDiamond(target * 20, 3)
+        }
+      });
+    });
+
+    missions.push({
+      id:'collection_complete_85',
+      tab:'collection',
+      icon:'完',
+      title:'石板コンプリート',
+      desc:'石板85枚をすべて所持',
+      currentType:'collectionOwned',
+      target:85,
+      reward:{ coin:1000000, diamond:200 }
+    });
+
+    return missions;
+  }
+
+  function makeSkillMissions(){
+    const missions = [];
+
+    SKILL_COUNT_TARGETS.forEach(target => {
+      missions.push({
+        id:`skill_owned_${target}`,
+        tab:'skill',
+        icon:'技',
+        title:`スキル${target}種所持`,
+        desc:'所持しているスキルの種類数',
+        currentType:'skillOwned',
+        target,
+        reward:{
+          coin:target * 25000,
+          diamond:target * 8
+        }
+      });
+    });
+
+    SKILL_PLUS_TARGETS.forEach(target => {
+      missions.push({
+        id:`skill_plus_${target}`,
+        tab:'skill',
+        icon:'+',
+        title:`スキル合計+${target}`,
+        desc:'スキルガチャで強化された合計+値',
+        currentType:'skillTotalPlus',
+        target,
+        reward:{
+          coin:scaleCoin(target, 3000),
+          diamond:scaleDiamond(target * 30, 4)
+        }
+      });
+    });
+
+    SKILL_USE_TARGETS.forEach(target => {
+      missions.push({
+        id:`skill_use_${target}`,
+        tab:'skill',
+        icon:'発',
+        title:`スキル${target.toLocaleString()}回使用`,
+        desc:'全スキルの累計使用回数',
+        currentType:'skillUseCount',
+        target,
+        reward:{
+          coin:scaleCoin(target, 1200),
+          diamond:scaleDiamond(target, 2)
+        }
+      });
+    });
+
+    return missions;
   }
 
   function makeEventMissions(){
     const missions = [];
 
-    const goldRuns = [1,3,5,10,15,20,30,40,50,75,100,150,200,300,500];
-    const doubleRuns = [1,3,5,10,20,30,50,75,100,150,200];
-    const tickets = [1,5,10,20,30,50,75,100,150,200,300,500,750,1000,2000];
-    const bossKills = [10,25,50,100,150,200,300,500,750,1000];
-    const eventCoins = [10000,30000,50000,100000,200000,300000,500000,750000,1000000,2000000,3000000,5000000,7500000,10000000,20000000];
+    const goldRuns = [1,2,3,5,7,10,15,20,30,40,50,75,100,150,200,300,500];
+    const doubleRuns = [1,2,3,5,7,10,15,20,30,50,75,100,150,200,300];
+    const tickets = [1,3,5,10,20,30,50,75,100,150,200,300,500,750,1000,2000];
+    const bossKills = [1,3,5,10,25,50,100,150,200,300,500,750,1000,1500,2000];
+    const eventCoins = [
+      1000,3000,5000,10000,30000,50000,100000,200000,300000,
+      500000,750000,1000000,2000000,3000000,5000000,10000000,20000000
+    ];
 
     goldRuns.forEach(n => {
       const tier = n >= 300 ? 'huge' : n >= 100 ? 'large' : n >= 20 ? 'medium' : 'small';
@@ -582,33 +777,6 @@
       });
     });
 
-    [
-      'ホークモブ',
-      'ミラモブ',
-      'モブガーディアン',
-      'ネオンモブ',
-      'ドラゴンモブ',
-      'モブリリス',
-      'モブ魔王',
-      'モブメイル',
-      'モブスミス',
-      'モブネプ',
-      '閻魔モブ',
-      'ウルモブリリス'
-    ].forEach(name => {
-      missions.push({
-        id:`event_boss_name_${name}`,
-        tab:'event',
-        icon:'名',
-        title:`${name}を10体撃破`,
-        desc:`イベント中に${name}を10体撃破`,
-        currentType:'eventBossNameKills',
-        bossKey:name,
-        target:10,
-        reward:eventRewardByTier(name === '閻魔モブ' || name === 'ウルモブリリス' ? 'large' : 'medium')
-      });
-    });
-
     eventCoins.forEach(n => {
       const tier = n >= 5000000 ? 'huge' : n >= 1000000 ? 'large' : n >= 100000 ? 'medium' : 'small';
 
@@ -624,7 +792,7 @@
       });
     });
 
-    return missions.slice(0, 101);
+    return missions;
   }
 
   function allMissions(){
@@ -636,8 +804,76 @@
       ...makeRankMissions(),
       ...makeCoinMissions(),
       ...makeScoreMissions(),
+      ...makeCollectionMissions(),
+      ...makeSkillMissions(),
       ...makeEventMissions()
     ];
+  }
+
+  function collectionOwnedCount(){
+    const gacha = getGachaState();
+    let count = 0;
+
+    allStones().forEach(stone => {
+      const data = gacha.stones && gacha.stones[String(stone.no)];
+      if (data && data.owned) count++;
+    });
+
+    return count;
+  }
+
+  function collectionRarityOwnedCount(rarity){
+    const gacha = getGachaState();
+    let count = 0;
+
+    allStones().forEach(stone => {
+      if (stone.rarity !== rarity) return;
+
+      const data = gacha.stones && gacha.stones[String(stone.no)];
+      if (data && data.owned) count++;
+    });
+
+    return count;
+  }
+
+  function collectionTotalPlus(){
+    const gacha = getGachaState();
+    let total = 0;
+
+    Object.keys(gacha.stones || {}).forEach(key => {
+      total += Number(gacha.stones[key].plus || 0);
+    });
+
+    return total;
+  }
+
+  function skillOwnedCount(){
+    const gacha = getGachaState();
+    let count = 0;
+
+    Object.keys(gacha.skills || {}).forEach(key => {
+      if (gacha.skills[key] && gacha.skills[key].owned) count++;
+    });
+
+    if (window.MobShotSkills && window.MobShotSkills.loadState) {
+      const state = window.MobShotSkills.loadState();
+      Object.keys(state.skills || {}).forEach(key => {
+        if (state.skills[key] && state.skills[key].owned) count++;
+      });
+    }
+
+    return Math.min(count, 14);
+  }
+
+  function skillTotalPlus(){
+    const gacha = getGachaState();
+    let total = 0;
+
+    Object.keys(gacha.skills || {}).forEach(key => {
+      total += Number(gacha.skills[key].plus || 0);
+    });
+
+    return total;
   }
 
   function currentValue(mission, save){
@@ -649,6 +885,14 @@
     if (mission.currentType === 'totalScore') return Number(save.totalScore || 0);
     if (mission.currentType === 'firstBoss') return s.firstBossKills && s.firstBossKills[mission.bossKey] ? 1 : 0;
     if (mission.currentType === 'firstStrongBoss') return s.firstStrongBossKills && s.firstStrongBossKills[mission.bossKey] ? 1 : 0;
+
+    if (mission.currentType === 'collectionOwned') return collectionOwnedCount();
+    if (mission.currentType === 'collectionRarityOwned') return collectionRarityOwnedCount(mission.rarity);
+    if (mission.currentType === 'collectionTotalPlus') return collectionTotalPlus();
+
+    if (mission.currentType === 'skillOwned') return skillOwnedCount();
+    if (mission.currentType === 'skillTotalPlus') return skillTotalPlus();
+    if (mission.currentType === 'skillUseCount') return Number(s.skillUseCount || 0);
 
     if (mission.currentType === 'eventGoldClear') return Number(ev.goldClear || 0);
     if (mission.currentType === 'eventDoubleClear') return Number(ev.doubleBossClear || 0);
@@ -676,35 +920,35 @@
       return count;
     }
 
-    if (mission.currentType === 'eventBossNameKills') {
-      return Number(ev.bossKills && ev.bossKills[mission.bossKey] || 0);
-    }
-
     return Number(s[mission.currentType] || 0);
   }
 
-  function ensureEventTab(){
+  function ensureExtraTabs(){
     const tabs = document.querySelector('.mission-tabs');
-    if (!tabs || $('missionTabEvent')) return;
+    if (!tabs) return;
 
-    const btn = document.createElement('button');
-    btn.id = 'missionTabEvent';
-    btn.className = 'mission-tab';
-    btn.type = 'button';
-    btn.textContent = 'イベント';
+    [
+      { id:'missionTabCollection', text:'石板', tab:'collection' },
+      { id:'missionTabSkill', text:'スキル', tab:'skill' },
+      { id:'missionTabEvent', text:'イベント', tab:'event' }
+    ].forEach(item => {
+      if ($(item.id)) return;
 
-    btn.addEventListener('click', function(){
-      setTab('event');
+      const btn = document.createElement('button');
+      btn.id = item.id;
+      btn.className = 'mission-tab';
+      btn.type = 'button';
+      btn.textContent = item.text;
+      btn.addEventListener('click', function(){ setTab(item.tab); });
+
+      tabs.appendChild(btn);
     });
-
-    tabs.appendChild(btn);
   }
 
   function claimMission(id){
     const missionState = loadState();
     const save = getSave();
-    const missions = allMissions();
-    const mission = missions.find(m => m.id === id);
+    const mission = allMissions().find(m => m.id === id);
 
     if (!mission) return;
 
@@ -782,7 +1026,7 @@
   }
 
   function render(){
-    ensureEventTab();
+    ensureExtraTabs();
 
     const list = $('missionList');
     if (!list) return;
@@ -802,7 +1046,7 @@
   function setTab(tab){
     currentTab = tab;
 
-    ensureEventTab();
+    ensureExtraTabs();
 
     const tabs = {
       stage:$('missionTabStage'),
@@ -810,6 +1054,8 @@
       gate:$('missionTabGate'),
       rank:$('missionTabRank'),
       coin:$('missionTabCoin'),
+      collection:$('missionTabCollection'),
+      skill:$('missionTabSkill'),
       event:$('missionTabEvent')
     };
 
@@ -820,11 +1066,10 @@
     });
 
     const help = $('missionHelpText');
+
     if (help) {
       const count = allMissions().filter(m => m.tab === tab).length;
-      help.textContent = tab === 'event'
-        ? `イベントミッション ${count}個`
-        : '条件達成後に「受け取る」で報酬を獲得できます。';
+      help.textContent = `${count}個のミッションがあります。条件達成後に報酬を受け取れます。`;
     }
 
     render();
@@ -832,24 +1077,21 @@
 
   function open(){
     const modal = $('missionModal');
-
     if (!modal) return;
 
-    ensureEventTab();
+    ensureExtraTabs();
     setTab(currentTab || 'stage');
     modal.classList.remove('hidden');
   }
 
   function close(){
     const modal = $('missionModal');
-
     if (!modal) return;
-
     modal.classList.add('hidden');
   }
 
   function bind(){
-    ensureEventTab();
+    ensureExtraTabs();
 
     const openBtn = $('openMissionBtn');
 
@@ -887,6 +1129,8 @@
       missionTabGate:'gate',
       missionTabRank:'rank',
       missionTabCoin:'coin',
+      missionTabCollection:'collection',
+      missionTabSkill:'skill',
       missionTabEvent:'event'
     };
 
@@ -906,9 +1150,7 @@
       modal.__mobMissionBgBound = true;
 
       modal.addEventListener('click', function(e){
-        if (e.target === modal) {
-          close();
-        }
+        if (e.target === modal) close();
       });
     }
   }
@@ -919,45 +1161,22 @@
     }
 
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
-
     render();
   }
 
-  function addObstacleKill(count){
+  function addMissionStat(key, count){
     if (window.MobShotStorage && window.MobShotStorage.addMissionStat) {
-      window.MobShotStorage.addMissionStat('obstacleKills', Number(count || 1));
+      window.MobShotStorage.addMissionStat(key, Number(count || 1));
     }
   }
 
-  function addEnemyKill(count){
-    if (window.MobShotStorage && window.MobShotStorage.addMissionStat) {
-      window.MobShotStorage.addMissionStat('enemyKills', Number(count || 1));
-    }
-  }
-
-  function addMidBossKill(count){
-    if (window.MobShotStorage && window.MobShotStorage.addMissionStat) {
-      window.MobShotStorage.addMissionStat('midBossKills', Number(count || 1));
-    }
-  }
-
-  function addBossKill(count){
-    if (window.MobShotStorage && window.MobShotStorage.addMissionStat) {
-      window.MobShotStorage.addMissionStat('bossKills', Number(count || 1));
-    }
-  }
-
-  function addGateCount(count){
-    if (window.MobShotStorage && window.MobShotStorage.addMissionStat) {
-      window.MobShotStorage.addMissionStat('gateCount', Number(count || 1));
-    }
-  }
-
-  function addEarnedCoin(amount){
-    if (window.MobShotStorage && window.MobShotStorage.addMissionStat) {
-      window.MobShotStorage.addMissionStat('totalEarnedCoin', Number(amount || 0));
-    }
-  }
+  function addObstacleKill(count){ addMissionStat('obstacleKills', count); }
+  function addEnemyKill(count){ addMissionStat('enemyKills', count); }
+  function addMidBossKill(count){ addMissionStat('midBossKills', count); }
+  function addBossKill(count){ addMissionStat('bossKills', count); }
+  function addGateCount(count){ addMissionStat('gateCount', count); }
+  function addEarnedCoin(amount){ addMissionStat('totalEarnedCoin', amount); }
+  function addSkillUse(count){ addMissionStat('skillUseCount', count); }
 
   function recordStageClear(){
     return;
@@ -1012,6 +1231,10 @@
     addGateCount(1);
   }
 
+  function onSkillUsed(){
+    addSkillUse(1);
+  }
+
   function onStageClear(){
     return;
   }
@@ -1024,6 +1247,7 @@
   document.addEventListener('DOMContentLoaded', init);
   window.addEventListener('mobshot:saveUpdated', render);
   window.addEventListener('mobshot:eventStatsUpdated', render);
+  window.addEventListener('mobshot:gachaUpdated', render);
 
   window.MobShotMission = {
     init,
@@ -1040,11 +1264,13 @@
     addBossKill,
     addGateCount,
     addEarnedCoin,
+    addSkillUse,
 
     recordStageClear,
     onEntityKilled,
     onEventBossKilled,
     onGateTaken,
+    onSkillUsed,
     onStageClear,
 
     allMissions
