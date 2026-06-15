@@ -28,9 +28,7 @@
   function $(id){ return document.getElementById(id); }
 
   function getSave(){
-    if (window.MobShotStorage && window.MobShotStorage.load) {
-      return window.MobShotStorage.load();
-    }
+    if (window.MobShotStorage && window.MobShotStorage.load) return window.MobShotStorage.load();
 
     try {
       return JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
@@ -101,7 +99,7 @@
   }
 
   function stoneImage(no){
-    return `cards/card${no}.png`;
+    return `co/co${no}.png`;
   }
 
   function stoneName(no){
@@ -140,36 +138,34 @@
   }
 
   function getSkillPool(){
-    if (window.MobShotSkills && window.MobShotSkills.SKILLS) {
-      return window.MobShotSkills.SKILLS;
+    if (window.MobShotSkills && Array.isArray(window.MobShotSkills.SKILL_MASTER)) {
+      return window.MobShotSkills.SKILL_MASTER;
     }
 
     return [
-      { id:'rocket_barrage', name:'Rocket Barrage', image:'skill/rocket barrage.png' },
-      { id:'energy_rush', name:'Energy Rush', image:'skill/energyrush.png' },
-      { id:'double_missile', name:'Double Missile', image:'skill/double missile.png' },
-      { id:'shadow_clone', name:'Shadow Clone', image:'skill/shadowclone.png' },
-      { id:'thunderbolt', name:'Thunderbolt', image:'skill/thunderbolt.png' },
-      { id:'arcane_barrier', name:'Arcane Barrier', image:'skill/arcane barrier.png' },
-      { id:'dark_oblivion', name:'Dark Oblivion', image:'skill/dark oblivion.png' },
-      { id:'blackhole', name:'Black Hole', image:'skill/blackhole.png' },
-      { id:'healing_breeze', name:'Healing Breeze', image:'skill/healingbreeze.png' },
-      { id:'rose_pulse', name:'Rose Pulse', image:'skill/rosepulse.png' }
+      { key:'rocket', name:'ロケットランチャー', image:'skill/rocket barrage.png' },
+      { key:'energyRush', name:'エネルギーラッシュ', image:'skill/energyrush.png' },
+      { key:'twinMissile', name:'ツインミサイル', image:'skill/double missile.png' },
+      { key:'shadowClone', name:'影分身', image:'skill/shadowclone.png' },
+      { key:'thunderbolt', name:'サンダーボルト', image:'skill/thunderbolt.png' },
+      { key:'arcaneBarrier', name:'アルカナバリア', image:'skill/arcane barrier.png' },
+      { key:'darkPower', name:'闇の力', image:'skill/dark oblivion.png' },
+      { key:'blackHole', name:'ブラックホール', image:'skill/blackhole.png' },
+      { key:'healingBreeze', name:'癒しの風', image:'skill/healingbreeze.png' },
+      { key:'rosePulse', name:'薔薇の鼓動', image:'skill/rosepulse.png' }
     ];
   }
 
   function rollSkill(){
     const pool = getSkillPool();
     const skill = pool[Math.floor(Math.random() * pool.length)] || pool[0];
-    const rarity = rollRarity();
 
     return {
       type:'skill',
-      id:skill.id || skill.key || skill.name,
+      id:skill.key || skill.id || skill.name,
       name:skill.name || skill.label || 'SKILL',
       image:skill.image || '',
-      rarity,
-      maxPlus:rarityMax(rarity)
+      desc:skill.desc || ''
     };
   }
 
@@ -198,18 +194,20 @@
         id:result.id,
         name:result.name,
         image:result.image,
-        rarity:result.rarity,
-        plus:0,
-        owned:false
+        owned:false,
+        plus:0
       };
 
       current.owned = true;
       current.name = result.name;
       current.image = result.image;
-      current.rarity = result.rarity;
-      current.plus = Math.min(rarityMax(result.rarity), Number(current.plus || 0) + 1);
+      current.plus = Number(current.plus || 0) + 1;
 
       state.skills[key] = current;
+
+      if (window.MobShotSkills && window.MobShotSkills.acquireSkill) {
+        window.MobShotSkills.acquireSkill(key);
+      }
     }
 
     saveState(state);
@@ -260,10 +258,11 @@
       @keyframes gachaZoom{0%{transform:scale(1);filter:brightness(1)}100%{transform:scale(1.35);filter:brightness(2.3)}}
       .gacha-results{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
       .gacha-result{border-radius:18px;padding:10px;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.22);text-align:center}
-      .gacha-result img{width:76px;height:76px;object-fit:contain}
+      .gacha-result img{width:82px;height:82px;object-fit:contain}
       .gacha-result-name{font-weight:1000;color:#fff;font-size:13px;margin-top:4px}
       .gacha-result-rarity{font-weight:1000;font-size:18px;text-shadow:0 2px 0 #000}
       .rarity-R{color:#dfe8ff}.rarity-SR{color:#6be6ff}.rarity-SSR{color:#ffe66b}.rarity-UR{color:#ff6bff}
+      .gacha-skill-tag{display:inline-block;margin-bottom:5px;padding:3px 8px;border-radius:999px;background:linear-gradient(#9deeff,#4bb8ff);color:#00172a;font-size:12px;font-weight:1000}
     `;
     document.head.appendChild(style);
   }
@@ -421,6 +420,17 @@
   }
 
   function resultCardHtml(r){
+    if (r.type === 'skill') {
+      return `
+        <div class="gacha-result">
+          <div class="gacha-skill-tag">SKILL</div>
+          <img src="${r.image}" alt="${r.name}" onerror="this.style.display='none'">
+          <div class="gacha-result-name">${r.name}</div>
+          <div class="gacha-result-name">入手 / 強化</div>
+        </div>
+      `;
+    }
+
     return `
       <div class="gacha-result">
         <div class="gacha-result-rarity rarity-${r.rarity}">${r.rarity}</div>
