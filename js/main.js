@@ -17,20 +17,25 @@
     'mobshot_save',
     'mobshot_meta',
     'MOBSHOT_SAVE',
+
     'mobshot_pet_state_v1',
     'mobshot_pet_state_v2',
     'mobshot_pet_state_v3',
     'mobshot_pet_equip_test',
     'mobshot_pet_equip_test_v2',
+
     'mobshot_shop_state_v1',
     'mobshot_shop_state_v2',
     'mobshot_equip_state_v1',
     'mobshot_equip_state_v2',
+
     'mobshot_skill_state_v1',
     'mobshot_mission_state_v1',
     'mobshot_mission_state_v2',
+
     'mobshot_gacha_state_v1',
     'mobshot_collection_display_v1',
+
     'mobshot_event_state_v1',
     'mobshot_events_state_v1',
     'mobshot_current_event_v1',
@@ -78,87 +83,77 @@
     style.id = 'mobMainExtraStyle';
     style.textContent = `
       .player-showcase{
-        position:relative;
+        position:relative !important;
         isolation:isolate;
       }
 
       .player-showcase .player-glow{
         position:relative;
-        z-index:2;
+        z-index:2 !important;
       }
 
       .player-showcase #mainPlayer,
       .player-showcase .fallback-player{
-        position:relative;
-        z-index:5;
+        position:relative !important;
+        z-index:10 !important;
       }
 
       .player-showcase #mainPetFloatLayer{
-        position:absolute;
-        z-index:6;
+        position:absolute !important;
+        z-index:11 !important;
+        pointer-events:none;
       }
 
       .main-stone-display-layer{
         position:absolute;
-        left:50%;
-        top:50%;
-        width:min(88vw,430px);
-        height:190px;
-        transform:translate(-50%,-50%);
-        z-index:1;
+        inset:0;
+        z-index:1 !important;
         pointer-events:none;
-        overflow:hidden;
-        opacity:.62;
-      }
-
-      .main-stone-display-track{
-        position:absolute;
-        left:0;
-        top:0;
-        height:100%;
-        display:flex;
-        align-items:center;
-        gap:34px;
-        width:max-content;
-        animation:mobStoneScroll 34s linear infinite;
+        overflow:visible;
       }
 
       .main-stone-display-item{
-        width:112px;
-        height:142px;
-        flex:0 0 auto;
+        position:absolute;
+        width:92px;
+        height:116px;
         display:flex;
         align-items:center;
         justify-content:center;
-        border-radius:22px;
-        background:rgba(0,0,0,.10);
+        opacity:.72;
         filter:drop-shadow(0 8px 0 rgba(0,0,0,.22));
-        animation:mobStoneFloat 4.6s ease-in-out infinite;
+        animation:mobStoneFloat 4.8s ease-in-out infinite;
       }
 
-      .main-stone-display-item:nth-child(2n){
+      .main-stone-display-item.left{
+        left:-18px;
+        top:38%;
+        transform:translateY(-50%) rotate(-8deg);
+      }
+
+      .main-stone-display-item.top{
+        left:50%;
+        top:-18px;
+        transform:translateX(-50%) rotate(3deg);
         animation-delay:-1.4s;
       }
 
-      .main-stone-display-item:nth-child(3n){
+      .main-stone-display-item.right{
+        right:-18px;
+        top:38%;
+        transform:translateY(-50%) rotate(8deg);
         animation-delay:-2.7s;
       }
 
       .main-stone-display-item img{
-        width:108px;
-        height:134px;
+        width:92px;
+        height:116px;
         object-fit:contain;
       }
 
-      @keyframes mobStoneScroll{
-        0%{transform:translateX(0)}
-        100%{transform:translateX(-50%)}
-      }
-
       @keyframes mobStoneFloat{
-        0%{transform:translateY(8px)}
-        50%{transform:translateY(-10px)}
-        100%{transform:translateY(8px)}
+        0%{margin-top:8px}
+        50%{margin-top:-10px}
+        100%{margin-top:8px}
       }
 
       .mob-game-confirm{
@@ -468,17 +463,13 @@
 
     layer.style.display = 'block';
 
-    const loopStones = stones.concat(stones, stones, stones);
+    const positions = ['left', 'top', 'right'];
 
-    layer.innerHTML = `
-      <div class="main-stone-display-track">
-        ${loopStones.map(stone => `
-          <div class="main-stone-display-item">
-            <img src="${stone.image}" alt="STONE" onerror="this.style.display='none'">
-          </div>
-        `).join('')}
+    layer.innerHTML = stones.slice(0, 3).map((stone, index) => `
+      <div class="main-stone-display-item ${positions[index] || 'top'}">
+        <img src="${stone.image}" alt="STONE" onerror="this.style.display='none'">
       </div>
-    `;
+    `).join('');
   }
 
   function refreshMainVisuals(){
