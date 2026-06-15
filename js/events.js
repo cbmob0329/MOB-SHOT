@@ -5,6 +5,7 @@
   const GOLD_CLEAR_KEY = 'mobshot_gold_stage_clear_v1';
   const DOUBLE_CLEAR_KEY = 'mobshot_double_boss_clear_v1';
   const EVENT_ITEM_KEY = 'mobshot_event_items_v1';
+  const EVENT_STATS_KEY = 'mobshot_event_stats_v1';
 
   const TEST_GOLD_TICKET_START = 10;
 
@@ -55,6 +56,17 @@
     }
   }
 
+  function saveMain(save){
+    if (window.MobShotStorage && window.MobShotStorage.save) {
+      window.MobShotStorage.save(save);
+      return;
+    }
+
+    try {
+      localStorage.setItem('mobshot_split_v1', JSON.stringify(save || {}));
+    } catch(e) {}
+  }
+
   function getRank(){
     return Number(getSave().rank || 1);
   }
@@ -95,16 +107,70 @@
     } catch(e) {}
   }
 
+  function defaultStats(){
+    return {
+      goldClear:0,
+      scoreAttackClear:0,
+      doubleBossClear:0,
+      eventCoinTotal:0,
+      eventBossKills:0,
+      goldTicketTotal:0,
+      goldTicketSpent:0,
+      bossKills:{},
+      doubleClearByDifficulty:{ veryHard:0, inferno:0, legend:0 },
+      doubleStageClear:{}
+    };
+  }
+
+  function loadStats(){
+    let stats = null;
+
+    try {
+      stats = JSON.parse(localStorage.getItem(EVENT_STATS_KEY)) || null;
+    } catch(e) {
+      stats = null;
+    }
+
+    stats = Object.assign(defaultStats(), stats || {});
+    stats.bossKills = stats.bossKills || {};
+    stats.doubleClearByDifficulty = Object.assign({ veryHard:0, inferno:0, legend:0 }, stats.doubleClearByDifficulty || {});
+    stats.doubleStageClear = stats.doubleStageClear || {};
+
+    return stats;
+  }
+
+  function saveStats(stats){
+    try {
+      localStorage.setItem(EVENT_STATS_KEY, JSON.stringify(stats || defaultStats()));
+    } catch(e) {}
+  }
+
+  function addStat(key, amount){
+    const stats = loadStats();
+    stats[key] = Number(stats[key] || 0) + Number(amount || 0);
+    saveStats(stats);
+    notifyMission();
+    return stats[key];
+  }
+
   function getGoldTicket(){
     return loadItems().goldTicket;
   }
 
   function addGoldTicket(amount){
     const items = loadItems();
-    items.goldTicket = Math.max(0, Number(items.goldTicket || 0) + Number(amount || 0));
+    const add = Number(amount || 0);
+
+    items.goldTicket = Math.max(0, Number(items.goldTicket || 0) + add);
     saveItems(items);
+
+    if (add > 0) {
+      addStat('goldTicketTotal', add);
+    }
+
     render();
     window.dispatchEvent(new CustomEvent('mobshot:eventItemsUpdated'));
+
     return items.goldTicket;
   }
 
@@ -116,6 +182,9 @@
 
     items.goldTicket = Number(items.goldTicket || 0) - need;
     saveItems(items);
+
+    addStat('goldTicketSpent', need);
+
     render();
     window.dispatchEvent(new CustomEvent('mobshot:eventItemsUpdated'));
 
@@ -191,7 +260,9 @@
 
   function markDoubleCleared(difficultyKey, stageId){
     const data = loadDoubleClear();
-    data[doubleClearKey(difficultyKey, stageId)] = true;
+    const key = doubleClearKey(difficultyKey, stageId);
+
+    data[key] = true;
     saveDoubleClear(data);
   }
 
@@ -211,6 +282,54 @@
     }
 
     return false;
+  }
+
+  function recordGoldClear(difficultyKey, coinAmount){
+    const stats = loadStats();
+    stats.goldClear = Number(stats.goldClear || 0) + 1;
+    stats.eventCoinTotal = Number(stats.eventCoinTotal || 0) + Number(coinAmount || 0);
+    saveStats(stats);
+    notifyMission();
+  }
+
+  function recordScoreAttackClear(coinAmount){
+    const stats = loadStats();
+    stats.scoreAttackClear = Number(stats.scoreAttackClear || 0) + 1;
+    stats.eventCoinTotal = Number(stats.eventCoinTotal || 0) + Number(coinAmount || 0);
+    saveStats(stats);
+    notifyMission();
+  }
+
+  function recordDoubleBossClear(difficultyKey, stageId, coinAmount){
+    const stats = loadStats();
+    const stageKey = doubleClearKey(difficultyKey, stageId);
+
+    stats.doubleBossClear = Number(stats.doubleBossClear || 0) + 1;
+    stats.eventCoinTotal = Number(stats.eventCoinTotal || 0) + Number(coinAmount || 0);
+    stats.doubleClearByDifficulty[difficultyKey] = Number(stats.doubleClearByDifficulty[difficultyKey] || 0) + 1;
+    stats.doubleStageClear[stageKey] = Number(stats.doubleStageClear[stageKey] || 0) + 1;
+
+    saveStats(stats);
+    notifyMission();
+  }
+
+  function recordEventBossKill(bossName){
+    const stats = loadStats();
+    const name = String(bossName || 'BOSS');
+
+    stats.eventBossKills = Number(stats.eventBossKills || 0) + 1;
+    stats.bossKills[name] = Number(stats.bossKills[name] || 0) + 1;
+
+    saveStats(stats);
+    notifyMission();
+  }
+
+  function notifyMission(){
+    if (window.MobShotMission && window.MobShotMission.refresh) {
+      window.MobShotMission.refresh();
+    }
+
+    window.dispatchEvent(new CustomEvent('mobshot:eventStatsUpdated'));
   }
 
   function openModal(){
@@ -606,6 +725,7 @@
 
   function init(){
     loadItems();
+    loadStats();
     bind();
   }
 
@@ -621,6 +741,7 @@
     GOLD_CLEAR_KEY,
     DOUBLE_CLEAR_KEY,
     EVENT_ITEM_KEY,
+    EVENT_STATS_KEY,
     TEST_GOLD_TICKET_START,
 
     openModal,
@@ -655,6 +776,14 @@
     getGoldTicket,
     addGoldTicket,
     consumeGoldTicket,
-    resetTestTickets
+    resetTestTickets,
+
+    loadStats,
+    saveStats,
+    addStat,
+    recordGoldClear,
+    recordScoreAttackClear,
+    recordDoubleBossClear,
+    recordEventBossKill
   };
 })();
