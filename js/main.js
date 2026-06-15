@@ -17,25 +17,20 @@
     'mobshot_save',
     'mobshot_meta',
     'MOBSHOT_SAVE',
-
     'mobshot_pet_state_v1',
     'mobshot_pet_state_v2',
     'mobshot_pet_state_v3',
     'mobshot_pet_equip_test',
     'mobshot_pet_equip_test_v2',
-
     'mobshot_shop_state_v1',
     'mobshot_shop_state_v2',
     'mobshot_equip_state_v1',
     'mobshot_equip_state_v2',
-
     'mobshot_skill_state_v1',
     'mobshot_mission_state_v1',
     'mobshot_mission_state_v2',
-
     'mobshot_gacha_state_v1',
     'mobshot_collection_display_v1',
-
     'mobshot_event_state_v1',
     'mobshot_events_state_v1',
     'mobshot_current_event_v1',
@@ -49,29 +44,14 @@
   function preventSmartphoneZoom(){
     let lastTouchEnd = 0;
 
-    document.addEventListener('gesturestart', function(e){
-      e.preventDefault();
-    }, { passive:false });
-
-    document.addEventListener('gesturechange', function(e){
-      e.preventDefault();
-    }, { passive:false });
-
-    document.addEventListener('gestureend', function(e){
-      e.preventDefault();
-    }, { passive:false });
-
-    document.addEventListener('dblclick', function(e){
-      e.preventDefault();
-    }, { passive:false });
+    document.addEventListener('gesturestart', e => e.preventDefault(), { passive:false });
+    document.addEventListener('gesturechange', e => e.preventDefault(), { passive:false });
+    document.addEventListener('gestureend', e => e.preventDefault(), { passive:false });
+    document.addEventListener('dblclick', e => e.preventDefault(), { passive:false });
 
     document.addEventListener('touchend', function(e){
       const now = Date.now();
-
-      if (now - lastTouchEnd <= 350) {
-        e.preventDefault();
-      }
-
+      if (now - lastTouchEnd <= 350) e.preventDefault();
       lastTouchEnd = now;
     }, { passive:false });
   }
@@ -83,33 +63,24 @@
     style.id = 'mobMainExtraStyle';
     style.textContent = `
       .player-showcase{
-        position:relative !important;
         isolation:isolate;
-      }
-
-      .player-showcase .player-glow{
-        position:relative;
-        z-index:2 !important;
-      }
-
-      .player-showcase #mainPlayer,
-      .player-showcase .fallback-player{
-        position:relative !important;
-        z-index:10 !important;
-      }
-
-      .player-showcase #mainPetFloatLayer{
-        position:absolute !important;
-        z-index:11 !important;
-        pointer-events:none;
       }
 
       .main-stone-display-layer{
         position:absolute;
         inset:0;
-        z-index:1 !important;
+        z-index:0;
         pointer-events:none;
         overflow:visible;
+      }
+
+      #mainPlayer{
+        z-index:5;
+      }
+
+      #mainPetFloatLayer{
+        z-index:6;
+        pointer-events:none;
       }
 
       .main-stone-display-item{
@@ -351,14 +322,12 @@
 
   function setImage(id, src){
     const el = $(id);
-
     if (!el || !src) return;
 
     el.src = src;
 
     el.onerror = function(){
       el.style.display = 'none';
-
       const fallback = el.nextElementSibling;
       if (fallback) fallback.style.display = 'block';
     };
@@ -374,11 +343,7 @@
       bestScore:0,
       coin:0,
       diamond:0,
-      rank:1,
-      stageProgress:{
-        currentAreaIndex:0,
-        currentStageNo:1
-      }
+      rank:1
     };
   }
 
@@ -508,22 +473,13 @@
   function wireButton(ids, handler){
     ids.forEach(id => {
       const btn = $(id);
-
       if (!btn || btn.__mobMainBound) return;
 
       btn.__mobMainBound = true;
 
-      btn.addEventListener('click', function(e){
-        runHandler(handler, e);
-      }, { passive:false });
-
-      btn.addEventListener('pointerup', function(e){
-        runHandler(handler, e);
-      }, { passive:false });
-
-      btn.addEventListener('touchend', function(e){
-        runHandler(handler, e);
-      }, { passive:false });
+      btn.addEventListener('click', e => runHandler(handler, e), { passive:false });
+      btn.addEventListener('pointerup', e => runHandler(handler, e), { passive:false });
+      btn.addEventListener('touchend', e => runHandler(handler, e), { passive:false });
     });
   }
 
@@ -642,22 +598,13 @@
 
   function bindFallbackButton(id, handler, flag){
     const btn = $(id);
-
     if (!btn || btn[flag]) return;
 
     btn[flag] = true;
 
-    btn.addEventListener('click', function(e){
-      runHandler(handler, e);
-    }, { passive:false });
-
-    btn.addEventListener('pointerup', function(e){
-      runHandler(handler, e);
-    }, { passive:false });
-
-    btn.addEventListener('touchend', function(e){
-      runHandler(handler, e);
-    }, { passive:false });
+    btn.addEventListener('click', e => runHandler(handler, e), { passive:false });
+    btn.addEventListener('pointerup', e => runHandler(handler, e), { passive:false });
+    btn.addEventListener('touchend', e => runHandler(handler, e), { passive:false });
   }
 
   function bindResultButtons(){
@@ -665,41 +612,24 @@
 
     if (retry && !retry.__mobRetryBound) {
       retry.__mobRetryBound = true;
-
-      retry.addEventListener('click', function(e){
-        runHandler(goGame, e);
-      }, { passive:false });
-
-      retry.addEventListener('pointerup', function(e){
-        runHandler(goGame, e);
-      }, { passive:false });
+      retry.addEventListener('click', e => runHandler(goGame, e), { passive:false });
+      retry.addEventListener('pointerup', e => runHandler(goGame, e), { passive:false });
     }
 
     const resultHome = $('resultHomeBtn');
 
     if (resultHome && !resultHome.__mobHomeBound) {
       resultHome.__mobHomeBound = true;
-
-      resultHome.addEventListener('click', function(e){
-        runHandler(goMain, e);
-      }, { passive:false });
-
-      resultHome.addEventListener('pointerup', function(e){
-        runHandler(goMain, e);
-      }, { passive:false });
+      resultHome.addEventListener('click', e => runHandler(goMain, e), { passive:false });
+      resultHome.addEventListener('pointerup', e => runHandler(goMain, e), { passive:false });
     }
   }
 
   function clearAllMobShotLocalStorage(){
-    DELETE_KEYS.forEach(key => {
-      localStorage.removeItem(key);
-    });
+    DELETE_KEYS.forEach(key => localStorage.removeItem(key));
 
     Object.keys(localStorage).forEach(key => {
-      if (
-        key.indexOf('mobshot_') === 0 ||
-        key.indexOf('MOBSHOT_') === 0
-      ) {
+      if (key.indexOf('mobshot_') === 0 || key.indexOf('MOBSHOT_') === 0) {
         localStorage.removeItem(key);
       }
     });
@@ -707,7 +637,6 @@
 
   function bindDeleteSave(){
     const btn = $('deleteSaveBtn');
-
     if (!btn || btn.__mobDeleteBound) return;
 
     btn.__mobDeleteBound = true;
@@ -734,25 +663,11 @@
   }
 
   function initModules(){
-    if (window.MobShotShop && window.MobShotShop.init) {
-      window.MobShotShop.init();
-    }
-
-    if (window.MobShotEquip && window.MobShotEquip.init) {
-      window.MobShotEquip.init();
-    }
-
-    if (window.MobShotMission && window.MobShotMission.init) {
-      window.MobShotMission.init();
-    }
-
-    if (window.MobShotPets && window.MobShotPets.init) {
-      window.MobShotPets.init();
-    }
-
-    if (window.MobShotCollection && window.MobShotCollection.render) {
-      window.MobShotCollection.render();
-    }
+    if (window.MobShotShop && window.MobShotShop.init) window.MobShotShop.init();
+    if (window.MobShotEquip && window.MobShotEquip.init) window.MobShotEquip.init();
+    if (window.MobShotMission && window.MobShotMission.init) window.MobShotMission.init();
+    if (window.MobShotPets && window.MobShotPets.init) window.MobShotPets.init();
+    if (window.MobShotCollection && window.MobShotCollection.render) window.MobShotCollection.render();
   }
 
   function init(){
