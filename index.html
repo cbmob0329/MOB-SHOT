@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
   <title>MOB SHOT</title>
   <link rel="stylesheet" href="css/style.css" />
-
   <style>
     .main-bg{
       position:absolute;
@@ -133,7 +132,6 @@
     }
   </style>
 </head>
-
 <body>
   <div id="app">
     <section id="mainScreen" class="screen active">
@@ -203,7 +201,7 @@
       </nav>
 
       <nav class="bottom-menu">
-        <button class="bottom-button disabled-btn" type="button">
+        <button id="openGachaBtn" class="bottom-button" type="button">
           <img id="gachaImg" src="mt/menugacha.png" alt="ガチャ" />
           <span>ガチャ</span>
         </button>
@@ -213,7 +211,7 @@
           <span>ミッション</span>
         </button>
 
-        <button class="bottom-button disabled-btn" type="button">
+        <button id="openCollectionBtn" class="bottom-button" type="button">
           <img id="collectionImg" src="mt/menucolle.png" alt="コレクション" />
           <span>コレクション</span>
         </button>
@@ -370,6 +368,9 @@
   <script src="js/equip.js"></script>
   <script src="js/mission.js"></script>
 
+  <script src="js/gacha.js"></script>
+  <script src="js/collection.js"></script>
+
   <script src="js/game-pets.js"></script>
 
   <script src="js/game-skills-effects.js"></script>
@@ -379,19 +380,16 @@
   <script src="js/game-boss-data.js"></script>
   <script src="js/game-boss-bullets.js"></script>
   <script src="js/game-boss-skills.js"></script>
-  <script src="js/game-boss-ai.js"></script>
-  <script src="js/game-boss.js"></script>
+  <script src="js/game-boss-core.js"></script>
+  <script src="js/game-boss-manager.js"></script>
 
   <script src="js/game-spawn.js"></script>
   <script src="js/game-combat.js"></script>
   <script src="js/game-render.js"></script>
-
-  <script src="js/events.js"></script>
-
-  <script src="js/game-boss-manager.js"></script>
   <script src="js/game-events.js"></script>
   <script src="js/game.js"></script>
 
+  <script src="js/events.js"></script>
   <script src="js/main.js"></script>
   <script src="js/test-stage.js"></script>
 </body>
