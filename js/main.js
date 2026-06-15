@@ -12,6 +12,36 @@
     document.getElementById('gameScreen') ||
     document.getElementById('gameView');
 
+  const DELETE_KEYS = [
+    'mobshot_split_v1',
+    'mobshot_save',
+    'mobshot_meta',
+    'MOBSHOT_SAVE',
+
+    'mobshot_pet_state_v1',
+    'mobshot_pet_state_v2',
+    'mobshot_pet_state_v3',
+    'mobshot_pet_equip_test',
+    'mobshot_pet_equip_test_v2',
+
+    'mobshot_shop_state_v1',
+    'mobshot_shop_state_v2',
+    'mobshot_equip_state_v1',
+    'mobshot_equip_state_v2',
+
+    'mobshot_skill_state_v1',
+    'mobshot_mission_state_v1',
+    'mobshot_mission_state_v2',
+
+    'mobshot_gacha_state_v1',
+    'mobshot_collection_display_v1',
+
+    'mobshot_event_state_v1',
+    'mobshot_events_state_v1',
+    'mobshot_current_event_v1',
+    'mobshot_double_boss_state_v1'
+  ];
+
   function $(id){
     return document.getElementById(id);
   }
@@ -46,6 +76,223 @@
     }, { passive:false });
   }
 
+  function injectMainStyle(){
+    if ($('mobMainExtraStyle')) return;
+
+    const style = document.createElement('style');
+    style.id = 'mobMainExtraStyle';
+    style.textContent = `
+      .main-stone-display-layer{
+        position:absolute;
+        left:50%;
+        top:43%;
+        width:min(76vw,360px);
+        height:145px;
+        transform:translate(-50%,-50%);
+        z-index:4;
+        pointer-events:none;
+        overflow:hidden;
+        opacity:.86;
+      }
+
+      .main-stone-display-track{
+        position:absolute;
+        inset:0;
+        display:flex;
+        align-items:center;
+        gap:18px;
+        width:max-content;
+        animation:mobStoneScroll 18s linear infinite;
+      }
+
+      .main-stone-display-item{
+        width:104px;
+        height:126px;
+        flex:0 0 auto;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:20px;
+        background:rgba(0,0,0,.18);
+        filter:drop-shadow(0 8px 0 rgba(0,0,0,.25));
+      }
+
+      .main-stone-display-item img{
+        width:98px;
+        height:118px;
+        object-fit:contain;
+      }
+
+      @keyframes mobStoneScroll{
+        0%{transform:translateX(0)}
+        100%{transform:translateX(-50%)}
+      }
+
+      .mob-game-confirm{
+        position:absolute;
+        inset:0;
+        z-index:160;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:18px;
+        background:rgba(0,0,0,.68);
+      }
+
+      .mob-game-confirm.hidden{
+        display:none;
+      }
+
+      .mob-game-confirm-card{
+        width:min(92vw,430px);
+        border-radius:26px;
+        padding:18px;
+        background:linear-gradient(180deg,rgba(34,27,72,.98),rgba(5,8,22,.98));
+        border:3px solid rgba(255,255,255,.36);
+        box-shadow:0 18px 48px rgba(0,0,0,.7);
+        text-align:center;
+      }
+
+      .mob-game-confirm-title{
+        font-size:24px;
+        font-weight:1000;
+        color:#fff;
+        text-shadow:0 3px 0 #000;
+        margin-bottom:10px;
+      }
+
+      .mob-game-confirm-text{
+        font-size:14px;
+        line-height:1.6;
+        font-weight:900;
+        color:#dfe8ff;
+        margin-bottom:14px;
+        white-space:pre-line;
+      }
+
+      .mob-game-confirm-actions{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+      }
+
+      .mob-game-confirm-btn{
+        border:0;
+        border-radius:999px;
+        padding:12px 14px;
+        font-size:15px;
+        font-weight:1000;
+        box-shadow:0 4px 0 rgba(0,0,0,.35);
+      }
+
+      .mob-game-confirm-btn.yes{
+        color:#210800;
+        background:linear-gradient(#ff8b8b,#e22a2a);
+      }
+
+      .mob-game-confirm-btn.no{
+        color:#102033;
+        background:linear-gradient(#ffffff,#b7c1d5);
+      }
+
+      .mob-game-toast{
+        position:absolute;
+        left:50%;
+        top:22%;
+        transform:translateX(-50%);
+        z-index:170;
+        min-width:220px;
+        max-width:86vw;
+        padding:12px 16px;
+        border-radius:999px;
+        background:linear-gradient(#ffe66b,#ffb423);
+        color:#181000;
+        font-size:14px;
+        font-weight:1000;
+        text-align:center;
+        box-shadow:0 6px 0 rgba(0,0,0,.35);
+        pointer-events:none;
+        opacity:0;
+        transition:opacity .2s, transform .2s;
+      }
+
+      .mob-game-toast.show{
+        opacity:1;
+        transform:translateX(-50%) translateY(-4px);
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function ensureGameConfirm(){
+    injectMainStyle();
+
+    let modal = $('mobGameConfirm');
+    if (modal) return modal;
+
+    modal = document.createElement('div');
+    modal.id = 'mobGameConfirm';
+    modal.className = 'mob-game-confirm hidden';
+    modal.innerHTML = `
+      <div class="mob-game-confirm-card">
+        <div id="mobGameConfirmTitle" class="mob-game-confirm-title"></div>
+        <div id="mobGameConfirmText" class="mob-game-confirm-text"></div>
+        <div class="mob-game-confirm-actions">
+          <button id="mobGameConfirmYes" class="mob-game-confirm-btn yes" type="button">はい</button>
+          <button id="mobGameConfirmNo" class="mob-game-confirm-btn no" type="button">いいえ</button>
+        </div>
+      </div>
+    `;
+
+    (mainScreen || $('app') || document.body).appendChild(modal);
+    return modal;
+  }
+
+  function showGameConfirm(title, text, yesText, noText, onYes){
+    const modal = ensureGameConfirm();
+
+    $('mobGameConfirmTitle').textContent = title || '確認';
+    $('mobGameConfirmText').textContent = text || '';
+    $('mobGameConfirmYes').textContent = yesText || 'はい';
+    $('mobGameConfirmNo').textContent = noText || 'いいえ';
+
+    $('mobGameConfirmYes').onclick = function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      modal.classList.add('hidden');
+      if (onYes) onYes();
+    };
+
+    $('mobGameConfirmNo').onclick = function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      modal.classList.add('hidden');
+    };
+
+    modal.classList.remove('hidden');
+  }
+
+  function showToast(text){
+    injectMainStyle();
+
+    let toast = $('mobGameToast');
+
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'mobGameToast';
+      toast.className = 'mob-game-toast';
+      (mainScreen || $('app') || document.body).appendChild(toast);
+    }
+
+    toast.textContent = text;
+    toast.classList.add('show');
+
+    clearTimeout(toast.__timer);
+    toast.__timer = setTimeout(function(){
+      toast.classList.remove('show');
+    }, 1450);
+  }
+
   function showScreen(name){
     const screens = document.querySelectorAll('.screen');
 
@@ -61,7 +308,7 @@
       if (window.MobShotGame && window.MobShotGame.start) {
         window.MobShotGame.start();
       } else {
-        alert('ゲーム本体が読み込まれていません。js/game.js を確認してください。');
+        showToast('ゲーム本体が読み込まれていません');
       }
 
       return;
@@ -151,6 +398,8 @@
   }
 
   function refreshMainVisuals(){
+    refreshMainStoneDisplay();
+
     if (window.MobShotEquip && window.MobShotEquip.updateMainPlayerImage) {
       window.MobShotEquip.updateMainPlayerImage();
     }
@@ -170,6 +419,82 @@
     if (window.MobShotMission && window.MobShotMission.render) {
       window.MobShotMission.render();
     }
+  }
+
+  function ensureMainStoneLayer(){
+    injectMainStyle();
+
+    if (!mainScreen) return null;
+
+    let layer = $('mainStoneDisplayLayer');
+
+    if (layer) return layer;
+
+    layer = document.createElement('div');
+    layer.id = 'mainStoneDisplayLayer';
+    layer.className = 'main-stone-display-layer';
+
+    const showcase = mainScreen.querySelector('.player-showcase');
+
+    if (showcase) {
+      showcase.insertBefore(layer, showcase.firstChild);
+    } else {
+      mainScreen.appendChild(layer);
+    }
+
+    return layer;
+  }
+
+  function fallbackDisplayStones(){
+    if (!window.MobShotCollection || !window.MobShotCollection.loadDisplayState) {
+      return [];
+    }
+
+    const state = window.MobShotCollection.loadDisplayState();
+    const display = Array.isArray(state.display) ? state.display : [];
+
+    return display
+      .filter(no => no)
+      .map(no => ({
+        no,
+        image:`co/co${no}.png`
+      }));
+  }
+
+  function getMainDisplayStones(){
+    if (window.MobShotCollection && window.MobShotCollection.getDisplayStones) {
+      return window.MobShotCollection.getDisplayStones();
+    }
+
+    return fallbackDisplayStones();
+  }
+
+  function refreshMainStoneDisplay(){
+    const layer = ensureMainStoneLayer();
+
+    if (!layer) return;
+
+    const stones = getMainDisplayStones();
+
+    if (!stones.length) {
+      layer.innerHTML = '';
+      layer.style.display = 'none';
+      return;
+    }
+
+    layer.style.display = 'block';
+
+    const loopStones = stones.concat(stones);
+
+    layer.innerHTML = `
+      <div class="main-stone-display-track">
+        ${loopStones.map(stone => `
+          <div class="main-stone-display-item">
+            <img src="${stone.image}" alt="STONE" onerror="this.style.display='none'">
+          </div>
+        `).join('')}
+      </div>
+    `;
   }
 
   function runHandler(handler, e){
@@ -439,6 +764,21 @@
     }
   }
 
+  function clearAllMobShotLocalStorage(){
+    DELETE_KEYS.forEach(key => {
+      localStorage.removeItem(key);
+    });
+
+    Object.keys(localStorage).forEach(key => {
+      if (
+        key.indexOf('mobshot_') === 0 ||
+        key.indexOf('MOBSHOT_') === 0
+      ) {
+        localStorage.removeItem(key);
+      }
+    });
+  }
+
   function bindDeleteSave(){
     const btn = $('deleteSaveBtn');
 
@@ -450,27 +790,20 @@
       e.preventDefault();
       e.stopPropagation();
 
-      const ok = confirm(
-        'セーブデータを削除しますか？\nコイン・スコア・ランク・ステージ進行・ペット・ショップ・装備・ミッション状態などが初期化されます。'
+      showGameConfirm(
+        'セーブ削除',
+        '本当にセーブデータを削除しますか？\nコイン・ランク・ステージ進行・ショップ・装備・ペット・ミッション・ガチャ・コレクションを初期化します。',
+        '削除する',
+        'やめる',
+        function(){
+          clearAllMobShotLocalStorage();
+          showToast('セーブデータを削除しました');
+
+          setTimeout(function(){
+            location.reload();
+          }, 700);
+        }
       );
-
-      if (!ok) return;
-
-      localStorage.removeItem('mobshot_split_v1');
-      localStorage.removeItem('mobshot_save');
-      localStorage.removeItem('mobshot_meta');
-      localStorage.removeItem('MOBSHOT_SAVE');
-
-      localStorage.removeItem('mobshot_pet_state_v3');
-      localStorage.removeItem('mobshot_pet_equip_test');
-      localStorage.removeItem('mobshot_pet_equip_test_v2');
-
-      localStorage.removeItem('mobshot_shop_state_v1');
-      localStorage.removeItem('mobshot_equip_state_v1');
-      localStorage.removeItem('mobshot_mission_state_v1');
-
-      alert('セーブデータを削除しました。');
-      location.reload();
     }, { passive:false });
   }
 
@@ -490,14 +823,20 @@
     if (window.MobShotPets && window.MobShotPets.init) {
       window.MobShotPets.init();
     }
+
+    if (window.MobShotCollection && window.MobShotCollection.render) {
+      window.MobShotCollection.render();
+    }
   }
 
   function init(){
     preventSmartphoneZoom();
+    injectMainStyle();
     initImages();
     refreshMainHud();
 
     createDeleteSaveButton();
+    ensureGameConfirm();
     initModules();
 
     wireButton(['sortieBtn', 'btnSortie', 'mainSortieBtn'], goGame);
@@ -517,6 +856,14 @@
       refreshMainHud();
       refreshMainVisuals();
     });
+
+    window.addEventListener('mobshot:gachaUpdated', function(){
+      refreshMainVisuals();
+    });
+
+    window.addEventListener('mobshot:collectionDisplayUpdated', function(){
+      refreshMainStoneDisplay();
+    });
   }
 
   window.addEventListener('DOMContentLoaded', init);
@@ -525,11 +872,15 @@
     showScreen,
     refreshMainHud,
     refreshMainVisuals,
+    refreshMainStoneDisplay,
     goMain,
     goGame,
     openShop,
     openEquip,
     openMission,
-    openPetEquip
+    openPetEquip,
+    showGameConfirm,
+    showToast,
+    clearAllMobShotLocalStorage
   };
 })();
