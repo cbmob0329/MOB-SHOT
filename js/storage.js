@@ -41,18 +41,8 @@
   ];
 
   const AREA_ORDER = [
-    'grass',
-    'desert',
-    'town',
-    'neon',
-    'magma',
-    'castle',
-    'prison',
-    'matrix',
-    'seaRail',
-    'neonHighway',
-    'makai',
-    'last'
+    'grass','desert','town','neon','magma','castle',
+    'prison','matrix','seaRail','neonHighway','makai','last'
   ];
 
   function buildStageList(){
@@ -84,11 +74,7 @@
 
   function defaultHighestStages(){
     const highest = {};
-
-    AREA_ORDER.forEach(key => {
-      highest[key] = 0;
-    });
-
+    AREA_ORDER.forEach(key => highest[key] = 0);
     return highest;
   }
 
@@ -158,56 +144,28 @@
     saveData.diamond = Number(saveData.diamond || 0);
     saveData.rank = Number(saveData.rank || calcRank(saveData.totalScore));
 
-    saveData.stageProgress = Object.assign(
-      defaultSave().stageProgress,
-      saveData.stageProgress || {}
-    );
-
-    saveData.stageProgress.highest = Object.assign(
-      defaultHighestStages(),
-      saveData.stageProgress.highest || {}
-    );
-
-    saveData.stageProgress.clearedStageIds = Object.assign(
-      {},
-      saveData.stageProgress.clearedStageIds || {}
-    );
+    saveData.stageProgress = Object.assign(defaultSave().stageProgress, saveData.stageProgress || {});
+    saveData.stageProgress.highest = Object.assign(defaultHighestStages(), saveData.stageProgress.highest || {});
+    saveData.stageProgress.clearedStageIds = Object.assign({}, saveData.stageProgress.clearedStageIds || {});
 
     saveData.stageProgress.currentStageIndex = Math.max(
       0,
-      Math.min(
-        STAGE_LIST.length - 1,
-        Number(saveData.stageProgress.currentStageIndex || 0)
-      )
+      Math.min(STAGE_LIST.length - 1, Number(saveData.stageProgress.currentStageIndex || 0))
     );
 
     saveData.stageProgress.highestStageIndex = Math.max(
       -1,
-      Math.min(
-        STAGE_LIST.length - 1,
-        Number(saveData.stageProgress.highestStageIndex ?? -1)
-      )
+      Math.min(STAGE_LIST.length - 1, Number(saveData.stageProgress.highestStageIndex ?? -1))
     );
 
-    saveData.testStage = Object.assign(
-      defaultSave().testStage,
-      saveData.testStage || {}
-    );
-
+    saveData.testStage = Object.assign(defaultSave().testStage, saveData.testStage || {});
     saveData.testStage.enabled = !!saveData.testStage.enabled;
     saveData.testStage.stageIndex = Math.max(
       0,
-      Math.min(
-        STAGE_LIST.length - 1,
-        Number(saveData.testStage.stageIndex || 0)
-      )
+      Math.min(STAGE_LIST.length - 1, Number(saveData.testStage.stageIndex || 0))
     );
 
-    saveData.missionStats = Object.assign(
-      defaultMissionStats(),
-      saveData.missionStats || {}
-    );
-
+    saveData.missionStats = Object.assign(defaultMissionStats(), saveData.missionStats || {});
     saveData.missionStats.obstacleKills = Number(saveData.missionStats.obstacleKills || 0);
     saveData.missionStats.enemyKills = Number(saveData.missionStats.enemyKills || 0);
     saveData.missionStats.midBossKills = Number(saveData.missionStats.midBossKills || 0);
@@ -216,20 +174,9 @@
     saveData.missionStats.totalEarnedCoin = Number(saveData.missionStats.totalEarnedCoin || 0);
     saveData.missionStats.totalStageClears = Number(saveData.missionStats.totalStageClears || 0);
 
-    saveData.missionStats.firstBossKills = Object.assign(
-      {},
-      saveData.missionStats.firstBossKills || {}
-    );
-
-    saveData.missionStats.firstStrongBossKills = Object.assign(
-      {},
-      saveData.missionStats.firstStrongBossKills || {}
-    );
-
-    saveData.missionStats.reachedAreas = Object.assign(
-      {},
-      saveData.missionStats.reachedAreas || {}
-    );
+    saveData.missionStats.firstBossKills = Object.assign({}, saveData.missionStats.firstBossKills || {});
+    saveData.missionStats.firstStrongBossKills = Object.assign({}, saveData.missionStats.firstStrongBossKills || {});
+    saveData.missionStats.reachedAreas = Object.assign({}, saveData.missionStats.reachedAreas || {});
 
     return saveData;
   }
@@ -261,11 +208,7 @@
   }
 
   function getStageByIndex(index){
-    index = Math.max(
-      0,
-      Math.min(STAGE_LIST.length - 1, Number(index || 0))
-    );
-
+    index = Math.max(0, Math.min(STAGE_LIST.length - 1, Number(index || 0)));
     return STAGE_LIST[index];
   }
 
@@ -291,7 +234,6 @@
 
     if (data.testStage && data.testStage.enabled) {
       const stage = getStageByIndex(data.testStage.stageIndex);
-
       return decorateStage(stage, data.testStage.stageIndex, true);
     }
 
@@ -316,9 +258,7 @@
 
   function setCurrentStageById(id){
     const index = STAGE_LIST.findIndex(stage => stage.id === id);
-
     if (index < 0) return load();
-
     return setCurrentStageByIndex(index);
   }
 
@@ -336,17 +276,13 @@
 
   function setTestStageById(id){
     const index = STAGE_LIST.findIndex(stage => stage.id === id);
-
     if (index < 0) return load();
-
     return setTestStageByIndex(index);
   }
 
   function clearTestStage(){
     const data = load();
-
     data.testStage.enabled = false;
-
     return save(data);
   }
 
@@ -363,13 +299,9 @@
     data.totalScore += score;
     data.bestScore = Math.max(data.bestScore, score);
     data.coin += coin;
-
     data.missionStats.totalEarnedCoin += coin;
 
-    data.rank = Math.max(
-      Number(data.rank || 1),
-      calcRank(data.totalScore)
-    );
+    data.rank = Math.max(Number(data.rank || 1), calcRank(data.totalScore));
 
     return save(data);
   }
@@ -377,13 +309,9 @@
   function recordStageClearByInfo(info){
     const data = load();
 
-    if (!info) {
-      info = getCurrentStage();
-    }
+    if (!info) info = getCurrentStage();
 
-    if (info.isTest) {
-      return save(data);
-    }
+    if (info.isTest) return save(data);
 
     const currentIndex = Number(info.index || 0);
 
@@ -407,10 +335,7 @@
   function recordStageClear(areaKey, stageNo){
     const current = getCurrentStage();
 
-    if (
-      current.areaKey === areaKey &&
-      Number(current.stageNo) === Number(stageNo)
-    ) {
+    if (current.areaKey === areaKey && Number(current.stageNo) === Number(stageNo)) {
       return recordStageClearByInfo(current);
     }
 
@@ -421,17 +346,13 @@
 
     if (index < 0) return load();
 
-    return recordStageClearByInfo(
-      decorateStage(STAGE_LIST[index], index, false)
-    );
+    return recordStageClearByInfo(decorateStage(STAGE_LIST[index], index, false));
   }
 
   function advanceStage(){
     const data = load();
 
-    if (data.testStage && data.testStage.enabled) {
-      return save(data);
-    }
+    if (data.testStage && data.testStage.enabled) return save(data);
 
     const nextIndex = Math.min(
       STAGE_LIST.length - 1,
@@ -451,9 +372,7 @@
 
   function addMissionStat(key, amount){
     const data = load();
-
     data.missionStats[key] = Number(data.missionStats[key] || 0) + Number(amount || 1);
-
     return save(data);
   }
 
@@ -471,9 +390,40 @@
     return save(data);
   }
 
+  function clearAllMobShotStorage(){
+    const keys = [];
+
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+
+        if (
+          key &&
+          (
+            key.indexOf('mobshot') === 0 ||
+            key.indexOf('MOBSHOT') === 0
+          )
+        ) {
+          keys.push(key);
+        }
+      }
+
+      keys.forEach(key => localStorage.removeItem(key));
+    } catch(e) {}
+
+    return keys;
+  }
+
   function resetSave(){
+    clearAllMobShotStorage();
+
     const data = defaultSave();
     save(data);
+
+    window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
+    window.dispatchEvent(new CustomEvent('mobshot:eventItemsUpdated'));
+    window.dispatchEvent(new CustomEvent('mobshot:eventStatsUpdated'));
+
     return data;
   }
 
@@ -500,6 +450,7 @@
     markBossFirstKill,
 
     resetSave,
+    clearAllMobShotStorage,
 
     STAGE_LIST,
     STAGE_AREAS,
