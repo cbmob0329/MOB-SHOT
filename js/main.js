@@ -17,25 +17,20 @@
     'mobshot_save',
     'mobshot_meta',
     'MOBSHOT_SAVE',
-
     'mobshot_pet_state_v1',
     'mobshot_pet_state_v2',
     'mobshot_pet_state_v3',
     'mobshot_pet_equip_test',
     'mobshot_pet_equip_test_v2',
-
     'mobshot_shop_state_v1',
     'mobshot_shop_state_v2',
     'mobshot_equip_state_v1',
     'mobshot_equip_state_v2',
-
     'mobshot_skill_state_v1',
     'mobshot_mission_state_v1',
     'mobshot_mission_state_v2',
-
     'mobshot_gacha_state_v1',
     'mobshot_collection_display_v1',
-
     'mobshot_event_state_v1',
     'mobshot_events_state_v1',
     'mobshot_current_event_v1',
@@ -82,50 +77,88 @@
     const style = document.createElement('style');
     style.id = 'mobMainExtraStyle';
     style.textContent = `
+      .player-showcase{
+        position:relative;
+        isolation:isolate;
+      }
+
+      .player-showcase .player-glow{
+        position:relative;
+        z-index:2;
+      }
+
+      .player-showcase #mainPlayer,
+      .player-showcase .fallback-player{
+        position:relative;
+        z-index:5;
+      }
+
+      .player-showcase #mainPetFloatLayer{
+        position:absolute;
+        z-index:6;
+      }
+
       .main-stone-display-layer{
         position:absolute;
         left:50%;
-        top:43%;
-        width:min(76vw,360px);
-        height:145px;
+        top:50%;
+        width:min(88vw,430px);
+        height:190px;
         transform:translate(-50%,-50%);
-        z-index:4;
+        z-index:1;
         pointer-events:none;
         overflow:hidden;
-        opacity:.86;
+        opacity:.62;
       }
 
       .main-stone-display-track{
         position:absolute;
-        inset:0;
+        left:0;
+        top:0;
+        height:100%;
         display:flex;
         align-items:center;
-        gap:18px;
+        gap:34px;
         width:max-content;
-        animation:mobStoneScroll 18s linear infinite;
+        animation:mobStoneScroll 34s linear infinite;
       }
 
       .main-stone-display-item{
-        width:104px;
-        height:126px;
+        width:112px;
+        height:142px;
         flex:0 0 auto;
         display:flex;
         align-items:center;
         justify-content:center;
-        border-radius:20px;
-        background:rgba(0,0,0,.18);
-        filter:drop-shadow(0 8px 0 rgba(0,0,0,.25));
+        border-radius:22px;
+        background:rgba(0,0,0,.10);
+        filter:drop-shadow(0 8px 0 rgba(0,0,0,.22));
+        animation:mobStoneFloat 4.6s ease-in-out infinite;
+      }
+
+      .main-stone-display-item:nth-child(2n){
+        animation-delay:-1.4s;
+      }
+
+      .main-stone-display-item:nth-child(3n){
+        animation-delay:-2.7s;
       }
 
       .main-stone-display-item img{
-        width:98px;
-        height:118px;
+        width:108px;
+        height:134px;
         object-fit:contain;
       }
 
       @keyframes mobStoneScroll{
         0%{transform:translateX(0)}
         100%{transform:translateX(-50%)}
+      }
+
+      @keyframes mobStoneFloat{
+        0%{transform:translateY(8px)}
+        50%{transform:translateY(-10px)}
+        100%{transform:translateY(8px)}
       }
 
       .mob-game-confirm{
@@ -221,6 +254,7 @@
         transform:translateX(-50%) translateY(-4px);
       }
     `;
+
     document.head.appendChild(style);
   }
 
@@ -294,16 +328,12 @@
   }
 
   function showScreen(name){
-    const screens = document.querySelectorAll('.screen');
-
-    screens.forEach(screen => {
+    document.querySelectorAll('.screen').forEach(screen => {
       screen.classList.remove('active');
     });
 
     if (name === 'game') {
-      if (gameScreen) {
-        gameScreen.classList.add('active');
-      }
+      if (gameScreen) gameScreen.classList.add('active');
 
       if (window.MobShotGame && window.MobShotGame.start) {
         window.MobShotGame.start();
@@ -318,9 +348,7 @@
       window.MobShotGame.stop();
     }
 
-    if (mainScreen) {
-      mainScreen.classList.add('active');
-    }
+    if (mainScreen) mainScreen.classList.add('active');
 
     refreshMainHud();
     refreshMainVisuals();
@@ -337,10 +365,7 @@
       el.style.display = 'none';
 
       const fallback = el.nextElementSibling;
-
-      if (fallback) {
-        fallback.style.display = 'block';
-      }
+      if (fallback) fallback.style.display = 'block';
     };
   }
 
@@ -350,14 +375,14 @@
     }
 
     return {
-      totalScore: 0,
-      bestScore: 0,
-      coin: 0,
-      diamond: 0,
-      rank: 1,
-      stageProgress: {
-        currentAreaIndex: 0,
-        currentStageNo: 1
+      totalScore:0,
+      bestScore:0,
+      coin:0,
+      diamond:0,
+      rank:1,
+      stageProgress:{
+        currentAreaIndex:0,
+        currentStageNo:1
       }
     };
   }
@@ -374,51 +399,12 @@
   function refreshMainHud(){
     const save = readSave();
 
-    const diamond = $('mainDiamond');
-    const rank = $('mainRank');
-    const coin = $('mainCoin');
-
-    if (diamond) {
-      diamond.textContent = Number(save.diamond || 0).toLocaleString();
-    }
-
-    if (rank) {
-      rank.textContent = Number(save.rank || 1).toLocaleString();
-    }
-
-    if (coin) {
-      coin.textContent = Number(save.coin || 0).toLocaleString();
-    }
+    if ($('mainDiamond')) $('mainDiamond').textContent = Number(save.diamond || 0).toLocaleString();
+    if ($('mainRank')) $('mainRank').textContent = Number(save.rank || 1).toLocaleString();
+    if ($('mainCoin')) $('mainCoin').textContent = Number(save.coin || 0).toLocaleString();
 
     const sortieBtn = $('sortieBtn');
-
-    if (sortieBtn) {
-      sortieBtn.setAttribute('data-stage', currentStageText());
-    }
-  }
-
-  function refreshMainVisuals(){
-    refreshMainStoneDisplay();
-
-    if (window.MobShotEquip && window.MobShotEquip.updateMainPlayerImage) {
-      window.MobShotEquip.updateMainPlayerImage();
-    }
-
-    if (window.MobShotPets && window.MobShotPets.renderAll) {
-      window.MobShotPets.renderAll();
-    }
-
-    if (window.MobShotShop && window.MobShotShop.render) {
-      window.MobShotShop.render();
-    }
-
-    if (window.MobShotEquip && window.MobShotEquip.render) {
-      window.MobShotEquip.render();
-    }
-
-    if (window.MobShotMission && window.MobShotMission.render) {
-      window.MobShotMission.render();
-    }
+    if (sortieBtn) sortieBtn.setAttribute('data-stage', currentStageText());
   }
 
   function ensureMainStoneLayer(){
@@ -427,7 +413,6 @@
     if (!mainScreen) return null;
 
     let layer = $('mainStoneDisplayLayer');
-
     if (layer) return layer;
 
     layer = document.createElement('div');
@@ -471,7 +456,6 @@
 
   function refreshMainStoneDisplay(){
     const layer = ensureMainStoneLayer();
-
     if (!layer) return;
 
     const stones = getMainDisplayStones();
@@ -484,7 +468,7 @@
 
     layer.style.display = 'block';
 
-    const loopStones = stones.concat(stones);
+    const loopStones = stones.concat(stones, stones, stones);
 
     layer.innerHTML = `
       <div class="main-stone-display-track">
@@ -495,6 +479,30 @@
         `).join('')}
       </div>
     `;
+  }
+
+  function refreshMainVisuals(){
+    refreshMainStoneDisplay();
+
+    if (window.MobShotEquip && window.MobShotEquip.updateMainPlayerImage) {
+      window.MobShotEquip.updateMainPlayerImage();
+    }
+
+    if (window.MobShotPets && window.MobShotPets.renderAll) {
+      window.MobShotPets.renderAll();
+    }
+
+    if (window.MobShotShop && window.MobShotShop.render) {
+      window.MobShotShop.render();
+    }
+
+    if (window.MobShotEquip && window.MobShotEquip.render) {
+      window.MobShotEquip.render();
+    }
+
+    if (window.MobShotMission && window.MobShotMission.render) {
+      window.MobShotMission.render();
+    }
   }
 
   function runHandler(handler, e){
@@ -575,10 +583,7 @@
     }
 
     const modal = $('petEquipModal');
-
-    if (modal) {
-      modal.classList.remove('hidden');
-    }
+    if (modal) modal.classList.remove('hidden');
   }
 
   function openShop(){
@@ -588,10 +593,7 @@
     }
 
     const modal = $('shopModal');
-
-    if (modal) {
-      modal.classList.remove('hidden');
-    }
+    if (modal) modal.classList.remove('hidden');
   }
 
   function openEquip(){
@@ -601,10 +603,7 @@
     }
 
     const modal = $('equipModal');
-
-    if (modal) {
-      modal.classList.remove('hidden');
-    }
+    if (modal) modal.classList.remove('hidden');
   }
 
   function openMission(){
@@ -614,17 +613,13 @@
     }
 
     const modal = $('missionModal');
-
-    if (modal) {
-      modal.classList.remove('hidden');
-    }
+    if (modal) modal.classList.remove('hidden');
   }
 
   function createDeleteSaveButton(){
     if (!mainScreen) return;
 
     let btn = $('deleteSaveBtn');
-
     if (btn) return;
 
     btn = document.createElement('button');
@@ -654,83 +649,23 @@
     mainScreen.appendChild(btn);
   }
 
-  function bindPetButtonFallback(){
-    const petBtn = $('openPetEquipBtn');
+  function bindFallbackButton(id, handler, flag){
+    const btn = $(id);
 
-    if (!petBtn || petBtn.__mobPetFallbackBound) return;
+    if (!btn || btn[flag]) return;
 
-    petBtn.__mobPetFallbackBound = true;
+    btn[flag] = true;
 
-    petBtn.addEventListener('click', function(e){
-      runHandler(openPetEquip, e);
+    btn.addEventListener('click', function(e){
+      runHandler(handler, e);
     }, { passive:false });
 
-    petBtn.addEventListener('pointerup', function(e){
-      runHandler(openPetEquip, e);
+    btn.addEventListener('pointerup', function(e){
+      runHandler(handler, e);
     }, { passive:false });
 
-    petBtn.addEventListener('touchend', function(e){
-      runHandler(openPetEquip, e);
-    }, { passive:false });
-  }
-
-  function bindShopButtonFallback(){
-    const shopBtn = $('openShopBtn');
-
-    if (!shopBtn || shopBtn.__mobShopFallbackBound) return;
-
-    shopBtn.__mobShopFallbackBound = true;
-
-    shopBtn.addEventListener('click', function(e){
-      runHandler(openShop, e);
-    }, { passive:false });
-
-    shopBtn.addEventListener('pointerup', function(e){
-      runHandler(openShop, e);
-    }, { passive:false });
-
-    shopBtn.addEventListener('touchend', function(e){
-      runHandler(openShop, e);
-    }, { passive:false });
-  }
-
-  function bindEquipButtonFallback(){
-    const equipBtn = $('openEquipBtn');
-
-    if (!equipBtn || equipBtn.__mobEquipFallbackBound) return;
-
-    equipBtn.__mobEquipFallbackBound = true;
-
-    equipBtn.addEventListener('click', function(e){
-      runHandler(openEquip, e);
-    }, { passive:false });
-
-    equipBtn.addEventListener('pointerup', function(e){
-      runHandler(openEquip, e);
-    }, { passive:false });
-
-    equipBtn.addEventListener('touchend', function(e){
-      runHandler(openEquip, e);
-    }, { passive:false });
-  }
-
-  function bindMissionButtonFallback(){
-    const missionBtn = $('openMissionBtn');
-
-    if (!missionBtn || missionBtn.__mobMissionFallbackBound) return;
-
-    missionBtn.__mobMissionFallbackBound = true;
-
-    missionBtn.addEventListener('click', function(e){
-      runHandler(openMission, e);
-    }, { passive:false });
-
-    missionBtn.addEventListener('pointerup', function(e){
-      runHandler(openMission, e);
-    }, { passive:false });
-
-    missionBtn.addEventListener('touchend', function(e){
-      runHandler(openMission, e);
+    btn.addEventListener('touchend', function(e){
+      runHandler(handler, e);
     }, { passive:false });
   }
 
@@ -842,10 +777,10 @@
     wireButton(['sortieBtn', 'btnSortie', 'mainSortieBtn'], goGame);
     wireButton(['backBtn', 'gameBackBtn'], goMain);
 
-    bindShopButtonFallback();
-    bindEquipButtonFallback();
-    bindMissionButtonFallback();
-    bindPetButtonFallback();
+    bindFallbackButton('openShopBtn', openShop, '__mobShopFallbackBound');
+    bindFallbackButton('openEquipBtn', openEquip, '__mobEquipFallbackBound');
+    bindFallbackButton('openMissionBtn', openMission, '__mobMissionFallbackBound');
+    bindFallbackButton('openPetEquipBtn', openPetEquip, '__mobPetFallbackBound');
 
     bindResultButtons();
     bindDeleteSave();
