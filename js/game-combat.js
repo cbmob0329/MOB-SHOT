@@ -1,6 +1,8 @@
 'use strict';
 
 (function(){
+  const PLAYER_ENEMY_BULLET_HIT_R = 12;
+
   function isSkillInvincible(entity){
     if (
       window.MobShotGameSkills &&
@@ -12,26 +14,31 @@
     return false;
   }
 
+  function enemyBulletHitRadius(e){
+    if (e.hitR != null) {
+      return Number(e.hitR);
+    }
+
+    return Math.max(10, Math.ceil(Number(e.r || 8) * 0.72));
+  }
+
+  function enemyBulletBreakRadius(e){
+    if (e.hitR != null) {
+      return Math.max(Number(e.hitR), Math.ceil(Number(e.r || 8) * 0.72));
+    }
+
+    return Number(e.r || 8);
+  }
+
   function applyGate(gate, tools){
     const state = tools.state;
     const addText = tools.addText;
     const burst = tools.burst;
 
-    if (gate.type === 'power') {
-      state.power += gate.value;
-    }
-
-    if (gate.type === 'range') {
-      state.range += gate.value;
-    }
-
-    if (gate.type === 'rapid') {
-      state.attackSpeed += 0.12 * gate.value;
-    }
-
-    if (gate.type === 'life') {
-      state.hp = Math.min(state.maxHp, state.hp + gate.value);
-    }
+    if (gate.type === 'power') state.power += gate.value;
+    if (gate.type === 'range') state.range += gate.value;
+    if (gate.type === 'rapid') state.attackSpeed += 0.12 * gate.value;
+    if (gate.type === 'life') state.hp = Math.min(state.maxHp, state.hp + gate.value);
 
     if (gate.type === 'wide') {
       state.baseWide += gate.value;
@@ -39,19 +46,13 @@
     }
 
     if (gate.type === 'cooldown') {
-      if (
-        window.MobShotGameSkills &&
-        window.MobShotGameSkills.reduceCooldownAll
-      ) {
+      if (window.MobShotGameSkills && window.MobShotGameSkills.reduceCooldownAll) {
         window.MobShotGameSkills.reduceCooldownAll(gate.value);
       }
     }
 
     if (gate.type === 'skillmax') {
-      if (
-        window.MobShotGameSkills &&
-        window.MobShotGameSkills.fillAll
-      ) {
+      if (window.MobShotGameSkills && window.MobShotGameSkills.fillAll) {
         window.MobShotGameSkills.fillAll();
       }
     }
@@ -111,13 +112,8 @@
 
       b.y += b.vy;
 
-      if (b.startY - b.y >= b.maxTravel) {
-        b.dead = true;
-      }
-
-      if (b.y < -80) {
-        b.dead = true;
-      }
+      if (b.startY - b.y >= b.maxTravel) b.dead = true;
+      if (b.y < -80) b.dead = true;
     }
 
     for (const e of state.entities) {
@@ -163,9 +159,7 @@
 
       if (e.life != null) {
         e.life--;
-        if (e.life <= 0) {
-          e.dead = true;
-        }
+        if (e.life <= 0) e.dead = true;
       }
 
       if (
@@ -189,20 +183,16 @@
       if (b.dead) continue;
 
       for (const e of state.entities) {
-        if (e.dead || e.kind === 'gate') {
-          continue;
-        }
+        if (e.dead || e.kind === 'gate') continue;
 
         if (e.kind === 'enemyBullet') {
-          if (!isBreakableEnemyBullet(e)) {
-            continue;
-          }
+          if (!isBreakableEnemyBullet(e)) continue;
 
-          const bulletHit = Math.hypot(b.x - e.x, b.y - e.y) < (e.r || 8) + b.r;
+          const bulletHit =
+            Math.hypot(b.x - e.x, b.y - e.y) <
+            enemyBulletBreakRadius(e) + b.r;
 
-          if (!bulletHit) {
-            continue;
-          }
+          if (!bulletHit) continue;
 
           b.dead = true;
           e.hp = Number(e.hp || 1) - Number(b.dmg || 1);
@@ -261,7 +251,12 @@
       }
 
       if (e.kind === 'enemyBullet') {
-        if (Math.hypot(p.x - e.x, p.y - e.y) < p.r + (e.r || 8)) {
+        const hitR = enemyBulletHitRadius(e);
+
+        if (
+          Math.hypot(p.x - e.x, p.y - e.y) <
+          PLAYER_ENEMY_BULLET_HIT_R + hitR
+        ) {
           e.dead = true;
 
           if (isSkillInvincible(e)) {
