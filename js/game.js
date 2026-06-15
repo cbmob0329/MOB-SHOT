@@ -22,6 +22,19 @@
   const SCROLL_SPEED = 1.15;
   const FIELD_ENTITY_SPEED = 0.72;
 
+  const DIFFICULTY_ICONS = {
+    'イージー': 'mt/game1.png',
+    'ハード': 'mt/game2.png',
+    'ベリーハード': 'mt/game3.png',
+    'インフェルノ': 'mt/game4.png',
+    'レジェンド': 'mt/game5.png',
+    easy: 'mt/game1.png',
+    hard: 'mt/game2.png',
+    veryHard: 'mt/game3.png',
+    inferno: 'mt/game4.png',
+    legend: 'mt/game5.png'
+  };
+
   const ORIGINAL_DATA = JSON.parse(JSON.stringify({
     stage: D.stage,
     enemies: D.enemies,
@@ -78,6 +91,37 @@
     texts: []
   };
 
+  function injectHudStyle(){
+    if (document.getElementById('mobShotGameHudStyle')) return;
+
+    const style = document.createElement('style');
+    style.id = 'mobShotGameHudStyle';
+    style.textContent = `
+      .game-hud .hud-item span{
+        font-size:18px !important;
+        font-weight:1000 !important;
+        letter-spacing:.02em;
+      }
+      #hudStageImg{
+        width:34px !important;
+        height:34px !important;
+        object-fit:contain !important;
+        filter:drop-shadow(0 3px 0 rgba(0,0,0,.35));
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function setHudDifficultyIcon(difficulty){
+    injectHudStyle();
+
+    const img = document.getElementById('hudStageImg');
+    if (!img) return;
+
+    const src = DIFFICULTY_ICONS[difficulty] || 'mt/stagestage.png';
+    img.src = src;
+  }
+
   function clone(obj){
     return JSON.parse(JSON.stringify(obj));
   }
@@ -96,7 +140,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260615_game_split';
+      image.src = src + '?v=20260615_game_hud_icon';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -119,22 +163,10 @@
     );
   }
 
-  function rand(a, b){
-    return a + Math.random() * (b - a);
-  }
-
-  function intRand(a, b){
-    return Math.floor(rand(a, b + 1));
-  }
-
-  function pick(arr){
-    if (!arr || !arr.length) return null;
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
-
-  function clamp(v, a, b){
-    return Math.max(a, Math.min(b, v));
-  }
+  function rand(a, b){ return a + Math.random() * (b - a); }
+  function intRand(a, b){ return Math.floor(rand(a, b + 1)); }
+  function pick(arr){ return arr && arr.length ? arr[Math.floor(Math.random() * arr.length)] : null; }
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
 
   function weightedPick(list){
     if (!list || !list.length) return null;
@@ -196,7 +228,7 @@
       areaNo: Number(stage.areaNo || 1),
       stageNo: Number(stage.stageNo || 1),
       id: stage.id || '1-1',
-      difficulty: stage.difficulty || 'EASY',
+      difficulty: stage.difficulty || 'イージー',
       isStrongBoss: !!stage.isStrongBoss,
       isLegend: !!stage.isLegend,
       isTest: !!stage.isTest
@@ -212,9 +244,7 @@
       H,
       ctx,
       scroll,
-      frame: function(){
-        return frame;
-      },
+      frame: function(){ return frame; },
       rand,
       intRand,
       pick,
@@ -228,15 +258,7 @@
   }
 
   function makeRenderTools(){
-    return {
-      ctx,
-      state,
-      D,
-      W,
-      H,
-      scroll,
-      getImage
-    };
+    return { ctx, state, D, W, H, scroll, getImage };
   }
 
   function resize(){
@@ -256,20 +278,11 @@
   }
 
   function resetEventMode(){
-    state.eventMode = {
-      active: false,
-      key: ''
-    };
+    state.eventMode = { active: false, key: '' };
   }
 
   function setEventMode(mode){
-    state.eventMode = Object.assign(
-      {
-        active: false,
-        key: ''
-      },
-      mode || {}
-    );
+    state.eventMode = Object.assign({ active: false, key: '' }, mode || {});
   }
 
   function isEventMode(key){
@@ -286,6 +299,7 @@
     runCommitted = false;
     aiErrorCount = 0;
 
+    injectHudStyle();
     restoreBaseData();
 
     const shopBonus = getShopBonus();
@@ -295,13 +309,11 @@
 
     state.maxHp = D.player.maxHp + shopBonus.hp + equipBonus.hp;
     state.hp = state.maxHp;
-
     state.power = D.player.power + shopBonus.power + equipBonus.power;
     state.range = D.player.range + shopBonus.range;
     state.baseWide = D.player.wide;
     state.wide = state.baseWide;
     state.attackSpeed = D.player.attackSpeed + shopBonus.rapid + equipBonus.rapid;
-
     state.playerImage = avatar ? avatar.backImage : D.player.image;
     state.bulletImage = D.player.bulletImage;
 
@@ -311,13 +323,12 @@
 
     state.score = 0;
     state.coin = 0;
-
     state.player.x = W / 2;
     state.player.targetX = W / 2;
     state.player.y = getPlayerBaseY();
     state.player.targetY = getPlayerBaseY();
-
     state.shootCd = 0;
+
     state.areaSpawn.nextEnemy = 0;
     state.areaSpawn.nextGimmick = 0;
     state.areaSpawn.nextChest = 0;
@@ -342,15 +353,11 @@
 
     updateSkillHudImages();
 
-    if (resultPanel) {
-      resultPanel.classList.add('hidden');
-    }
-
+    if (resultPanel) resultPanel.classList.add('hidden');
     if (resultRetryBtn) {
       resultRetryBtn.style.display = '';
       resultRetryBtn.textContent = 'もう一度';
     }
-
     if (resultHomeBtn) {
       resultHomeBtn.style.display = '';
       resultHomeBtn.textContent = 'メインへ戻る';
@@ -364,12 +371,12 @@
       return;
     }
 
-    if (
-      window.MobShotEvents &&
-      window.MobShotEvents.clearCurrentEvent
-    ) {
+    if (window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
       window.MobShotEvents.clearCurrentEvent();
     }
+
+    const info = getCurrentStageInfo();
+    setHudDifficultyIcon(info.difficulty);
 
     handleFlowEvent(flow.start());
   }
@@ -444,13 +451,9 @@
       console.error('Flow event error:', ev.type, err);
       addText('FLOW ERROR', W / 2, H * 0.25, '#ff5b5b');
 
-      if (ev.type === 'gateStart') {
-        handleFlowEvent(flow.completeGate());
-      } else if (ev.type === 'midBossStart') {
-        handleFlowEvent(flow.completeMidBoss());
-      } else if (ev.type === 'bossStart') {
-        handleFlowEvent(flow.completeBoss());
-      }
+      if (ev.type === 'gateStart') handleFlowEvent(flow.completeGate());
+      else if (ev.type === 'midBossStart') handleFlowEvent(flow.completeMidBoss());
+      else if (ev.type === 'bossStart') handleFlowEvent(flow.completeBoss());
     }
   }
 
@@ -504,10 +507,7 @@
       }
 
       if (snap.phase === 'gate') {
-        const gatesAlive = state.entities.some(e =>
-          e.kind === 'gate' &&
-          !e.dead
-        );
+        const gatesAlive = state.entities.some(e => e.kind === 'gate' && !e.dead);
 
         if (!gatesAlive || frame >= state.gateEndAt) {
           state.entities.forEach(e => {
@@ -519,10 +519,7 @@
       }
 
       if (snap.phase === 'midBoss') {
-        const alive = state.entities.some(e =>
-          e.kind === 'midBoss' &&
-          !e.dead
-        );
+        const alive = state.entities.some(e => e.kind === 'midBoss' && !e.dead);
 
         if (!alive && snap.phaseFrame > 60) {
           handleFlowEvent(flow.completeMidBoss());
@@ -530,10 +527,7 @@
       }
 
       if (snap.phase === 'boss') {
-        const alive = state.entities.some(e =>
-          e.kind === 'boss' &&
-          !e.dead
-        );
+        const alive = state.entities.some(e => e.kind === 'boss' && !e.dead);
 
         if (!alive && snap.phaseFrame > 60) {
           handleFlowEvent(flow.completeBoss());
@@ -558,22 +552,13 @@
   function updateEnemyAI(e){
     e.aiTimer = Number(e.aiTimer || 0) + 1;
 
-    if (
-      e.aiType === 'hop' ||
-      e.aiType === 'fastHop' ||
-      e.aiType === 'wideHop'
-    ) {
+    if (e.aiType === 'hop' || e.aiType === 'fastHop' || e.aiType === 'wideHop') {
       e.x += Math.sin(e.aiTimer * 0.16) * (e.aiType === 'fastHop' ? 2.2 : 1.25);
       e.y += Math.sin(e.aiTimer * 0.22) * 0.35;
     }
 
-    if (e.aiType === 'sway') {
-      e.x += Math.sin(e.aiTimer * 0.08) * 1.6;
-    }
-
-    if (e.aiType === 'fastSide') {
-      e.x += Math.sin(e.aiTimer * 0.16) * 2.2;
-    }
+    if (e.aiType === 'sway') e.x += Math.sin(e.aiTimer * 0.08) * 1.6;
+    if (e.aiType === 'fastSide') e.x += Math.sin(e.aiTimer * 0.16) * 2.2;
   }
 
   function fallbackBossMove(e){
@@ -600,11 +585,7 @@
     for (const e of state.entities) {
       if (e.dead) continue;
 
-      if (
-        e.kind === 'enemy' ||
-        e.kind === 'midBoss' ||
-        e.kind === 'boss'
-      ) {
+      if (e.kind === 'enemy' || e.kind === 'midBoss' || e.kind === 'boss') {
         e.bob = Number(e.bob || 0) + 0.06;
       }
 
@@ -647,9 +628,7 @@
           fallbackBossMove(e);
         }
       } else {
-        if (e.kind === 'enemy') {
-          updateEnemyAI(e);
-        }
+        if (e.kind === 'enemy') updateEnemyAI(e);
 
         e.y += (e.vy || 0) * FIELD_ENTITY_SPEED;
 
@@ -662,9 +641,7 @@
         }
       }
 
-      if (e.barrierTimer > 0) {
-        e.barrierTimer--;
-      }
+      if (e.barrierTimer > 0) e.barrierTimer--;
     }
   }
 
@@ -780,17 +757,11 @@
   }
 
   function killEntity(e){
-    if (
-      window.MobShotGameEvents &&
-      window.MobShotGameEvents.onEntityKilled
-    ) {
+    if (window.MobShotGameEvents && window.MobShotGameEvents.onEntityKilled) {
       window.MobShotGameEvents.onEntityKilled(e, getCoreApi());
     }
 
-    if (
-      window.MobShotGameBossManager &&
-      window.MobShotGameBossManager.onEntityKilled
-    ) {
+    if (window.MobShotGameBossManager && window.MobShotGameBossManager.onEntityKilled) {
       window.MobShotGameBossManager.onEntityKilled(e, getCoreApi());
     }
 
@@ -861,13 +832,8 @@
       }
     }
 
-    if (resultScore) {
-      resultScore.textContent = state.score.toLocaleString();
-    }
-
-    if (resultCoin) {
-      resultCoin.textContent = state.coin.toLocaleString();
-    }
+    if (resultScore) resultScore.textContent = state.score.toLocaleString();
+    if (resultCoin) resultCoin.textContent = state.coin.toLocaleString();
 
     if (finishData && finishData.event) {
       if (resultRetryBtn) resultRetryBtn.style.display = 'none';
@@ -888,9 +854,7 @@
       }
     }
 
-    if (resultPanel) {
-      resultPanel.classList.remove('hidden');
-    }
+    if (resultPanel) resultPanel.classList.remove('hidden');
   }
 
   function testClearNow(){
@@ -902,11 +866,9 @@
 
   function createTestClearButton(){
     const gameScreen = document.getElementById('gameScreen');
-
     if (!gameScreen) return;
 
     let btn = document.getElementById('testClearBtn');
-
     if (btn) return;
 
     btn = document.createElement('button');
@@ -987,16 +949,11 @@
     resetEventMode();
     restoreBaseData();
 
-    if (
-      window.MobShotEvents &&
-      window.MobShotEvents.clearCurrentEvent
-    ) {
+    if (window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
       window.MobShotEvents.clearCurrentEvent();
     }
 
-    if (resultPanel) {
-      resultPanel.classList.add('hidden');
-    }
+    if (resultPanel) resultPanel.classList.add('hidden');
 
     if (window.MobShotMain && window.MobShotMain.goMain) {
       window.MobShotMain.goMain();
@@ -1011,15 +968,12 @@
       document.getElementById('mainScreen') ||
       document.getElementById('mainView');
 
-    if (main) {
-      main.classList.add('active');
-    }
+    if (main) main.classList.add('active');
   }
 
   function bindResultButtons(){
     ['resultHomeBtn', 'gameBackBtn', 'backBtn', 'resultRetryBtn'].forEach(id => {
       const btn = document.getElementById(id);
-
       if (!btn || btn.__mobShotBound) return;
 
       btn.__mobShotBound = true;
@@ -1039,6 +993,8 @@
   }
 
   function updateHud(){
+    injectHudStyle();
+
     if (
       window.MobShotGameEvents &&
       window.MobShotGameEvents.updateHud &&
@@ -1048,6 +1004,8 @@
     }
 
     const info = getCurrentStageInfo();
+
+    setHudDifficultyIcon(info.difficulty);
 
     if (hudStage) {
       hudStage.textContent = `${info.id}`;
@@ -1067,13 +1025,7 @@
   }
 
   function addText(text, x, y, color){
-    state.texts.push({
-      text,
-      x,
-      y,
-      color,
-      life: 48
-    });
+    state.texts.push({ text, x, y, color, life: 48 });
   }
 
   function burst(x, y, color, n){
@@ -1095,10 +1047,7 @@
         window.MobShotRender.drawAll(makeRenderTools());
       }
 
-      if (
-        window.MobShotGameEvents &&
-        window.MobShotGameEvents.draw
-      ) {
+      if (window.MobShotGameEvents && window.MobShotGameEvents.draw) {
         window.MobShotGameEvents.draw(ctx, getCoreApi());
       }
 
@@ -1213,10 +1162,12 @@
   window.addEventListener('DOMContentLoaded', function(){
     bindResultButtons();
     createTestClearButton();
+    injectHudStyle();
   });
 
   bindResultButtons();
   createTestClearButton();
+  injectHudStyle();
 
   window.MobShotGameCore = {
     killEntity,
