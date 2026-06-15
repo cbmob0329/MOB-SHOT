@@ -28,208 +28,42 @@
     const style = document.createElement('style');
     style.id = 'mobCollectionStyle';
     style.textContent = `
-      .collection-modal{
-        position:absolute;
-        inset:0;
-        z-index:94;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding:14px;
-        background:rgba(0,0,0,.68);
-      }
-
-      .collection-modal.hidden{
-        display:none;
-      }
-
-      .collection-card{
-        width:min(96vw,560px);
-        max-height:88vh;
-        overflow:auto;
-        border-radius:26px;
-        padding:14px;
-        background:linear-gradient(180deg,rgba(27,24,62,.98),rgba(5,8,22,.98));
-        border:3px solid rgba(255,255,255,.35);
-        box-shadow:0 18px 48px rgba(0,0,0,.62);
-      }
-
-      .collection-head{
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:10px;
-        margin-bottom:10px;
-      }
-
-      .collection-head h2{
-        margin:0;
-        font-size:24px;
-        font-weight:1000;
-        color:#fff;
-        text-shadow:0 3px 0 #000;
-      }
-
-      .collection-close{
-        border:0;
-        border-radius:999px;
-        padding:9px 14px;
-        font-weight:1000;
-        background:linear-gradient(#ffe66b,#ffb423);
-        color:#1b1200;
-        box-shadow:0 4px 0 rgba(0,0,0,.35);
-      }
-
-      .collection-summary{
-        margin:0 0 10px;
-        padding:10px 12px;
-        border-radius:16px;
-        background:rgba(255,255,255,.10);
-        border:2px solid rgba(255,255,255,.20);
-        color:#dfe8ff;
-        font-size:13px;
-        font-weight:900;
-        line-height:1.5;
-      }
-
-      .collection-tabs{
-        display:flex;
-        gap:8px;
-        overflow:auto;
-        padding-bottom:8px;
-        margin-bottom:10px;
-      }
-
-      .collection-tab{
-        flex:0 0 auto;
-        border:0;
-        border-radius:999px;
-        padding:9px 12px;
-        font-size:12px;
-        font-weight:1000;
-        color:#1a1200;
-        background:linear-gradient(#fff,#b7c1d5);
-        box-shadow:0 3px 0 rgba(0,0,0,.3);
-      }
-
-      .collection-tab.active{
-        background:linear-gradient(#ffe66b,#ff9f23);
-      }
-
-      .collection-grid{
-        display:grid;
-        grid-template-columns:repeat(3,1fr);
-        gap:10px;
-      }
-
-      .stone-card{
-        position:relative;
-        min-height:132px;
-        border-radius:18px;
-        padding:8px;
-        background:rgba(255,255,255,.10);
-        border:2px solid rgba(255,255,255,.22);
-        text-align:center;
-        overflow:hidden;
-      }
-
-      .stone-card.locked{
-        filter:grayscale(1);
-        opacity:.62;
-      }
-
-      .stone-img-wrap{
-        height:68px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        border-radius:14px;
-        background:rgba(0,0,0,.22);
-        margin-bottom:6px;
-      }
-
-      .stone-img{
-        width:64px;
-        height:64px;
-        object-fit:contain;
-      }
-
-      .stone-lock{
-        width:48px;
-        height:48px;
-        border-radius:14px;
-        background:rgba(0,0,0,.55);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        color:#fff;
-        font-size:24px;
-        font-weight:1000;
-      }
-
-      .stone-no{
-        font-size:11px;
-        color:#9deeff;
-        font-weight:1000;
-      }
-
-      .stone-name{
-        font-size:11px;
-        color:#fff;
-        font-weight:1000;
-        line-height:1.25;
-        min-height:28px;
-      }
-
-      .stone-rarity{
-        position:absolute;
-        top:6px;
-        left:6px;
-        min-width:34px;
-        padding:2px 6px;
-        border-radius:999px;
-        font-size:11px;
-        font-weight:1000;
-        color:#fff;
-        text-shadow:0 2px 0 #000;
-        background:rgba(0,0,0,.5);
-      }
-
-      .stone-plus{
-        position:absolute;
-        top:6px;
-        right:6px;
-        padding:2px 7px;
-        border-radius:999px;
-        font-size:11px;
-        font-weight:1000;
-        color:#181000;
-        background:linear-gradient(#fff,#ffe66b);
-      }
-
-      .stone-effect{
-        margin-top:4px;
-        font-size:10px;
-        color:#dfe8ff;
-        font-weight:800;
-      }
-
+      .collection-modal{position:absolute;inset:0;z-index:94;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(0,0,0,.68)}
+      .collection-modal.hidden{display:none}
+      .collection-card{width:min(96vw,560px);max-height:88vh;overflow:auto;border-radius:26px;padding:14px;background:linear-gradient(180deg,rgba(27,24,62,.98),rgba(5,8,22,.98));border:3px solid rgba(255,255,255,.35);box-shadow:0 18px 48px rgba(0,0,0,.62)}
+      .collection-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+      .collection-head h2{margin:0;font-size:24px;font-weight:1000;color:#fff;text-shadow:0 3px 0 #000}
+      .collection-close{border:0;border-radius:999px;padding:9px 14px;font-weight:1000;background:linear-gradient(#ffe66b,#ffb423);color:#1b1200;box-shadow:0 4px 0 rgba(0,0,0,.35)}
+      .collection-summary{margin:0 0 10px;padding:10px 12px;border-radius:16px;background:rgba(255,255,255,.10);border:2px solid rgba(255,255,255,.20);color:#dfe8ff;font-size:13px;font-weight:900;line-height:1.5}
+      .collection-tabs{display:flex;gap:8px;overflow:auto;padding-bottom:8px;margin-bottom:10px}
+      .collection-tab{flex:0 0 auto;border:0;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:1000;color:#1a1200;background:linear-gradient(#fff,#b7c1d5);box-shadow:0 3px 0 rgba(0,0,0,.3)}
+      .collection-tab.active{background:linear-gradient(#ffe66b,#ff9f23)}
+      .collection-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+      .stone-card{position:relative;min-height:132px;border-radius:18px;padding:8px;background:rgba(255,255,255,.10);border:2px solid rgba(255,255,255,.22);text-align:center;overflow:hidden}
+      .stone-card.locked{filter:grayscale(1);opacity:.62}
+      .stone-img-wrap{height:68px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:rgba(0,0,0,.22);margin-bottom:6px}
+      .stone-img{width:64px;height:64px;object-fit:contain}
+      .stone-lock{width:48px;height:48px;border-radius:14px;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:1000}
+      .stone-no{font-size:11px;color:#9deeff;font-weight:1000}
+      .stone-name{font-size:11px;color:#fff;font-weight:1000;line-height:1.25;min-height:28px}
+      .stone-rarity{position:absolute;top:6px;left:6px;min-width:34px;padding:2px 6px;border-radius:999px;font-size:11px;font-weight:1000;color:#fff;text-shadow:0 2px 0 #000;background:rgba(0,0,0,.5)}
+      .stone-plus{position:absolute;top:6px;right:6px;padding:2px 7px;border-radius:999px;font-size:11px;font-weight:1000;color:#181000;background:linear-gradient(#fff,#ffe66b)}
+      .stone-effect{margin-top:4px;font-size:10px;color:#dfe8ff;font-weight:800}
       .rarity-R{color:#dfe8ff}
       .rarity-SR{color:#6be6ff}
       .rarity-SSR{color:#ffe66b}
       .rarity-UR{color:#ff6bff}
-
-      @media (max-width:380px){
-        .collection-grid{
-          grid-template-columns:repeat(2,1fr);
-        }
-      }
+      @media (max-width:380px){.collection-grid{grid-template-columns:repeat(2,1fr)}}
     `;
     document.head.appendChild(style);
   }
 
   function categoryOf(no){
     return CATEGORY_LIST.find(c => no >= c.from && no <= c.to) || CATEGORY_LIST[0];
+  }
+
+  function stoneImage(no){
+    return `co/co${no}.png`;
   }
 
   function allStones(){
@@ -244,7 +78,7 @@
         category:cat.name,
         effect:cat.effect,
         name:`石板 No.${String(no).padStart(2, '0')}`,
-        image:`cards/card${no}.png`
+        image:stoneImage(no)
       });
     }
 
