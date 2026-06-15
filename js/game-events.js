@@ -5,37 +5,80 @@
   const EVENT_MAX_AGE_MS = 1000 * 60 * 15;
   const GOLD_TICKET_DROP_RATE = 0.08;
 
-  function readEventSafe(){
-    if (!window.MobShotEvents || !window.MobShotEvents.getCurrentEvent) {
-      return null;
+  const DIFFICULTY_ICONS = {
+    easy: 'mt/game1.png',
+    hard: 'mt/game2.png',
+    veryHard: 'mt/game3.png',
+    inferno: 'mt/game4.png',
+    legend: 'mt/game5.png'
+  };
+
+  function normalizeDifficultyKey(value){
+    const v = String(value || '').toLowerCase();
+
+    if (v === 'easy' || value === 'イージー') return 'easy';
+    if (v === 'hard' || value === 'ハード') return 'hard';
+    if (v === 'veryhard' || v === 'very_hard' || value === 'ベリーハード') return 'veryHard';
+    if (v === 'inferno' || value === 'インフェルノ') return 'inferno';
+    if (v === 'legend' || value === 'レジェンド') return 'legend';
+
+    return '';
+  }
+
+  function injectHudStyle(){
+    if (document.getElementById('mobShotHudDifficultyStyle')) return;
+
+    const style = document.createElement('style');
+    style.id = 'mobShotHudDifficultyStyle';
+    style.textContent = `
+      .game-hud .hud-item span{
+        font-size:18px !important;
+        font-weight:1000 !important;
+        letter-spacing:.02em;
+      }
+      #hudStageImg{
+        width:34px !important;
+        height:34px !important;
+        object-fit:contain !important;
+        filter:drop-shadow(0 3px 0 rgba(0,0,0,.35));
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function setHudDifficultyIcon(keyOrName){
+    injectHudStyle();
+
+    const img = document.getElementById('hudStageImg');
+    if (!img) return;
+
+    const key = normalizeDifficultyKey(keyOrName);
+    const src = DIFFICULTY_ICONS[key];
+
+    if (src) {
+      img.src = src;
     }
+  }
+
+  function readEventSafe(){
+    if (!window.MobShotEvents || !window.MobShotEvents.getCurrentEvent) return null;
 
     const ev = window.MobShotEvents.getCurrentEvent();
-
     if (!ev || !ev.key) return null;
 
     if (ev.startedAt && Date.now() - Number(ev.startedAt) > EVENT_MAX_AGE_MS) {
       if (window.MobShotEvents.clearCurrentEvent) {
         window.MobShotEvents.clearCurrentEvent();
       }
-
       return null;
     }
 
     return ev;
   }
 
-  function isGoldStageRun(core){
-    return core.isEventMode('gold');
-  }
-
-  function isScoreAttackRun(core){
-    return core.isEventMode('scoreAttack');
-  }
-
-  function isDoubleBossRun(core){
-    return core.isEventMode('doubleBoss');
-  }
+  function isGoldStageRun(core){ return core.isEventMode('gold'); }
+  function isScoreAttackRun(core){ return core.isEventMode('scoreAttack'); }
+  function isDoubleBossRun(core){ return core.isEventMode('doubleBoss'); }
 
   function startCurrentEvent(core){
     const ev = readEventSafe();
@@ -86,6 +129,8 @@
       nextBonusEnemy: core.frame + 200,
       bossCount: 0
     });
+
+    setHudDifficultyIcon(diff.key);
 
     core.showBanner(`GOLD STAGE ${diff.name}`);
     core.addText(`${diff.name} / 120秒`, core.W / 2, core.H * 0.28, '#ffcf5b');
@@ -274,6 +319,8 @@
       doubleKilled: 0
     });
 
+    setHudDifficultyIcon(diff.key);
+
     setupStageArea(core, stage.areaKey, 'DOUBLE BOSS');
 
     core.showBanner(`DOUBLE BOSS ${diff.name}`);
@@ -329,9 +376,7 @@
 
     if (core.frame >= Number(mode.nextChest || 0)) {
       const count = Math.random() < 0.16 ? 2 : 1;
-
       spawnGoldChestWave(core, count);
-
       mode.nextChest = core.frame + core.intRand(175, 270);
     }
 
@@ -345,20 +390,14 @@
       Number(mode.bossCount || 0) > 0 &&
       Number(mode.bossCount || 0) % 3 === 0
     ) {
-      const midAlive = core.state.entities.some(e =>
-        !e.dead &&
-        e.kind === 'midBoss'
-      );
+      const midAlive = core.state.entities.some(e => !e.dead && e.kind === 'midBoss');
 
       if (!midAlive && Math.random() < 0.018) {
         spawnGoldMidBoss(core);
       }
     }
 
-    const bossAlive = core.state.entities.some(e =>
-      !e.dead &&
-      e.kind === 'boss'
-    );
+    const bossAlive = core.state.entities.some(e => !e.dead && e.kind === 'boss');
 
     if (!bossAlive && core.frame >= Number(mode.nextBoss || 0)) {
       spawnGoldBoss(core);
@@ -425,22 +464,8 @@
     const gold = Math.random() < 0.2;
 
     const def = gold
-      ? {
-          name: '金の宝箱',
-          image: 'gimi/takagol.png',
-          hp: 10,
-          score: 60,
-          coinMin: 16,
-          coinMax: 34
-        }
-      : {
-          name: '銀の宝箱',
-          image: 'gimi/takagin.png',
-          hp: 6,
-          score: 30,
-          coinMin: 7,
-          coinMax: 18
-        };
+      ? { name:'金の宝箱', image:'gimi/takagol.png', hp:10, score:60, coinMin:16, coinMax:34 }
+      : { name:'銀の宝箱', image:'gimi/takagin.png', hp:6, score:30, coinMin:7, coinMax:18 };
 
     const hp = Math.ceil(def.hp * (0.9 + chestMul * 0.25));
 
@@ -487,11 +512,7 @@
 
   function updateScoreAttackMode(core){
     const mode = core.state.eventMode;
-
-    const bossAlive = core.state.entities.some(e =>
-      !e.dead &&
-      e.kind === 'boss'
-    );
+    const bossAlive = core.state.entities.some(e => !e.dead && e.kind === 'boss');
 
     if (!bossAlive) {
       mode.scoreBossIndex = Number(mode.scoreBossIndex || 0) + 1;
@@ -576,16 +597,11 @@
   }
 
   function clearExpiredGate(core){
-    const gatesAlive = core.state.entities.some(e =>
-      e.kind === 'gate' &&
-      !e.dead
-    );
+    const gatesAlive = core.state.entities.some(e => e.kind === 'gate' && !e.dead);
 
     if (!gatesAlive && core.getGateEndAt() && core.frame > core.getGateEndAt()) {
       core.state.entities.forEach(e => {
-        if (e.kind === 'gate') {
-          e.dead = true;
-        }
+        if (e.kind === 'gate') e.dead = true;
       });
 
       core.setGateEndAt(0);
@@ -655,13 +671,8 @@
       window.MobShotEvents.hasGoldCleared &&
       window.MobShotEvents.hasGoldCleared(key);
 
-    const coinReward = cleared
-      ? Number(diff.clearCoin || 300)
-      : Number(diff.firstCoin || 3000);
-
-    const diamondReward = cleared
-      ? 0
-      : Number(diff.firstDiamond || 0);
+    const coinReward = cleared ? Number(diff.clearCoin || 300) : Number(diff.firstCoin || 3000);
+    const diamondReward = cleared ? 0 : Number(diff.firstDiamond || 0);
 
     core.state.coin += coinReward;
     addDiamond(diamondReward);
@@ -719,9 +730,7 @@
     const wasDoubleBoss = isDoubleBossRun(core);
 
     if (!wasGold && !wasScoreAttack && !wasDoubleBoss) {
-      return {
-        event: false
-      };
+      return { event: false };
     }
 
     let text = '';
@@ -765,6 +774,8 @@
   }
 
   function updateHud(core){
+    injectHudStyle();
+
     if (!core.state.eventMode || !core.state.eventMode.active) {
       return false;
     }
@@ -776,11 +787,13 @@
         const remain = Math.max(0, Math.ceil((Number(mode.endFrame || 0) - core.frame) / 60));
         const diff = mode.difficulty || {};
 
+        setHudDifficultyIcon(diff.key || diff.name);
         core.hudStage.textContent = `GOLD ${diff.name || ''} ${remain}`;
       } else if (isDoubleBossRun(core)) {
         const stage = mode.doubleStage || {};
         const diff = mode.doubleDifficulty || {};
 
+        setHudDifficultyIcon(diff.key || diff.name);
         core.hudStage.textContent = `DOUBLE ${diff.name || ''} ${stage.id || ''}`;
       } else if (isScoreAttackRun(core)) {
         const now = Math.min(
@@ -794,17 +807,9 @@
       }
     }
 
-    if (core.hudScore) {
-      core.hudScore.textContent = Math.floor(core.state.score).toLocaleString();
-    }
-
-    if (core.hudCoin) {
-      core.hudCoin.textContent = Math.floor(core.state.coin).toLocaleString();
-    }
-
-    if (core.hudLife) {
-      core.hudLife.textContent = Math.max(0, Math.ceil(core.state.hp));
-    }
+    if (core.hudScore) core.hudScore.textContent = Math.floor(core.state.score).toLocaleString();
+    if (core.hudCoin) core.hudCoin.textContent = Math.floor(core.state.coin).toLocaleString();
+    if (core.hudLife) core.hudLife.textContent = Math.max(0, Math.ceil(core.state.hp));
 
     return true;
   }
