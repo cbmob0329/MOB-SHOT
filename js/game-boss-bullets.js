@@ -6,18 +6,39 @@
       window.MobShotBossData &&
       window.MobShotBossData.getAttackSpec
     ) {
-      return window.MobShotBossData.getAttackSpec(e.name);
+      const spec = window.MobShotBossData.getAttackSpec(e.name) || {};
+
+      return Object.assign({
+        image: 'atk/hawkatk.png',
+        flipY: true,
+        small: 22,
+        normal: 30,
+        big: 42,
+        huge: 56,
+        color: '#ff4aff'
+      }, spec);
     }
 
     return {
       image: 'atk/hawkatk.png',
       flipY: true,
-      small: 26,
-      normal: 34,
-      big: 48,
-      huge: 62,
+      small: 22,
+      normal: 30,
+      big: 42,
+      huge: 56,
       color: '#ff4aff'
     };
+  }
+
+  function sizeOf(spec, sizeType){
+    const raw = Number(spec[sizeType] || spec.normal || 30);
+
+    if (sizeType === 'small') return Math.max(20, raw);
+    if (sizeType === 'normal') return Math.max(28, raw);
+    if (sizeType === 'big') return Math.max(40, raw);
+    if (sizeType === 'huge') return Math.max(54, raw);
+
+    return Math.max(28, raw);
   }
 
   function playerAngle(e, tools, sx, sy){
@@ -30,7 +51,7 @@
 
     const spec = specOf(e);
     const sizeType = opt.sizeType || 'normal';
-    const r = Number(opt.r || spec[sizeType] || spec.normal || 34);
+    const r = Number(opt.r || sizeOf(spec, sizeType));
     const hp = Number(opt.hp || 0);
     const speed = Number(opt.speed || 2.8);
     const angle = Number(opt.angle || Math.PI / 2);
@@ -43,21 +64,30 @@
       y: sy,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
+
       r,
-      dmg: Number(opt.dmg || Math.max(6, Math.ceil(r * 0.45))),
+      visualR: Math.ceil(r * 1.08),
+      hitR: Math.ceil(r * 0.92),
+
+      dmg: Number(opt.dmg || Math.max(6, Math.ceil(r * 0.42))),
       hp,
       maxHp: hp,
       breakable: hp > 0,
+
       image: opt.image || spec.image,
       flipY: opt.flipY != null ? opt.flipY : spec.flipY,
+      color: opt.color || spec.color || '#ff4aff',
+
       dead: false,
       bob: 0,
-      color: opt.color || spec.color || '#ff4aff',
       life: Number(opt.life || 420),
 
       homing: !!opt.homing,
       homingPower: Number(opt.homingPower || 0.012),
-      homingSpeed: Number(opt.homingSpeed || speed)
+      homingSpeed: Number(opt.homingSpeed || speed),
+
+      glow: opt.glow !== false,
+      fromBoss: true
     });
   }
 
@@ -71,11 +101,7 @@
     pushEnemyBullet(
       e,
       tools,
-      Object.assign({}, opt, {
-        x: sx,
-        y: sy,
-        angle
-      })
+      Object.assign({}, opt, { x:sx, y:sy, angle })
     );
   }
 
@@ -83,9 +109,7 @@
     pushEnemyBullet(
       e,
       tools,
-      Object.assign({}, opt || {}, {
-        angle
-      })
+      Object.assign({}, opt || {}, { angle })
     );
   }
 
@@ -105,11 +129,7 @@
       pushEnemyBullet(
         e,
         tools,
-        Object.assign({}, opt, {
-          x: sx,
-          y: sy,
-          angle
-        })
+        Object.assign({}, opt, { x:sx, y:sy, angle })
       );
     }
   }
@@ -128,9 +148,7 @@
       pushEnemyBullet(
         e,
         tools,
-        Object.assign({}, opt, {
-          angle
-        })
+        Object.assign({}, opt, { angle })
       );
     }
   }
@@ -153,11 +171,7 @@
       pushEnemyBullet(
         e,
         tools,
-        Object.assign({}, opt, {
-          x,
-          y,
-          angle: Math.PI / 2
-        })
+        Object.assign({}, opt, { x, y, angle:Math.PI / 2 })
       );
     }
   }
@@ -369,9 +383,7 @@
       pushEnemyBullet(
         e,
         tools,
-        Object.assign({}, opt, {
-          angle
-        })
+        Object.assign({}, opt, { angle })
       );
     });
   }
