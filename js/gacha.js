@@ -31,7 +31,9 @@
   function $(id){ return document.getElementById(id); }
 
   function getSave(){
-    if (window.MobShotStorage && window.MobShotStorage.load) return window.MobShotStorage.load();
+    if (window.MobShotStorage && window.MobShotStorage.load) {
+      return window.MobShotStorage.load();
+    }
 
     try {
       return JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
@@ -91,6 +93,13 @@
 
   function rarityImage(rarity){
     return RARITY[rarity] ? RARITY[rarity].image : RARITY.R.image;
+  }
+
+  function rarityClass(rarity){
+    if (rarity === 'UR') return 'rarity-frame-ur';
+    if (rarity === 'SSR') return 'rarity-frame-ssr';
+    if (rarity === 'SR') return 'rarity-frame-sr';
+    return 'rarity-frame-r';
   }
 
   function rollRarity(){
@@ -155,7 +164,12 @@
       { key:'energyRush', name:'エネルギーラッシュ', image:'skill/energyrush.png', desc:'エネルギー弾を乱射する。' },
       { key:'twinMissile', name:'ツインミサイル', image:'skill/double missile.png', desc:'追尾ミサイルを放つ。' },
       { key:'shadowClone', name:'影分身', image:'skill/shadowclone.png', desc:'分身を召喚する。' },
-      { key:'thunderbolt', name:'サンダーボルト', image:'skill/thunderbolt.png', desc:'雷を落とす。' }
+      { key:'thunderbolt', name:'サンダーボルト', image:'skill/thunderbolt.png', desc:'雷を落とす。' },
+      { key:'arcaneBarrier', name:'アルカナバリア', image:'skill/arcane barrier.png', desc:'バリアを展開する。' },
+      { key:'darkPower', name:'闇の力', image:'skill/dark oblivion.png', desc:'闇の力で強化する。' },
+      { key:'blackHole', name:'ブラックホール', image:'skill/blackhole.png', desc:'敵を吸い寄せる。' },
+      { key:'healingBreeze', name:'癒しの風', image:'skill/healingbreeze.png', desc:'HPを回復する。' },
+      { key:'rosePulse', name:'薔薇の鼓動', image:'skill/rosepulse.png', desc:'薔薇弾で攻撃する。' }
     ];
   }
 
@@ -261,19 +275,30 @@
       .gacha-anim.zoom img{animation:gachaZoom .55s ease-out forwards}
       @keyframes gachaShake{0%{transform:translateX(-4px) rotate(-2deg)}50%{transform:translateX(4px) rotate(2deg)}100%{transform:translateX(-4px) rotate(-2deg)}}
       @keyframes gachaZoom{0%{transform:scale(1);filter:brightness(1)}100%{transform:scale(1.35);filter:brightness(2.3)}}
-      .gacha-results{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-      .gacha-result{border-radius:18px;padding:10px;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.22);text-align:center}
-      .gacha-result img.gacha-main-result-img{width:82px;height:82px;object-fit:contain}
-      .gacha-result-name{font-weight:1000;color:#fff;font-size:13px;margin-top:4px}
-      .gacha-result-rarity-img{width:54px;height:26px;object-fit:contain;margin-bottom:4px;filter:drop-shadow(0 2px 0 rgba(0,0,0,.45))}
+
+      .gacha-results{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+      .gacha-result{position:relative;border-radius:20px;padding:20px 10px 10px;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.22);text-align:center;overflow:visible}
+      .gacha-result img.gacha-main-result-img{width:92px;height:92px;object-fit:contain;position:relative;z-index:2}
+      .gacha-result-name{font-weight:1000;color:#fff;font-size:13px;margin-top:4px;position:relative;z-index:3}
+      .gacha-result-rarity-img{position:absolute;left:50%;top:-18px;width:90px;height:48px;object-fit:contain;z-index:6;transform:translateX(-50%);filter:drop-shadow(0 4px 0 rgba(0,0,0,.55));animation:gachaRarityFloat 1.7s ease-in-out infinite}
+      @keyframes gachaRarityFloat{0%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}100%{transform:translateX(-50%) translateY(0)}}
+
+      .rarity-frame-r{border-color:rgba(255,255,255,.24)}
+      .rarity-frame-sr{border-color:#58dfff;box-shadow:0 0 8px #58dfff,inset 0 0 8px rgba(88,223,255,.45)}
+      .rarity-frame-ssr{border-color:#ffd83d;box-shadow:0 0 12px #ffd83d,0 0 22px rgba(255,216,61,.78),inset 0 0 12px rgba(255,216,61,.48)}
+      .rarity-frame-ur{border-color:#ff3cff;box-shadow:0 0 6px #000,0 0 18px #ff3cff,0 0 32px #6d00ff,inset 0 0 12px #ff3cff;animation:urFramePulse 1.9s ease-in-out infinite}
+      .rarity-frame-ur:before{content:'';position:absolute;inset:4px;border-radius:16px;border:2px solid rgba(0,0,0,.85);box-shadow:inset 0 0 12px rgba(0,0,0,.85);pointer-events:none}
+      @keyframes urFramePulse{0%{filter:brightness(1)}50%{filter:brightness(1.45)}100%{filter:brightness(1)}}
+
       .gacha-skill-tag{display:inline-block;margin-bottom:5px;padding:3px 8px;border-radius:999px;background:linear-gradient(#9deeff,#4bb8ff);color:#00172a;font-size:12px;font-weight:1000}
+
       .gacha-preview{position:absolute;inset:0;z-index:140;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.76)}
       .gacha-preview.hidden{display:none}
-      .gacha-preview-card{width:min(92vw,420px);border-radius:26px;padding:16px;background:linear-gradient(180deg,rgba(33,27,70,.98),rgba(5,8,22,.98));border:3px solid rgba(255,255,255,.38);text-align:center;box-shadow:0 18px 48px rgba(0,0,0,.7)}
-      .gacha-preview-card img.preview-main{width:78%;max-height:280px;object-fit:contain;margin:8px auto}
-      .gacha-preview-card img.preview-rarity{width:92px;height:44px;object-fit:contain;filter:drop-shadow(0 3px 0 rgba(0,0,0,.45))}
-      .gacha-preview-title{font-size:20px;font-weight:1000;color:#fff;text-shadow:0 3px 0 #000}
-      .gacha-preview-desc{font-size:13px;font-weight:900;color:#dfe8ff;line-height:1.45;margin:8px 0 12px}
+      .gacha-preview-card{position:relative;width:min(92vw,420px);border-radius:26px;padding:22px 16px 16px;background:linear-gradient(180deg,rgba(33,27,70,.98),rgba(5,8,22,.98));border:3px solid rgba(255,255,255,.38);text-align:center;box-shadow:0 18px 48px rgba(0,0,0,.7);overflow:visible}
+      .gacha-preview-card img.preview-main{width:78%;max-height:280px;object-fit:contain;margin:8px auto;position:relative;z-index:2}
+      .gacha-preview-card img.preview-rarity{position:absolute;left:50%;top:-24px;width:126px;height:64px;object-fit:contain;z-index:8;transform:translateX(-50%);filter:drop-shadow(0 4px 0 rgba(0,0,0,.55));animation:gachaRarityFloat 1.7s ease-in-out infinite}
+      .gacha-preview-title{font-size:20px;font-weight:1000;color:#fff;text-shadow:0 3px 0 #000;position:relative;z-index:3}
+      .gacha-preview-desc{font-size:13px;font-weight:900;color:#dfe8ff;line-height:1.45;margin:8px 0 12px;position:relative;z-index:3}
     `;
     document.head.appendChild(style);
   }
@@ -319,7 +344,7 @@
     preview.id = 'gachaPreview';
     preview.className = 'gacha-preview hidden';
     preview.innerHTML = `
-      <div class="gacha-preview-card">
+      <div id="gachaPreviewCard" class="gacha-preview-card">
         <div id="gachaPreviewRarity"></div>
         <img id="gachaPreviewImg" class="preview-main" alt="">
         <div id="gachaPreviewTitle" class="gacha-preview-title"></div>
@@ -341,10 +366,19 @@
   function openPreview(item){
     ensurePreview();
 
+    const card = $('gachaPreviewCard');
     const rarityBox = $('gachaPreviewRarity');
     const img = $('gachaPreviewImg');
     const title = $('gachaPreviewTitle');
     const desc = $('gachaPreviewDesc');
+
+    if (card) {
+      card.className = 'gacha-preview-card';
+
+      if (item.type === 'stone') {
+        card.classList.add(rarityClass(item.rarity));
+      }
+    }
 
     if (rarityBox) {
       rarityBox.innerHTML = item.type === 'stone'
@@ -354,6 +388,7 @@
 
     if (img) img.src = item.image || '';
     if (title) title.textContent = item.name || '';
+
     if (desc) {
       if (item.type === 'stone') {
         desc.textContent = `${item.category || ''} / ${item.effect || ''} / +1 最大+${item.maxPlus || ''}`;
@@ -512,11 +547,19 @@
 
     results.forEach(result => {
       const card = document.createElement('div');
+
       card.className = 'gacha-result';
+
+      if (result.type === 'stone') {
+        card.classList.add(rarityClass(result.rarity));
+      }
+
       card.innerHTML = resultCardHtml(result);
+
       card.addEventListener('click', function(){
         openPreview(result);
       });
+
       list.appendChild(card);
     });
 
@@ -600,6 +643,7 @@
     addResult,
     rarityMax,
     rarityImage,
+    rarityClass,
     GACHA_SAVE_KEY
   };
 })();
