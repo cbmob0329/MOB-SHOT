@@ -4,10 +4,10 @@
   const GACHA_SAVE_KEY = 'mobshot_gacha_state_v1';
 
   const RARITY = {
-    R: { max:99, rate:68 },
-    SR:{ max:50, rate:24 },
-    SSR:{ max:30, rate:7 },
-    UR:{ max:10, rate:1 }
+    R: { max:99, rate:68, image:'mt/R.png' },
+    SR:{ max:50, rate:24, image:'mt/SR.png' },
+    SSR:{ max:30, rate:7, image:'mt/SSR.png' },
+    UR:{ max:10, rate:1, image:'mt/UR.png' }
   };
 
   const STONE_CATEGORIES = [
@@ -24,6 +24,9 @@
     shake:'mt/gacha3.png',
     open:'mt/gacha4.png'
   };
+
+  let isAnimating = false;
+  let lastType = 'stone';
 
   function $(id){ return document.getElementById(id); }
 
@@ -86,6 +89,10 @@
     return RARITY[rarity] ? RARITY[rarity].max : 99;
   }
 
+  function rarityImage(rarity){
+    return RARITY[rarity] ? RARITY[rarity].image : RARITY.R.image;
+  }
+
   function rollRarity(){
     const total = Object.values(RARITY).reduce((sum, r) => sum + r.rate, 0);
     let roll = Math.random() * total;
@@ -133,6 +140,7 @@
     return Object.assign({}, base, {
       type:'stone',
       rarity,
+      rarityImage:rarityImage(rarity),
       maxPlus:rarityMax(rarity)
     });
   }
@@ -143,16 +151,11 @@
     }
 
     return [
-      { key:'rocket', name:'ロケットランチャー', image:'skill/rocket barrage.png' },
-      { key:'energyRush', name:'エネルギーラッシュ', image:'skill/energyrush.png' },
-      { key:'twinMissile', name:'ツインミサイル', image:'skill/double missile.png' },
-      { key:'shadowClone', name:'影分身', image:'skill/shadowclone.png' },
-      { key:'thunderbolt', name:'サンダーボルト', image:'skill/thunderbolt.png' },
-      { key:'arcaneBarrier', name:'アルカナバリア', image:'skill/arcane barrier.png' },
-      { key:'darkPower', name:'闇の力', image:'skill/dark oblivion.png' },
-      { key:'blackHole', name:'ブラックホール', image:'skill/blackhole.png' },
-      { key:'healingBreeze', name:'癒しの風', image:'skill/healingbreeze.png' },
-      { key:'rosePulse', name:'薔薇の鼓動', image:'skill/rosepulse.png' }
+      { key:'rocket', name:'ロケットランチャー', image:'skill/rocket barrage.png', desc:'ロケット弾で攻撃する。' },
+      { key:'energyRush', name:'エネルギーラッシュ', image:'skill/energyrush.png', desc:'エネルギー弾を乱射する。' },
+      { key:'twinMissile', name:'ツインミサイル', image:'skill/double missile.png', desc:'追尾ミサイルを放つ。' },
+      { key:'shadowClone', name:'影分身', image:'skill/shadowclone.png', desc:'分身を召喚する。' },
+      { key:'thunderbolt', name:'サンダーボルト', image:'skill/thunderbolt.png', desc:'雷を落とす。' }
     ];
   }
 
@@ -201,6 +204,7 @@
       current.owned = true;
       current.name = result.name;
       current.image = result.image;
+      current.desc = result.desc || '';
       current.plus = Number(current.plus || 0) + 1;
 
       state.skills[key] = current;
@@ -244,6 +248,7 @@
       .gacha-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
       .gacha-head h2{margin:0;font-size:25px;font-weight:1000;color:#fff;text-shadow:0 3px 0 #000}
       .gacha-close,.gacha-btn{border:0;border-radius:999px;padding:10px 14px;font-weight:1000;background:linear-gradient(#ffe66b,#ffb423);color:#1d1300;box-shadow:0 4px 0 rgba(0,0,0,.35)}
+      .gacha-close.hidden{display:none}
       .gacha-main-img{display:block;width:100%;max-height:220px;object-fit:contain;margin:4px auto 10px;border-radius:18px;background:rgba(0,0,0,.22)}
       .gacha-diamond{font-weight:1000;color:#9deeff;margin:0 0 10px;text-align:center}
       .gacha-menu{display:grid;grid-template-columns:1fr;gap:10px}
@@ -258,11 +263,17 @@
       @keyframes gachaZoom{0%{transform:scale(1);filter:brightness(1)}100%{transform:scale(1.35);filter:brightness(2.3)}}
       .gacha-results{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
       .gacha-result{border-radius:18px;padding:10px;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.22);text-align:center}
-      .gacha-result img{width:82px;height:82px;object-fit:contain}
+      .gacha-result img.gacha-main-result-img{width:82px;height:82px;object-fit:contain}
       .gacha-result-name{font-weight:1000;color:#fff;font-size:13px;margin-top:4px}
-      .gacha-result-rarity{font-weight:1000;font-size:18px;text-shadow:0 2px 0 #000}
-      .rarity-R{color:#dfe8ff}.rarity-SR{color:#6be6ff}.rarity-SSR{color:#ffe66b}.rarity-UR{color:#ff6bff}
+      .gacha-result-rarity-img{width:54px;height:26px;object-fit:contain;margin-bottom:4px;filter:drop-shadow(0 2px 0 rgba(0,0,0,.45))}
       .gacha-skill-tag{display:inline-block;margin-bottom:5px;padding:3px 8px;border-radius:999px;background:linear-gradient(#9deeff,#4bb8ff);color:#00172a;font-size:12px;font-weight:1000}
+      .gacha-preview{position:absolute;inset:0;z-index:140;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.76)}
+      .gacha-preview.hidden{display:none}
+      .gacha-preview-card{width:min(92vw,420px);border-radius:26px;padding:16px;background:linear-gradient(180deg,rgba(33,27,70,.98),rgba(5,8,22,.98));border:3px solid rgba(255,255,255,.38);text-align:center;box-shadow:0 18px 48px rgba(0,0,0,.7)}
+      .gacha-preview-card img.preview-main{width:78%;max-height:280px;object-fit:contain;margin:8px auto}
+      .gacha-preview-card img.preview-rarity{width:92px;height:44px;object-fit:contain;filter:drop-shadow(0 3px 0 rgba(0,0,0,.45))}
+      .gacha-preview-title{font-size:20px;font-weight:1000;color:#fff;text-shadow:0 3px 0 #000}
+      .gacha-preview-desc{font-size:13px;font-weight:900;color:#dfe8ff;line-height:1.45;margin:8px 0 12px}
     `;
     document.head.appendChild(style);
   }
@@ -288,12 +299,80 @@
 
     ($('app') || document.body).appendChild(modal);
 
-    $('gachaCloseBtn').addEventListener('click', close);
-    modal.addEventListener('click', function(e){
-      if (e.target === modal) close();
+    $('gachaCloseBtn').addEventListener('click', function(){
+      if (!isAnimating) close();
     });
 
+    modal.addEventListener('click', function(e){
+      if (e.target === modal && !isAnimating) close();
+    });
+
+    ensurePreview();
     return modal;
+  }
+
+  function ensurePreview(){
+    let preview = $('gachaPreview');
+    if (preview) return preview;
+
+    preview = document.createElement('div');
+    preview.id = 'gachaPreview';
+    preview.className = 'gacha-preview hidden';
+    preview.innerHTML = `
+      <div class="gacha-preview-card">
+        <div id="gachaPreviewRarity"></div>
+        <img id="gachaPreviewImg" class="preview-main" alt="">
+        <div id="gachaPreviewTitle" class="gacha-preview-title"></div>
+        <div id="gachaPreviewDesc" class="gacha-preview-desc"></div>
+        <button id="gachaPreviewClose" class="gacha-btn gray" type="button">閉じる</button>
+      </div>
+    `;
+
+    ($('app') || document.body).appendChild(preview);
+
+    $('gachaPreviewClose').addEventListener('click', closePreview);
+    preview.addEventListener('click', function(e){
+      if (e.target === preview) closePreview();
+    });
+
+    return preview;
+  }
+
+  function openPreview(item){
+    ensurePreview();
+
+    const rarityBox = $('gachaPreviewRarity');
+    const img = $('gachaPreviewImg');
+    const title = $('gachaPreviewTitle');
+    const desc = $('gachaPreviewDesc');
+
+    if (rarityBox) {
+      rarityBox.innerHTML = item.type === 'stone'
+        ? `<img class="preview-rarity" src="${rarityImage(item.rarity)}" alt="${item.rarity}">`
+        : `<span class="gacha-skill-tag">SKILL</span>`;
+    }
+
+    if (img) img.src = item.image || '';
+    if (title) title.textContent = item.name || '';
+    if (desc) {
+      if (item.type === 'stone') {
+        desc.textContent = `${item.category || ''} / ${item.effect || ''} / +1 最大+${item.maxPlus || ''}`;
+      } else {
+        desc.textContent = item.desc || 'スキルを入手・強化しました。';
+      }
+    }
+
+    $('gachaPreview').classList.remove('hidden');
+  }
+
+  function closePreview(){
+    const preview = $('gachaPreview');
+    if (preview) preview.classList.add('hidden');
+  }
+
+  function setCloseVisible(show){
+    const btn = $('gachaCloseBtn');
+    if (btn) btn.classList.toggle('hidden', !show);
   }
 
   function diamondText(){
@@ -307,11 +386,16 @@
   }
 
   function close(){
+    if (isAnimating) return;
+
     const modal = $('gachaModal');
     if (modal) modal.classList.add('hidden');
   }
 
   function renderTop(){
+    isAnimating = false;
+    setCloseVisible(true);
+
     const content = $('gachaContent');
     if (!content) return;
 
@@ -331,6 +415,10 @@
   }
 
   function renderChoice(type){
+    isAnimating = false;
+    setCloseVisible(true);
+    lastType = type;
+
     const content = $('gachaContent');
     const title = type === 'stone' ? '石板ガチャ' : 'スキルガチャ';
     const oneCost = type === 'stone' ? 1 : 5;
@@ -357,6 +445,8 @@
       return;
     }
 
+    lastType = type;
+
     const results = [];
 
     for (let i = 0; i < count; i++) {
@@ -369,6 +459,9 @@
   }
 
   function playAnimation(results){
+    isAnimating = true;
+    setCloseVisible(false);
+
     const content = $('gachaContent');
 
     content.innerHTML = `
@@ -397,6 +490,8 @@
     }, 3000);
 
     setTimeout(function(){
+      isAnimating = false;
+      setCloseVisible(true);
       renderResults(results);
     }, 3700);
   }
@@ -406,42 +501,51 @@
 
     content.innerHTML = `
       <div class="gacha-diamond">${diamondText()}</div>
-      <div class="gacha-results">
-        ${results.map(resultCardHtml).join('')}
-      </div>
+      <div id="gachaResultList" class="gacha-results"></div>
       <div class="gacha-row">
         <button id="gachaAgainBtn" class="gacha-btn" type="button">もう一度</button>
         <button id="gachaDoneBtn" class="gacha-btn gray" type="button">終了</button>
       </div>
     `;
 
-    $('gachaAgainBtn').addEventListener('click', renderTop);
+    const list = $('gachaResultList');
+
+    results.forEach(result => {
+      const card = document.createElement('div');
+      card.className = 'gacha-result';
+      card.innerHTML = resultCardHtml(result);
+      card.addEventListener('click', function(){
+        openPreview(result);
+      });
+      list.appendChild(card);
+    });
+
+    $('gachaAgainBtn').addEventListener('click', function(){ renderChoice(lastType); });
     $('gachaDoneBtn').addEventListener('click', close);
   }
 
   function resultCardHtml(r){
     if (r.type === 'skill') {
       return `
-        <div class="gacha-result">
-          <div class="gacha-skill-tag">SKILL</div>
-          <img src="${r.image}" alt="${r.name}" onerror="this.style.display='none'">
-          <div class="gacha-result-name">${r.name}</div>
-          <div class="gacha-result-name">入手 / 強化</div>
-        </div>
+        <div class="gacha-skill-tag">SKILL</div>
+        <img class="gacha-main-result-img" src="${r.image}" alt="${r.name}" onerror="this.style.display='none'">
+        <div class="gacha-result-name">${r.name}</div>
+        <div class="gacha-result-name">入手 / 強化</div>
       `;
     }
 
     return `
-      <div class="gacha-result">
-        <div class="gacha-result-rarity rarity-${r.rarity}">${r.rarity}</div>
-        <img src="${r.image}" alt="${r.name}" onerror="this.style.display='none'">
-        <div class="gacha-result-name">${r.name}</div>
-        <div class="gacha-result-name">+1 / MAX ${r.maxPlus}</div>
-      </div>
+      <img class="gacha-result-rarity-img" src="${rarityImage(r.rarity)}" alt="${r.rarity}">
+      <img class="gacha-main-result-img" src="${r.image}" alt="${r.name}" onerror="this.style.display='none'">
+      <div class="gacha-result-name">${r.name}</div>
+      <div class="gacha-result-name">+1 / MAX ${r.maxPlus}</div>
     `;
   }
 
   function showMessage(text){
+    isAnimating = false;
+    setCloseVisible(true);
+
     const content = $('gachaContent');
 
     content.innerHTML = `
@@ -495,6 +599,7 @@
     rollSkill,
     addResult,
     rarityMax,
+    rarityImage,
     GACHA_SAVE_KEY
   };
 })();
