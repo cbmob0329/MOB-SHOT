@@ -57,6 +57,36 @@
     '閻魔モブ': 'enma'
   };
 
+  const DIFFICULTY_BALANCE = {
+    veryHard: {
+      hpMulExtra: 1.00,
+      minHp: 1600,
+      minFinalHp: 0,
+      cdMul: 0.82,
+      minShootCd: 42,
+      minAttackCd: 82,
+      contactMul: 1.00
+    },
+    inferno: {
+      hpMulExtra: 1.10,
+      minHp: 3000,
+      minFinalHp: 0,
+      cdMul: 0.66,
+      minShootCd: 34,
+      minAttackCd: 66,
+      contactMul: 1.25
+    },
+    legend: {
+      hpMulExtra: 1.25,
+      minHp: 5200,
+      minFinalHp: 8500,
+      cdMul: 0.52,
+      minShootCd: 28,
+      minAttackCd: 54,
+      contactMul: 1.55
+    }
+  };
+
   function normalizeName(name){
     return String(name || '')
       .replace(/\s/g, '')
@@ -120,6 +150,11 @@
     if (normalized.includes('ホーク')) return 'hawk';
 
     return 'hawk';
+  }
+
+  function getDifficultyBalance(diff){
+    const key = typeof diff === 'string' ? diff : diff && diff.key;
+    return DIFFICULTY_BALANCE[key] || DIFFICULTY_BALANCE.veryHard;
   }
 
   function getStageAreaData(areaKey){
@@ -249,27 +284,42 @@
       name: name || 'BOSS',
       image,
       hp:
-        type === 'ultraLilith' ? 900 :
-        type === 'enma' ? 780 :
-        type === 'maoh' ? 700 :
+        type === 'ultraLilith' ? 1400 :
+        type === 'enma' ? 1200 :
+        type === 'maoh' ? 1050 :
+        type === 'nep' ? 950 :
+        type === 'smith' ? 850 :
+        type === 'mail' ? 900 :
+        type === 'dragon' ? 820 :
+        type === 'lilith' ? 780 :
+        type === 'guardian' ? 720 :
+        type === 'neon' ? 680 :
+        type === 'mira' ? 560 :
         520,
       score:
         type === 'ultraLilith' ? 4500 :
         type === 'enma' ? 3800 :
+        type === 'maoh' ? 3200 :
+        type === 'nep' ? 2600 :
         2200,
       coin:
         type === 'ultraLilith' ? 700 :
         type === 'enma' ? 600 :
+        type === 'maoh' ? 420 :
         260,
       type,
       shootCd:
         type === 'ultraLilith' || type === 'enma'
           ? 105
-          : 130,
+          : type === 'neon' || type === 'smith'
+            ? 112
+            : 130,
       attackCd:
         type === 'ultraLilith' || type === 'enma'
           ? 170
-          : 220,
+          : type === 'maoh' || type === 'lilith'
+            ? 190
+            : 220,
       moveSpeed:
         type === 'guardian' || type === 'mail'
           ? 0.95
@@ -277,7 +327,9 @@
       contactDmg:
         type === 'ultraLilith' || type === 'enma'
           ? 28
-          : 18
+          : type === 'maoh'
+            ? 24
+            : 18
     };
   }
 
@@ -318,21 +370,44 @@
     const bossA = getBossDefByName(core, area, stage.bossA);
     const bossB = getBossDefByName(core, area, stage.bossB);
 
-    spawnDoubleBossEntity(core, bossA, diff, 0);
-    spawnDoubleBossEntity(core, bossB, diff, 1);
+    spawnDoubleBossEntity(core, bossA, diff, stage, 0);
+    spawnDoubleBossEntity(core, bossB, diff, stage, 1);
 
     core.state.eventMode.doubleSpawned = true;
 
     core.showBanner('2体同時出現！');
   }
 
-  function spawnDoubleBossEntity(core, def, diff, side){
-    const hpMul = Number(diff.hpMul || 1.35);
+  function spawnDoubleBossEntity(core, def, diff, stage, side){
+    const balance = getDifficultyBalance(diff);
+    const hpMul = Number(diff.hpMul || 1.35) * Number(balance.hpMulExtra || 1);
     const scoreMul = Number(diff.scoreMul || 1.25);
 
     const x = side === 0 ? core.W * 0.32 : core.W * 0.68;
     const targetY = core.H * 0.22 + side * 18;
-    const hp = Math.ceil(Number(def.hp || 300) * hpMul);
+
+    const baseHp = Number(def.hp || 300);
+    const minHp = stage && stage.final
+      ? Math.max(Number(balance.minFinalHp || 0), Number(balance.minHp || 0))
+      : Number(balance.minHp || 0);
+
+    const hp = Math.max(
+      Math.ceil(baseHp * hpMul),
+      minHp
+    );
+
+    const baseShootCd = Number(def.shootCd || 130);
+    const baseAttackCd = Number(def.attackCd || 220);
+
+    const shootCd = Math.max(
+      Number(balance.minShootCd || 30),
+      Math.floor(baseShootCd * Number(balance.cdMul || 1))
+    );
+
+    const attackCd = Math.max(
+      Number(balance.minAttackCd || 60),
+      Math.floor(baseAttackCd * Number(balance.cdMul || 1))
+    );
 
     const e = {
       kind: 'boss',
@@ -348,16 +423,18 @@
       score: Math.ceil(Number(def.score || 1000) * scoreMul),
       coin: Math.ceil(Number(def.coin || 100) * 0.25),
       type: def.type || typeFromName(def.name),
-      shootCd: Math.max(45, Math.floor(Number(def.shootCd || 130) * 0.72)),
-      attackCd: Math.max(95, Math.floor(Number(def.attackCd || 220) * 0.82)),
+      shootCd,
+      attackCd,
       targetY,
       baseY: targetY,
-      contactDmg: Number(def.contactDmg || 18),
+      contactDmg: Math.ceil(Number(def.contactDmg || 18) * Number(balance.contactMul || 1)),
       dead: false,
       bob: core.rand(0, Math.PI * 2),
       __doubleBoss: true,
       __doubleSide: side,
-      __doubleCounted: false
+      __doubleCounted: false,
+      __doubleDifficulty: diff ? diff.key : '',
+      __doubleStageId: stage ? stage.id : 0
     };
 
     core.state.entities.push(e);
@@ -440,16 +517,27 @@
     core.state.eventMode.doubleKilled = Number(core.state.eventMode.doubleKilled || 0) + 1;
 
     bossDeathEffect(core, e);
+
+    if (window.MobShotMission && window.MobShotMission.onEventBossKilled) {
+      window.MobShotMission.onEventBossKilled({
+        eventKey: 'doubleBoss',
+        bossName: e.name,
+        difficulty: e.__doubleDifficulty || '',
+        stageId: Number(e.__doubleStageId || 0)
+      });
+    }
   }
 
   window.MobShotGameBossManager = {
     BOSS_IMAGE_BY_NAME,
     BOSS_TYPE_BY_NAME,
+    DIFFICULTY_BALANCE,
 
     normalizeName,
     bossNameMatch,
     bossImageFromName,
     typeFromName,
+    getDifficultyBalance,
 
     getStageAreaData,
     allBossCandidates,
