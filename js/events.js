@@ -44,27 +44,182 @@
     return document.getElementById(id);
   }
 
+  function injectConfirmStyle(){
+    if (document.getElementById('mobEventConfirmStyle')) return;
+
+    const style = document.createElement('style');
+    style.id = 'mobEventConfirmStyle';
+    style.textContent = `
+      .mob-event-confirm{
+        position:absolute;
+        inset:0;
+        z-index:120;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:18px;
+        background:rgba(0,0,0,.72);
+      }
+      .mob-event-confirm.hidden{display:none}
+      .mob-event-confirm-card{
+        width:min(90vw,440px);
+        border-radius:28px;
+        padding:18px;
+        background:linear-gradient(180deg,rgba(34,26,70,.98),rgba(6,8,24,.98));
+        border:4px solid rgba(255,255,255,.35);
+        box-shadow:0 18px 48px rgba(0,0,0,.65), inset 0 0 0 2px rgba(255,255,255,.08);
+        text-align:center;
+      }
+      .mob-event-confirm-title{
+        margin:0 0 10px;
+        font-size:26px;
+        font-weight:1000;
+        color:#fff;
+        text-shadow:0 4px 0 #000;
+      }
+      .mob-event-confirm-sub{
+        margin:0 0 14px;
+        font-size:17px;
+        font-weight:1000;
+        color:#ffe66b;
+        line-height:1.45;
+      }
+      .mob-event-confirm-reward{
+        margin:10px 0;
+        padding:12px;
+        border-radius:18px;
+        background:rgba(255,255,255,.10);
+        border:2px solid rgba(255,255,255,.22);
+        color:#fff;
+        font-size:15px;
+        font-weight:900;
+        line-height:1.55;
+      }
+      .mob-event-confirm-extra{
+        margin:8px 0 14px;
+        color:#dfe8ff;
+        font-size:13px;
+        font-weight:800;
+        line-height:1.45;
+      }
+      .mob-event-confirm-actions{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:10px;
+      }
+      .mob-event-confirm-yes,
+      .mob-event-confirm-no{
+        border:0;
+        border-radius:999px;
+        padding:14px 18px;
+        font-size:18px;
+        font-weight:1000;
+        box-shadow:0 5px 0 rgba(0,0,0,.38);
+      }
+      .mob-event-confirm-yes{
+        background:linear-gradient(#9dff73,#26b63e);
+        color:#07370f;
+      }
+      .mob-event-confirm-no{
+        background:linear-gradient(#ffffff,#aeb7c8);
+        color:#182033;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function ensureConfirmModal(){
+    injectConfirmStyle();
+
+    let modal = qs('mobEventConfirm');
+    if (modal) return modal;
+
+    modal = document.createElement('div');
+    modal.id = 'mobEventConfirm';
+    modal.className = 'mob-event-confirm hidden';
+    modal.innerHTML = `
+      <div class="mob-event-confirm-card">
+        <h2 id="mobEventConfirmTitle" class="mob-event-confirm-title">EVENT</h2>
+        <p id="mobEventConfirmSub" class="mob-event-confirm-sub"></p>
+        <div id="mobEventConfirmReward" class="mob-event-confirm-reward"></div>
+        <div id="mobEventConfirmExtra" class="mob-event-confirm-extra"></div>
+        <div class="mob-event-confirm-actions">
+          <button id="mobEventConfirmYes" class="mob-event-confirm-yes" type="button">はい</button>
+          <button id="mobEventConfirmNo" class="mob-event-confirm-no" type="button">いいえ</button>
+        </div>
+      </div>
+    `;
+
+    const app = qs('app') || document.body;
+    app.appendChild(modal);
+
+    return modal;
+  }
+
+  function openConfirm(opt){
+    const modal = ensureConfirmModal();
+    const title = qs('mobEventConfirmTitle');
+    const sub = qs('mobEventConfirmSub');
+    const reward = qs('mobEventConfirmReward');
+    const extra = qs('mobEventConfirmExtra');
+    const yes = qs('mobEventConfirmYes');
+    const no = qs('mobEventConfirmNo');
+
+    if (title) title.textContent = opt.title || 'EVENT';
+    if (sub) sub.textContent = opt.sub || '';
+    if (reward) reward.innerHTML = String(opt.reward || '').replace(/\n/g, '<br>');
+    if (extra) extra.innerHTML = String(opt.extra || '').replace(/\n/g, '<br>');
+
+    modal.classList.remove('hidden');
+
+    yes.onclick = function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      modal.classList.add('hidden');
+      if (typeof opt.onYes === 'function') opt.onYes();
+    };
+
+    no.onclick = function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      modal.classList.add('hidden');
+      if (typeof opt.onNo === 'function') opt.onNo();
+    };
+  }
+
+  function showMessage(title, message){
+    openConfirm({
+      title,
+      sub: message,
+      reward: '',
+      extra: '',
+      onYes:null
+    });
+
+    const yes = qs('mobEventConfirmYes');
+    const no = qs('mobEventConfirmNo');
+
+    if (yes) yes.textContent = 'OK';
+    if (no) no.style.display = 'none';
+
+    yes.onclick = function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      const modal = qs('mobEventConfirm');
+      if (modal) modal.classList.add('hidden');
+      if (no) no.style.display = '';
+      yes.textContent = 'はい';
+    };
+  }
+
   function getSave(){
-    if (window.MobShotStorage && window.MobShotStorage.load) {
-      return window.MobShotStorage.load();
-    }
+    if (window.MobShotStorage && window.MobShotStorage.load) return window.MobShotStorage.load();
 
     try {
       return JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
     } catch(e) {
       return {};
     }
-  }
-
-  function saveMain(save){
-    if (window.MobShotStorage && window.MobShotStorage.save) {
-      window.MobShotStorage.save(save);
-      return;
-    }
-
-    try {
-      localStorage.setItem('mobshot_split_v1', JSON.stringify(save || {}));
-    } catch(e) {}
   }
 
   function getRank(){
@@ -76,10 +231,7 @@
   }
 
   function defaultItems(){
-    return {
-      goldTicket: TEST_GOLD_TICKET_START,
-      __testInitialized: true
-    };
+    return { goldTicket:TEST_GOLD_TICKET_START, __testInitialized:true };
   }
 
   function loadItems(){
@@ -97,7 +249,6 @@
     }
 
     items.goldTicket = Math.max(0, Number(items.goldTicket || 0));
-
     return items;
   }
 
@@ -164,9 +315,7 @@
     items.goldTicket = Math.max(0, Number(items.goldTicket || 0) + add);
     saveItems(items);
 
-    if (add > 0) {
-      addStat('goldTicketTotal', add);
-    }
+    if (add > 0) addStat('goldTicketTotal', add);
 
     render();
     window.dispatchEvent(new CustomEvent('mobshot:eventItemsUpdated'));
@@ -182,7 +331,6 @@
 
     items.goldTicket = Number(items.goldTicket || 0) - need;
     saveItems(items);
-
     addStat('goldTicketSpent', need);
 
     render();
@@ -260,9 +408,7 @@
 
   function markDoubleCleared(difficultyKey, stageId){
     const data = loadDoubleClear();
-    const key = doubleClearKey(difficultyKey, stageId);
-
-    data[key] = true;
+    data[doubleClearKey(difficultyKey, stageId)] = true;
     saveDoubleClear(data);
   }
 
@@ -270,15 +416,11 @@
     if (difficultyKey === 'veryHard') return true;
 
     if (difficultyKey === 'inferno') {
-      return DOUBLE_STAGES
-        .filter(s => !s.final)
-        .every(s => hasDoubleCleared('veryHard', s.id));
+      return DOUBLE_STAGES.filter(s => !s.final).every(s => hasDoubleCleared('veryHard', s.id));
     }
 
     if (difficultyKey === 'legend') {
-      return DOUBLE_STAGES
-        .filter(s => !s.final)
-        .every(s => hasDoubleCleared('inferno', s.id));
+      return DOUBLE_STAGES.filter(s => !s.final).every(s => hasDoubleCleared('inferno', s.id));
     }
 
     return false;
@@ -351,38 +493,21 @@
     const cleared = hasGoldCleared(diff.key);
 
     if (cleared) {
-      return `クリア報酬：${diff.clearCoin.toLocaleString()} COIN`;
+      return `クリア報酬\n${diff.clearCoin.toLocaleString()} COIN`;
     }
 
-    return `初回報酬：${diff.firstCoin.toLocaleString()} COIN + ${diff.firstDiamond} DIAMOND`;
+    return `初回報酬\n${diff.firstCoin.toLocaleString()} COIN + ${diff.firstDiamond} DIAMOND`;
   }
 
   function rewardTextDouble(diff, stage){
     const cleared = hasDoubleCleared(diff.key, stage.id);
 
-    if (cleared) {
-      return 'クリア済み：初回報酬なし';
-    }
+    if (cleared) return 'クリア済み\n初回報酬なし';
 
     const coin = stage.final ? stage.firstCoin : diff.firstCoin;
     const diamond = stage.final ? stage.firstDiamond : diff.firstDiamond;
 
-    return `初回報酬：${coin.toLocaleString()} COIN + ${diamond} DIAMOND`;
-  }
-
-  function confirmStart(title, rewardText, extra){
-    const lines = [
-      `${title}に出撃しますか？`,
-      '',
-      rewardText
-    ];
-
-    if (extra) {
-      lines.push('');
-      lines.push(extra);
-    }
-
-    return window.confirm(lines.join('\n'));
+    return `初回報酬\n${coin.toLocaleString()} COIN + ${diamond} DIAMOND`;
   }
 
   function styleModeButton(btn, color){
@@ -495,20 +620,20 @@
         if (!unlocked) return;
 
         if (getGoldTicket() <= 0) {
-          alert('GOLD TICKETがありません。通常ステージの宝箱からまれに入手できます。');
+          showMessage('GOLD TICKET不足', '通常ステージの宝箱からまれに入手できます。');
           render();
           return;
         }
 
-        const ok = confirmStart(
-          `GOLD STAGE ${diff.name}`,
-          rewardTextGold(diff),
-          '消費：GOLD TICKET 1枚'
-        );
-
-        if (!ok) return;
-
-        startEvent('gold', diff.key);
+        openConfirm({
+          title:'GOLD STAGE',
+          sub:`${diff.name}に出撃しますか？`,
+          reward:rewardTextGold(diff),
+          extra:'消費\nGOLD TICKET 1枚',
+          onYes:function(){
+            startEvent('gold', diff.key);
+          }
+        });
       });
 
       wrap.appendChild(btn);
@@ -532,15 +657,15 @@
 
       if (!unlocked) return;
 
-      const ok = confirmStart(
-        'スコアアタック',
-        '報酬：スコア記録のみ',
-        'ボス連戦に挑戦します。'
-      );
-
-      if (!ok) return;
-
-      startEvent('scoreAttack', '');
+      openConfirm({
+        title:'スコアアタック',
+        sub:'ボス連戦に挑戦しますか？',
+        reward:'報酬\nスコア記録のみ',
+        extra:'歴代ボスを順番に撃破します。',
+        onYes:function(){
+          startEvent('scoreAttack', '');
+        }
+      });
     });
 
     parent.appendChild(btn);
@@ -587,15 +712,15 @@
 
           if (!diffUnlocked) return;
 
-          const ok = confirmStart(
-            `ダブルボス ${diff.name} / ${stage.title}`,
-            rewardTextDouble(diff, stage),
-            'ボス2体が同時に出現します。'
-          );
-
-          if (!ok) return;
-
-          startEvent('doubleBoss', diff.key, stage.id);
+          openConfirm({
+            title:'ダブルボス',
+            sub:`${diff.name} / ${stage.title}に出撃しますか？`,
+            reward:rewardTextDouble(diff, stage),
+            extra:'ボス2体が同時に出現します。',
+            onYes:function(){
+              startEvent('doubleBoss', diff.key, stage.id);
+            }
+          });
         });
 
         wrap.appendChild(btn);
@@ -608,7 +733,7 @@
   function startEvent(key, difficultyKey, stageId){
     if (key === 'gold') {
       if (!consumeGoldTicket(1)) {
-        alert('GOLD TICKETがありません。通常ステージの宝箱からまれに入手できます。');
+        showMessage('GOLD TICKET不足', '通常ステージの宝箱からまれに入手できます。');
         render();
         return;
       }
@@ -616,9 +741,9 @@
 
     const eventData = {
       key,
-      difficulty: difficultyKey || '',
-      stageId: Number(stageId || 0),
-      startedAt: Date.now()
+      difficulty:difficultyKey || '',
+      stageId:Number(stageId || 0),
+      startedAt:Date.now()
     };
 
     try {
@@ -727,6 +852,7 @@
     loadItems();
     loadStats();
     bind();
+    ensureConfirmModal();
   }
 
   document.addEventListener('DOMContentLoaded', init);
