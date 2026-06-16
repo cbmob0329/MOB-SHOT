@@ -10,17 +10,97 @@
   const TEST_GOLD_TICKET_START = 10;
 
   const GOLD_DIFFICULTIES = [
-    { key:'easy', name:'イージー', color:'#9dff73', firstCoin:3000, firstDiamond:5, clearCoin:300, chestMul:0.55, bossHpMul:0.7, bossCoinMul:0.7, showMidBoss:false },
-    { key:'hard', name:'ハード', color:'#6be6ff', firstCoin:5000, firstDiamond:5, clearCoin:500, chestMul:0.8, bossHpMul:0.95, bossCoinMul:0.9, showMidBoss:false },
-    { key:'veryHard', name:'ベリーハード', color:'#ffcf5b', firstCoin:10000, firstDiamond:5, clearCoin:800, chestMul:1.1, bossHpMul:1.25, bossCoinMul:1.1, showMidBoss:false },
-    { key:'inferno', name:'インフェルノ', color:'#ff5b5b', firstCoin:15000, firstDiamond:10, clearCoin:1000, chestMul:1.4, bossHpMul:1.65, bossCoinMul:1.25, showMidBoss:true },
-    { key:'legend', name:'レジェンド', color:'#d86bff', firstCoin:30000, firstDiamond:30, clearCoin:1500, chestMul:1.85, bossHpMul:2.2, bossCoinMul:1.45, showMidBoss:true }
+    {
+      key:'easy',
+      name:'イージー',
+      icon:'mt/game1.png',
+      color:'#9dff73',
+      firstCoin:3000,
+      firstDiamond:5,
+      clearCoin:300,
+      chestMul:0.8,
+      bossHpMul:1.0,
+      bossCoinMul:1.0,
+      bossCount:1,
+      midBossCount:0,
+      enemySpawn:true,
+      showMidBoss:false,
+      label:'ボス1体 / コイン×1'
+    },
+    {
+      key:'hard',
+      name:'ハード',
+      icon:'mt/game2.png',
+      color:'#6be6ff',
+      firstCoin:8000,
+      firstDiamond:8,
+      clearCoin:800,
+      chestMul:1.4,
+      bossHpMul:1.35,
+      bossCoinMul:1.8,
+      bossCount:2,
+      midBossCount:0,
+      enemySpawn:true,
+      showMidBoss:false,
+      label:'ボス2体 / コイン×2'
+    },
+    {
+      key:'veryHard',
+      name:'ベリーハード',
+      icon:'mt/game3.png',
+      color:'#ffcf5b',
+      firstCoin:15000,
+      firstDiamond:10,
+      clearCoin:1500,
+      chestMul:2.2,
+      bossHpMul:1.8,
+      bossCoinMul:3.2,
+      bossCount:2,
+      midBossCount:1,
+      enemySpawn:true,
+      showMidBoss:true,
+      label:'ボス2体+中ボス / コイン×4'
+    },
+    {
+      key:'inferno',
+      name:'インフェルノ',
+      icon:'mt/game4.png',
+      color:'#ff5b5b',
+      firstCoin:30000,
+      firstDiamond:20,
+      clearCoin:3000,
+      chestMul:3.5,
+      bossHpMul:2.35,
+      bossCoinMul:6.0,
+      bossCount:3,
+      midBossCount:1,
+      enemySpawn:true,
+      showMidBoss:true,
+      label:'ボス3体 / コイン×8'
+    },
+    {
+      key:'legend',
+      name:'レジェンド',
+      icon:'mt/game5.png',
+      color:'#d86bff',
+      firstCoin:80000,
+      firstDiamond:50,
+      clearCoin:7000,
+      chestMul:5.5,
+      bossHpMul:3.2,
+      bossCoinMul:10.0,
+      bossCount:3,
+      midBossCount:2,
+      enemySpawn:true,
+      showMidBoss:true,
+      label:'ボス3体+雑魚湧き / コイン×15'
+    }
   ];
 
   const DOUBLE_DIFFICULTIES = [
-    { key:'veryHard', name:'ベリーハード', color:'#ffcf5b', firstCoin:5000, firstDiamond:5, hpMul:1.35, scoreMul:1.25 },
-    { key:'inferno', name:'インフェルノ', color:'#ff5b5b', firstCoin:10000, firstDiamond:10, hpMul:1.95, scoreMul:1.55 },
-    { key:'legend', name:'レジェンド', color:'#d86bff', firstCoin:30000, firstDiamond:50, hpMul:2.75, scoreMul:2.1 }
+    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', firstCoin:5000, firstDiamond:5, hpMul:1.35, scoreMul:1.25 },
+    { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', color:'#ff5b5b', firstCoin:10000, firstDiamond:10, hpMul:1.95, scoreMul:1.55 },
+    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', firstCoin:30000, firstDiamond:50, hpMul:2.75, scoreMul:2.1 }
   ];
 
   const DOUBLE_STAGES = [
@@ -42,6 +122,159 @@
 
   function qs(id){
     return document.getElementById(id);
+  }
+
+  function injectEventStyle(){
+    if (document.getElementById('mobEventUiStyle')) return;
+
+    const style = document.createElement('style');
+    style.id = 'mobEventUiStyle';
+    style.textContent = `
+      .event-card{
+        grid-template-columns:82px 1fr !important;
+        align-items:start !important;
+      }
+
+      .event-info h3{
+        font-size:20px !important;
+        margin-bottom:4px !important;
+      }
+
+      .event-info p{
+        font-size:12px !important;
+        margin-bottom:8px !important;
+      }
+
+      .event-difficulty-grid{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:9px;
+        margin-top:10px;
+      }
+
+      .event-difficulty-card{
+        position:relative;
+        width:100%;
+        min-height:74px;
+        overflow:hidden;
+        border:0;
+        border-radius:18px;
+        padding:0;
+        background:rgba(255,255,255,.08);
+        box-shadow:0 5px 0 rgba(0,0,0,.36);
+      }
+
+      .event-difficulty-card:disabled{
+        opacity:.45;
+        filter:grayscale(1);
+      }
+
+      .event-difficulty-card img{
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        object-fit:cover;
+      }
+
+      .event-difficulty-card::after{
+        content:"";
+        position:absolute;
+        inset:0;
+        background:linear-gradient(90deg,rgba(0,0,0,.68),rgba(0,0,0,.18),rgba(0,0,0,.50));
+        pointer-events:none;
+      }
+
+      .event-difficulty-name{
+        position:absolute;
+        left:14px;
+        top:9px;
+        z-index:2;
+        font-size:17px;
+        font-weight:1000;
+        color:#fff;
+        text-shadow:0 3px 0 #000;
+        letter-spacing:.04em;
+      }
+
+      .event-difficulty-small{
+        position:absolute;
+        left:14px;
+        bottom:8px;
+        z-index:2;
+        font-size:11px;
+        line-height:1.25;
+        font-weight:1000;
+        color:#dfe8ff;
+        text-shadow:0 2px 0 #000;
+        text-align:left;
+      }
+
+      .event-difficulty-badge{
+        position:absolute;
+        right:10px;
+        top:9px;
+        z-index:2;
+        padding:5px 8px;
+        border-radius:999px;
+        font-size:11px;
+        font-weight:1000;
+        color:#151000;
+        background:linear-gradient(#ffe66b,#ffb423);
+        box-shadow:0 3px 0 rgba(0,0,0,.35);
+      }
+
+      .event-ticket-text{
+        margin-top:8px;
+        font-weight:1000;
+        color:#ffcf5b;
+        text-shadow:0 2px 0 #000;
+      }
+
+      .event-double-title{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        margin:10px 0 4px;
+        font-size:16px;
+        font-weight:1000;
+        text-shadow:0 2px 0 #000;
+      }
+
+      .event-double-title img{
+        width:38px;
+        height:26px;
+        object-fit:cover;
+        border-radius:8px;
+      }
+
+      .event-stage-button{
+        width:100%;
+        border:0;
+        border-radius:16px;
+        padding:10px 12px;
+        font-size:14px;
+        font-weight:1000;
+        color:#fff;
+        text-align:left;
+        background:rgba(255,255,255,.12);
+        border:2px solid rgba(255,255,255,.22);
+        box-shadow:0 4px 0 rgba(0,0,0,.30);
+      }
+
+      .event-stage-button:disabled{
+        opacity:.45;
+        filter:grayscale(1);
+      }
+
+      .event-stage-button small{
+        display:block;
+        margin-top:3px;
+        font-size:10px;
+        color:#dfe8ff;
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   function injectConfirmStyle(){
@@ -170,6 +403,16 @@
     if (reward) reward.innerHTML = String(opt.reward || '').replace(/\n/g, '<br>');
     if (extra) extra.innerHTML = String(opt.extra || '').replace(/\n/g, '<br>');
 
+    if (yes) {
+      yes.textContent = opt.yesText || 'はい';
+      yes.style.display = '';
+    }
+
+    if (no) {
+      no.textContent = opt.noText || 'いいえ';
+      no.style.display = opt.hideNo ? 'none' : '';
+    }
+
     modal.classList.remove('hidden');
 
     yes.onclick = function(e){
@@ -193,23 +436,9 @@
       sub: message,
       reward: '',
       extra: '',
-      onYes:null
+      yesText:'OK',
+      hideNo:true
     });
-
-    const yes = qs('mobEventConfirmYes');
-    const no = qs('mobEventConfirmNo');
-
-    if (yes) yes.textContent = 'OK';
-    if (no) no.style.display = 'none';
-
-    yes.onclick = function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      const modal = qs('mobEventConfirm');
-      if (modal) modal.classList.add('hidden');
-      if (no) no.style.display = '';
-      yes.textContent = 'はい';
-    };
   }
 
   function getSave(){
@@ -479,6 +708,7 @@
     if (!modal) return;
 
     clearCurrentEvent();
+    injectEventStyle();
     render();
     modal.classList.remove('hidden');
   }
@@ -510,20 +740,9 @@
     return `初回報酬\n${coin.toLocaleString()} COIN + ${diamond} DIAMOND`;
   }
 
-  function styleModeButton(btn, color){
-    btn.style.width = '100%';
-    btn.style.textAlign = 'center';
-    btn.style.borderRadius = '18px';
-    btn.style.padding = '14px 12px';
-    btn.style.fontSize = '18px';
-    btn.style.lineHeight = '1.25';
-    btn.style.color = '#10070a';
-    btn.style.background = `linear-gradient(180deg,#ffffff,${color})`;
-    btn.style.border = `3px solid ${color}`;
-    btn.style.boxShadow = '0 5px 0 rgba(0,0,0,.36)';
-  }
-
   function render(){
+    injectEventStyle();
+
     const list = qs('eventList');
     const lock = qs('eventLockText');
 
@@ -584,34 +803,32 @@
     const ticket = getGoldTicket();
 
     const ticketText = document.createElement('div');
-    ticketText.style.marginTop = '8px';
-    ticketText.style.fontWeight = '1000';
-    ticketText.style.color = '#ffcf5b';
+    ticketText.className = 'event-ticket-text';
     ticketText.textContent = `GOLD TICKET: ${ticket}`;
 
     parent.appendChild(ticketText);
 
     const wrap = document.createElement('div');
-    wrap.style.display = 'grid';
-    wrap.style.gridTemplateColumns = '1fr';
-    wrap.style.gap = '9px';
-    wrap.style.marginTop = '10px';
+    wrap.className = 'event-difficulty-grid';
 
     GOLD_DIFFICULTIES.forEach(diff => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'event-play-btn';
+      btn.className = 'event-difficulty-card';
       btn.disabled = !unlocked || ticket <= 0;
 
-      styleModeButton(btn, diff.color);
+      const status =
+        !unlocked ? 'LOCK' :
+        ticket <= 0 ? 'チケット不足' :
+        hasGoldCleared(diff.key) ? 'CLEAR済' :
+        'NEW';
 
-      if (!unlocked) {
-        btn.innerHTML = `<b>${diff.name}</b><br><small>LOCK</small>`;
-      } else if (ticket <= 0) {
-        btn.innerHTML = `<b>${diff.name}</b><br><small>チケット不足</small>`;
-      } else {
-        btn.innerHTML = `<b>${diff.name}</b>`;
-      }
+      btn.innerHTML = `
+        <img src="${diff.icon}" alt="${diff.name}">
+        <span class="event-difficulty-name">${diff.name}</span>
+        <span class="event-difficulty-small">${diff.label}</span>
+        <span class="event-difficulty-badge">${status}</span>
+      `;
 
       btn.addEventListener('click', function(e){
         e.preventDefault();
@@ -629,7 +846,7 @@
           title:'GOLD STAGE',
           sub:`${diff.name}に出撃しますか？`,
           reward:rewardTextGold(diff),
-          extra:'消費\nGOLD TICKET 1枚',
+          extra:`消費\nGOLD TICKET 1枚\n\n${diff.label}`,
           onYes:function(){
             startEvent('gold', diff.key);
           }
@@ -645,11 +862,17 @@
   function renderScoreAttackButton(parent, unlocked){
     const btn = document.createElement('button');
 
-    btn.className = 'event-play-btn';
+    btn.className = 'event-difficulty-card';
     btn.type = 'button';
     btn.disabled = !unlocked;
-    btn.textContent = unlocked ? '挑戦する' : 'LOCK';
     btn.style.marginTop = '8px';
+
+    btn.innerHTML = `
+      <img src="mt/game2.png" alt="スコアアタック">
+      <span class="event-difficulty-name">挑戦する</span>
+      <span class="event-difficulty-small">歴代ボス連戦 / ハイスコア</span>
+      <span class="event-difficulty-badge">${unlocked ? 'START' : 'LOCK'}</span>
+    `;
 
     btn.addEventListener('click', function(e){
       e.preventDefault();
@@ -675,18 +898,16 @@
     const wrap = document.createElement('div');
     wrap.style.display = 'grid';
     wrap.style.gridTemplateColumns = '1fr';
-    wrap.style.gap = '10px';
+    wrap.style.gap = '8px';
     wrap.style.marginTop = '8px';
 
     DOUBLE_DIFFICULTIES.forEach(diff => {
       const diffUnlocked = unlocked && isDoubleDifficultyUnlocked(diff.key);
 
       const title = document.createElement('div');
-      title.style.fontWeight = '1000';
+      title.className = 'event-double-title';
       title.style.color = diffUnlocked ? diff.color : '#9aa4bd';
-      title.style.fontSize = '18px';
-      title.style.marginTop = '4px';
-      title.textContent = diffUnlocked ? diff.name : `${diff.name} LOCK`;
+      title.innerHTML = `<img src="${diff.icon}" alt="${diff.name}"><span>${diffUnlocked ? diff.name : diff.name + ' LOCK'}</span>`;
 
       wrap.appendChild(title);
 
@@ -697,14 +918,12 @@
         const btn = document.createElement('button');
 
         btn.type = 'button';
-        btn.className = 'event-play-btn';
+        btn.className = 'event-stage-button';
         btn.disabled = !diffUnlocked;
 
-        styleModeButton(btn, diff.color);
-
         btn.innerHTML =
-          `<b>${stage.id}. ${stage.title}</b>` +
-          `<br><small>${cleared ? 'CLEAR' : 'NEW'}</small>`;
+          `${stage.id}. ${stage.title}` +
+          `<small>${cleared ? 'CLEAR' : 'NEW'} / ${stage.bossA} + ${stage.bossB}</small>`;
 
         btn.addEventListener('click', function(e){
           e.preventDefault();
@@ -851,6 +1070,7 @@
   function init(){
     loadItems();
     loadStats();
+    injectEventStyle();
     bind();
     ensureConfirmModal();
   }
