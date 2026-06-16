@@ -299,7 +299,7 @@ function showRewardPop(mission, reward){
   if (list) {
     list.innerHTML = `
       <div style="
-        font-size:32px;
+        font-size:26px;
         font-weight:1000;
         color:#ffd54a;
         text-align:center;
