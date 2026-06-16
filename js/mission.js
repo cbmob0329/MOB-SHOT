@@ -126,6 +126,207 @@
     return document.getElementById(id);
   }
 
+  function injectMissionRewardStyle(){
+    if ($('mobMissionRewardStyle')) return;
+
+    const style = document.createElement('style');
+    style.id = 'mobMissionRewardStyle';
+    style.textContent = `
+      .mission-reward-pop{
+        position:absolute;
+        inset:0;
+        z-index:170;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:18px;
+        background:rgba(0,0,0,.62);
+      }
+
+      .mission-reward-pop.hidden{
+        display:none;
+      }
+
+      .mission-reward-card{
+        width:min(90vw,420px);
+        border-radius:26px;
+        padding:18px;
+        text-align:center;
+        background:linear-gradient(180deg,rgba(35,28,78,.98),rgba(5,8,22,.98));
+        border:3px solid rgba(255,255,255,.38);
+        box-shadow:0 18px 48px rgba(0,0,0,.7);
+        animation:missionRewardIn .22s ease-out both;
+      }
+
+      @keyframes missionRewardIn{
+        from{transform:scale(.9) translateY(12px);opacity:0}
+        to{transform:scale(1) translateY(0);opacity:1}
+      }
+
+      .mission-reward-title{
+        font-size:26px;
+        font-weight:1000;
+        color:#ffe66b;
+        text-shadow:0 3px 0 #000,0 0 14px rgba(255,230,107,.7);
+        margin-bottom:8px;
+      }
+
+      .mission-reward-name{
+        font-size:15px;
+        font-weight:1000;
+        color:#fff;
+        line-height:1.4;
+        margin-bottom:12px;
+      }
+
+      .mission-reward-list{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:8px;
+        margin:0 0 14px;
+      }
+
+      .mission-reward-item{
+        border-radius:16px;
+        padding:10px 12px;
+        background:rgba(255,255,255,.10);
+        border:2px solid rgba(255,255,255,.20);
+        color:#dfe8ff;
+        font-weight:1000;
+        font-size:16px;
+      }
+
+      .mission-reward-item.diamond{
+        color:#9deeff;
+        box-shadow:inset 0 0 12px rgba(107,230,255,.22);
+      }
+
+      .mission-reward-item.coin{
+        color:#ffcf5b;
+        box-shadow:inset 0 0 12px rgba(255,207,91,.22);
+      }
+
+      .mission-reward-ok{
+        border:0;
+        border-radius:999px;
+        padding:12px 24px;
+        font-size:16px;
+        font-weight:1000;
+        color:#181000;
+        background:linear-gradient(#ffe66b,#ffb423);
+        box-shadow:0 5px 0 rgba(0,0,0,.35);
+      }
+
+      .mission-toast{
+        position:absolute;
+        left:50%;
+        top:22%;
+        transform:translateX(-50%);
+        z-index:180;
+        max-width:86vw;
+        min-width:220px;
+        padding:12px 16px;
+        border-radius:999px;
+        background:linear-gradient(#ffffff,#b7c1d5);
+        color:#102033;
+        font-size:14px;
+        font-weight:1000;
+        text-align:center;
+        box-shadow:0 6px 0 rgba(0,0,0,.35);
+        pointer-events:none;
+        opacity:0;
+        transition:opacity .18s, transform .18s;
+      }
+
+      .mission-toast.show{
+        opacity:1;
+        transform:translateX(-50%) translateY(-5px);
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  function ensureRewardPop(){
+    injectMissionRewardStyle();
+
+    let pop = $('missionRewardPop');
+    if (pop) return pop;
+
+    pop = document.createElement('div');
+    pop.id = 'missionRewardPop';
+    pop.className = 'mission-reward-pop hidden';
+    pop.innerHTML = `
+      <div class="mission-reward-card">
+        <div class="mission-reward-title">MISSION CLEAR!</div>
+        <div id="missionRewardName" class="mission-reward-name"></div>
+        <div id="missionRewardList" class="mission-reward-list"></div>
+        <button id="missionRewardOkBtn" class="mission-reward-ok" type="button">OK</button>
+      </div>
+    `;
+
+    ($('app') || document.body).appendChild(pop);
+
+    $('missionRewardOkBtn').addEventListener('click', closeRewardPop);
+    pop.addEventListener('click', function(e){
+      if (e.target === pop) closeRewardPop();
+    });
+
+    return pop;
+  }
+
+  function showRewardPop(mission, reward){
+    const pop = ensureRewardPop();
+    const name = $('missionRewardName');
+    const list = $('missionRewardList');
+
+    if (name) {
+      name.textContent = mission ? mission.title : '報酬を受け取りました';
+    }
+
+    const items = [];
+
+    if (reward && Number(reward.diamond || 0) > 0) {
+      items.push(`<div class="mission-reward-item diamond">◆ ${Number(reward.diamond).toLocaleString()} ダイヤ</div>`);
+    }
+
+    if (reward && Number(reward.coin || 0) > 0) {
+      items.push(`<div class="mission-reward-item coin">● ${Number(reward.coin).toLocaleString()} コイン</div>`);
+    }
+
+    if (list) {
+      list.innerHTML = items.join('') || '<div class="mission-reward-item">報酬なし</div>';
+    }
+
+    pop.classList.remove('hidden');
+  }
+
+  function closeRewardPop(){
+    const pop = $('missionRewardPop');
+    if (pop) pop.classList.add('hidden');
+  }
+
+  function showMissionToast(text){
+    injectMissionRewardStyle();
+
+    let toast = $('missionToast');
+
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'missionToast';
+      toast.className = 'mission-toast';
+      ($('app') || document.body).appendChild(toast);
+    }
+
+    toast.textContent = text;
+    toast.classList.add('show');
+
+    clearTimeout(toast.__timer);
+    toast.__timer = setTimeout(function(){
+      toast.classList.remove('show');
+    }, 1300);
+  }
+
   function defaultState(){
     return { claimed:{} };
   }
@@ -251,10 +452,8 @@
 
   function rewardText(reward){
     const parts = [];
-
     if (reward.diamond) parts.push(`${Number(reward.diamond).toLocaleString()}ダイヤ`);
     if (reward.coin) parts.push(`${Number(reward.coin).toLocaleString()}コイン`);
-
     return parts.join(' / ') || '報酬なし';
   }
 
@@ -265,13 +464,6 @@
   function progressRate(current, target){
     if (!target) return 0;
     return Math.max(0, Math.min(100, Math.floor((current / target) * 100)));
-  }
-
-  function rewardTierByTarget(target){
-    if (target >= 1000000) return 'huge';
-    if (target >= 50000) return 'large';
-    if (target >= 1000) return 'medium';
-    return 'small';
   }
 
   function scaleCoin(target, base){
@@ -341,10 +533,7 @@
         desc:'雑魚敵・中ボス・ボスを含む累計撃破数',
         currentType:'enemyKills',
         target,
-        reward:{
-          coin:scaleCoin(target, 400),
-          diamond:scaleDiamond(target, 1)
-        }
+        reward:{ coin:scaleCoin(target, 400), diamond:scaleDiamond(target, 1) }
       });
     });
 
@@ -357,10 +546,7 @@
         desc:'木箱・看板・岩・宝箱などの累計破壊数',
         currentType:'obstacleKills',
         target,
-        reward:{
-          coin:scaleCoin(target, 350),
-          diamond:scaleDiamond(target, 1)
-        }
+        reward:{ coin:scaleCoin(target, 350), diamond:scaleDiamond(target, 1) }
       });
     });
 
@@ -373,10 +559,7 @@
         desc:'中ボスの累計撃破数',
         currentType:'midBossKills',
         target,
-        reward:{
-          coin:scaleCoin(target, 2000),
-          diamond:scaleDiamond(target * 20, 2)
-        }
+        reward:{ coin:scaleCoin(target, 2000), diamond:scaleDiamond(target * 20, 2) }
       });
     });
 
@@ -389,10 +572,7 @@
         desc:'ボス・強力ボスの累計撃破数',
         currentType:'bossKills',
         target,
-        reward:{
-          coin:scaleCoin(target, 4000),
-          diamond:scaleDiamond(target * 30, 3)
-        }
+        reward:{ coin:scaleCoin(target, 4000), diamond:scaleDiamond(target * 30, 3) }
       });
     });
 
@@ -442,10 +622,7 @@
       desc:'種類を問わず、ゲートを獲得した累計回数',
       currentType:'gateCount',
       target,
-      reward:{
-        coin:scaleCoin(target, 500),
-        diamond:scaleDiamond(target, 1)
-      }
+      reward:{ coin:scaleCoin(target, 500), diamond:scaleDiamond(target, 1) }
     }));
   }
 
@@ -453,12 +630,7 @@
     const missions = [];
 
     for (let rank = 2; rank <= 100; rank++) {
-      const tier =
-        rank >= 90 ? 'huge' :
-        rank >= 60 ? 'large' :
-        rank >= 25 ? 'medium' :
-        'small';
-
+      const tier = rank >= 90 ? 'huge' : rank >= 60 ? 'large' : rank >= 25 ? 'medium' : 'small';
       const base = eventReward(tier);
 
       missions.push({
@@ -488,10 +660,7 @@
       desc:'使ったコインではなく、獲得した累計コイン',
       currentType:'totalEarnedCoin',
       target,
-      reward:{
-        coin:Math.max(1000, Math.floor(target * 0.15)),
-        diamond:scaleDiamond(target, 1)
-      }
+      reward:{ coin:Math.max(1000, Math.floor(target * 0.15)), diamond:scaleDiamond(target, 1) }
     }));
   }
 
@@ -504,10 +673,7 @@
       desc:'累計SCOREで達成',
       currentType:'totalScore',
       target,
-      reward:{
-        coin:Math.max(1000, Math.floor(target * 0.06)),
-        diamond:scaleDiamond(target, 2)
-      }
+      reward:{ coin:Math.max(1000, Math.floor(target * 0.06)), diamond:scaleDiamond(target, 2) }
     }));
   }
 
@@ -523,10 +689,7 @@
         desc:'石板コレクションの所持枚数',
         currentType:'collectionOwned',
         target,
-        reward:{
-          coin:target * 7000,
-          diamond:0
-        }
+        reward:{ coin:target * 7000, diamond:0 }
       });
     });
 
@@ -564,10 +727,7 @@
         desc:'所持石板の強化値合計',
         currentType:'collectionTotalPlus',
         target,
-        reward:{
-          coin:scaleCoin(target, 2000),
-          diamond:0
-        }
+        reward:{ coin:scaleCoin(target, 2000), diamond:0 }
       });
     });
 
@@ -597,10 +757,7 @@
         desc:'所持しているスキルの種類数',
         currentType:'skillOwned',
         target,
-        reward:{
-          coin:target * 25000,
-          diamond:target * 1
-        }
+        reward:{ coin:target * 25000, diamond:target * 1 }
       });
     });
 
@@ -613,10 +770,7 @@
         desc:'スキルガチャで強化された合計+値',
         currentType:'skillTotalPlus',
         target,
-        reward:{
-          coin:scaleCoin(target, 3000),
-          diamond:scaleDiamond(target * 30, 4)
-        }
+        reward:{ coin:scaleCoin(target, 3000), diamond:scaleDiamond(target * 30, 4) }
       });
     });
 
@@ -629,10 +783,7 @@
         desc:'全スキルの累計使用回数',
         currentType:'skillUseCount',
         target,
-        reward:{
-          coin:scaleCoin(target, 1200),
-          diamond:scaleDiamond(target, 2)
-        }
+        reward:{ coin:scaleCoin(target, 1200), diamond:scaleDiamond(target, 2) }
       });
     });
 
@@ -653,7 +804,6 @@
 
     goldRuns.forEach(n => {
       const tier = n >= 300 ? 'huge' : n >= 100 ? 'large' : n >= 20 ? 'medium' : 'small';
-
       missions.push({
         id:`event_gold_clear_${n}`,
         tab:'event',
@@ -688,7 +838,6 @@
 
     doubleRuns.forEach(n => {
       const tier = n >= 150 ? 'huge' : n >= 50 ? 'large' : n >= 10 ? 'medium' : 'small';
-
       missions.push({
         id:`event_double_clear_${n}`,
         tab:'event',
@@ -718,7 +867,6 @@
     ].forEach(diff => {
       for (let i = 1; i <= diff.max; i++) {
         const tier = i === 7 ? 'huge' : diff.key === 'legend' ? 'large' : diff.key === 'inferno' ? 'medium' : 'small';
-
         missions.push({
           id:`event_double_${diff.key}_${i}`,
           tab:'event',
@@ -749,7 +897,6 @@
 
     tickets.forEach(n => {
       const tier = n >= 1000 ? 'huge' : n >= 300 ? 'large' : n >= 50 ? 'medium' : 'small';
-
       missions.push({
         id:`event_ticket_${n}`,
         tab:'event',
@@ -764,7 +911,6 @@
 
     bossKills.forEach(n => {
       const tier = n >= 750 ? 'huge' : n >= 200 ? 'large' : n >= 50 ? 'medium' : 'small';
-
       missions.push({
         id:`event_boss_kill_${n}`,
         tab:'event',
@@ -779,7 +925,6 @@
 
     eventCoins.forEach(n => {
       const tier = n >= 5000000 ? 'huge' : n >= 1000000 ? 'large' : n >= 100000 ? 'medium' : 'small';
-
       missions.push({
         id:`event_coin_${n}`,
         tab:'event',
@@ -828,7 +973,6 @@
 
     allStones().forEach(stone => {
       if (stone.rarity !== rarity) return;
-
       const data = gacha.stones && gacha.stones[String(stone.no)];
       if (data && data.owned) count++;
     });
@@ -849,20 +993,20 @@
 
   function skillOwnedCount(){
     const gacha = getGachaState();
-    let count = 0;
+    const set = new Set();
 
     Object.keys(gacha.skills || {}).forEach(key => {
-      if (gacha.skills[key] && gacha.skills[key].owned) count++;
+      if (gacha.skills[key] && gacha.skills[key].owned) set.add(key);
     });
 
     if (window.MobShotSkills && window.MobShotSkills.loadState) {
       const state = window.MobShotSkills.loadState();
       Object.keys(state.skills || {}).forEach(key => {
-        if (state.skills[key] && state.skills[key].owned) count++;
+        if (state.skills[key] && state.skills[key].owned) set.add(key);
       });
     }
 
-    return Math.min(count, 14);
+    return Math.min(set.size, 14);
   }
 
   function skillTotalPlus(){
@@ -953,14 +1097,14 @@
     if (!mission) return;
 
     if (missionState.claimed[id]) {
-      alert('すでに受け取り済みです。');
+      showMissionToast('すでに受け取り済みです');
       return;
     }
 
     const current = currentValue(mission, save);
 
     if (current < mission.target) {
-      alert('まだ条件を達成していません。');
+      showMissionToast('まだ条件を達成していません');
       return;
     }
 
@@ -974,7 +1118,7 @@
     saveMainData(save);
     saveState(missionState);
 
-    alert(`報酬を受け取りました！\n${rewardText(reward)}`);
+    showRewardPop(mission, reward);
     refreshAll();
   }
 
@@ -1079,6 +1223,7 @@
     const modal = $('missionModal');
     if (!modal) return;
 
+    ensureRewardPop();
     ensureExtraTabs();
     setTab(currentTab || 'stage');
     modal.classList.remove('hidden');
@@ -1091,6 +1236,7 @@
   }
 
   function bind(){
+    ensureRewardPop();
     ensureExtraTabs();
 
     const openBtn = $('openMissionBtn');
@@ -1178,20 +1324,13 @@
   function addEarnedCoin(amount){ addMissionStat('totalEarnedCoin', amount); }
   function addSkillUse(count){ addMissionStat('skillUseCount', count); }
 
-  function recordStageClear(){
-    return;
-  }
+  function recordStageClear(){ return; }
 
   function onEntityKilled(entity, rewardCoin){
     if (!entity) return;
 
-    if (entity.kind === 'gimmick' || entity.kind === 'chest') {
-      addObstacleKill(1);
-    }
-
-    if (entity.kind === 'enemy') {
-      addEnemyKill(1);
-    }
+    if (entity.kind === 'gimmick' || entity.kind === 'chest') addObstacleKill(1);
+    if (entity.kind === 'enemy') addEnemyKill(1);
 
     if (entity.kind === 'midBoss') {
       addEnemyKill(1);
@@ -1214,9 +1353,7 @@
       }
     }
 
-    if (rewardCoin) {
-      addEarnedCoin(rewardCoin);
-    }
+    if (rewardCoin) addEarnedCoin(rewardCoin);
   }
 
   function onEventBossKilled(data){
@@ -1227,17 +1364,9 @@
     render();
   }
 
-  function onGateTaken(){
-    addGateCount(1);
-  }
-
-  function onSkillUsed(){
-    addSkillUse(1);
-  }
-
-  function onStageClear(){
-    return;
-  }
+  function onGateTaken(){ addGateCount(1); }
+  function onSkillUsed(){ addSkillUse(1); }
+  function onStageClear(){ return; }
 
   function init(){
     bind();
