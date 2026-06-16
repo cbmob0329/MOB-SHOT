@@ -166,43 +166,6 @@
     };
   }
 
-  function makeMidBossEntity(def, api, opt){
-    const W = api.W;
-    const H = api.H;
-    const x = opt && opt.x != null ? opt.x : W / 2;
-    const hpMul = opt && opt.hpMul != null ? opt.hpMul : 1;
-
-    const hp = Math.ceil(Number(def.hp || 500) * hpMul);
-
-    return {
-      kind:'midBoss',
-      name:def.name || '中ボス',
-      image:def.image || 'en/enpte.png',
-      x,
-      y:-150,
-      baseY:H * 0.25,
-      targetY:H * 0.25,
-      vx:opt && opt.vx != null ? opt.vx : 1.35,
-      vy:2.25,
-      r:opt && opt.r != null ? opt.r : 64,
-      hp,
-      maxHp:hp,
-      score:Math.ceil(Number(def.score || 500) * hpMul),
-      coin:Math.ceil(Number(def.coin || 50) * hpMul),
-      dead:false,
-      shootCd:95,
-      attackCd:125,
-      diveMode:false,
-      diveReturn:false,
-      diveVx:0,
-      diveVy:0,
-      contactDmg:16,
-      hitPlayerCd:0,
-      bob:0,
-      eventBoss:true
-    };
-  }
-
   function makeEnemyEntity(def, api, hpMul, coinMul){
     const W = api.W;
 
@@ -298,11 +261,8 @@
       coin:100
     });
 
-    const count = Math.max(1, Number(diff.bossCount || 1));
-    const positions =
-      count === 1 ? [W / 2] :
-      count === 2 ? [W * 0.34, W * 0.66] :
-      [W * 0.25, W * 0.5, W * 0.75];
+    const count = 2;
+    const positions = [W * 0.34, W * 0.66];
 
     for (let i = 0; i < count; i++) {
       const boss = makeBossEntity(baseBoss, api, {
@@ -310,54 +270,18 @@
         hpMul:Number(diff.bossHpMul || 1),
         scoreMul:Number(diff.bossCoinMul || 1),
         coinMul:Number(diff.bossCoinMul || 1),
-        vx:i % 2 === 0 ? 1.35 : -1.35,
-        shootCd:Math.max(48, 82 - count * 6),
-        attackCd:Math.max(90, 135 - count * 8),
-        contactDmg:18 + (count * 2),
+        vx:i % 2 === 0 ? 1.25 : -1.25,
+        shootCd:74,
+        attackCd:125,
+        contactDmg:22,
         r:106
       });
 
-      boss.name = count > 1 ? `${baseBoss.name}${i + 1}` : baseBoss.name;
+      boss.name = `${baseBoss.name}${i + 1}`;
       state.entities.push(boss);
     }
 
     spawnedBoss = true;
-  }
-
-  function spawnGoldMidBosses(api){
-    if (spawnedMidBoss) return;
-
-    const state = api.state;
-    const D = api.D;
-    const W = api.W;
-    const diff = getGoldDifficulty();
-    const count = Math.max(0, Number(diff.midBossCount || 0));
-
-    if (count <= 0) {
-      spawnedMidBoss = true;
-      return;
-    }
-
-    const mids = D.enemies && D.enemies.midBoss && D.enemies.midBoss.length
-      ? D.enemies.midBoss
-      : [
-          { name:'モブプテラ', image:'en/enpte.png', hp:300, score:500, coin:60 }
-        ];
-
-    const positions =
-      count === 1 ? [W / 2] :
-      [W * 0.36, W * 0.64];
-
-    for (let i = 0; i < count; i++) {
-      const def = clone(mids[i % mids.length]);
-      state.entities.push(makeMidBossEntity(def, api, {
-        x:positions[i],
-        hpMul:Number(diff.bossHpMul || 1) * 0.85,
-        vx:i % 2 === 0 ? 1.35 : -1.35
-      }));
-    }
-
-    spawnedMidBoss = true;
   }
 
   function updateGold(api){
@@ -371,11 +295,7 @@
       api.showBanner(`GOLD STAGE ${diff.name}`);
     }
 
-    if (localFrame >= 50 && diff.showMidBoss) {
-      spawnGoldMidBosses(api);
-    }
-
-    if (localFrame >= (diff.showMidBoss ? 260 : 70)) {
+    if (localFrame >= 40) {
       spawnGoldBosses(api);
     }
 
@@ -383,13 +303,18 @@
       if (diff.enemySpawn !== false && D.enemies && D.enemies.zako) {
         const def = pick(D.enemies.zako);
         if (def) {
-          state.entities.push(makeEnemyEntity(def, api, Number(diff.bossHpMul || 1) * 0.45, Number(diff.bossCoinMul || 1)));
+          state.entities.push(makeEnemyEntity(
+            def,
+            api,
+            Number(diff.bossHpMul || 1) * 0.35,
+            Number(diff.bossCoinMul || 1)
+          ));
         }
       }
 
       nextEnemyAt = localFrame + intRand(
-        diff.key === 'legend' ? 55 : diff.key === 'inferno' ? 70 : 95,
-        diff.key === 'legend' ? 90 : diff.key === 'inferno' ? 115 : 150
+        diff.key === 'legend' ? 120 : diff.key === 'inferno' ? 140 : 180,
+        diff.key === 'legend' ? 180 : diff.key === 'inferno' ? 220 : 260
       );
     }
 
@@ -397,27 +322,37 @@
       if (D.gimmicks && D.gimmicks.length) {
         const def = pick(D.gimmicks);
         if (def) {
-          state.entities.push(makeGimmickEntity(def, api, Number(diff.bossHpMul || 1) * 0.55, Number(diff.chestMul || 1)));
+          state.entities.push(makeGimmickEntity(
+            def,
+            api,
+            Number(diff.bossHpMul || 1) * 0.45,
+            Number(diff.chestMul || 1)
+          ));
         }
       }
 
-      nextGimmickAt = localFrame + intRand(120, 190);
+      nextGimmickAt = localFrame + intRand(160, 240);
     }
 
     if (localFrame >= nextChestAt) {
       if (D.chests && D.chests.length && Math.random() < 0.55) {
         const def = pick(D.chests);
         if (def) {
-          state.entities.push(makeChestEntity(def, api, 1, Number(diff.chestMul || 1) * 3));
+          state.entities.push(makeChestEntity(
+            def,
+            api,
+            1,
+            Number(diff.chestMul || 1) * 3
+          ));
         }
       }
 
-      nextChestAt = localFrame + intRand(150, 230);
+      nextChestAt = localFrame + intRand(170, 260);
     }
 
     const bossAlive = state.entities.some(e =>
       !e.dead &&
-      (e.kind === 'boss' || e.kind === 'midBoss')
+      e.kind === 'boss'
     );
 
     if (spawnedBoss && !bossAlive && localFrame > 120) {
@@ -492,7 +427,6 @@
     const state = api.state;
     const info = getDoubleInfo();
     const diff = info.difficulty;
-    const stage = info.stage;
 
     localFrame++;
 
@@ -513,7 +447,7 @@
         }
       }
 
-      nextEnemyAt = localFrame + intRand(diff.key === 'legend' ? 70 : 110, diff.key === 'legend' ? 110 : 170);
+      nextEnemyAt = localFrame + intRand(diff.key === 'legend' ? 90 : 130, diff.key === 'legend' ? 150 : 210);
     }
 
     const bossAlive = state.entities.some(e => !e.dead && e.kind === 'boss');
@@ -596,9 +530,9 @@
 
     phase = 'event';
     localFrame = 0;
-    nextEnemyAt = 80;
-    nextChestAt = 130;
-    nextGimmickAt = 100;
+    nextEnemyAt = 120;
+    nextChestAt = 150;
+    nextGimmickAt = 130;
     spawnedBoss = false;
     spawnedMidBoss = false;
     scoreAttackIndex = 0;
@@ -649,7 +583,7 @@
   function onEntityKilled(entity, api){
     if (!active || !entity) return;
 
-    if (entity.kind === 'boss' || entity.kind === 'midBoss') {
+    if (entity.kind === 'boss') {
       if (window.MobShotEvents && window.MobShotEvents.recordEventBossKill) {
         window.MobShotEvents.recordEventBossKill(entity.name);
       }
