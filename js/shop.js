@@ -4,6 +4,7 @@
   const SHOP_SAVE_KEY = 'mobshot_shop_state_v1';
 
   const AVATAR_MASTER = [
+    {
           key: 'pink',
       name: 'ピンクモデル',
       price: 0,
