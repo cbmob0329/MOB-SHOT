@@ -253,19 +253,38 @@
     const W = api.W;
     const diff = getGoldDifficulty();
 
-    const baseBoss = clone(D.enemies && D.enemies.boss ? D.enemies.boss : {
-      name:'ホークモブ',
-      image:'boss/hawks.png',
-      hp:500,
-      score:1000,
-      coin:100
-    });
+const bossPairs = {
+  easy:['ホークモブ','ミラモブ'],
+  hard:['ミラモブⅡ','ネオンモブ'],
+  veryHard:['ドラゴンモブ','ドラゴンモブⅡ'],
+  inferno:['モブリリス','ドラゴンモブⅡ'],
+  legend:['モブリリス','モブ魔王']
+};
 
-    const count = 2;
-    const positions = [W * 0.34, W * 0.66];
+const names = bossPairs[diff.key] || bossPairs.easy;
 
-    for (let i = 0; i < count; i++) {
-      const boss = makeBossEntity(baseBoss, api, {
+const bossA = bossDefByName(names[0]);
+const bossB = bossDefByName(names[1]);
+
+const bosses = [bossA,bossB];
+const positions = [W * 0.34, W * 0.66];
+
+for(let i=0;i<2;i++){
+
+  const boss = makeBossEntity(bosses[i], api, {
+    x:positions[i],
+    hpMul:Number(diff.bossHpMul || 1),
+    scoreMul:Number(diff.bossCoinMul || 1),
+    coinMul:Number(diff.bossCoinMul || 1),
+    vx:i === 0 ? 1.25 : -1.25,
+    shootCd:74,
+    attackCd:125,
+    contactDmg:22,
+    r:106
+  });
+
+  state.entities.push(boss);
+}
         x:positions[i],
         hpMul:Number(diff.bossHpMul || 1),
         scoreMul:Number(diff.bossCoinMul || 1),
