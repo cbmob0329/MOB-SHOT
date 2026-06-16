@@ -278,6 +278,22 @@
     legend: 4
   };
 
+  const DIFFICULTY_BASE_SCALE = [
+    1.00,
+    2.35,
+    4.10,
+    6.30,
+    8.80
+  ];
+
+  const DIFFICULTY_MAX_SCALE = [
+    2.20,
+    4.00,
+    6.20,
+    8.80,
+    12.00
+  ];
+
   function clone(obj){
     return JSON.parse(JSON.stringify(obj));
   }
@@ -304,7 +320,10 @@
 
   function difficultyIndex(info){
     const diff = info && info.difficulty;
-    if (DIFFICULTY_ORDER[diff] != null) return DIFFICULTY_ORDER[diff];
+
+    if (DIFFICULTY_ORDER[diff] != null) {
+      return DIFFICULTY_ORDER[diff];
+    }
 
     const chapter = Number(info && info.chapter || 1);
 
@@ -319,72 +338,46 @@
   function areaIndex(info){
     const key = info && info.areaKey;
     const found = AREA_ORDER.indexOf(key);
+
     if (found >= 0) return found;
 
     const chapter = Number(info && info.chapter || 1);
     return Math.max(0, chapter - 1);
   }
 
-  function globalStageStep(info){
-    if (info && info.index != null) {
-      return Math.max(0, Number(info.index || 0));
-    }
+  function slotIndex(info){
+    const slot = Number(info && (info.areaSlot || info.stageNo) || 1);
+    return Math.max(0, slot - 1);
+  }
 
-    const diff = difficultyIndex(info);
+  function progressInDifficulty(info){
     const area = areaIndex(info);
-    const slot = Math.max(1, Number(info && info.areaSlot || info && info.stageNo || 1));
+    const slot = slotIndex(info);
 
-    return (diff * 18) + (area * 3) + (slot - 1);
-  }
+    const areaMax = AREA_ORDER.length - 1;
+    const areaRate = areaMax > 0 ? area / areaMax : 0;
+    const slotRate = slot / 2;
 
-  function stageSlotScale(info){
-    const slot = Number(info.areaSlot || info.stageNo || 1);
-
-    if (slot === 2) return 1.12;
-    if (slot === 3) return 1.25;
-    if (slot >= 4) return 1.35 + ((slot - 4) * 0.08);
-
-    return 1;
-  }
-
-  function difficultyBaseScale(info){
-    const diff = difficultyIndex(info);
-
-    if (diff === 0) return 1.00;
-    if (diff === 1) return 2.65;
-    if (diff === 2) return 5.60;
-    if (diff === 3) return 10.50;
-    if (diff === 4) return 18.00;
-
-    return 1.00;
-  }
-
-  function areaWithinDifficultyScale(info){
-    const area = areaIndex(info);
-    return 1 + (area * 0.22);
-  }
-
-  function globalProgressScale(info){
-    const step = globalStageStep(info);
-    return 1 + (step * 0.035);
+    return Math.max(0, Math.min(1, (areaRate * 0.82) + (slotRate * 0.18)));
   }
 
   function totalScale(info){
-    let scale =
-      difficultyBaseScale(info) *
-      areaWithinDifficultyScale(info) *
-      stageSlotScale(info) *
-      globalProgressScale(info);
+    const diff = difficultyIndex(info);
+    const base = DIFFICULTY_BASE_SCALE[diff] || 1;
+    const max = DIFFICULTY_MAX_SCALE[diff] || base;
+    const progress = progressInDifficulty(info);
+
+    let scale = base + ((max - base) * progress);
 
     if (info.isStrongBoss) {
-      scale *= 1.08;
+      scale += 0.18;
     }
 
     if (info.isLegend) {
-      scale *= 1.18;
+      scale += 0.35;
     }
 
-    return scale;
+    return Math.max(1, scale);
   }
 
   function scaleList(list, scale){
@@ -424,9 +417,9 @@
     const src = strong ? (area.strongBoss || area.boss) : area.boss;
     const copy = clone(src || area.boss);
 
-    copy.hp = Math.ceil(Number(copy.hp || 1) * scale * (strong ? 1.2 : 1));
-    copy.score = Math.ceil(Number(copy.score || 0) * scale * (strong ? 1.2 : 1));
-    copy.coin = Math.ceil(Number(copy.coin || 0) * scale * (strong ? 1.2 : 1));
+    copy.hp = Math.ceil(Number(copy.hp || 1) * scale * (strong ? 1.15 : 1));
+    copy.score = Math.ceil(Number(copy.score || 0) * scale * (strong ? 1.15 : 1));
+    copy.coin = Math.ceil(Number(copy.coin || 0) * scale * (strong ? 1.15 : 1));
     copy.strong = strong;
     copy.isLegendBoss = !!info.isLegend;
 
