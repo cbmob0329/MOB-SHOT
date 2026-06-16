@@ -312,7 +312,13 @@ function showRewardPop(mission, reward){
 
   pop.classList.remove('hidden');
 }
+function closeRewardPop(){
+  const pop = $('missionRewardPop');
 
+  if (pop) {
+    pop.classList.add('hidden');
+  }
+}
   function showMissionToast(text){
     injectMissionRewardStyle();
 
