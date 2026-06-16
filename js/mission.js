@@ -275,36 +275,43 @@
     return pop;
   }
 
-  function showRewardPop(mission, reward){
-    const pop = ensureRewardPop();
-    const name = $('missionRewardName');
-    const list = $('missionRewardList');
+function showRewardPop(mission, reward){
+  const pop = ensureRewardPop();
 
-    if (name) {
-      name.textContent = mission ? mission.title : '報酬を受け取りました';
-    }
+  const name = $('missionRewardName');
+  const list = $('missionRewardList');
 
-    const items = [];
-
-    if (reward && Number(reward.diamond || 0) > 0) {
-      items.push(`<div class="mission-reward-item diamond">◆ ${Number(reward.diamond).toLocaleString()} ダイヤ</div>`);
-    }
-
-    if (reward && Number(reward.coin || 0) > 0) {
-      items.push(`<div class="mission-reward-item coin">● ${Number(reward.coin).toLocaleString()} コイン</div>`);
-    }
-
-    if (list) {
-      list.innerHTML = items.join('') || '<div class="mission-reward-item">報酬なし</div>';
-    }
-
-    pop.classList.remove('hidden');
+  if (name) {
+    name.textContent = mission.title;
   }
 
-  function closeRewardPop(){
-    const pop = $('missionRewardPop');
-    if (pop) pop.classList.add('hidden');
+  let rewardText = '';
+
+  if (reward.coin > 0) {
+    rewardText += Number(reward.coin).toLocaleString() + 'コイン';
   }
+
+  if (reward.diamond > 0) {
+    if (rewardText) rewardText += ' / ';
+    rewardText += Number(reward.diamond).toLocaleString() + 'ダイヤ';
+  }
+
+  if (list) {
+    list.innerHTML = `
+      <div style="
+        font-size:32px;
+        font-weight:1000;
+        color:#ffd54a;
+        text-align:center;
+        padding:20px 0;
+      ">
+        ${rewardText}
+      </div>
+    `;
+  }
+
+  pop.classList.remove('hidden');
+}
 
   function showMissionToast(text){
     injectMissionRewardStyle();
