@@ -4,8 +4,7 @@
   const SHOP_SAVE_KEY = 'mobshot_shop_state_v1';
 
   const AVATAR_MASTER = [
-    {
-      key: 'pink',
+          key: 'pink',
       name: 'ピンクモデル',
       price: 0,
       rank: 1,
@@ -17,7 +16,7 @@
     {
       key: 'blue',
       name: 'ブルーモデル',
-      price: 1000,
+      price: 3000,
       rank: 1,
       ownedDefault: false,
       menuImage: 'play/playblue2.png',
@@ -27,7 +26,7 @@
     {
       key: 'purple',
       name: 'パープルモデル',
-      price: 1000,
+      price: 3000,
       rank: 1,
       ownedDefault: false,
       menuImage: 'play/playpar2.png',
@@ -37,7 +36,7 @@
     {
       key: 'yellow',
       name: 'イエローモデル',
-      price: 1000,
+      price: 3000,
       rank: 1,
       ownedDefault: false,
       menuImage: 'play/playye2.png',
@@ -57,7 +56,7 @@
     {
       key: 'hero',
       name: '勇者モデル',
-      price: 10000,
+      price: 15000,
       rank: 10,
       ownedDefault: false,
       menuImage: 'play/playyu2.png',
@@ -68,11 +67,253 @@
       key: 'mobbr',
       name: 'MOB BRモデル',
       price: 15000,
-      rank: 15,
+      rank: 10,
       ownedDefault: false,
       menuImage: 'play/playbr2.png',
       backImage: 'play/playbr.png',
+      desc: 'RANK10で解放 / 能力変化なし'
+    },
+    {
+      key: 'pinks',
+      name: 'ラフスタイルモデル',
+      price: 10000,
+      rank: 10,
+      ownedDefault: false,
+      menuImage: 'play/pink.png',
+      backImage: 'play/pink2.png',
+      desc: 'RANK10で解放 / 能力変化なし'
+    },
+    {
+      key: 'sabak',
+      name: '砂漠盗賊モデル',
+      price: 10000,
+      rank: 10,
+      ownedDefault: false,
+      menuImage: 'play/sabak.png',
+      backImage: 'play/sabak2.png',
+      desc: 'RANK10で解放 / 能力変化なし'
+    },
+    {
+      key: 'dot',
+      name: 'ドットモブモデル',
+      price: 15000,
+      rank: 10,
+      ownedDefault: false,
+      menuImage: 'play/dot.png',
+      backImage: 'play/dot2.png',
+      desc: 'RANK10で解放 / 能力変化なし'
+    },
+    {
+      key: 'home',
+      name: 'ホームズモデル',
+      price: 15000,
+      rank: 10,
+      ownedDefault: false,
+      menuImage: 'play/home.png',
+      backImage: 'play/home2.png',
+      desc: 'RANK10で解放 / 能力変化なし'
+    },
+    {
+      key: 'puni',
+      name: 'ぷにモブモデル',
+      price: 20000,
+      rank: 15,
+      ownedDefault: false,
+      menuImage: 'play/puni.png',
+      backImage: 'play/puni2.png',
       desc: 'RANK15で解放 / 能力変化なし'
+    },
+    {
+      key: 'gra',
+      name: 'グラディモブモデル',
+      price: 20000,
+      rank: 15,
+      ownedDefault: false,
+      menuImage: 'play/gra.png',
+      backImage: 'play/gra2.png',
+      desc: 'RANK15で解放 / 能力変化なし'
+       },
+    {
+      key: 'art',
+      name: 'MOB ARTISTモデル',
+      price: 20000,
+      rank: 15,
+      ownedDefault: false,
+      menuImage: 'play/art.png',
+      backImage: 'play/art2.png',
+      desc: 'RANK15で解放 / 能力変化なし'
+    },
+    {
+      key: 'kaeru',
+      name: 'カエルモデル',
+      price: 20000,
+      rank: 15,
+      ownedDefault: false,
+      menuImage: 'play/kaeru.png',
+      backImage: 'play/kaeru2.png',
+      desc: 'RANK15で解放 / 能力変化なし'
+　  },
+    {
+      key: 'party',
+      name: 'MOB PARTYモデル',
+      price: 20000,
+      rank: 15,
+      ownedDefault: false,
+      menuImage: 'play/party.png',
+      backImage: 'play/party2.png',
+      desc: 'RANK15で解放 / 能力変化なし'
+    },
+    {
+      key: 'gold',
+      name: 'ゴールドモデル',
+      price: 30000,
+      rank: 20,
+      ownedDefault: false,
+      menuImage: 'play/gold.png',
+      backImage: 'play/gold2.png',
+      desc: 'RANK20で解放 / 能力変化なし'
+    },
+    {
+      key: 'toy',
+      name: 'トイプーモデル',
+      price: 30000,
+      rank: 20,
+      ownedDefault: false,
+      menuImage: 'play/toy.png',
+      backImage: 'play/toy2.png',
+      desc: 'RANK20で解放 / 能力変化なし'
+    },
+    {
+      key: 'dog',
+      name: 'モフドッグモデル',
+      price: 30000,
+      rank: 20,
+      ownedDefault: false,
+      menuImage: 'play/dog.png',
+      backImage: 'play/dog2.png',
+      desc: 'RANK20で解放 / 能力変化なし'
+
+    },
+    {
+      key: 'mohu',
+      name: 'モフモフモデル',
+      price: 30000,
+      rank: 20,
+      ownedDefault: false,
+      menuImage: 'play/mohu.png',
+      backImage: 'play/mohu2.png',
+      desc: 'RANK20で解放 / 能力変化なし'
+    },
+    {
+      key: 'gab',
+      name: 'ティラノモデル',
+      price: 30000,
+      rank: 20,
+      ownedDefault: false,
+      menuImage: 'play/gab.png',
+      backImage: 'play/gab2.png',
+      desc: 'RANK20で解放 / 能力変化なし'
+    },
+    {
+      key: 'waack',
+      name: 'waackモデル',
+      price: 30000,
+      rank: 20,
+      ownedDefault: false,
+      menuImage: 'play/waack.png',
+      backImage: 'play/waack.png',
+      desc: 'RANK20で解放 / 能力変化なし'
+    },
+    {
+      key: 'magic',
+      name: 'マジックモデル',
+      price: 30000,
+      rank: 20,
+      ownedDefault: false,
+      menuImage: 'play/magic.png',
+      backImage: 'play/magic2.png',
+      desc: 'RANK20で解放 / 能力変化なし'
+    },
+    {
+      key: 'ace',
+      name: 'エースモデル',
+      price: 30000,
+      rank: 20,
+      ownedDefault: false,
+      menuImage: 'play/ace1.png',
+      backImage: 'play/ace2.png',
+      desc: 'RANK20で解放 / 能力変化なし'
+    },
+    {
+      key: 'ace2',
+      name: 'エースⅡモデル',
+      price: 30000,
+      rank: 20,
+      ownedDefault: false,
+      menuImage: 'play/ace3.png',
+      backImage: 'play/ace4.png',
+      desc: 'RANK20で解放 / 能力変化なし'
+
+    },
+    {
+      key: 'nep',
+      name: 'ネプモデル',
+      price: 50000,
+      rank: 30,
+      ownedDefault: false,
+      menuImage: 'play/nep.png',
+      backImage: 'play/nep2.png',
+      desc: 'RANK30で解放 / 能力変化なし'
+    },
+    {
+      key: 'en',
+      name: '閻魔モデル',
+      price: 50000,
+      rank: 30,
+      ownedDefault: false,
+      menuImage: 'play/en.png',
+      backImage: 'play/en2.png',
+      desc: 'RANK30で解放 / 能力変化なし'
+    },
+    {
+      key: 'riris',
+      name: 'リリスモデル',
+      price: 50000,
+      rank: 30,
+      ownedDefault: false,
+      menuImage: 'play/riris.png',
+      backImage: 'play/riris2.png',
+      desc: 'RANK30で解放 / 能力変化なし'
+    },
+    {
+      key: 'ul',
+      name: 'ウルリリスモデル',
+      price: 50000,
+      rank: 30,
+      ownedDefault: false,
+      menuImage: 'play/ulriri.png',
+      backImage: 'play/ulriri2.png',
+      desc: 'RANK30で解放 / 能力変化なし'
+    },
+    {
+      key: 'nekok',
+      name: 'ネコクーモデル',
+      price: 50000,
+      rank: 30,
+      ownedDefault: false,
+      menuImage: 'play/nekok.png',
+      backImage: 'play/nekok2.png',
+      desc: 'RANK30で解放 / 能力変化なし'
+    },
+    {
+      key: 'anohero',
+      name: 'あのヒーローモデル',
+      price: 50000,
+      rank: 30,
+      ownedDefault: false,
+      menuImage: 'play/hero.png',
+      backImage: 'play/hero2.png',
+      desc: 'RANK30で解放 / 能力変化なし'
     }
   ];
 
