@@ -5,7 +5,7 @@
 
   const AVATAR_MASTER = [
     {
-          key: 'pink',
+      key: 'pink',
       name: 'ピンクモデル',
       price: 0,
       rank: 1,
@@ -133,7 +133,7 @@
       menuImage: 'play/gra.png',
       backImage: 'play/gra2.png',
       desc: 'RANK15で解放 / 能力変化なし'
-       },
+    },
     {
       key: 'art',
       name: 'MOB ARTISTモデル',
@@ -153,7 +153,7 @@
       menuImage: 'play/kaeru.png',
       backImage: 'play/kaeru2.png',
       desc: 'RANK15で解放 / 能力変化なし'
-　  },
+    },
     {
       key: 'party',
       name: 'MOB PARTYモデル',
@@ -193,7 +193,6 @@
       menuImage: 'play/dog.png',
       backImage: 'play/dog2.png',
       desc: 'RANK20で解放 / 能力変化なし'
-
     },
     {
       key: 'mohu',
@@ -254,7 +253,6 @@
       menuImage: 'play/ace3.png',
       backImage: 'play/ace4.png',
       desc: 'RANK20で解放 / 能力変化なし'
-
     },
     {
       key: 'nep',
@@ -454,34 +452,10 @@
   ];
 
   const UPGRADE_MASTER = [
-    {
-      key: 'power',
-      name: 'POWER',
-      max: 50,
-      effectText: '攻撃力 +0.5',
-      desc: '弾ダメージを上げる'
-    },
-    {
-      key: 'range',
-      name: 'RANGE',
-      max: 10,
-      effectText: '射程 +0.5',
-      desc: '弾の飛距離を伸ばす'
-    },
-    {
-      key: 'rapid',
-      name: '攻撃速度',
-      max: 30,
-      effectText: '攻撃速度 +0.1',
-      desc: '連射速度を少し上げる'
-    },
-    {
-      key: 'hp',
-      name: 'HP',
-      max: 99,
-      effectText: '最大HP +10',
-      desc: '最大ライフを増やす'
-    }
+    { key: 'power', name: 'POWER', max: 50, effectText: '攻撃力 +0.5', desc: '弾ダメージを上げる' },
+    { key: 'range', name: 'RANGE', max: 10, effectText: '射程 +0.5', desc: '弾の飛距離を伸ばす' },
+    { key: 'rapid', name: '攻撃速度', max: 30, effectText: '攻撃速度 +0.1', desc: '連射速度を少し上げる' },
+    { key: 'hp', name: 'HP', max: 99, effectText: '最大HP +10', desc: '最大ライフを増やす' }
   ];
 
   let currentTab = 'avatar';
@@ -762,9 +736,7 @@
     modal.appendChild(fx);
 
     setTimeout(() => {
-      if (fx.parentNode) {
-        fx.parentNode.removeChild(fx);
-      }
+      if (fx.parentNode) fx.parentNode.removeChild(fx);
     }, 700);
   }
 
@@ -1017,9 +989,7 @@
       modal.__mobShopBgBound = true;
 
       modal.addEventListener('click', function(e){
-        if (e.target === modal) {
-          close();
-        }
+        if (e.target === modal) close();
       });
     }
   }
