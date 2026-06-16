@@ -42,8 +42,8 @@ window.MOBSHOT_DATA = {
     { type: 'power', label: 'パワーアップ', value: 1, weight: 8, image: 'mt/gatepower1.png', color: '#ff574a' },
     { type: 'range', label: '射程距離+1', value: 1, weight: 8, image: 'mt/gaterage1.png', color: '#4bb8ff' },
     { type: 'rapid', label: '連射速度+1', value: 1, weight: 8, image: 'mt/gaterapid1.png', color: '#ff9c2a' },
-    { type: 'life', label: 'ライフ回復+5', value: 5, weight: 3, image: 'mt/gatelife5.png', color: '#52e66b' },
-    { type: 'cooldown', label: 'スキルクールダウン-1秒', value: 1, weight: 1.2, image: 'mt/gatecd.png', color: '#b78cff' },
+    { type: 'life', label: 'ライフ回復+50', value: 50, weight: 3, image: 'mt/gatelife5.png', color: '#52e66b' },
+    { type: 'cooldown', label: 'スキルクールダウン-10秒', value: 10, weight: 1.2, image: 'mt/gatecd.png', color: '#b78cff' },
     { type: 'wide', label: 'ワイド+1', value: 1, weight: 0.05, rare: true, image: 'mt/gatewide.png', color: '#a85cff' },
     { type: 'wide', label: 'WIDE+2', value: 2, weight: 0.02, rare: true, minRank: 20, image: 'mt/gatewide2.png', color: '#a85cff' },
     { type: 'skillmax', label: 'SKILL MAX', value: 1, weight: 0.02, rare: true, minRank: 20, image: 'mt/gateskillmax.png', color: '#ffe66b' }
