@@ -21,11 +21,11 @@
       chestMul:0.8,
       bossHpMul:1.0,
       bossCoinMul:1.0,
-      bossCount:1,
+      bossCount:2,
       midBossCount:0,
       enemySpawn:true,
       showMidBoss:false,
-      label:'ボス1体 / コイン×1'
+      label:'ボス2体 / コイン×1'
     },
     {
       key:'hard',
@@ -56,10 +56,10 @@
       bossHpMul:1.8,
       bossCoinMul:3.2,
       bossCount:2,
-      midBossCount:1,
+      midBossCount:0,
       enemySpawn:true,
-      showMidBoss:true,
-      label:'ボス2体+中ボス / コイン×4'
+      showMidBoss:false,
+      label:'ボス2体 / コイン×4'
     },
     {
       key:'inferno',
@@ -72,11 +72,11 @@
       chestMul:3.5,
       bossHpMul:2.35,
       bossCoinMul:6.0,
-      bossCount:3,
-      midBossCount:1,
+      bossCount:2,
+      midBossCount:0,
       enemySpawn:true,
-      showMidBoss:true,
-      label:'ボス3体 / コイン×8'
+      showMidBoss:false,
+      label:'ボス2体 / コイン×8'
     },
     {
       key:'legend',
@@ -89,11 +89,11 @@
       chestMul:5.5,
       bossHpMul:3.2,
       bossCoinMul:10.0,
-      bossCount:3,
-      midBossCount:2,
+      bossCount:2,
+      midBossCount:0,
       enemySpawn:true,
-      showMidBoss:true,
-      label:'ボス3体+雑魚湧き / コイン×15'
+      showMidBoss:false,
+      label:'ボス2体 / コイン×15'
     }
   ];
 
