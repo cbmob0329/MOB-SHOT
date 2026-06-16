@@ -770,7 +770,7 @@ function closeRewardPop(){
         desc:'所持しているスキルの種類数',
         currentType:'skillOwned',
         target,
-        reward:{ coin:target * 25000, diamond:target * 1 }
+        reward:{ coin:target * 5000, diamond:target * 1 }
       });
     });
 
