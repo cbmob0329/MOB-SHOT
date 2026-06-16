@@ -13,7 +13,6 @@
   let nextChestAt = 0;
   let nextGimmickAt = 0;
   let spawnedBoss = false;
-  let spawnedMidBoss = false;
   let scoreAttackIndex = 0;
   let finishBonusApplied = false;
 
@@ -64,9 +63,9 @@
       chestMul:1,
       bossHpMul:1,
       bossCoinMul:1,
-      bossCount:1,
-      midBossCount:0,
-      showMidBoss:false
+      bossCount:2,
+      bosses:['ホークモブ','ミラモブ'],
+      enemySpawn:true
     };
   }
 
@@ -76,8 +75,23 @@
     }
 
     return {
-      difficulty:{ key:'veryHard', name:'ベリーハード', color:'#ffcf5b', hpMul:1.35, scoreMul:1.25, firstCoin:5000, firstDiamond:5 },
-      stage:{ id:1, areaKey:'grass', areaName:'草原', title:'草原', bossA:'ホークモブ', bossB:'ミラモブ' }
+      difficulty:{
+        key:'veryHard',
+        name:'ベリーハード',
+        color:'#ffcf5b',
+        hpMul:1.35,
+        scoreMul:1.25,
+        firstCoin:5000,
+        firstDiamond:5
+      },
+      stage:{
+        id:1,
+        areaKey:'grass',
+        areaName:'草原',
+        title:'草原',
+        bossA:'ホークモブ',
+        bossB:'ミラモブ'
+      }
     };
   }
 
@@ -129,6 +143,30 @@
     }
   }
 
+  function bossDefByName(name, fallback){
+    const stageData = window.MOBSHOT_STAGE_DATA || {};
+    const all = [];
+
+    Object.keys(stageData).forEach(key => {
+      const area = stageData[key];
+
+      if (area.boss) all.push(area.boss);
+      if (area.strongBoss) all.push(area.strongBoss);
+    });
+
+    const found = all.find(b => b && b.name === name);
+
+    if (found) return clone(found);
+
+    return clone(fallback || {
+      name:name || 'BOSS',
+      image:'boss/hawks.png',
+      hp:1000,
+      score:1000,
+      coin:300
+    });
+  }
+
   function makeBossEntity(def, api, opt){
     const W = api.W;
     const H = api.H;
@@ -168,7 +206,6 @@
 
   function makeEnemyEntity(def, api, hpMul, coinMul){
     const W = api.W;
-
     const hp = Math.ceil(Number(def.hp || 5) * hpMul);
 
     return {
@@ -249,56 +286,39 @@
     if (spawnedBoss) return;
 
     const state = api.state;
-    const D = api.D;
     const W = api.W;
     const diff = getGoldDifficulty();
 
-const bossPairs = {
-  easy:['ホークモブ','ミラモブ'],
-  hard:['ミラモブⅡ','ネオンモブ'],
-  veryHard:['ドラゴンモブ','ドラゴンモブⅡ'],
-  inferno:['モブリリス','ドラゴンモブⅡ'],
-  legend:['モブリリス','モブ魔王']
-};
+    const names = Array.isArray(diff.bosses) && diff.bosses.length
+      ? diff.bosses.slice(0, 2)
+      : ['ホークモブ','ミラモブ'];
 
-const names = bossPairs[diff.key] || bossPairs.easy;
+    while (names.length < 2) {
+      names.push(names[0] || 'ホークモブ');
+    }
 
-const bossA = bossDefByName(names[0]);
-const bossB = bossDefByName(names[1]);
+    const bosses = [
+      bossDefByName(names[0]),
+      bossDefByName(names[1], bossDefByName(names[0]))
+    ];
 
-const bosses = [bossA,bossB];
-const positions = [W * 0.34, W * 0.66];
+    const positions = [W * 0.34, W * 0.66];
 
-for(let i=0;i<2;i++){
-
-  const boss = makeBossEntity(bosses[i], api, {
-    x:positions[i],
-    hpMul:Number(diff.bossHpMul || 1),
-    scoreMul:Number(diff.bossCoinMul || 1),
-    coinMul:Number(diff.bossCoinMul || 1),
-    vx:i === 0 ? 1.25 : -1.25,
-    shootCd:74,
-    attackCd:125,
-    contactDmg:22,
-    r:106
-  });
-
-  state.entities.push(boss);
-}
-        x:positions[i],
+    bosses.forEach((def, index) => {
+      const boss = makeBossEntity(def, api, {
+        x:positions[index],
         hpMul:Number(diff.bossHpMul || 1),
         scoreMul:Number(diff.bossCoinMul || 1),
         coinMul:Number(diff.bossCoinMul || 1),
-        vx:i % 2 === 0 ? 1.25 : -1.25,
+        vx:index === 0 ? 1.25 : -1.25,
         shootCd:74,
         attackCd:125,
         contactDmg:22,
         r:106
       });
 
-      boss.name = `${baseBoss.name}${i + 1}`;
       state.entities.push(boss);
-    }
+    });
 
     spawnedBoss = true;
   }
@@ -321,6 +341,7 @@ for(let i=0;i<2;i++){
     if (localFrame >= nextEnemyAt) {
       if (diff.enemySpawn !== false && D.enemies && D.enemies.zako) {
         const def = pick(D.enemies.zako);
+
         if (def) {
           state.entities.push(makeEnemyEntity(
             def,
@@ -340,6 +361,7 @@ for(let i=0;i<2;i++){
     if (localFrame >= nextGimmickAt) {
       if (D.gimmicks && D.gimmicks.length) {
         const def = pick(D.gimmicks);
+
         if (def) {
           state.entities.push(makeGimmickEntity(
             def,
@@ -356,6 +378,7 @@ for(let i=0;i<2;i++){
     if (localFrame >= nextChestAt) {
       if (D.chests && D.chests.length && Math.random() < 0.55) {
         const def = pick(D.chests);
+
         if (def) {
           state.entities.push(makeChestEntity(
             def,
@@ -379,30 +402,6 @@ for(let i=0;i<2;i++){
     }
 
     return true;
-  }
-
-  function bossDefByName(name, fallback){
-    const stageData = window.MOBSHOT_STAGE_DATA || {};
-    const all = [];
-
-    Object.keys(stageData).forEach(key => {
-      const area = stageData[key];
-
-      if (area.boss) all.push(area.boss);
-      if (area.strongBoss) all.push(area.strongBoss);
-    });
-
-    const found = all.find(b => b && b.name === name);
-
-    if (found) return clone(found);
-
-    return clone(fallback || {
-      name:name || 'BOSS',
-      image:'boss/hawks.png',
-      hp:1000,
-      score:1000,
-      coin:300
-    });
   }
 
   function spawnDoubleBosses(api){
@@ -461,12 +460,21 @@ for(let i=0;i<2;i++){
       if (diff.key !== 'veryHard') {
         const D = api.D;
         const def = pick(D.enemies && D.enemies.zako ? D.enemies.zako : []);
+
         if (def) {
-          state.entities.push(makeEnemyEntity(def, api, Number(diff.hpMul || 1) * 0.4, Number(diff.scoreMul || 1)));
+          state.entities.push(makeEnemyEntity(
+            def,
+            api,
+            Number(diff.hpMul || 1) * 0.4,
+            Number(diff.scoreMul || 1)
+          ));
         }
       }
 
-      nextEnemyAt = localFrame + intRand(diff.key === 'legend' ? 90 : 130, diff.key === 'legend' ? 150 : 210);
+      nextEnemyAt = localFrame + intRand(
+        diff.key === 'legend' ? 90 : 130,
+        diff.key === 'legend' ? 150 : 210
+      );
     }
 
     const bossAlive = state.entities.some(e => !e.dead && e.kind === 'boss');
@@ -553,7 +561,6 @@ for(let i=0;i<2;i++){
     nextChestAt = 150;
     nextGimmickAt = 130;
     spawnedBoss = false;
-    spawnedMidBoss = false;
     scoreAttackIndex = 0;
     finishBonusApplied = false;
 
