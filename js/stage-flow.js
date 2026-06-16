@@ -250,6 +250,34 @@
     { name:'金の宝箱', image:'gimi/takagol.png', hp:18, score:160, coinMin:25, coinMax:60 }
   ];
 
+  const AREA_ORDER = [
+    'grass',
+    'desert',
+    'town',
+    'neon',
+    'magma',
+    'castle',
+    'prison',
+    'matrix',
+    'seaRail',
+    'neonHighway',
+    'makai',
+    'last'
+  ];
+
+  const DIFFICULTY_ORDER = {
+    'イージー': 0,
+    'ハード': 1,
+    'ベリーハード': 2,
+    'インフェルノ': 3,
+    'レジェンド': 4,
+    easy: 0,
+    hard: 1,
+    veryHard: 2,
+    inferno: 3,
+    legend: 4
+  };
+
   function clone(obj){
     return JSON.parse(JSON.stringify(obj));
   }
@@ -274,29 +302,86 @@
     };
   }
 
-  function chapterScale(info){
-    const chapter = Number(info.chapter || 1);
-    const base = 1 + Math.max(0, chapter - 1) * 0.25;
+  function difficultyIndex(info){
+    const diff = info && info.difficulty;
+    if (DIFFICULTY_ORDER[diff] != null) return DIFFICULTY_ORDER[diff];
 
-    if (chapter >= 14) return 4.5;
+    const chapter = Number(info && info.chapter || 1);
 
-    return base;
+    if (chapter >= 14) return 4;
+    if (chapter >= 11) return 3;
+    if (chapter >= 7) return 2;
+    if (chapter >= 3) return 1;
+
+    return 0;
+  }
+
+  function areaIndex(info){
+    const key = info && info.areaKey;
+    const found = AREA_ORDER.indexOf(key);
+    if (found >= 0) return found;
+
+    const chapter = Number(info && info.chapter || 1);
+    return Math.max(0, chapter - 1);
+  }
+
+  function globalStageStep(info){
+    if (info && info.index != null) {
+      return Math.max(0, Number(info.index || 0));
+    }
+
+    const diff = difficultyIndex(info);
+    const area = areaIndex(info);
+    const slot = Math.max(1, Number(info && info.areaSlot || info && info.stageNo || 1));
+
+    return (diff * 18) + (area * 3) + (slot - 1);
   }
 
   function stageSlotScale(info){
-    const slot = Number(info.areaSlot || 1);
+    const slot = Number(info.areaSlot || info.stageNo || 1);
 
     if (slot === 2) return 1.12;
     if (slot === 3) return 1.25;
+    if (slot >= 4) return 1.35 + ((slot - 4) * 0.08);
 
     return 1;
   }
 
+  function difficultyBaseScale(info){
+    const diff = difficultyIndex(info);
+
+    if (diff === 0) return 1.00;
+    if (diff === 1) return 2.65;
+    if (diff === 2) return 5.60;
+    if (diff === 3) return 10.50;
+    if (diff === 4) return 18.00;
+
+    return 1.00;
+  }
+
+  function areaWithinDifficultyScale(info){
+    const area = areaIndex(info);
+    return 1 + (area * 0.22);
+  }
+
+  function globalProgressScale(info){
+    const step = globalStageStep(info);
+    return 1 + (step * 0.035);
+  }
+
   function totalScale(info){
-    let scale = chapterScale(info) * stageSlotScale(info);
+    let scale =
+      difficultyBaseScale(info) *
+      areaWithinDifficultyScale(info) *
+      stageSlotScale(info) *
+      globalProgressScale(info);
+
+    if (info.isStrongBoss) {
+      scale *= 1.08;
+    }
 
     if (info.isLegend) {
-      scale *= 1.12;
+      scale *= 1.18;
     }
 
     return scale;
@@ -369,7 +454,8 @@
       background: area.background,
       isStrongBoss: !!info.isStrongBoss,
       isLegend: !!info.isLegend,
-      isTest: !!info.isTest
+      isTest: !!info.isTest,
+      stagePowerScale: scale
     });
 
     D.enemies = D.enemies || {};
