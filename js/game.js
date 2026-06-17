@@ -51,6 +51,7 @@
   let scroll = 0;
   let runCommitted = false;
   let aiErrorCount = 0;
+  let pendingRankUp = null;
 
   const images = new Map();
 
@@ -108,8 +109,253 @@
         object-fit:contain !important;
         filter:drop-shadow(0 3px 0 rgba(0,0,0,.35));
       }
+
+      .mob-rankup-modal{
+        position:absolute;
+        inset:0;
+        z-index:260;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:20px;
+        background:rgba(0,0,0,.78);
+      }
+
+      .mob-rankup-modal.hidden{
+        display:none;
+      }
+
+      .mob-rankup-card{
+        position:relative;
+        width:min(92vw,430px);
+        border-radius:32px;
+        padding:24px 18px 18px;
+        text-align:center;
+        background:linear-gradient(180deg,rgba(55,35,100,.98),rgba(8,10,28,.98));
+        border:4px solid rgba(255,230,107,.85);
+        box-shadow:
+          0 18px 55px rgba(0,0,0,.75),
+          0 0 32px rgba(255,210,60,.38),
+          inset 0 0 0 2px rgba(255,255,255,.12);
+        overflow:hidden;
+      }
+
+      .mob-rankup-card::before,
+      .mob-rankup-card::after{
+        content:"";
+        position:absolute;
+        width:180px;
+        height:180px;
+        border-radius:50%;
+        background:radial-gradient(circle,rgba(255,230,107,.75),rgba(255,230,107,0) 68%);
+        animation:mobRankGlow 1.8s ease-in-out infinite;
+        pointer-events:none;
+      }
+
+      .mob-rankup-card::before{
+        left:-70px;
+        top:-80px;
+      }
+
+      .mob-rankup-card::after{
+        right:-70px;
+        bottom:-80px;
+        animation-delay:-.9s;
+      }
+
+      .mob-rankup-title{
+        position:relative;
+        z-index:2;
+        font-size:42px;
+        font-weight:1000;
+        line-height:1;
+        letter-spacing:.04em;
+        color:#ffe66b;
+        text-shadow:
+          0 5px 0 #000,
+          0 0 18px rgba(255,230,107,.65);
+        animation:mobRankPop .42s ease-out both;
+      }
+
+      .mob-rankup-sub{
+        position:relative;
+        z-index:2;
+        margin-top:10px;
+        font-size:15px;
+        font-weight:1000;
+        color:#fff;
+        text-shadow:0 3px 0 #000;
+      }
+
+      .mob-rankup-rank{
+        position:relative;
+        z-index:2;
+        margin:18px auto 12px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:12px;
+        font-size:24px;
+        font-weight:1000;
+        color:#fff;
+        text-shadow:0 4px 0 #000;
+      }
+
+      .mob-rankup-rank b{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:82px;
+        padding:8px 12px;
+        border-radius:18px;
+        background:linear-gradient(#ff6bd8,#6b40ff);
+        border:3px solid rgba(255,255,255,.45);
+        box-shadow:0 5px 0 rgba(0,0,0,.35);
+      }
+
+      .mob-rankup-next{
+        position:relative;
+        z-index:2;
+        margin:12px auto;
+        padding:12px;
+        border-radius:18px;
+        background:rgba(255,255,255,.10);
+        border:2px solid rgba(255,255,255,.20);
+        color:#dfe8ff;
+        font-size:13px;
+        line-height:1.5;
+        font-weight:900;
+      }
+
+      .mob-rankup-ok{
+        position:relative;
+        z-index:2;
+        width:100%;
+        margin-top:12px;
+        border:0;
+        border-radius:999px;
+        padding:14px 16px;
+        font-size:18px;
+        font-weight:1000;
+        color:#261600;
+        background:linear-gradient(#fff178,#ffb423);
+        box-shadow:0 6px 0 rgba(0,0,0,.38);
+      }
+
+      .mob-rankup-spark{
+        position:absolute;
+        z-index:1;
+        width:8px;
+        height:8px;
+        border-radius:50%;
+        background:#fff178;
+        box-shadow:0 0 14px rgba(255,230,107,.9);
+        animation:mobRankSpark 1.2s ease-out infinite;
+      }
+
+      @keyframes mobRankGlow{
+        0%,100%{opacity:.55; transform:scale(.92)}
+        50%{opacity:1; transform:scale(1.12)}
+      }
+
+      @keyframes mobRankPop{
+        0%{transform:scale(.65); opacity:0}
+        70%{transform:scale(1.08); opacity:1}
+        100%{transform:scale(1); opacity:1}
+      }
+
+      @keyframes mobRankSpark{
+        0%{transform:translateY(18px) scale(.6); opacity:0}
+        20%{opacity:1}
+        100%{transform:translateY(-80px) scale(1.25); opacity:0}
+      }
     `;
     document.head.appendChild(style);
+  }
+
+  function ensureRankUpModal(){
+    injectHudStyle();
+
+    let modal = document.getElementById('mobRankUpModal');
+    if (modal) return modal;
+
+    modal = document.createElement('div');
+    modal.id = 'mobRankUpModal';
+    modal.className = 'mob-rankup-modal hidden';
+
+    modal.innerHTML = `
+      <div class="mob-rankup-card">
+        <span class="mob-rankup-spark" style="left:12%;bottom:25%;animation-delay:0s"></span>
+        <span class="mob-rankup-spark" style="left:28%;bottom:18%;animation-delay:-.25s"></span>
+        <span class="mob-rankup-spark" style="left:48%;bottom:20%;animation-delay:-.5s"></span>
+        <span class="mob-rankup-spark" style="left:70%;bottom:16%;animation-delay:-.75s"></span>
+        <span class="mob-rankup-spark" style="left:86%;bottom:27%;animation-delay:-1s"></span>
+
+        <div class="mob-rankup-title">RANK UP!</div>
+        <div id="mobRankUpSub" class="mob-rankup-sub">ランクが上がりました！</div>
+        <div class="mob-rankup-rank">
+          <b id="mobRankBefore">1</b>
+          <span>→</span>
+          <b id="mobRankAfter">2</b>
+        </div>
+        <div id="mobRankNext" class="mob-rankup-next"></div>
+        <button id="mobRankUpOk" class="mob-rankup-ok" type="button">OK</button>
+      </div>
+    `;
+
+    const gameScreen = document.getElementById('gameScreen') || document.body;
+    gameScreen.appendChild(modal);
+
+    const ok = document.getElementById('mobRankUpOk');
+    if (ok) {
+      ok.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        modal.classList.add('hidden');
+      }, { passive:false });
+
+      ok.addEventListener('pointerup', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        modal.classList.add('hidden');
+      }, { passive:false });
+    }
+
+    return modal;
+  }
+
+  function showRankUpModal(detail){
+    if (!detail) return;
+
+    const modal = ensureRankUpModal();
+
+    const beforeEl = document.getElementById('mobRankBefore');
+    const afterEl = document.getElementById('mobRankAfter');
+    const subEl = document.getElementById('mobRankUpSub');
+    const nextEl = document.getElementById('mobRankNext');
+
+    const beforeRank = Number(detail.beforeRank || 1);
+    const rank = Number(detail.rank || beforeRank);
+    const totalScore = Number(detail.totalScore || 0);
+    const nextScore = Number(detail.nextScore || 0);
+
+    if (beforeEl) beforeEl.textContent = beforeRank;
+    if (afterEl) afterEl.textContent = rank;
+    if (subEl) subEl.textContent = `RANK ${rank} に到達！`;
+
+    if (nextEl) {
+      if (nextScore > 0 && nextScore > totalScore) {
+        nextEl.innerHTML =
+          `現在SCORE: ${totalScore.toLocaleString()}<br>` +
+          `次のRANKまで: ${(nextScore - totalScore).toLocaleString()} SCORE`;
+      } else {
+        nextEl.innerHTML =
+          `現在SCORE: ${totalScore.toLocaleString()}<br>` +
+          `最高ランクに到達しています`;
+      }
+    }
+
+    modal.classList.remove('hidden');
   }
 
   function setHudDifficultyIcon(difficulty){
@@ -140,7 +386,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260615_game_hud_icon';
+      image.src = src + '?v=20260617_rankup';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -298,8 +544,10 @@
     scroll = 0;
     runCommitted = false;
     aiErrorCount = 0;
+    pendingRankUp = null;
 
     injectHudStyle();
+    ensureRankUpModal();
     restoreBaseData();
 
     const shopBonus = getShopBonus();
@@ -791,6 +1039,8 @@
   function finishRun(clear){
     if (runCommitted) return;
 
+    pendingRankUp = null;
+
     const finishData =
       window.MobShotGameEvents &&
       window.MobShotGameEvents.beforeFinish
@@ -855,6 +1105,12 @@
     }
 
     if (resultPanel) resultPanel.classList.remove('hidden');
+
+    if (pendingRankUp) {
+      setTimeout(function(){
+        showRankUpModal(pendingRankUp);
+      }, 500);
+    }
   }
 
   function testClearNow(){
@@ -954,6 +1210,9 @@
     }
 
     if (resultPanel) resultPanel.classList.add('hidden');
+
+    const rankModal = document.getElementById('mobRankUpModal');
+    if (rankModal) rankModal.classList.add('hidden');
 
     if (window.MobShotMain && window.MobShotMain.goMain) {
       window.MobShotMain.goMain();
@@ -1120,6 +1379,7 @@
       finishRun,
       stopLoopOnly,
       goMainFromResult,
+      showRankUpModal,
 
       setGateEndAt(value){
         state.gateEndAt = Number(value || 0);
@@ -1159,15 +1419,21 @@
 
   window.addEventListener('resize', resize);
 
+  window.addEventListener('mobshot:rankUp', function(e){
+    pendingRankUp = e && e.detail ? e.detail : null;
+  });
+
   window.addEventListener('DOMContentLoaded', function(){
     bindResultButtons();
     createTestClearButton();
     injectHudStyle();
+    ensureRankUpModal();
   });
 
   bindResultButtons();
   createTestClearButton();
   injectHudStyle();
+  ensureRankUpModal();
 
   window.MobShotGameCore = {
     killEntity,
@@ -1183,6 +1449,7 @@
     stop,
     showBanner,
     goMainFromResult,
-    testClearNow
+    testClearNow,
+    showRankUpModal
   };
 })();
