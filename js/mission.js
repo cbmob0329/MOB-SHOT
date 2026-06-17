@@ -6,10 +6,10 @@
   let currentTab = 'stage';
 
   const EVENT_REWARD = {
-    small: { coin:1000, diamond:4 },
-    medium:{ coin:5000, diamond:8 },
-    large:{ coin:20000, diamond:15 },
-    huge:{ coin:80000, diamond:25 }
+    small: { coin:500, diamond:4 },
+    medium:{ coin:2500, diamond:8 },
+    large:{ coin:10000, diamond:15 },
+    huge:{ coin:30000, diamond:25 }
   };
 
   const COUNT_TARGETS_LONG = [
@@ -77,49 +77,49 @@
   const RARITIES = ['R','SR','SSR','UR'];
 
   const AREA_REACH_REWARDS = [
-    { id:'reach_1_3', stageId:'1-3', title:'草原突破', coin:10000, diamond:5 },
-    { id:'reach_1_6', stageId:'1-6', title:'砂漠突破', coin:15000, diamond:7 },
-    { id:'reach_1_9', stageId:'1-9', title:'田舎町突破', coin:20000, diamond:8 },
-    { id:'reach_2_3', stageId:'2-3', title:'ネオン街突破', coin:30000, diamond:10 },
-    { id:'reach_2_6', stageId:'2-6', title:'マグマ突破', coin:50000, diamond:12 },
-    { id:'reach_2_9', stageId:'2-9', title:'魔王城突破', coin:80000, diamond:15 },
-    { id:'reach_3_9', stageId:'3-9', title:'ハード前半突破', coin:120000, diamond:18 },
-    { id:'reach_4_9', stageId:'4-9', title:'ハード完全突破', coin:180000, diamond:25 },
-    { id:'reach_5_9', stageId:'5-9', title:'ベリーハード前半突破', coin:260000, diamond:30 },
-    { id:'reach_6_9', stageId:'6-9', title:'ベリーハード完全突破', coin:360000, diamond:40 },
-    { id:'reach_7_9', stageId:'7-9', title:'インフェルノ前半突破', coin:500000, diamond:50 },
-    { id:'reach_8_9', stageId:'8-9', title:'インフェルノ完全突破', coin:750000, diamond:65 },
-    { id:'reach_9_9', stageId:'9-9', title:'監獄突破', coin:1000000, diamond:75 },
-    { id:'reach_10_9', stageId:'10-9', title:'マトリックス突破', coin:1300000, diamond:85 },
-    { id:'reach_11_9', stageId:'11-9', title:'海の線路突破', coin:1600000, diamond:95 },
-    { id:'reach_12_9', stageId:'12-9', title:'ネオン高速突破', coin:2000000, diamond:110 },
-    { id:'reach_13_9', stageId:'13-9', title:'魔界突破', coin:2600000, diamond:130 },
-    { id:'reach_14_9', stageId:'14-9', title:'魔王の間突破', coin:4000000, diamond:200 }
+    { id:'reach_1_3', stageId:'1-3', title:'草原突破', coin:5000, diamond:5 },
+    { id:'reach_1_6', stageId:'1-6', title:'砂漠突破', coin:8000, diamond:7 },
+    { id:'reach_1_9', stageId:'1-9', title:'田舎町突破', coin:12000, diamond:8 },
+    { id:'reach_2_3', stageId:'2-3', title:'ネオン街突破', coin:18000, diamond:10 },
+    { id:'reach_2_6', stageId:'2-6', title:'マグマ突破', coin:28000, diamond:12 },
+    { id:'reach_2_9', stageId:'2-9', title:'魔王城突破', coin:45000, diamond:15 },
+    { id:'reach_3_9', stageId:'3-9', title:'ハード前半突破', coin:70000, diamond:18 },
+    { id:'reach_4_9', stageId:'4-9', title:'ハード完全突破', coin:100000, diamond:25 },
+    { id:'reach_5_9', stageId:'5-9', title:'ベリーハード前半突破', coin:140000, diamond:30 },
+    { id:'reach_6_9', stageId:'6-9', title:'ベリーハード完全突破', coin:200000, diamond:40 },
+    { id:'reach_7_9', stageId:'7-9', title:'インフェルノ前半突破', coin:280000, diamond:50 },
+    { id:'reach_8_9', stageId:'8-9', title:'インフェルノ完全突破', coin:400000, diamond:65 },
+    { id:'reach_9_9', stageId:'9-9', title:'監獄突破', coin:550000, diamond:75 },
+    { id:'reach_10_9', stageId:'10-9', title:'マトリックス突破', coin:700000, diamond:85 },
+    { id:'reach_11_9', stageId:'11-9', title:'海の線路突破', coin:850000, diamond:95 },
+    { id:'reach_12_9', stageId:'12-9', title:'ネオン高速突破', coin:1050000, diamond:110 },
+    { id:'reach_13_9', stageId:'13-9', title:'魔界突破', coin:1350000, diamond:130 },
+    { id:'reach_14_9', stageId:'14-9', title:'魔王の間突破', coin:2000000, diamond:200 }
   ];
 
   const NORMAL_BOSS_FIRST = [
-    { key:'ホークモブ', coin:3000, diamond:3 },
-    { key:'ミラモブ', coin:3000, diamond:3 },
-    { key:'番人', coin:4000, diamond:3 },
-    { key:'ネオンモブ', coin:6000, diamond:4 },
-    { key:'ドラゴンモブ', coin:8000, diamond:5 },
-    { key:'モブリリス', coin:12000, diamond:8 }
+    { key:'ホークモブ', coin:2000, diamond:3 },
+    { key:'ミラモブ', coin:2000, diamond:3 },
+    { key:'番人', coin:3000, diamond:3 },
+    { key:'ネオンモブ', coin:4000, diamond:4 },
+    { key:'ドラゴンモブ', coin:6000, diamond:5 },
+    { key:'モブリリス', coin:9000, diamond:8 }
   ];
 
   const STRONG_BOSS_FIRST = [
-    { key:'ホークモブⅡ', coin:15000, diamond:10 },
-    { key:'ミラモブⅡ', coin:15000, diamond:10 },
-    { key:'番人Ⅱ', coin:20000, diamond:12 },
-    { key:'ネオンモブⅡ', coin:30000, diamond:15 },
-    { key:'ドラゴンモブⅡ', coin:50000, diamond:18 },
-    { key:'モブ魔王', coin:100000, diamond:30 },
-    { key:'モブメイル', coin:150000, diamond:35 },
-    { key:'モブスミス', coin:200000, diamond:40 },
-    { key:'モブネプ', coin:300000, diamond:45 },
-    { key:'ブルネオモブ', coin:400000, diamond:55 },
-    { key:'パルネオモブ', coin:500000, diamond:65 },
-    { key:'閻魔モブ', coin:800000, diamond:85 },
-    { key:'ウルモブリリス', coin:1500000, diamond:150 }
+    { key:'ホークモブⅡ', coin:10000, diamond:10 },
+    { key:'ミラモブⅡ', coin:10000, diamond:10 },
+    { key:'番人Ⅱ', coin:14000, diamond:12 },
+    { key:'ネオンモブⅡ', coin:20000, diamond:15 },
+    { key:'ドラゴンモブⅡ', coin:35000, diamond:18 },
+    { key:'モブ魔王', coin:70000, diamond:30 },
+    { key:'モブメイル', coin:100000, diamond:35 },
+    { key:'モブスミス', coin:130000, diamond:40 },
+    { key:'モブネプ', coin:180000, diamond:45 },
+    { key:'ブルネオモブ', coin:240000, diamond:55 },
+    { key:'パルネオモブ', coin:300000, diamond:65 },
+    { key:'閻魔モブ', coin:450000, diamond:85 },
+    { key:'ウルモブリリス', coin:800000, diamond:150 }
   ];
 
   function $(id){
@@ -184,26 +184,6 @@
         grid-template-columns:1fr;
         gap:8px;
         margin:0 0 14px;
-      }
-
-      .mission-reward-item{
-        border-radius:16px;
-        padding:10px 12px;
-        background:rgba(255,255,255,.10);
-        border:2px solid rgba(255,255,255,.20);
-        color:#dfe8ff;
-        font-weight:1000;
-        font-size:16px;
-      }
-
-      .mission-reward-item.diamond{
-        color:#9deeff;
-        box-shadow:inset 0 0 12px rgba(107,230,255,.22);
-      }
-
-      .mission-reward-item.coin{
-        color:#ffcf5b;
-        box-shadow:inset 0 0 12px rgba(255,207,91,.22);
       }
 
       .mission-reward-ok{
@@ -275,50 +255,55 @@
     return pop;
   }
 
-function showRewardPop(mission, reward){
-  const pop = ensureRewardPop();
+  function showRewardPop(mission, reward){
+    const pop = ensureRewardPop();
 
-  const name = $('missionRewardName');
-  const list = $('missionRewardList');
+    const name = $('missionRewardName');
+    const list = $('missionRewardList');
 
-  if (name) {
-    name.textContent = mission.title;
+    if (name) {
+      name.textContent = mission.title;
+    }
+
+    let rewardText = '';
+
+    if (Number(reward.coin || 0) > 0) {
+      rewardText += Number(reward.coin).toLocaleString() + 'コイン';
+    }
+
+    if (Number(reward.diamond || 0) > 0) {
+      if (rewardText) rewardText += ' / ';
+      rewardText += Number(reward.diamond).toLocaleString() + 'ダイヤ';
+    }
+
+    if (!rewardText) rewardText = '報酬なし';
+
+    if (list) {
+      list.innerHTML = `
+        <div style="
+          font-size:26px;
+          font-weight:1000;
+          color:#ffd54a;
+          text-align:center;
+          padding:20px 0;
+          line-height:1.35;
+        ">
+          ${rewardText}
+        </div>
+      `;
+    }
+
+    pop.classList.remove('hidden');
   }
 
-  let rewardText = '';
+  function closeRewardPop(){
+    const pop = $('missionRewardPop');
 
-  if (reward.coin > 0) {
-    rewardText += Number(reward.coin).toLocaleString() + 'コイン';
+    if (pop) {
+      pop.classList.add('hidden');
+    }
   }
 
-  if (reward.diamond > 0) {
-    if (rewardText) rewardText += ' / ';
-    rewardText += Number(reward.diamond).toLocaleString() + 'ダイヤ';
-  }
-
-  if (list) {
-    list.innerHTML = `
-      <div style="
-        font-size:26px;
-        font-weight:1000;
-        color:#ffd54a;
-        text-align:center;
-        padding:20px 0;
-      ">
-        ${rewardText}
-      </div>
-    `;
-  }
-
-  pop.classList.remove('hidden');
-}
-function closeRewardPop(){
-  const pop = $('missionRewardPop');
-
-  if (pop) {
-    pop.classList.add('hidden');
-  }
-}
   function showMissionToast(text){
     injectMissionRewardStyle();
 
@@ -480,12 +465,16 @@ function closeRewardPop(){
   }
 
   function scaleCoin(target, base){
-    if (target <= 10) return base;
-    if (target <= 100) return base * 2;
-    if (target <= 1000) return base * 4;
-    if (target <= 10000) return base * 8;
-    if (target <= 100000) return base * 18;
-    return base * 45;
+    let coin = base;
+
+    if (target <= 10) coin = base;
+    else if (target <= 100) coin = base * 1.6;
+    else if (target <= 1000) coin = base * 3;
+    else if (target <= 10000) coin = base * 6;
+    else if (target <= 100000) coin = base * 12;
+    else coin = base * 28;
+
+    return Math.max(300, Math.floor(coin));
   }
 
   function scaleDiamond(target, base){
@@ -525,7 +514,7 @@ function closeRewardPop(){
         currentType:'totalStageClears',
         target,
         reward:{
-          coin:target * 2500,
+          coin:Math.max(1000, Math.floor(target * 1200)),
           diamond:target <= 10 ? target : Math.floor(target / 3)
         }
       });
@@ -546,7 +535,7 @@ function closeRewardPop(){
         desc:'雑魚敵・中ボス・ボスを含む累計撃破数',
         currentType:'enemyKills',
         target,
-        reward:{ coin:scaleCoin(target, 400), diamond:scaleDiamond(target, 1) }
+        reward:{ coin:scaleCoin(target, 260), diamond:scaleDiamond(target, 1) }
       });
     });
 
@@ -559,7 +548,7 @@ function closeRewardPop(){
         desc:'木箱・看板・岩・宝箱などの累計破壊数',
         currentType:'obstacleKills',
         target,
-        reward:{ coin:scaleCoin(target, 350), diamond:scaleDiamond(target, 1) }
+        reward:{ coin:scaleCoin(target, 240), diamond:scaleDiamond(target, 1) }
       });
     });
 
@@ -572,7 +561,7 @@ function closeRewardPop(){
         desc:'中ボスの累計撃破数',
         currentType:'midBossKills',
         target,
-        reward:{ coin:scaleCoin(target, 2000), diamond:scaleDiamond(target * 20, 2) }
+        reward:{ coin:scaleCoin(target, 1100), diamond:scaleDiamond(target * 20, 2) }
       });
     });
 
@@ -585,7 +574,7 @@ function closeRewardPop(){
         desc:'ボス・強力ボスの累計撃破数',
         currentType:'bossKills',
         target,
-        reward:{ coin:scaleCoin(target, 4000), diamond:scaleDiamond(target * 30, 3) }
+        reward:{ coin:scaleCoin(target, 1800), diamond:scaleDiamond(target * 30, 3) }
       });
     });
 
@@ -635,7 +624,7 @@ function closeRewardPop(){
       desc:'種類を問わず、ゲートを獲得した累計回数',
       currentType:'gateCount',
       target,
-      reward:{ coin:scaleCoin(target, 500), diamond:scaleDiamond(target, 1) }
+      reward:{ coin:scaleCoin(target, 320), diamond:scaleDiamond(target, 1) }
     }));
   }
 
@@ -655,7 +644,7 @@ function closeRewardPop(){
         currentType:'rank',
         target:rank,
         reward:{
-          coin:rank * 8000 + base.coin,
+          coin:0,
           diamond:Math.max(3, Math.floor(rank / 2)) + base.diamond
         }
       });
@@ -673,7 +662,10 @@ function closeRewardPop(){
       desc:'使ったコインではなく、獲得した累計コイン',
       currentType:'totalEarnedCoin',
       target,
-      reward:{ coin:Math.max(1000, Math.floor(target * 0.15)), diamond:scaleDiamond(target, 1) }
+      reward:{
+        coin:Math.max(500, Math.floor(target * 0.06)),
+        diamond:scaleDiamond(target, 1)
+      }
     }));
   }
 
@@ -686,7 +678,10 @@ function closeRewardPop(){
       desc:'累計SCOREで達成',
       currentType:'totalScore',
       target,
-      reward:{ coin:Math.max(1000, Math.floor(target * 0.06)), diamond:scaleDiamond(target, 2) }
+      reward:{
+        coin:Math.max(700, Math.floor(target * 0.025)),
+        diamond:scaleDiamond(target, 2)
+      }
     }));
   }
 
@@ -702,7 +697,7 @@ function closeRewardPop(){
         desc:'石板コレクションの所持枚数',
         currentType:'collectionOwned',
         target,
-        reward:{ coin:target * 7000, diamond:0 }
+        reward:{ coin:target * 3000, diamond:0 }
       });
     });
 
@@ -724,7 +719,7 @@ function closeRewardPop(){
           rarity,
           target,
           reward:{
-            coin:target * (rarity === 'UR' ? 60000 : rarity === 'SSR' ? 30000 : rarity === 'SR' ? 15000 : 6000),
+            coin:target * (rarity === 'UR' ? 25000 : rarity === 'SSR' ? 14000 : rarity === 'SR' ? 7000 : 3000),
             diamond:0
           }
         });
@@ -740,7 +735,7 @@ function closeRewardPop(){
         desc:'所持石板の強化値合計',
         currentType:'collectionTotalPlus',
         target,
-        reward:{ coin:scaleCoin(target, 2000), diamond:0 }
+        reward:{ coin:scaleCoin(target, 900), diamond:0 }
       });
     });
 
@@ -752,7 +747,7 @@ function closeRewardPop(){
       desc:'石板85枚をすべて所持',
       currentType:'collectionOwned',
       target:85,
-      reward:{ coin:1000000, diamond:200 }
+      reward:{ coin:500000, diamond:200 }
     });
 
     return missions;
@@ -770,7 +765,7 @@ function closeRewardPop(){
         desc:'所持しているスキルの種類数',
         currentType:'skillOwned',
         target,
-        reward:{ coin:target * 5000, diamond:target * 1 }
+        reward:{ coin:target * 2500, diamond:target * 1 }
       });
     });
 
@@ -783,7 +778,7 @@ function closeRewardPop(){
         desc:'スキルガチャで強化された合計+値',
         currentType:'skillTotalPlus',
         target,
-        reward:{ coin:scaleCoin(target, 3000), diamond:scaleDiamond(target * 30, 4) }
+        reward:{ coin:scaleCoin(target, 1200), diamond:scaleDiamond(target * 30, 4) }
       });
     });
 
@@ -796,7 +791,7 @@ function closeRewardPop(){
         desc:'全スキルの累計使用回数',
         currentType:'skillUseCount',
         target,
-        reward:{ coin:scaleCoin(target, 1200), diamond:scaleDiamond(target, 2) }
+        reward:{ coin:scaleCoin(target, 600), diamond:scaleDiamond(target, 2) }
       });
     });
 
