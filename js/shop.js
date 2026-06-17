@@ -331,7 +331,7 @@
     {
       key: 'fireball',
       name: '火の玉',
-      price: 1000,
+      price: 8000,
       rank: 1,
       ownedDefault: false,
       power: 1,
@@ -342,7 +342,7 @@
     {
       key: 'recordfire',
       name: 'レコードファイア',
-      price: 3000,
+      price: 20000,
       rank: 3,
       ownedDefault: false,
       power: 2,
@@ -353,7 +353,7 @@
     {
       key: 'rainbowfire',
       name: 'レインボーファイア',
-      price: 3000,
+      price: 35000,
       rank: 5,
       ownedDefault: false,
       power: 2,
@@ -364,7 +364,7 @@
     {
       key: 'wataame',
       name: 'WATAAME!!',
-      price: null,
+      price: 80000,
       rank: 10,
       ownedDefault: false,
       power: 2,
@@ -375,7 +375,7 @@
     {
       key: 'garagara',
       name: 'ガラガラの旅',
-      price: null,
+      price: 120000,
       rank: 10,
       ownedDefault: false,
       power: 3,
@@ -386,7 +386,7 @@
     {
       key: 'book',
       name: '読みかけの本',
-      price: null,
+      price: 160000,
       rank: 10,
       ownedDefault: false,
       power: 3,
@@ -397,7 +397,7 @@
     {
       key: 'mobrpg',
       name: 'MOB RPG',
-      price: null,
+      price: 220000,
       rank: 10,
       ownedDefault: false,
       power: 4,
@@ -408,7 +408,7 @@
     {
       key: 'iyonokuni',
       name: '伊予ノ国',
-      price: null,
+      price: 350000,
       rank: 20,
       ownedDefault: false,
       power: 2,
@@ -419,7 +419,7 @@
     {
       key: 'realize',
       name: 'Realize',
-      price: null,
+      price: 450000,
       rank: 20,
       ownedDefault: false,
       power: 4,
@@ -430,7 +430,7 @@
     {
       key: 'portal',
       name: 'Portal',
-      price: null,
+      price: 600000,
       rank: 20,
       ownedDefault: false,
       power: 1,
@@ -441,7 +441,7 @@
     {
       key: 'pb2',
       name: 'PB2',
-      price: null,
+      price: 800000,
       rank: 20,
       ownedDefault: false,
       power: 2,
@@ -561,46 +561,91 @@
     return `${Number(item.price).toLocaleString()} COIN`;
   }
 
+  function getRankUpgradeCap(key){
+    const rank = playerRank();
+
+    if (key === 'hp') return 99;
+
+    if (rank <= 9) {
+      if (key === 'power') return 5;
+      if (key === 'range') return 2;
+      if (key === 'rapid') return 5;
+    }
+
+    if (rank <= 14) {
+      if (key === 'power') return 10;
+      if (key === 'range') return 5;
+      if (key === 'rapid') return 10;
+    }
+
+    if (rank <= 25) {
+      if (key === 'power') return 30;
+      if (key === 'range') return 8;
+      if (key === 'rapid') return 15;
+    }
+
+    if (rank <= 35) {
+      if (key === 'power') return 40;
+      if (key === 'range') return 9;
+      if (key === 'rapid') return 20;
+    }
+
+    if (key === 'power') return 50;
+    if (key === 'range') return 10;
+    if (key === 'rapid') return 30;
+
+    return 99;
+  }
+
+  function rankCapText(key){
+    if (key === 'hp') return 'RANK制限なし';
+
+    const rank = playerRank();
+    const cap = getRankUpgradeCap(key);
+
+    if (rank <= 9) return `現在RANK${rank}: Lv${cap}まで`;
+    if (rank <= 14) return `現在RANK${rank}: Lv${cap}まで`;
+    if (rank <= 25) return `現在RANK${rank}: Lv${cap}まで`;
+    if (rank <= 35) return `現在RANK${rank}: Lv${cap}まで`;
+
+    return 'RANK36以上: 制限なし';
+  }
+
   function upgradeCost(key, currentLv){
     const nextLv = currentLv + 1;
 
     if (key === 'power') {
-      if (nextLv === 1) return 100;
-      if (nextLv === 2) return 300;
-      if (nextLv === 3) return 600;
-      if (nextLv === 4) return 800;
-      if (nextLv === 5) return 1000;
-      return 1000 + (nextLv - 5) * 1000;
+      if (nextLv <= 5) return 1500 * nextLv;
+      if (nextLv <= 10) return 10000 + (nextLv - 5) * 4500;
+      if (nextLv <= 30) return 35000 + (nextLv - 10) * 9000;
+      if (nextLv <= 40) return 220000 + (nextLv - 30) * 22000;
+      return 470000 + (nextLv - 40) * 45000;
     }
 
     if (key === 'range') {
-      if (nextLv === 1) return 100;
-      if (nextLv === 2) return 300;
-      if (nextLv === 3) return 600;
-      if (nextLv === 4) return 800;
-      if (nextLv === 5) return 1000;
-      return 1000 + (nextLv - 5) * 3000;
+      if (nextLv <= 2) return 3000 * nextLv;
+      if (nextLv <= 5) return 12000 + (nextLv - 2) * 10000;
+      if (nextLv <= 8) return 50000 + (nextLv - 5) * 35000;
+      if (nextLv <= 9) return 200000;
+      return 350000;
     }
 
     if (key === 'rapid') {
-      if (nextLv === 1) return 1500;
-      if (nextLv === 2) return 3000;
-      if (nextLv === 3) return 5000;
-      if (nextLv === 4) return 8000;
-      if (nextLv === 5) return 12000;
-      return 12000 + (nextLv - 5) * 4000;
+      if (nextLv <= 5) return 5000 * nextLv;
+      if (nextLv <= 10) return 35000 + (nextLv - 5) * 15000;
+      if (nextLv <= 15) return 120000 + (nextLv - 10) * 30000;
+      if (nextLv <= 20) return 300000 + (nextLv - 15) * 60000;
+      return 650000 + (nextLv - 20) * 90000;
     }
 
     if (key === 'hp') {
-      if (nextLv === 1) return 150;
-      if (nextLv === 2) return 300;
-      if (nextLv === 3) return 450;
-      if (nextLv === 4) return 600;
-      if (nextLv === 5) return 1000;
-      return 1000 + (nextLv - 5) * 1000;
+      if (nextLv <= 10) return 1000 * nextLv;
+      if (nextLv <= 30) return 12000 + (nextLv - 10) * 3500;
+      if (nextLv <= 60) return 85000 + (nextLv - 30) * 7000;
+      return 300000 + (nextLv - 60) * 12000;
     }
 
-    return 999999;
+    return 999999999;
   }
 
   function buyAvatar(key){
@@ -687,9 +732,15 @@
 
     const state = loadState();
     const lv = Number(state.upgrades[key] || 0);
+    const rankCap = getRankUpgradeCap(key);
 
     if (lv >= item.max) {
       alert('最大Lvです。');
+      return;
+    }
+
+    if (lv >= rankCap) {
+      alert(`現在のRANKではこれ以上強化できません。\n${rankCapText(key)}`);
       return;
     }
 
@@ -857,11 +908,13 @@
 
     UPGRADE_MASTER.forEach(item => {
       const lv = Number(state.upgrades[item.key] || 0);
+      const rankCap = Math.min(item.max, getRankUpgradeCap(item.key));
       const maxed = lv >= item.max;
-      const cost = maxed ? 0 : upgradeCost(item.key, lv);
+      const rankLocked = !maxed && lv >= rankCap;
+      const cost = maxed || rankLocked ? 0 : upgradeCost(item.key, lv);
 
       const card = document.createElement('div');
-      card.className = 'shop-card';
+      card.className = 'shop-card' + (rankLocked ? ' locked' : '');
 
       card.innerHTML = `
         ${iconUpgrade()}
@@ -869,18 +922,25 @@
           <div class="shop-card-name">${item.name}<span>Lv${lv}/${item.max}</span></div>
           <div class="shop-card-desc">${item.desc}</div>
           <div class="shop-card-price">${item.effectText}</div>
-          <div class="shop-card-spec">${maxed ? 'MAX' : `次の強化: ${cost.toLocaleString()} COIN`}</div>
+          <div class="shop-card-spec">${rankCapText(item.key)}</div>
+          <div class="shop-card-spec">${
+            maxed
+              ? 'MAX'
+              : rankLocked
+                ? `RANK制限中 / Lv${rankCap}まで`
+                : `次の強化: ${cost.toLocaleString()} COIN`
+          }</div>
         </div>
         <div class="shop-card-actions">
-          <button type="button" class="shop-card-btn" ${maxed ? 'disabled' : ''}>
-            ${maxed ? 'MAX' : '強化'}
+          <button type="button" class="shop-card-btn" ${maxed || rankLocked ? 'disabled' : ''}>
+            ${maxed ? 'MAX' : rankLocked ? 'LOCK' : '強化'}
           </button>
         </div>
       `;
 
       const btn = card.querySelector('.shop-card-btn');
 
-      if (btn && !maxed) {
+      if (btn && !maxed && !rankLocked) {
         btn.addEventListener('click', function(){
           upgrade(item.key);
         });
@@ -1047,6 +1107,8 @@
     getRecord,
     getUpgrades,
     getUpgradeBonus,
+    getRankUpgradeCap,
+    upgradeCost,
     AVATAR_MASTER,
     RECORD_MASTER,
     UPGRADE_MASTER
