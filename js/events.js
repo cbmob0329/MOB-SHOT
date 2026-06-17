@@ -118,10 +118,119 @@
     { id:7, areaKey:'last', areaName:'魔王の間', title:'魔王の間', bossA:'閻魔モブ', bossB:'ウルモブリリス', allowed:['legend'], final:true, firstCoin:50000, firstDiamond:100 }
   ];
 
+  const QUEST_DIFFICULTIES = [
+    {
+      key:'easy',
+      name:'イージー',
+      icon:'mt/game1.png',
+      color:'#9dff73',
+      cost:5000,
+      hpMul:0.85,
+      scoreMul:1.0,
+      coinMul:0.8,
+      enemyHpMul:0.8,
+      label:'低難度 / 初回確認向け'
+    },
+    {
+      key:'veryHard',
+      name:'ベリーハード',
+      icon:'mt/game3.png',
+      color:'#ffcf5b',
+      cost:30000,
+      hpMul:1.6,
+      scoreMul:1.6,
+      coinMul:1.2,
+      enemyHpMul:1.35,
+      label:'高難度 / 中盤以降向け'
+    },
+    {
+      key:'legend',
+      name:'レジェンド',
+      icon:'mt/game5.png',
+      color:'#d86bff',
+      cost:100000,
+      hpMul:2.8,
+      scoreMul:2.5,
+      coinMul:1.8,
+      enemyHpMul:2.2,
+      label:'超高難度 / 終盤向け'
+    }
+  ];
+
+  const QUEST_STAGES = [
+    {
+      id:1,
+      key:'pterarush',
+      title:'プテラッシュ',
+      areaKey:'grass',
+      areaName:'草原',
+      background:null,
+      desc:'中ボスのプテラが 2匹同時 → 3匹同時 → 5匹同時 に出現。全て倒すとクリア。',
+      label:'プテラ 2→3→5',
+      rank:10
+    },
+    {
+      id:2,
+      key:'thieves',
+      title:'盗賊団',
+      areaKey:'desert',
+      areaName:'砂漠',
+      background:null,
+      desc:'ミラモブ1体と砂漠の雑魚敵30体を倒すとクリア。障害物も出現。',
+      label:'ミラモブ + 雑魚30体',
+      rank:10
+    },
+    {
+      id:3,
+      key:'guardian_test',
+      title:'番人試験',
+      areaKey:'town',
+      areaName:'田舎町',
+      background:null,
+      desc:'ミニサイズの番人が2体同時に出現。両方倒すとクリア。',
+      label:'小番人 2体同時',
+      rank:10
+    },
+    {
+      id:4,
+      key:'nine_heads',
+      title:'9つの首',
+      areaKey:'neon',
+      areaName:'ネオン街',
+      background:null,
+      desc:'ネオンギドラ3体同時 → 大型ネオンギドラ1体。倒すとクリア。',
+      label:'ギドラ3体 + 大型1体',
+      rank:10
+    },
+    {
+      id:5,
+      key:'hot_magma',
+      title:'アチアチマグマ',
+      areaKey:'magma',
+      areaName:'マグマ',
+      background:null,
+      desc:'雑魚30体撃破後、ドラゴンと中ボス2体が同時出現。全て倒すとクリア。',
+      label:'雑魚30体 + ドラゴン + 中ボス2体',
+      rank:10
+    },
+    {
+      id:6,
+      key:'lilith_sisters',
+      title:'リリス四姉妹',
+      areaKey:'castle',
+      areaName:'魔王城',
+      background:null,
+      desc:'小さめのモブリリスが4体同時に出現。全て倒すとクリア。',
+      label:'小モブリリス 4体同時',
+      rank:10
+    }
+  ];
+
   const EVENTS = [
     { key:'gold', name:'GOLD STAGE', image:'mt/event_gold.png', desc:'チケットを使ってコインを稼ぐイベント。' },
     { key:'scoreAttack', name:'スコアアタック', image:'mt/event_score.png', desc:'歴代ボスを順番に倒してハイスコアを目指すイベント。' },
     { key:'doubleBoss', name:'ダブルボス', image:'mt/event_double.png', desc:'2体のボスを同時に撃破する高難易度イベント。' },
+    { key:'eventQuest', name:'イベントクエスト', image:'mt/event_secret.png', desc:'コインを消費して特別クエストに挑戦。複数の中ボスや特殊条件を突破する。' },
     { key:'secretBoss', name:'シークレットボス', image:'mt/event_secret.png', desc:'COMING SOON' }
   ];
 
@@ -213,6 +322,7 @@
         color:#dfe8ff;
         text-shadow:0 2px 0 #000;
         text-align:left;
+        max-width:78%;
       }
 
       .event-difficulty-badge{
@@ -277,6 +387,36 @@
         margin-top:3px;
         font-size:10px;
         color:#dfe8ff;
+      }
+
+      .event-quest-wrap{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:12px;
+        margin-top:10px;
+      }
+
+      .event-quest-box{
+        padding:10px;
+        border-radius:18px;
+        background:rgba(255,255,255,.08);
+        border:2px solid rgba(255,255,255,.18);
+      }
+
+      .event-quest-title{
+        font-size:16px;
+        font-weight:1000;
+        color:#fff;
+        text-shadow:0 2px 0 #000;
+        margin-bottom:4px;
+      }
+
+      .event-quest-desc{
+        font-size:11px;
+        line-height:1.45;
+        font-weight:900;
+        color:#dfe8ff;
+        margin-bottom:8px;
       }
     `;
     document.head.appendChild(style);
@@ -456,6 +596,20 @@
     }
   }
 
+  function saveMainData(save){
+    if (window.MobShotStorage && window.MobShotStorage.save) {
+      window.MobShotStorage.save(save);
+      return true;
+    }
+
+    try {
+      localStorage.setItem('mobshot_split_v1', JSON.stringify(save));
+      return true;
+    } catch(e) {
+      return false;
+    }
+  }
+
   function getRank(){
     return Number(getSave().rank || 1);
   }
@@ -497,13 +651,16 @@
       goldClear:0,
       scoreAttackClear:0,
       doubleBossClear:0,
+      eventQuestClear:0,
       eventCoinTotal:0,
       eventBossKills:0,
       goldTicketTotal:0,
       goldTicketSpent:0,
       bossKills:{},
       doubleClearByDifficulty:{ veryHard:0, inferno:0, legend:0 },
-      doubleStageClear:{}
+      doubleStageClear:{},
+      questClearByDifficulty:{ easy:0, veryHard:0, legend:0 },
+      questStageClear:{}
     };
   }
 
@@ -520,6 +677,8 @@
     stats.bossKills = stats.bossKills || {};
     stats.doubleClearByDifficulty = Object.assign({ veryHard:0, inferno:0, legend:0 }, stats.doubleClearByDifficulty || {});
     stats.doubleStageClear = stats.doubleStageClear || {};
+    stats.questClearByDifficulty = Object.assign({ easy:0, veryHard:0, legend:0 }, stats.questClearByDifficulty || {});
+    stats.questStageClear = stats.questStageClear || {};
 
     return stats;
   }
@@ -594,6 +753,14 @@
     return DOUBLE_STAGES.find(s => Number(s.id) === Number(id)) || DOUBLE_STAGES[0];
   }
 
+  function getQuestDifficulty(key){
+    return QUEST_DIFFICULTIES.find(d => d.key === key) || QUEST_DIFFICULTIES[0];
+  }
+
+  function getQuestStage(id){
+    return QUEST_STAGES.find(s => Number(s.id) === Number(id)) || QUEST_STAGES[0];
+  }
+
   function loadGoldClear(){
     try {
       return JSON.parse(localStorage.getItem(GOLD_CLEAR_KEY)) || {};
@@ -660,6 +827,39 @@
     return false;
   }
 
+  function questClearKey(difficultyKey, questId){
+    return `${difficultyKey}_${questId}`;
+  }
+
+  function hasQuestCleared(difficultyKey, questId){
+    const stats = loadStats();
+    return !!(stats.questStageClear && stats.questStageClear[questClearKey(difficultyKey, questId)]);
+  }
+
+  function canPlayQuest(stage, diff){
+    if (!stage || !diff) return false;
+    return isUnlocked() && getRank() >= Number(stage.rank || 10);
+  }
+
+  function consumeCoin(amount){
+    const need = Number(amount || 0);
+    const save = getSave();
+    const coin = Number(save.coin || 0);
+
+    if (coin < need) return false;
+
+    save.coin = coin - need;
+    saveMainData(save);
+
+    if (window.MobShotMain && window.MobShotMain.refreshMainHud) {
+      window.MobShotMain.refreshMainHud();
+    }
+
+    window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
+
+    return true;
+  }
+
   function recordGoldClear(difficultyKey, coinAmount){
     const stats = loadStats();
     stats.goldClear = Number(stats.goldClear || 0) + 1;
@@ -684,6 +884,19 @@
     stats.eventCoinTotal = Number(stats.eventCoinTotal || 0) + Number(coinAmount || 0);
     stats.doubleClearByDifficulty[difficultyKey] = Number(stats.doubleClearByDifficulty[difficultyKey] || 0) + 1;
     stats.doubleStageClear[stageKey] = Number(stats.doubleStageClear[stageKey] || 0) + 1;
+
+    saveStats(stats);
+    notifyMission();
+  }
+
+  function recordEventQuestClear(difficultyKey, questId, coinAmount){
+    const stats = loadStats();
+    const stageKey = questClearKey(difficultyKey, questId);
+
+    stats.eventQuestClear = Number(stats.eventQuestClear || 0) + 1;
+    stats.eventCoinTotal = Number(stats.eventCoinTotal || 0) + Number(coinAmount || 0);
+    stats.questClearByDifficulty[difficultyKey] = Number(stats.questClearByDifficulty[difficultyKey] || 0) + 1;
+    stats.questStageClear[stageKey] = Number(stats.questStageClear[stageKey] || 0) + 1;
 
     saveStats(stats);
     notifyMission();
@@ -745,6 +958,13 @@
     return `初回報酬\n${coin.toLocaleString()} COIN + ${diamond} DIAMOND`;
   }
 
+  function rewardTextQuest(diff, stage){
+    const cleared = hasQuestCleared(diff.key, stage.id);
+    const rewardText = cleared ? 'クリア済み\n追加報酬は後で調整予定' : '初回クリア報酬\n特別な石板ドロップ予定';
+
+    return `${rewardText}\n\n消費: ${Number(diff.cost || 0).toLocaleString()} COIN`;
+  }
+
   function render(){
     injectEventStyle();
 
@@ -789,6 +1009,8 @@
         renderScoreAttackButton(info, unlocked);
       } else if (ev.key === 'doubleBoss') {
         renderDoubleBossButtons(info, unlocked);
+      } else if (ev.key === 'eventQuest') {
+        renderQuestButtons(info, unlocked);
       } else {
         const btn = document.createElement('button');
         btn.className = 'event-play-btn';
@@ -954,11 +1176,104 @@
     parent.appendChild(wrap);
   }
 
+  function renderQuestButtons(parent, unlocked){
+    const wrap = document.createElement('div');
+    wrap.className = 'event-quest-wrap';
+
+    QUEST_STAGES.forEach(stage => {
+      const box = document.createElement('div');
+      box.className = 'event-quest-box';
+
+      const title = document.createElement('div');
+      title.className = 'event-quest-title';
+      title.textContent = `${stage.id}. ${stage.title}`;
+
+      const desc = document.createElement('div');
+      desc.className = 'event-quest-desc';
+      desc.textContent = stage.desc;
+
+      box.appendChild(title);
+      box.appendChild(desc);
+
+      QUEST_DIFFICULTIES.forEach(diff => {
+        const playOk = unlocked && canPlayQuest(stage, diff);
+        const cleared = hasQuestCleared(diff.key, stage.id);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'event-difficulty-card';
+        btn.disabled = !playOk;
+        btn.style.marginTop = '7px';
+
+        const status =
+          !unlocked ? 'LOCK' :
+          getRank() < Number(stage.rank || 10) ? `RANK${stage.rank}` :
+          cleared ? 'CLEAR済' :
+          'START';
+
+        btn.innerHTML = `
+          <img src="${diff.icon}" alt="${diff.name}">
+          <span class="event-difficulty-name">${diff.name}</span>
+          <span class="event-difficulty-small">${stage.label} / ${Number(diff.cost || 0).toLocaleString()} COIN</span>
+          <span class="event-difficulty-badge">${status}</span>
+        `;
+
+        btn.addEventListener('click', function(e){
+          e.preventDefault();
+          e.stopPropagation();
+
+          if (!playOk) return;
+
+          const save = getSave();
+          const haveCoin = Number(save.coin || 0);
+          const cost = Number(diff.cost || 0);
+
+          if (haveCoin < cost) {
+            showMessage('COIN不足', `必要COIN: ${cost.toLocaleString()}\n現在COIN: ${haveCoin.toLocaleString()}`);
+            return;
+          }
+
+          openConfirm({
+            title:'イベントクエスト',
+            sub:`${stage.title} / ${diff.name}に出撃しますか？`,
+            reward:rewardTextQuest(diff, stage),
+            extra:`${stage.desc}`,
+            onYes:function(){
+              startEvent('eventQuest', diff.key, stage.id);
+            }
+          });
+        });
+
+        box.appendChild(btn);
+      });
+
+      wrap.appendChild(box);
+    });
+
+    parent.appendChild(wrap);
+  }
+
   function startEvent(key, difficultyKey, stageId){
     if (key === 'gold') {
       if (!consumeGoldTicket(1)) {
         showMessage('GOLD TICKET不足', '通常ステージの宝箱からまれに入手できます。');
         render();
+        return;
+      }
+    }
+
+    if (key === 'eventQuest') {
+      const diff = getQuestDifficulty(difficultyKey || 'easy');
+      const quest = getQuestStage(stageId || 1);
+
+      if (!canPlayQuest(quest, diff)) {
+        showMessage('LOCK', 'このクエストはまだ解放されていません。');
+        return;
+      }
+
+      if (!consumeCoin(Number(diff.cost || 0))) {
+        const save = getSave();
+        showMessage('COIN不足', `必要COIN: ${Number(diff.cost || 0).toLocaleString()}\n現在COIN: ${Number(save.coin || 0).toLocaleString()}`);
         return;
       }
     }
@@ -1012,6 +1327,11 @@
     return !!(ev && ev.key === 'doubleBoss');
   }
 
+  function isEventQuest(){
+    const ev = getCurrentEvent();
+    return !!(ev && ev.key === 'eventQuest');
+  }
+
   function getCurrentGoldDifficulty(){
     const ev = getCurrentEvent();
     if (!ev || ev.key !== 'gold') return getDifficulty('easy');
@@ -1022,6 +1342,14 @@
     const ev = getCurrentEvent();
     const difficulty = getDoubleDifficulty(ev && ev.difficulty ? ev.difficulty : 'veryHard');
     const stage = getDoubleStage(ev && ev.stageId ? ev.stageId : 1);
+
+    return { difficulty, stage };
+  }
+
+  function getCurrentQuest(){
+    const ev = getCurrentEvent();
+    const difficulty = getQuestDifficulty(ev && ev.difficulty ? ev.difficulty : 'easy');
+    const stage = getQuestStage(ev && ev.stageId ? ev.stageId : 1);
 
     return { difficulty, stage };
   }
@@ -1088,6 +1416,8 @@
     GOLD_DIFFICULTIES,
     DOUBLE_DIFFICULTIES,
     DOUBLE_STAGES,
+    QUEST_DIFFICULTIES,
+    QUEST_STAGES,
     EVENT_SAVE_KEY,
     GOLD_CLEAR_KEY,
     DOUBLE_CLEAR_KEY,
@@ -1105,6 +1435,7 @@
     isGoldStage,
     isScoreAttack,
     isDoubleBoss,
+    isEventQuest,
     isUnlocked,
 
     getDifficulty,
@@ -1112,6 +1443,11 @@
     getDoubleDifficulty,
     getDoubleStage,
     getCurrentDoubleBoss,
+
+    getQuestDifficulty,
+    getQuestStage,
+    getCurrentQuest,
+    hasQuestCleared,
 
     hasGoldCleared,
     markGoldCleared,
@@ -1135,6 +1471,7 @@
     recordGoldClear,
     recordScoreAttackClear,
     recordDoubleBossClear,
+    recordEventQuestClear,
     recordEventBossKill
   };
 })();
