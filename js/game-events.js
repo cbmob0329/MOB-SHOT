@@ -16,6 +16,13 @@
   let scoreAttackIndex = 0;
   let finishBonusApplied = false;
 
+  let questInfo = null;
+  let questPhase = 0;
+  let questKills = 0;
+  let questBossSpawned = false;
+  let questWaveSpawned = false;
+  let questTargetKills = 0;
+
   const SCORE_ATTACK_BOSSES = [
     { name:'ホークモブ', image:'boss/hawks.png', hp:600, score:1000, coin:200 },
     { name:'ミラモブ', image:'boss/miraboss.png', hp:800, score:1300, coin:260 },
@@ -26,6 +33,15 @@
     { name:'モブ魔王', image:'boss/bossmaoh.png', hp:3800, score:6000, coin:1200 },
     { name:'ウルモブリリス', image:'boss/bossulriri.png', hp:5200, score:9000, coin:1800 }
   ];
+
+  const QUEST_FALLBACK_BOSSES = {
+    ptera:{ name:'プテラ', image:'boss/hawks.png', hp:520, score:700, coin:120 },
+    mira:{ name:'ミラモブ', image:'boss/miraboss.png', hp:900, score:1200, coin:220 },
+    ban:{ name:'番人', image:'boss/bossban.png', hp:850, score:1000, coin:180 },
+    ghidora:{ name:'ネオンギドラ', image:'boss/bossneon.png', hp:900, score:1200, coin:220 },
+    dragon:{ name:'ドラゴンモブ', image:'boss/bossdragoon.png', hp:1500, score:1800, coin:300 },
+    lilith:{ name:'モブリリス', image:'boss/bossriris.png', hp:1200, score:1600, coin:280 }
+  };
 
   function clone(obj){
     return JSON.parse(JSON.stringify(obj));
@@ -95,6 +111,32 @@
     };
   }
 
+  function getQuestInfo(){
+    if (window.MobShotEvents && window.MobShotEvents.getCurrentQuest) {
+      return window.MobShotEvents.getCurrentQuest();
+    }
+
+    return {
+      difficulty:{
+        key:'easy',
+        name:'イージー',
+        color:'#9dff73',
+        hpMul:0.85,
+        scoreMul:1,
+        coinMul:0.8,
+        enemyHpMul:0.8,
+        cost:5000
+      },
+      stage:{
+        id:1,
+        key:'pterarush',
+        title:'プテラッシュ',
+        areaKey:'grass',
+        areaName:'草原'
+      }
+    };
+  }
+
   function getSave(){
     if (window.MobShotStorage && window.MobShotStorage.load) {
       return window.MobShotStorage.load();
@@ -127,20 +169,26 @@
     saveMainData(save);
   }
 
-  function setStageVisual(api, title, background){
+  function setStageVisual(api, title, background, areaKey, areaName){
     const D = api.D;
 
     if (!D || !D.stage) return;
 
     D.stage.id = title || 'EVENT';
     D.stage.name = title || 'EVENT';
-    D.stage.areaName = title || 'EVENT';
-    D.stage.areaType = title || 'EVENT';
+    D.stage.areaName = areaName || title || 'EVENT';
+    D.stage.areaType = areaKey || title || 'EVENT';
+    D.stage.areaKey = areaKey || D.stage.areaKey;
     D.stage.difficulty = title || 'EVENT';
 
     if (background) {
       D.stage.background = background;
     }
+  }
+
+  function stageAreaData(areaKey){
+    const stageData = window.MOBSHOT_STAGE_DATA || {};
+    return stageData[areaKey] || null;
   }
 
   function bossDefByName(name, fallback){
@@ -152,6 +200,9 @@
 
       if (area.boss) all.push(area.boss);
       if (area.strongBoss) all.push(area.strongBoss);
+      if (area.midBoss) all.push(area.midBoss);
+      if (area.midboss) all.push(area.midboss);
+      if (area.middleBoss) all.push(area.middleBoss);
     });
 
     const found = all.find(b => b && b.name === name);
@@ -167,6 +218,18 @@
     });
   }
 
+  function midBossDef(areaKey, fallback){
+    const area = stageAreaData(areaKey);
+
+    if (area) {
+      if (area.midBoss) return clone(area.midBoss);
+      if (area.midboss) return clone(area.midboss);
+      if (area.middleBoss) return clone(area.middleBoss);
+    }
+
+    return clone(fallback || QUEST_FALLBACK_BOSSES.ptera);
+  }
+
   function makeBossEntity(def, api, opt){
     const W = api.W;
     const H = api.H;
@@ -175,19 +238,20 @@
     const scoreMul = opt && opt.scoreMul != null ? opt.scoreMul : 1;
     const coinMul = opt && opt.coinMul != null ? opt.coinMul : 1;
     const r = opt && opt.r != null ? opt.r : 112;
+    const kind = opt && opt.kind ? opt.kind : 'boss';
 
     const hp = Math.ceil(Number(def.hp || 1000) * hpMul);
 
     return {
-      kind:'boss',
+      kind,
       name:def.name || 'BOSS',
       image:def.image || 'boss/hawks.png',
       x,
-      y:-240,
-      baseY:H * 0.21,
-      targetY:H * 0.21,
+      y:opt && opt.y != null ? opt.y : -240,
+      baseY:opt && opt.baseY != null ? opt.baseY : H * 0.21,
+      targetY:opt && opt.targetY != null ? opt.targetY : H * 0.21,
       vx:opt && opt.vx != null ? opt.vx : 1.35,
-      vy:1.55,
+      vy:opt && opt.vy != null ? opt.vy : 1.55,
       r,
       hp,
       maxHp:hp,
@@ -200,7 +264,8 @@
       contactDmg:opt && opt.contactDmg != null ? opt.contactDmg : 22,
       hitPlayerCd:0,
       bob:0,
-      eventBoss:true
+      eventBoss:true,
+      questBoss:!!(opt && opt.questBoss)
     };
   }
 
@@ -230,7 +295,8 @@
       shootCd:210 + intRand(0, 70),
       burstShot:false,
       bulletLarge:false,
-      bulletColor:'#ffcf5b'
+      bulletColor:'#ffcf5b',
+      eventEnemy:true
     };
   }
 
@@ -280,6 +346,48 @@
       dead:false,
       bob:0
     };
+  }
+
+  function spawnAreaEnemy(api, areaKey, hpMul, coinMul){
+    const D = api.D;
+    let list = [];
+
+    const area = stageAreaData(areaKey);
+    if (area && area.enemies && area.enemies.zako) list = area.enemies.zako;
+    else if (D.enemies && D.enemies.zako) list = D.enemies.zako;
+
+    const def = pick(list);
+    if (def) {
+      api.state.entities.push(makeEnemyEntity(def, api, hpMul, coinMul));
+    }
+  }
+
+  function spawnAreaGimmick(api, areaKey, hpMul, coinMul){
+    const D = api.D;
+    let list = [];
+
+    const area = stageAreaData(areaKey);
+    if (area && area.gimmicks) list = area.gimmicks;
+    else if (D.gimmicks) list = D.gimmicks;
+
+    const def = pick(list);
+    if (def) {
+      api.state.entities.push(makeGimmickEntity(def, api, hpMul, coinMul));
+    }
+  }
+
+  function spawnAreaChest(api, areaKey, hpMul, coinMul){
+    const D = api.D;
+    let list = [];
+
+    const area = stageAreaData(areaKey);
+    if (area && area.chests) list = area.chests;
+    else if (D.chests) list = D.chests;
+
+    const def = pick(list);
+    if (def) {
+      api.state.entities.push(makeChestEntity(def, api, hpMul, coinMul));
+    }
   }
 
   function spawnGoldBosses(api){
@@ -542,6 +650,329 @@
     return true;
   }
 
+  function currentQuestDiff(){
+    return questInfo && questInfo.difficulty ? questInfo.difficulty : getQuestInfo().difficulty;
+  }
+
+  function currentQuestStage(){
+    return questInfo && questInfo.stage ? questInfo.stage : getQuestInfo().stage;
+  }
+
+  function questHpMul(extra){
+    const diff = currentQuestDiff();
+    return Number(diff.hpMul || 1) * Number(extra == null ? 1 : extra);
+  }
+
+  function questEnemyHpMul(extra){
+    const diff = currentQuestDiff();
+    return Number(diff.enemyHpMul || diff.hpMul || 1) * Number(extra == null ? 1 : extra);
+  }
+
+  function questScoreMul(extra){
+    const diff = currentQuestDiff();
+    return Number(diff.scoreMul || 1) * Number(extra == null ? 1 : extra);
+  }
+
+  function questCoinMul(extra){
+    const diff = currentQuestDiff();
+    return Number(diff.coinMul || 1) * Number(extra == null ? 1 : extra);
+  }
+
+  function activeQuestBossAlive(api){
+    return api.state.entities.some(e =>
+      !e.dead &&
+      (e.kind === 'boss' || e.kind === 'midBoss') &&
+      e.questBoss
+    );
+  }
+
+  function spawnQuestBossGroup(api, defs, opt){
+    const W = api.W;
+    const count = defs.length;
+    const margin = count <= 2 ? 0.32 : count <= 3 ? 0.24 : 0.16;
+    const spanA = W * margin;
+    const spanB = W * (1 - margin);
+
+    defs.forEach((def, index) => {
+      const t = count === 1 ? 0.5 : index / (count - 1);
+      const x = spanA + (spanB - spanA) * t;
+      const side = index % 2 === 0 ? 1 : -1;
+
+      api.state.entities.push(makeBossEntity(def, api, {
+        kind:opt && opt.kind ? opt.kind : 'midBoss',
+        x,
+        hpMul:questHpMul(opt && opt.hpMul != null ? opt.hpMul : 1),
+        scoreMul:questScoreMul(opt && opt.scoreMul != null ? opt.scoreMul : 1),
+        coinMul:questCoinMul(opt && opt.coinMul != null ? opt.coinMul : 1),
+        vx:side * Number(opt && opt.vx != null ? opt.vx : 1.15),
+        shootCd:opt && opt.shootCd != null ? opt.shootCd : 82,
+        attackCd:opt && opt.attackCd != null ? opt.attackCd : 135,
+        contactDmg:opt && opt.contactDmg != null ? opt.contactDmg : 18,
+        r:opt && opt.r != null ? opt.r : 84,
+        questBoss:true
+      }));
+    });
+  }
+
+  function updateQuestFieldSpawns(api, areaKey){
+    if (localFrame >= nextEnemyAt) {
+      spawnAreaEnemy(api, areaKey, questEnemyHpMul(0.55), questCoinMul(0.65));
+      nextEnemyAt = localFrame + intRand(95, 155);
+    }
+
+    if (localFrame >= nextGimmickAt) {
+      spawnAreaGimmick(api, areaKey, questEnemyHpMul(0.75), questCoinMul(0.7));
+      nextGimmickAt = localFrame + intRand(135, 210);
+    }
+
+    if (localFrame >= nextChestAt) {
+      if (Math.random() < 0.34) {
+        spawnAreaChest(api, areaKey, questEnemyHpMul(0.65), questCoinMul(0.8));
+      }
+
+      nextChestAt = localFrame + intRand(260, 390);
+    }
+  }
+
+  function updatePteraRush(api){
+    const stage = currentQuestStage();
+    const ptera = midBossDef('grass', QUEST_FALLBACK_BOSSES.ptera);
+    const waves = [2, 3, 5];
+
+    updateQuestFieldSpawns(api, stage.areaKey);
+
+    if (!questWaveSpawned && localFrame > 45) {
+      const count = waves[questPhase] || 0;
+      const defs = [];
+
+      for (let i = 0; i < count; i++) defs.push(ptera);
+
+      spawnQuestBossGroup(api, defs, {
+        kind:'midBoss',
+        hpMul:0.75 + questPhase * 0.12,
+        scoreMul:0.8,
+        coinMul:0.8,
+        r:76,
+        contactDmg:16 + questPhase * 2
+      });
+
+      api.showBanner(`プテラッシュ ${count}体`);
+      questWaveSpawned = true;
+    }
+
+    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 90) {
+      questPhase++;
+      questWaveSpawned = false;
+      localFrame = 35;
+
+      if (questPhase >= waves.length) {
+        api.finishRun(true);
+      }
+    }
+  }
+
+  function updateThieves(api){
+    const stage = currentQuestStage();
+
+    updateQuestFieldSpawns(api, stage.areaKey);
+
+    if (!questBossSpawned && localFrame > 45) {
+      const mira = bossDefByName('ミラモブ', QUEST_FALLBACK_BOSSES.mira);
+
+      spawnQuestBossGroup(api, [mira], {
+        kind:'boss',
+        hpMul:1.0,
+        scoreMul:1.0,
+        coinMul:1.0,
+        r:98,
+        contactDmg:22
+      });
+
+      api.showBanner('盗賊団 ミラモブ出現');
+      questBossSpawned = true;
+    }
+
+    if (localFrame >= nextEnemyAt - 35 && questKills < 30) {
+      spawnAreaEnemy(api, 'desert', questEnemyHpMul(0.7), questCoinMul(0.55));
+    }
+
+    const bossAlive = activeQuestBossAlive(api);
+
+    if (questBossSpawned && !bossAlive && questKills >= 30 && localFrame > 120) {
+      api.finishRun(true);
+    }
+  }
+
+  function updateGuardianTest(api){
+    const stage = currentQuestStage();
+
+    updateQuestFieldSpawns(api, stage.areaKey);
+
+    if (!questWaveSpawned && localFrame > 55) {
+      const ban = bossDefByName('番人', QUEST_FALLBACK_BOSSES.ban);
+
+      spawnQuestBossGroup(api, [ban, ban], {
+        kind:'midBoss',
+        hpMul:0.75,
+        scoreMul:0.9,
+        coinMul:0.8,
+        r:72,
+        contactDmg:18
+      });
+
+      api.showBanner('番人試験');
+      questWaveSpawned = true;
+    }
+
+    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
+      api.finishRun(true);
+    }
+  }
+
+  function updateNineHeads(api){
+    const stage = currentQuestStage();
+    const ghidora = midBossDef('neon', QUEST_FALLBACK_BOSSES.ghidora);
+
+    updateQuestFieldSpawns(api, stage.areaKey);
+
+    if (!questWaveSpawned && questPhase === 0 && localFrame > 55) {
+      spawnQuestBossGroup(api, [ghidora, ghidora, ghidora], {
+        kind:'midBoss',
+        hpMul:0.9,
+        scoreMul:1.0,
+        coinMul:1.0,
+        r:82,
+        contactDmg:20
+      });
+
+      api.showBanner('9つの首');
+      questWaveSpawned = true;
+    }
+
+    if (questPhase === 0 && questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
+      questPhase = 1;
+      questWaveSpawned = false;
+      localFrame = 35;
+    }
+
+    if (!questWaveSpawned && questPhase === 1 && localFrame > 55) {
+      spawnQuestBossGroup(api, [ghidora], {
+        kind:'midBoss',
+        hpMul:2.1,
+        scoreMul:2.0,
+        coinMul:1.5,
+        r:118,
+        contactDmg:28,
+        vx:1.35
+      });
+
+      api.showBanner('大型ネオンギドラ');
+      questWaveSpawned = true;
+    }
+
+    if (questPhase === 1 && questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
+      api.finishRun(true);
+    }
+  }
+
+  function updateHotMagma(api){
+    const stage = currentQuestStage();
+
+    updateQuestFieldSpawns(api, stage.areaKey);
+
+    if (questPhase === 0) {
+      if (localFrame >= nextEnemyAt - 35 && questKills < 30) {
+        spawnAreaEnemy(api, 'magma', questEnemyHpMul(0.8), questCoinMul(0.55));
+      }
+
+      if (questKills >= 30) {
+        questPhase = 1;
+        questWaveSpawned = false;
+        localFrame = 35;
+        api.showBanner('ドラゴン出現準備');
+      }
+
+      return;
+    }
+
+    if (!questWaveSpawned && questPhase === 1 && localFrame > 55) {
+      const dragon = bossDefByName('ドラゴンモブ', QUEST_FALLBACK_BOSSES.dragon);
+      const mid = midBossDef('magma', QUEST_FALLBACK_BOSSES.dragon);
+
+      spawnQuestBossGroup(api, [dragon, mid, mid], {
+        kind:'midBoss',
+        hpMul:1.15,
+        scoreMul:1.25,
+        coinMul:1.1,
+        r:90,
+        contactDmg:24
+      });
+
+      api.state.entities.forEach(e => {
+        if (e.questBoss && e.name === dragon.name) {
+          e.kind = 'boss';
+          e.r = 106;
+          e.hp = Math.ceil(e.hp * 1.25);
+          e.maxHp = e.hp;
+        }
+      });
+
+      api.showBanner('アチアチマグマ');
+      questWaveSpawned = true;
+    }
+
+    if (questPhase === 1 && questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
+      api.finishRun(true);
+    }
+  }
+
+  function updateLilithSisters(api){
+    const stage = currentQuestStage();
+
+    updateQuestFieldSpawns(api, stage.areaKey);
+
+    if (!questWaveSpawned && localFrame > 55) {
+      const lilith = bossDefByName('モブリリス', QUEST_FALLBACK_BOSSES.lilith);
+
+      spawnQuestBossGroup(api, [lilith, lilith, lilith, lilith], {
+        kind:'boss',
+        hpMul:0.72,
+        scoreMul:0.85,
+        coinMul:0.8,
+        r:74,
+        contactDmg:18,
+        shootCd:86,
+        attackCd:145
+      });
+
+      api.showBanner('リリス四姉妹');
+      questWaveSpawned = true;
+    }
+
+    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
+      api.finishRun(true);
+    }
+  }
+
+  function updateEventQuest(api){
+    const stage = currentQuestStage();
+
+    localFrame++;
+
+    if (localFrame === 1) {
+      api.showBanner(`${stage.title} ${currentQuestDiff().name}`);
+    }
+
+    if (stage.key === 'pterarush') updatePteraRush(api);
+    else if (stage.key === 'thieves') updateThieves(api);
+    else if (stage.key === 'guardian_test') updateGuardianTest(api);
+    else if (stage.key === 'nine_heads') updateNineHeads(api);
+    else if (stage.key === 'hot_magma') updateHotMagma(api);
+    else if (stage.key === 'lilith_sisters') updateLilithSisters(api);
+
+    return true;
+  }
+
   function startCurrentEvent(api){
     eventData = getEvent();
 
@@ -564,6 +995,13 @@
     scoreAttackIndex = 0;
     finishBonusApplied = false;
 
+    questInfo = null;
+    questPhase = 0;
+    questKills = 0;
+    questBossSpawned = false;
+    questWaveSpawned = false;
+    questTargetKills = 0;
+
     api.state.entities.length = 0;
     api.state.bullets.length = 0;
     api.state.particles.length = 0;
@@ -580,7 +1018,7 @@
     if (eventType === 'doubleBoss') {
       const info = getDoubleInfo();
       api.setEventMode({ active:true, key:'doubleBoss' });
-      setStageVisual(api, `DOUBLE ${info.difficulty.name}`, null);
+      setStageVisual(api, `DOUBLE ${info.difficulty.name}`, null, info.stage.areaKey, info.stage.areaName);
       api.showBanner(`ダブルボス ${info.stage.title}`);
       return true;
     }
@@ -589,6 +1027,22 @@
       api.setEventMode({ active:true, key:'scoreAttack' });
       setStageVisual(api, 'SCORE ATTACK', 'sta/backneon.png');
       api.showBanner('スコアアタック');
+      return true;
+    }
+
+    if (eventType === 'eventQuest') {
+      questInfo = getQuestInfo();
+
+      api.setEventMode({ active:true, key:'eventQuest' });
+      setStageVisual(
+        api,
+        `QUEST ${questInfo.difficulty.name}`,
+        questInfo.stage.background || null,
+        questInfo.stage.areaKey,
+        questInfo.stage.areaName
+      );
+
+      api.showBanner(`${questInfo.stage.title}`);
       return true;
     }
 
@@ -602,6 +1056,7 @@
     if (eventType === 'gold') return updateGold(api);
     if (eventType === 'doubleBoss') return updateDoubleBoss(api);
     if (eventType === 'scoreAttack') return updateScoreAttack(api);
+    if (eventType === 'eventQuest') return updateEventQuest(api);
 
     return false;
   }
@@ -609,9 +1064,19 @@
   function onEntityKilled(entity, api){
     if (!active || !entity) return;
 
-    if (entity.kind === 'boss') {
+    if (entity.kind === 'boss' || entity.kind === 'midBoss') {
       if (window.MobShotEvents && window.MobShotEvents.recordEventBossKill) {
         window.MobShotEvents.recordEventBossKill(entity.name);
+      }
+    }
+
+    if (eventType === 'eventQuest') {
+      if (entity.kind === 'enemy') {
+        questKills++;
+      }
+
+      if (entity.questBoss && (entity.kind === 'boss' || entity.kind === 'midBoss')) {
+        questTargetKills++;
       }
     }
   }
@@ -690,6 +1155,18 @@
       text = `スコアアタック終了！ 撃破 ${scoreAttackIndex}体`;
     }
 
+    if (clear && eventType === 'eventQuest') {
+      const info = getQuestInfo();
+      const diff = info.difficulty;
+      const stage = info.stage;
+
+      if (window.MobShotEvents && window.MobShotEvents.recordEventQuestClear) {
+        window.MobShotEvents.recordEventQuestClear(diff.key, stage.id, api.state.coin);
+      }
+
+      text = `${stage.title} ${diff.name} クリア！`;
+    }
+
     if (!clear) {
       text = 'イベント失敗';
     }
@@ -733,6 +1210,24 @@
 
     if (eventType === 'scoreAttack') {
       if (api.hudStage) api.hudStage.textContent = `SCORE ${scoreAttackIndex + 1}`;
+      if (api.hudScore) api.hudScore.textContent = Math.floor(api.state.score).toLocaleString();
+      if (api.hudCoin) api.hudCoin.textContent = Math.floor(api.state.coin).toLocaleString();
+      if (api.hudLife) api.hudLife.textContent = Math.max(0, Math.ceil(api.state.hp));
+
+      return true;
+    }
+
+    if (eventType === 'eventQuest') {
+      const info = getQuestInfo();
+
+      if (api.hudStage) {
+        if (info.stage.key === 'thieves' || info.stage.key === 'hot_magma') {
+          api.hudStage.textContent = `QUEST ${questKills}/30`;
+        } else {
+          api.hudStage.textContent = `QUEST ${info.difficulty.name}`;
+        }
+      }
+
       if (api.hudScore) api.hudScore.textContent = Math.floor(api.state.score).toLocaleString();
       if (api.hudCoin) api.hudCoin.textContent = Math.floor(api.state.coin).toLocaleString();
       if (api.hudLife) api.hudLife.textContent = Math.max(0, Math.ceil(api.state.hp));
