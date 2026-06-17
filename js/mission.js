@@ -222,6 +222,17 @@
         opacity:1;
         transform:translateX(-50%) translateY(-5px);
       }
+
+      .mission-tabs{
+        grid-template-columns:repeat(4,1fr) !important;
+        gap:5px !important;
+      }
+
+      .mission-tab{
+        font-size:11px !important;
+        padding:8px 3px !important;
+        white-space:nowrap;
+      }
     `;
 
     document.head.appendChild(style);
@@ -257,13 +268,10 @@
 
   function showRewardPop(mission, reward){
     const pop = ensureRewardPop();
-
     const name = $('missionRewardName');
     const list = $('missionRewardList');
 
-    if (name) {
-      name.textContent = mission.title;
-    }
+    if (name) name.textContent = mission.title;
 
     let rewardText = '';
 
@@ -298,10 +306,7 @@
 
   function closeRewardPop(){
     const pop = $('missionRewardPop');
-
-    if (pop) {
-      pop.classList.add('hidden');
-    }
+    if (pop) pop.classList.add('hidden');
   }
 
   function showMissionToast(text){
@@ -386,13 +391,16 @@
       goldClear:0,
       scoreAttackClear:0,
       doubleBossClear:0,
+      eventQuestClear:0,
       eventCoinTotal:0,
       eventBossKills:0,
       goldTicketTotal:0,
       goldTicketSpent:0,
       bossKills:{},
       doubleClearByDifficulty:{ veryHard:0, inferno:0, legend:0 },
-      doubleStageClear:{}
+      doubleStageClear:{},
+      questClearByDifficulty:{ easy:0, veryHard:0, legend:0 },
+      questStageClear:{}
     };
   }
 
@@ -803,6 +811,7 @@
 
     const goldRuns = [1,2,3,5,7,10,15,20,30,40,50,75,100,150,200,300,500];
     const doubleRuns = [1,2,3,5,7,10,15,20,30,50,75,100,150,200,300];
+    const questRuns = [1,2,3,5,7,10,15,20,30,50,75,100,150,200,300];
     const tickets = [1,3,5,10,20,30,50,75,100,150,200,300,500,750,1000,2000];
     const bossKills = [1,3,5,10,25,50,100,150,200,300,500,750,1000,1500,2000];
     const eventCoins = [
@@ -814,7 +823,7 @@
       const tier = n >= 300 ? 'huge' : n >= 100 ? 'large' : n >= 20 ? 'medium' : 'small';
       missions.push({
         id:`event_gold_clear_${n}`,
-        tab:'event',
+        tab:'eventGold',
         icon:'金',
         title:`GOLD STAGE ${n}回クリア`,
         desc:'GOLD STAGEの累計クリア回数',
@@ -833,7 +842,7 @@
     ].forEach(item => {
       missions.push({
         id:`event_gold_first_${item.key}`,
-        tab:'event',
+        tab:'eventGold',
         icon:'初',
         title:`GOLD STAGE ${item.name} 初クリア`,
         desc:`GOLD STAGE ${item.name}を初クリア`,
@@ -848,7 +857,7 @@
       const tier = n >= 150 ? 'huge' : n >= 50 ? 'large' : n >= 10 ? 'medium' : 'small';
       missions.push({
         id:`event_double_clear_${n}`,
-        tab:'event',
+        tab:'eventDouble',
         icon:'双',
         title:`ダブルボス ${n}回クリア`,
         desc:'ダブルボスの累計クリア回数',
@@ -877,7 +886,7 @@
         const tier = i === 7 ? 'huge' : diff.key === 'legend' ? 'large' : diff.key === 'inferno' ? 'medium' : 'small';
         missions.push({
           id:`event_double_${diff.key}_${i}`,
-          tab:'event',
+          tab:'eventDouble',
           icon:'双',
           title:`ダブルボス ${diff.name} ${stageNames[i]}クリア`,
           desc:`${diff.name}の${stageNames[i]}をクリア`,
@@ -891,7 +900,7 @@
 
       missions.push({
         id:`event_double_${diff.key}_all`,
-        tab:'event',
+        tab:'eventDouble',
         icon:'制',
         title:`ダブルボス ${diff.name} 全制覇`,
         desc:`${diff.name}の全ステージをクリア`,
@@ -903,11 +912,68 @@
       });
     });
 
+    questRuns.forEach(n => {
+      const tier = n >= 150 ? 'huge' : n >= 50 ? 'large' : n >= 10 ? 'medium' : 'small';
+      missions.push({
+        id:`event_quest_clear_${n}`,
+        tab:'eventQuest',
+        icon:'Q',
+        title:`イベントクエスト ${n}回クリア`,
+        desc:'イベントクエストの累計クリア回数',
+        currentType:'eventQuestClear',
+        target:n,
+        reward:eventRewardByTier(tier)
+      });
+    });
+
+    [
+      { key:'easy', name:'イージー', tier:'small' },
+      { key:'veryHard', name:'ベリーハード', tier:'medium' },
+      { key:'legend', name:'レジェンド', tier:'huge' }
+    ].forEach(diff => {
+      [1,2,3,4,5,6].forEach(stageId => {
+        const questNames = {
+          1:'プテラッシュ',
+          2:'盗賊団',
+          3:'番人試験',
+          4:'9つの首',
+          5:'アチアチマグマ',
+          6:'リリス四姉妹'
+        };
+
+        missions.push({
+          id:`event_quest_${diff.key}_${stageId}`,
+          tab:'eventQuest',
+          icon:'Q',
+          title:`${questNames[stageId]} ${diff.name}クリア`,
+          desc:`イベントクエスト ${questNames[stageId]} ${diff.name}`,
+          currentType:'eventQuestStage',
+          difficulty:diff.key,
+          stageId,
+          target:1,
+          reward:eventRewardByTier(diff.tier)
+        });
+      });
+
+      missions.push({
+        id:`event_quest_${diff.key}_all`,
+        tab:'eventQuest',
+        icon:'制',
+        title:`イベントクエスト ${diff.name} 全制覇`,
+        desc:`${diff.name}のイベントクエストを全てクリア`,
+        currentType:'eventQuestAll',
+        difficulty:diff.key,
+        maxStage:6,
+        target:6,
+        reward:eventRewardByTier(diff.key === 'legend' ? 'huge' : 'large')
+      });
+    });
+
     tickets.forEach(n => {
       const tier = n >= 1000 ? 'huge' : n >= 300 ? 'large' : n >= 50 ? 'medium' : 'small';
       missions.push({
         id:`event_ticket_${n}`,
-        tab:'event',
+        tab:'eventOther',
         icon:'券',
         title:`GOLD TICKET 累計${n}枚入手`,
         desc:'通常ステージの宝箱などから入手した累計枚数',
@@ -921,7 +987,7 @@
       const tier = n >= 750 ? 'huge' : n >= 200 ? 'large' : n >= 50 ? 'medium' : 'small';
       missions.push({
         id:`event_boss_kill_${n}`,
-        tab:'event',
+        tab:'eventOther',
         icon:'撃',
         title:`イベントボス累計${n}体撃破`,
         desc:'イベント中に撃破したボスの累計数',
@@ -935,7 +1001,7 @@
       const tier = n >= 5000000 ? 'huge' : n >= 1000000 ? 'large' : n >= 100000 ? 'medium' : 'small';
       missions.push({
         id:`event_coin_${n}`,
-        tab:'event',
+        tab:'eventOther',
         icon:'￥',
         title:`イベント累計${n.toLocaleString()}コイン獲得`,
         desc:'イベント報酬で獲得した累計コイン',
@@ -1048,6 +1114,7 @@
 
     if (mission.currentType === 'eventGoldClear') return Number(ev.goldClear || 0);
     if (mission.currentType === 'eventDoubleClear') return Number(ev.doubleBossClear || 0);
+    if (mission.currentType === 'eventQuestClear') return Number(ev.eventQuestClear || 0);
     if (mission.currentType === 'eventTicketTotal') return Number(ev.goldTicketTotal || 0);
     if (mission.currentType === 'eventBossKills') return Number(ev.eventBossKills || 0);
     if (mission.currentType === 'eventCoinTotal') return Number(ev.eventCoinTotal || 0);
@@ -1072,6 +1139,22 @@
       return count;
     }
 
+    if (mission.currentType === 'eventQuestStage') {
+      return window.MobShotEvents && window.MobShotEvents.hasQuestCleared && window.MobShotEvents.hasQuestCleared(mission.difficulty, mission.stageId) ? 1 : 0;
+    }
+
+    if (mission.currentType === 'eventQuestAll') {
+      let count = 0;
+
+      for (let i = 1; i <= Number(mission.maxStage || 0); i++) {
+        if (window.MobShotEvents && window.MobShotEvents.hasQuestCleared && window.MobShotEvents.hasQuestCleared(mission.difficulty, i)) {
+          count++;
+        }
+      }
+
+      return count;
+    }
+
     return Number(s[mission.currentType] || 0);
   }
 
@@ -1082,7 +1165,10 @@
     [
       { id:'missionTabCollection', text:'石板', tab:'collection' },
       { id:'missionTabSkill', text:'スキル', tab:'skill' },
-      { id:'missionTabEvent', text:'イベント', tab:'event' }
+      { id:'missionTabEventGold', text:'GOLD', tab:'eventGold' },
+      { id:'missionTabEventDouble', text:'ダブル', tab:'eventDouble' },
+      { id:'missionTabEventQuest', text:'クエスト', tab:'eventQuest' },
+      { id:'missionTabEventOther', text:'イベント他', tab:'eventOther' }
     ].forEach(item => {
       if ($(item.id)) return;
 
@@ -1134,17 +1220,15 @@
     const list = $('missionList');
     if (!list) return;
 
+    if (missionState.claimed[mission.id]) return;
+
     const current = currentValue(mission, save);
     const complete = current >= mission.target;
-    const claimed = !!missionState.claimed[mission.id];
     const rate = progressRate(current, mission.target);
 
     const card = document.createElement('div');
 
-    card.className =
-      'mission-card' +
-      (complete ? ' complete' : '') +
-      (claimed ? ' claimed' : '');
+    card.className = 'mission-card' + (complete ? ' complete' : '');
 
     card.innerHTML = `
       <div class="mission-card-icon">${mission.icon}</div>
@@ -1160,21 +1244,29 @@
       </div>
 
       <div class="mission-card-actions">
-        <button type="button" class="mission-card-btn ${claimed ? 'claimed' : complete ? 'ready' : ''}" ${claimed || !complete ? 'disabled' : ''}>
-          ${claimed ? '受取済' : complete ? '受け取る' : '未達成'}
+        <button type="button" class="mission-card-btn ${complete ? 'ready' : ''}" ${!complete ? 'disabled' : ''}>
+          ${complete ? '受け取る' : '未達成'}
         </button>
       </div>
     `;
 
     const btn = card.querySelector('.mission-card-btn');
 
-    if (btn && complete && !claimed) {
+    if (btn && complete) {
       btn.addEventListener('click', function(){
         claimMission(mission.id);
       });
     }
 
     list.appendChild(card);
+  }
+
+  function visibleMissionsForTab(tab, missionState){
+    return allMissions().filter(mission => {
+      if (mission.tab !== tab) return false;
+      if (missionState.claimed[mission.id]) return false;
+      return true;
+    });
   }
 
   function render(){
@@ -1185,14 +1277,28 @@
 
     const missionState = loadState();
     const save = getSave();
+    const missions = visibleMissionsForTab(currentTab, missionState);
 
     list.innerHTML = '';
 
-    allMissions()
-      .filter(mission => mission.tab === currentTab)
-      .forEach(mission => {
-        renderMissionCard(mission, missionState, save);
-      });
+    if (!missions.length) {
+      const empty = document.createElement('div');
+      empty.className = 'mission-card';
+      empty.innerHTML = `
+        <div class="mission-card-icon">完</div>
+        <div class="mission-card-body">
+          <div class="mission-card-name">表示できるミッションはありません</div>
+          <div class="mission-card-desc">受け取り済みのミッションは一覧から消えます。</div>
+          <div class="mission-card-reward">次の条件達成を目指そう！</div>
+        </div>
+      `;
+      list.appendChild(empty);
+      return;
+    }
+
+    missions.forEach(mission => {
+      renderMissionCard(mission, missionState, save);
+    });
   }
 
   function setTab(tab){
@@ -1208,7 +1314,10 @@
       coin:$('missionTabCoin'),
       collection:$('missionTabCollection'),
       skill:$('missionTabSkill'),
-      event:$('missionTabEvent')
+      eventGold:$('missionTabEventGold'),
+      eventDouble:$('missionTabEventDouble'),
+      eventQuest:$('missionTabEventQuest'),
+      eventOther:$('missionTabEventOther')
     };
 
     Object.keys(tabs).forEach(key => {
@@ -1220,8 +1329,9 @@
     const help = $('missionHelpText');
 
     if (help) {
-      const count = allMissions().filter(m => m.tab === tab).length;
-      help.textContent = `${count}個のミッションがあります。条件達成後に報酬を受け取れます。`;
+      const missionState = loadState();
+      const count = visibleMissionsForTab(tab, missionState).length;
+      help.textContent = `${count}個の未受取ミッションがあります。受け取ったミッションは一覧から消えます。`;
     }
 
     render();
@@ -1285,7 +1395,10 @@
       missionTabCoin:'coin',
       missionTabCollection:'collection',
       missionTabSkill:'skill',
-      missionTabEvent:'event'
+      missionTabEventGold:'eventGold',
+      missionTabEventDouble:'eventDouble',
+      missionTabEventQuest:'eventQuest',
+      missionTabEventOther:'eventOther'
     };
 
     Object.keys(tabMap).forEach(id => {
