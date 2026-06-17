@@ -45,6 +45,22 @@
     'prison','matrix','seaRail','neonHighway','makai','last'
   ];
 
+  const RANK_MAX = 100;
+
+  const RANK_SCORE_TABLE = [
+    0,
+    0,
+    1000,
+    3000,
+    6000,
+    10000,
+    16000,
+    24000,
+    34000,
+    46000,
+    60000
+  ];
+
   function buildStageList(){
     const list = [];
 
@@ -117,20 +133,30 @@
     };
   }
 
+  function scoreNeedForRank(rank){
+    rank = Number(rank || 1);
+
+    if (rank <= 1) return 0;
+    if (rank <= 10) return RANK_SCORE_TABLE[rank] || 0;
+
+    const over = rank - 10;
+    return 60000 + Math.floor(Math.pow(over, 1.72) * 6500);
+  }
+
   function calcRank(totalScore){
     totalScore = Number(totalScore || 0);
 
-    if (totalScore >= 1500000) return 10;
-    if (totalScore >= 800000) return 9;
-    if (totalScore >= 400000) return 8;
-    if (totalScore >= 200000) return 7;
-    if (totalScore >= 100000) return 6;
-    if (totalScore >= 50000) return 5;
-    if (totalScore >= 30000) return 4;
-    if (totalScore >= 12500) return 3;
-    if (totalScore >= 5000) return 2;
+    let rank = 1;
 
-    return 1;
+    for (let r = 2; r <= RANK_MAX; r++) {
+      if (totalScore >= scoreNeedForRank(r)) {
+        rank = r;
+      } else {
+        break;
+      }
+    }
+
+    return Math.max(1, Math.min(RANK_MAX, rank));
   }
 
   function normalizeSave(saveData){
@@ -142,7 +168,11 @@
     saveData.bestScore = Number(saveData.bestScore || 0);
     saveData.coin = Number(saveData.coin || 0);
     saveData.diamond = Number(saveData.diamond || 0);
-    saveData.rank = Number(saveData.rank || calcRank(saveData.totalScore));
+    saveData.rank = Math.max(
+      Number(saveData.rank || 1),
+      calcRank(saveData.totalScore)
+    );
+    saveData.rank = Math.max(1, Math.min(RANK_MAX, Number(saveData.rank || 1)));
 
     saveData.stageProgress = Object.assign(defaultSave().stageProgress, saveData.stageProgress || {});
     saveData.stageProgress.highest = Object.assign(defaultHighestStages(), saveData.stageProgress.highest || {});
@@ -296,14 +326,30 @@
     score = Number(score || 0);
     coin = Number(coin || 0);
 
+    const beforeRank = Number(data.rank || 1);
+
     data.totalScore += score;
     data.bestScore = Math.max(data.bestScore, score);
     data.coin += coin;
     data.missionStats.totalEarnedCoin += coin;
 
-    data.rank = Math.max(Number(data.rank || 1), calcRank(data.totalScore));
+    const afterRank = Math.max(beforeRank, calcRank(data.totalScore));
+    data.rank = Math.max(1, Math.min(RANK_MAX, afterRank));
 
-    return save(data);
+    const saved = save(data);
+
+    if (saved.rank > beforeRank) {
+      window.dispatchEvent(new CustomEvent('mobshot:rankUp', {
+        detail: {
+          beforeRank,
+          rank: saved.rank,
+          totalScore: saved.totalScore,
+          nextScore: scoreNeedForRank(saved.rank + 1)
+        }
+      }));
+    }
+
+    return saved;
   }
 
   function recordStageClearByInfo(info){
@@ -431,6 +477,7 @@
     load,
     save,
     calcRank,
+    scoreNeedForRank,
     addRunResult,
 
     getCurrentStage,
@@ -452,6 +499,7 @@
     resetSave,
     clearAllMobShotStorage,
 
+    RANK_MAX,
     STAGE_LIST,
     STAGE_AREAS,
     AREA_ORDER
