@@ -287,6 +287,7 @@
     const r = opt && opt.r != null ? opt.r : 112;
     const kind = opt && opt.kind ? opt.kind : 'boss';
     const hp = Math.ceil(Number(def.hp || 1000) * hpMul);
+    const scale = opt && opt.scale != null ? Number(opt.scale) : 1;
 
     return {
       kind,
@@ -310,6 +311,9 @@
       contactDmg:opt && opt.contactDmg != null ? opt.contactDmg : 20,
       hitPlayerCd:0,
       bob:0,
+      scale,
+      drawScale:scale,
+      sizeMul:scale,
       eventBoss:true,
       questBoss:!!(opt && opt.questBoss)
     };
@@ -713,6 +717,7 @@
         attackCd:opt && opt.attackCd != null ? opt.attackCd : 145,
         contactDmg:opt && opt.contactDmg != null ? opt.contactDmg : 18,
         r:opt && opt.r != null ? opt.r : 78,
+        scale:opt && opt.scale != null ? opt.scale : 1,
         questBoss:true
       }));
     });
@@ -957,11 +962,24 @@
         hpMul:0.62,
         scoreMul:0.75,
         coinMul:0.65,
-        r:38,
+        r:56,
+        scale:0.5,
         contactDmg:12,
         shootCd:96,
         attackCd:155,
         vx:1.45
+      });
+
+      api.state.entities.forEach(e => {
+        if (e.questBoss && sameName(e.name, 'モブリリス')) {
+          e.r = 56;
+          e.w = 56;
+          e.h = 56;
+          e.scale = 0.5;
+          e.drawScale = 0.5;
+          e.sizeMul = 0.5;
+          e.eventLilithSister = true;
+        }
       });
 
       api.showBanner('リリス四姉妹');
