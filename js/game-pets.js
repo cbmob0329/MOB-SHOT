@@ -15,7 +15,7 @@
 
     if (!petImages.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260616_pet_battle_v2';
+      image.src = src + '?v=20260616_pet_battle_v3_balance';
       petImages.set(src, image);
     }
 
@@ -206,7 +206,7 @@
     }
 
     if (key === 'wondamob') {
-      addSupport('rapid', level(pet) >= 30 ? 1.5 : 1.2, 8 * 60);
+      addSupport('rapid', level(pet) >= 30 ? 1.35 : 1.15, 8 * 60);
     }
 
     if (key === 'punimobpink') {
@@ -226,7 +226,7 @@
 
         const rate = getSkillPowerRate(pet, target);
         const dmg = gameState.power * rate * getSupportPowerRate();
-        const offset = (w - (wide - 1) / 2) * 20;
+        const offset = (w - (wide - 1) / 2) * 26;
 
         pushBullet(pet, target, dmg, 'skill', offset);
       }
@@ -252,39 +252,39 @@
 
     if (key === 'mobdrago') {
       if (lv >= 5) count += 1;
-      if (lv >= 30) count = 15;
+      if (lv >= 30) count = 12;
     } else if (key === 'mobfrog') {
       if (lv >= 5) count += 1;
-      if (lv >= 30) count = 6;
+      if (lv >= 30) count = 5;
     } else if (key === 'mobdenden') {
       if (lv >= 5) count += 2;
-      if (lv >= 30) count = 20;
+      if (lv >= 30) count = 16;
     } else if (key === 'mobwolf') {
       if (lv >= 5) count += 1;
-      if (lv >= 30) count = 10;
-    } else if (key === 'mobslime') {
       if (lv >= 30) count = 8;
+    } else if (key === 'mobslime') {
+      if (lv >= 30) count = 6;
     } else if (key === 'mobchibihawk') {
       if (lv >= 30) count = 2;
     } else if (key === 'punimobpink') {
-      if (lv >= 30) count = 12;
+      if (lv >= 30) count = 10;
     } else if (key === 'minimiramob') {
       if (lv >= 5) count += 2;
       if (lv >= 25) count += 2;
-      if (lv >= 30) count = 12;
+      if (lv >= 30) count = 10;
     } else if (key === 'neonkidmob') {
       if (lv >= 5) count += 1;
-      if (lv >= 30) count = 5;
+      if (lv >= 30) count = 4;
     } else if (key === 'minidramob') {
       if (lv >= 5) count += 1;
       if (lv >= 30) count = 3;
     } else if (key === 'merurumob') {
       if (lv >= 15) count += 2;
-      if (lv >= 30) count = 7;
+      if (lv >= 30) count = 6;
     } else if (key === 'lilmoblilith') {
       if (lv >= 5) count += 2;
-      if (lv >= 25) count += 4;
-      if (lv >= 30) count = 18;
+      if (lv >= 25) count += 3;
+      if (lv >= 30) count = 14;
     } else if (key === 'chibimaohmob') {
       if (lv >= 30) count = 2;
     } else if (key === 'chibimobmelt') {
@@ -292,14 +292,14 @@
       if (lv >= 30) count = 3;
     } else if (key === 'lilmobnep') {
       if (lv >= 5) count += 1;
-      if (lv >= 30) count = 6;
+      if (lv >= 30) count = 5;
     } else if (key === 'chibiulmob') {
       if (lv >= 5) count += 2;
-      if (lv >= 25) count += 4;
-      if (lv >= 30) count = 16;
+      if (lv >= 25) count += 3;
+      if (lv >= 30) count = 13;
     } else if (key === 'hero') {
       if (lv >= 5) count += 1;
-      if (lv >= 30) count = 5;
+      if (lv >= 30) count = 4;
     }
 
     return Math.max(1, count);
@@ -318,23 +318,23 @@
       rate = Number(pet.data.skillBossRate || rate);
     }
 
-    if (key === 'mobdrago' && lv >= 30) rate = 2.2;
-    if (key === 'mobfrog' && lv >= 30) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 5.5 : 3.8;
-    if (key === 'mobdenden' && lv >= 30) rate = 1.3;
-    if (key === 'mobwolf' && lv >= 30) rate = target && (target.kind === 'boss' || target.kind === 'midBoss') ? 5.0 : 3.2;
-    if (key === 'mobslime' && lv >= 30) rate = 1.8;
-    if (key === 'mobchibihawk') rate = lv >= 30 ? 9.0 : lv >= 5 ? 5.0 : 4.5;
-    if (key === 'punimobpink' && lv >= 30) rate = 1.8;
-    if (key === 'minimiramob' && lv >= 30) rate = 2.3;
-    if (key === 'neonkidmob' && lv >= 30) rate = 3.2;
-    if (key === 'minidramob' && lv >= 30) rate = 8.5;
-    if (key === 'merurumob' && lv >= 30) rate = 3.8;
-    if (key === 'lilmoblilith' && lv >= 30) rate = 2.6;
-    if (key === 'chibimaohmob') rate = lv >= 30 ? 12.0 : lv >= 5 ? 8.0 : 7.0;
-    if (key === 'chibimobmelt' && lv >= 30) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 10.0 : 7.0;
-    if (key === 'lilmobnep' && lv >= 30) rate = 5.0;
-    if (key === 'chibiulmob' && lv >= 30) rate = 3.8;
-    if (key === 'hero' && lv >= 30) rate = 10.0;
+    if (key === 'mobdrago' && lv >= 30) rate = 1.7;
+    if (key === 'mobfrog' && lv >= 30) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 4.0 : 2.7;
+    if (key === 'mobdenden' && lv >= 30) rate = 1.0;
+    if (key === 'mobwolf' && lv >= 30) rate = target && (target.kind === 'boss' || target.kind === 'midBoss') ? 3.6 : 2.3;
+    if (key === 'mobslime' && lv >= 30) rate = 1.4;
+    if (key === 'mobchibihawk') rate = lv >= 30 ? 6.0 : lv >= 5 ? 3.5 : 3.0;
+    if (key === 'punimobpink' && lv >= 30) rate = 1.35;
+    if (key === 'minimiramob' && lv >= 30) rate = 1.75;
+    if (key === 'neonkidmob' && lv >= 30) rate = 2.3;
+    if (key === 'minidramob' && lv >= 30) rate = 6.0;
+    if (key === 'merurumob' && lv >= 30) rate = 2.7;
+    if (key === 'lilmoblilith' && lv >= 30) rate = 1.9;
+    if (key === 'chibimaohmob') rate = lv >= 30 ? 8.0 : lv >= 5 ? 5.5 : 4.8;
+    if (key === 'chibimobmelt' && lv >= 30) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 7.0 : 5.0;
+    if (key === 'lilmobnep' && lv >= 30) rate = 3.6;
+    if (key === 'chibiulmob' && lv >= 30) rate = 2.7;
+    if (key === 'hero' && lv >= 30) rate = 7.0;
 
     return skillRate(pet, rate);
   }
@@ -344,13 +344,13 @@
     let power = Number(type === 'skill' ? pet.data.skillBreakPower || 0 : pet.data.normalBreakPower || 0);
 
     if (type === 'skill') {
-      if (pet.data.key === 'mobdrago' && lv >= 30) power = 500;
-      if (pet.data.key === 'mobfrog' && lv >= 30) power = 800;
-      if (pet.data.key === 'mobdenden' && lv >= 30) power = 300;
-      if (pet.data.key === 'mobwolf' && lv >= 30) power = 1000;
-      if (pet.data.key === 'mobchibihawk' && lv >= 30) power = 1500;
-      if (pet.data.key === 'minidramob' && lv >= 30) power = 2500;
-      if (pet.data.key === 'hero' && lv >= 30) power = 3000;
+      if (pet.data.key === 'mobdrago' && lv >= 30) power = 350;
+      if (pet.data.key === 'mobfrog' && lv >= 30) power = 550;
+      if (pet.data.key === 'mobdenden' && lv >= 30) power = 220;
+      if (pet.data.key === 'mobwolf' && lv >= 30) power = 700;
+      if (pet.data.key === 'mobchibihawk' && lv >= 30) power = 1000;
+      if (pet.data.key === 'minidramob' && lv >= 30) power = 1600;
+      if (pet.data.key === 'hero' && lv >= 30) power = 2000;
     }
 
     return power;
@@ -373,7 +373,7 @@
       damage,
       target,
       type,
-      life:type === 'skill' ? 95 : 70,
+      life:type === 'skill' ? 125 : 78,
       color:bulletColor(pet.data, type),
       image:pet.data.atkImage || '',
       htmlBullet:pet.data.htmlBullet || '',
@@ -383,25 +383,27 @@
   }
 
   function getBulletSpeed(pet, type){
-    let speed = type === 'skill' ? 9.2 : 7.4;
+    let speed = type === 'skill' ? 5.6 : 7.4;
 
-    if (pet.data.key === 'mobdrago' && level(pet) >= 15) speed *= 1.3;
-    if (pet.data.key === 'mobchibihawk' && level(pet) >= 25) speed *= 2.0;
-    if (pet.data.key === 'lilmobnep' && level(pet) >= 25) speed *= 1.5;
-    if (pet.data.key === 'neonkidmob' && level(pet) >= 25) speed *= 1.4;
+    if (type === 'skill') {
+      if (pet.data.key === 'mobdrago' && level(pet) >= 15) speed *= 1.12;
+      if (pet.data.key === 'mobchibihawk' && level(pet) >= 25) speed *= 1.35;
+      if (pet.data.key === 'lilmobnep' && level(pet) >= 25) speed *= 1.18;
+      if (pet.data.key === 'neonkidmob' && level(pet) >= 25) speed *= 1.15;
+    }
 
     return speed;
   }
 
   function getBulletRadius(pet, type){
-    let r = type === 'skill' ? 11 : 5;
+    let r = type === 'skill' ? 18 : 5;
 
-    if (pet.data.atkImage && type === 'skill') r = 15;
-    if (pet.data.key === 'chibimaohmob' && type === 'skill') r = 24;
-    if (pet.data.key === 'minidramob' && type === 'skill') r = 20;
-    if (pet.data.key === 'lilmobnep' && level(pet) >= 15) r *= 1.3;
-    if (pet.data.key === 'hero' && level(pet) >= 25) r *= 1.5;
-    if (pet.data.key === 'chibimobmelt' && level(pet) >= 25) r *= 1.35;
+    if (pet.data.atkImage && type === 'skill') r = 22;
+    if (pet.data.key === 'chibimaohmob' && type === 'skill') r = 32;
+    if (pet.data.key === 'minidramob' && type === 'skill') r = 28;
+    if (pet.data.key === 'lilmobnep' && type === 'skill' && level(pet) >= 15) r *= 1.25;
+    if (pet.data.key === 'hero' && type === 'skill' && level(pet) >= 25) r *= 1.35;
+    if (pet.data.key === 'chibimobmelt' && type === 'skill' && level(pet) >= 25) r *= 1.25;
 
     return r;
   }
@@ -692,7 +694,7 @@
       const image = img(b.image);
 
       if (imageReady(image)) {
-        const size = b.type === 'skill' ? b.r * 3.2 : b.r * 2.8;
+        const size = b.type === 'skill' ? b.r * 3.5 : b.r * 2.8;
         ctx.drawImage(image, b.x - size / 2, b.y - size / 2, size, size);
       } else {
         drawHtmlBullet(ctx, b);
@@ -705,13 +707,15 @@
   function drawHtmlBullet(ctx, b){
     ctx.fillStyle = b.color;
     ctx.strokeStyle = '#111';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = b.type === 'skill' ? 3 : 2;
 
     if (b.htmlBullet === 'fire') {
       ctx.fillStyle = b.type === 'skill' ? '#ff6530' : '#ffb347';
       ctx.beginPath();
       ctx.arc(b.x, b.y, b.r + 3, 0, Math.PI * 2);
       ctx.fill();
+      ctx.stroke();
+
       ctx.fillStyle = '#ffe66b';
       ctx.beginPath();
       ctx.arc(b.x - 2, b.y - 2, b.r * 0.45, 0, Math.PI * 2);
@@ -722,22 +726,30 @@
       ctx.arc(b.x, b.y, b.r + 2, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
+
+      if (b.type === 'skill') {
+        ctx.globalAlpha = 0.35;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r + 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
     } else if (b.htmlBullet === 'thunder') {
       ctx.fillStyle = '#fff35a';
       ctx.beginPath();
-      ctx.moveTo(b.x, b.y - b.r - 4);
-      ctx.lineTo(b.x + b.r, b.y);
-      ctx.lineTo(b.x + 2, b.y + 2);
-      ctx.lineTo(b.x + b.r * 0.8, b.y + b.r + 5);
-      ctx.lineTo(b.x - b.r, b.y);
-      ctx.lineTo(b.x - 2, b.y - 2);
+      ctx.moveTo(b.x, b.y - b.r - 6);
+      ctx.lineTo(b.x + b.r, b.y - 2);
+      ctx.lineTo(b.x + 3, b.y + 3);
+      ctx.lineTo(b.x + b.r * 0.8, b.y + b.r + 7);
+      ctx.lineTo(b.x - b.r, b.y + 2);
+      ctx.lineTo(b.x - 3, b.y - 3);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
     } else {
       if (b.type === 'skill') {
         ctx.beginPath();
-        ctx.arc(b.x, b.y, b.r + 4, 0, Math.PI * 2);
+        ctx.arc(b.x, b.y, b.r + 7, 0, Math.PI * 2);
         ctx.globalAlpha = 0.28;
         ctx.fill();
         ctx.globalAlpha = 1;
