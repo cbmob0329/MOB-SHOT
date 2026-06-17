@@ -127,6 +127,99 @@
         100%{margin-top:8px}
       }
 
+      .main-rank-next-badge{
+        position:absolute;
+        left:6.2vw;
+        top:22.8svh;
+        z-index:21;
+        min-width:142px;
+        padding:7px 10px;
+        border-radius:999px;
+        background:rgba(5,8,22,.74);
+        border:2px solid rgba(255,255,255,.28);
+        box-shadow:0 4px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
+        color:#fff;
+        font-size:11px;
+        font-weight:1000;
+        line-height:1.15;
+        text-align:center;
+        text-shadow:0 2px 0 #000;
+        pointer-events:none;
+      }
+
+      .main-rank-next-badge strong{
+        color:#ffe66b;
+        font-size:12px;
+      }
+
+      .mob-rankup-modal{
+        position:absolute;
+        inset:0;
+        z-index:190;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:18px;
+        background:rgba(0,0,0,.72);
+      }
+
+      .mob-rankup-modal.hidden{
+        display:none;
+      }
+
+      .mob-rankup-card{
+        width:min(90vw,420px);
+        border-radius:30px;
+        padding:22px 18px 18px;
+        text-align:center;
+        background:linear-gradient(180deg,rgba(39,31,88,.98),rgba(8,10,28,.98));
+        border:4px solid rgba(255,230,107,.78);
+        box-shadow:0 18px 50px rgba(0,0,0,.72), inset 0 0 0 2px rgba(255,255,255,.12);
+        animation:mobRankPop .26s ease-out;
+      }
+
+      .mob-rankup-title{
+        margin:0 0 8px;
+        color:#ffe66b;
+        font-size:34px;
+        font-weight:1000;
+        text-shadow:0 5px 0 #000;
+        letter-spacing:.04em;
+      }
+
+      .mob-rankup-rank{
+        margin:0 0 12px;
+        color:#fff;
+        font-size:42px;
+        font-weight:1000;
+        text-shadow:0 5px 0 #000;
+      }
+
+      .mob-rankup-text{
+        margin:0 0 16px;
+        color:#dfe8ff;
+        font-size:15px;
+        font-weight:900;
+        line-height:1.55;
+        white-space:pre-line;
+      }
+
+      .mob-rankup-btn{
+        border:0;
+        border-radius:999px;
+        padding:13px 28px;
+        color:#210800;
+        background:linear-gradient(#ffe66b,#ff9f1f);
+        font-size:18px;
+        font-weight:1000;
+        box-shadow:0 5px 0 rgba(0,0,0,.38);
+      }
+
+      @keyframes mobRankPop{
+        0%{transform:scale(.82); opacity:0}
+        100%{transform:scale(1); opacity:1}
+      }
+
       .mob-game-confirm{
         position:absolute;
         inset:0;
@@ -222,6 +315,104 @@
     `;
 
     document.head.appendChild(style);
+  }
+
+  function ensureRankNextBadge(){
+    injectMainStyle();
+
+    if (!mainScreen) return null;
+
+    let badge = $('mainRankNextBadge');
+    if (badge) return badge;
+
+    badge = document.createElement('div');
+    badge.id = 'mainRankNextBadge';
+    badge.className = 'main-rank-next-badge';
+    badge.innerHTML = 'NEXT RANK<br><strong>---</strong>';
+
+    mainScreen.appendChild(badge);
+    return badge;
+  }
+
+  function rankNextText(save){
+    const rank = Number(save.rank || 1);
+    const totalScore = Number(save.totalScore || 0);
+
+    if (!window.MobShotStorage || !window.MobShotStorage.scoreNeedForRank) {
+      return 'NEXT RANK<br><strong>---</strong>';
+    }
+
+    const maxRank = Number(window.MobShotStorage.RANK_MAX || 100);
+
+    if (rank >= maxRank) {
+      return 'RANK MAX<br><strong>COMPLETE</strong>';
+    }
+
+    const nextNeed = Number(window.MobShotStorage.scoreNeedForRank(rank + 1) || 0);
+    const rest = Math.max(0, nextNeed - totalScore);
+
+    return `NEXT RANK<br><strong>あと ${rest.toLocaleString()} SCORE</strong>`;
+  }
+
+  function ensureRankUpModal(){
+    injectMainStyle();
+
+    let modal = $('mobRankUpModal');
+    if (modal) return modal;
+
+    modal = document.createElement('div');
+    modal.id = 'mobRankUpModal';
+    modal.className = 'mob-rankup-modal hidden';
+    modal.innerHTML = `
+      <div class="mob-rankup-card">
+        <h2 class="mob-rankup-title">RANK UP!</h2>
+        <div id="mobRankUpRank" class="mob-rankup-rank">RANK 1</div>
+        <div id="mobRankUpText" class="mob-rankup-text"></div>
+        <button id="mobRankUpOk" class="mob-rankup-btn" type="button">OK</button>
+      </div>
+    `;
+
+    (mainScreen || $('app') || document.body).appendChild(modal);
+
+    const ok = $('mobRankUpOk');
+    if (ok) {
+      ok.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        modal.classList.add('hidden');
+      }, { passive:false });
+    }
+
+    return modal;
+  }
+
+  function showRankUp(detail){
+    const modal = ensureRankUpModal();
+    if (!modal) return;
+
+    const rank = Number(detail && detail.rank || 1);
+    const beforeRank = Number(detail && detail.beforeRank || Math.max(1, rank - 1));
+    const totalScore = Number(detail && detail.totalScore || 0);
+    const maxRank = window.MobShotStorage ? Number(window.MobShotStorage.RANK_MAX || 100) : 100;
+
+    const rankEl = $('mobRankUpRank');
+    const textEl = $('mobRankUpText');
+
+    if (rankEl) rankEl.textContent = `RANK ${beforeRank} → ${rank}`;
+
+    if (textEl) {
+      if (rank >= maxRank) {
+        textEl.textContent = `最高ランクに到達しました！\nTOTAL SCORE ${totalScore.toLocaleString()}`;
+      } else if (window.MobShotStorage && window.MobShotStorage.scoreNeedForRank) {
+        const nextNeed = Number(window.MobShotStorage.scoreNeedForRank(rank + 1) || 0);
+        const rest = Math.max(0, nextNeed - totalScore);
+        textEl.textContent = `TOTAL SCORE ${totalScore.toLocaleString()}\n次のランクまで あと ${rest.toLocaleString()} SCORE`;
+      } else {
+        textEl.textContent = `TOTAL SCORE ${totalScore.toLocaleString()}`;
+      }
+    }
+
+    modal.classList.remove('hidden');
   }
 
   function ensureGameConfirm(){
@@ -362,6 +553,9 @@
     if ($('mainDiamond')) $('mainDiamond').textContent = Number(save.diamond || 0).toLocaleString();
     if ($('mainRank')) $('mainRank').textContent = Number(save.rank || 1).toLocaleString();
     if ($('mainCoin')) $('mainCoin').textContent = Number(save.coin || 0).toLocaleString();
+
+    const badge = ensureRankNextBadge();
+    if (badge) badge.innerHTML = rankNextText(save);
 
     const sortieBtn = $('sortieBtn');
     if (sortieBtn) sortieBtn.setAttribute('data-stage', currentStageText());
@@ -677,6 +871,8 @@
     refreshMainHud();
 
     createDeleteSaveButton();
+    ensureRankNextBadge();
+    ensureRankUpModal();
     ensureGameConfirm();
     initModules();
 
@@ -696,6 +892,11 @@
     window.addEventListener('mobshot:saveUpdated', function(){
       refreshMainHud();
       refreshMainVisuals();
+    });
+
+    window.addEventListener('mobshot:rankUp', function(e){
+      refreshMainHud();
+      showRankUp(e.detail || {});
     });
 
     window.addEventListener('mobshot:gachaUpdated', function(){
@@ -722,6 +923,7 @@
     openPetEquip,
     showGameConfirm,
     showToast,
+    showRankUp,
     clearAllMobShotLocalStorage
   };
 })();
