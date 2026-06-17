@@ -150,6 +150,22 @@
     return stageData[areaKey] || null;
   }
 
+  function eventEnemyPowerMul(key){
+    if (key === 'easy') return 1;
+    if (key === 'hard') return 2.4;
+    if (key === 'veryHard') return 5.5;
+    if (key === 'inferno') return 11;
+    if (key === 'legend') return 22;
+    return 1;
+  }
+
+  function questDifficultyPowerMul(key){
+    if (key === 'easy') return 1;
+    if (key === 'veryHard') return 6.5;
+    if (key === 'legend') return 24;
+    return 1;
+  }
+
   function areaEnemyList(areaKey, api){
     const area = stageAreaData(areaKey);
 
@@ -201,7 +217,6 @@
     const allArea = window.MOBSHOT_STAGE_DATA || {};
     Object.keys(allArea).forEach(key => {
       const a = allArea[key];
-
       if (!a) return;
 
       ['boss', 'strongBoss', 'legendBoss'].forEach(prop => {
@@ -220,7 +235,6 @@
     });
 
     const found = candidates.find(item => item && sameName(item.name, name));
-
     return clone(found || fallback || { name:name || 'BOSS', image:'boss/hawks.png', hp:1000, score:1000, coin:300 });
   }
 
@@ -241,7 +255,6 @@
     }
 
     const found = list.find(item => item && sameName(item.name, name));
-
     if (found) return clone(found);
 
     return findBossDef(api, areaKey, name, fallback);
@@ -317,9 +330,10 @@
       r:31,
       hp,
       maxHp:hp,
-      score:Math.ceil(Number(def.score || 10) * hpMul),
+      score:Math.ceil(Number(def.score || 10) * Math.max(1, hpMul * 0.35)),
       coinMin:Math.ceil(Number(def.coinMin || 1) * coinMul),
       coinMax:Math.ceil(Number(def.coinMax || 2) * coinMul),
+      contactDmg:Math.max(1, Math.ceil(hp * 0.35)),
       dead:false,
       bob:rand(0, Math.PI * 2),
       aiType:'sway',
@@ -349,7 +363,7 @@
       h:58,
       hp,
       maxHp:hp,
-      score:Math.ceil(Number(def.score || 80) * hpMul),
+      score:Math.ceil(Number(def.score || 80) * Math.max(1, hpMul * 0.25)),
       coinMin:Math.ceil(Number(def.coinMin || 10) * coinMul),
       coinMax:Math.ceil(Number(def.coinMax || 25) * coinMul),
       dead:false,
@@ -373,9 +387,10 @@
       h:82,
       hp,
       maxHp:hp,
-      score:Math.ceil(Number(def.score || 10) * hpMul),
+      score:Math.ceil(Number(def.score || 10) * Math.max(1, hpMul * 0.3)),
       coinMin:Math.ceil(Number(def.coinMin || 1) * coinMul),
       coinMax:Math.ceil(Number(def.coinMax || 2) * coinMul),
+      contactDmg:Math.max(1, Math.ceil(hp * 0.32)),
       dead:false,
       bob:0
     };
@@ -442,6 +457,7 @@
     const state = api.state;
     const D = api.D;
     const diff = getGoldDifficulty();
+    const enemyPower = eventEnemyPowerMul(diff.key);
 
     localFrame++;
 
@@ -456,28 +472,49 @@
     if (localFrame >= nextEnemyAt) {
       if (diff.enemySpawn !== false && D.enemies && D.enemies.zako) {
         const def = pick(D.enemies.zako);
-        if (def) state.entities.push(makeEnemyEntity(def, api, Number(diff.bossHpMul || 1) * 0.35, Number(diff.bossCoinMul || 1)));
+        if (def) {
+          state.entities.push(makeEnemyEntity(
+            def,
+            api,
+            Number(diff.bossHpMul || 1) * 0.35 * enemyPower,
+            Number(diff.bossCoinMul || 1)
+          ));
+        }
       }
 
       nextEnemyAt = localFrame + intRand(
-        diff.key === 'legend' ? 120 : diff.key === 'inferno' ? 140 : 180,
-        diff.key === 'legend' ? 180 : diff.key === 'inferno' ? 220 : 260
+        diff.key === 'legend' ? 100 : diff.key === 'inferno' ? 125 : 170,
+        diff.key === 'legend' ? 155 : diff.key === 'inferno' ? 195 : 250
       );
     }
 
     if (localFrame >= nextGimmickAt) {
       if (D.gimmicks && D.gimmicks.length) {
         const def = pick(D.gimmicks);
-        if (def) state.entities.push(makeGimmickEntity(def, api, Number(diff.bossHpMul || 1) * 0.45, Number(diff.chestMul || 1)));
+        if (def) {
+          state.entities.push(makeGimmickEntity(
+            def,
+            api,
+            Number(diff.bossHpMul || 1) * 0.45 * enemyPower,
+            Number(diff.chestMul || 1)
+          ));
+        }
       }
 
-      nextGimmickAt = localFrame + intRand(160, 240);
+      nextGimmickAt = localFrame + intRand(150, 230);
     }
 
     if (localFrame >= nextChestAt) {
       if (D.chests && D.chests.length && Math.random() < 0.55) {
         const def = pick(D.chests);
-        if (def) state.entities.push(makeChestEntity(def, api, 1, Number(diff.chestMul || 1) * 3));
+        if (def) {
+          state.entities.push(makeChestEntity(
+            def,
+            api,
+            Math.max(1, enemyPower * 0.45),
+            Number(diff.chestMul || 1) * 3
+          ));
+        }
       }
 
       nextChestAt = localFrame + intRand(170, 260);
@@ -533,6 +570,7 @@
     const state = api.state;
     const info = getDoubleInfo();
     const diff = info.difficulty;
+    const enemyPower = eventEnemyPowerMul(diff.key);
 
     localFrame++;
 
@@ -546,10 +584,10 @@
 
     if (localFrame >= nextEnemyAt) {
       if (diff.key !== 'veryHard') {
-        spawnAreaEnemy(api, info.stage.areaKey, Number(diff.hpMul || 1) * 0.4, Number(diff.scoreMul || 1));
+        spawnAreaEnemy(api, info.stage.areaKey, Number(diff.hpMul || 1) * 0.4 * enemyPower, Number(diff.scoreMul || 1));
       }
 
-      nextEnemyAt = localFrame + intRand(diff.key === 'legend' ? 110 : 150, diff.key === 'legend' ? 170 : 230);
+      nextEnemyAt = localFrame + intRand(diff.key === 'legend' ? 105 : 145, diff.key === 'legend' ? 165 : 225);
     }
 
     const bossAlive = state.entities.some(e => !e.dead && e.kind === 'boss');
@@ -631,7 +669,7 @@
 
   function questEnemyHpMul(extra){
     const diff = currentQuestDiff();
-    return Number(diff.enemyHpMul || diff.hpMul || 1) * Number(extra == null ? 1 : extra);
+    return Number(diff.enemyHpMul || diff.hpMul || 1) * questDifficultyPowerMul(diff.key) * Number(extra == null ? 1 : extra);
   }
 
   function questScoreMul(extra){
@@ -919,11 +957,11 @@
         hpMul:0.62,
         scoreMul:0.75,
         coinMul:0.65,
-        r:70,
-        contactDmg:17,
-        shootCd:92,
-        attackCd:150,
-        vx:1.35
+        r:38,
+        contactDmg:12,
+        shootCd:96,
+        attackCd:155,
+        vx:1.45
       });
 
       api.showBanner('リリス四姉妹');
