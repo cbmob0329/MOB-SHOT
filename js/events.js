@@ -10,96 +10,11 @@
   const TEST_GOLD_TICKET_START = 10;
 
   const GOLD_DIFFICULTIES = [
-    {
-      key:'easy',
-      name:'イージー',
-      icon:'mt/game1.png',
-      color:'#9dff73',
-      firstCoin:3000,
-      firstDiamond:5,
-      clearCoin:300,
-      chestMul:0.8,
-      bossHpMul:1.0,
-      bossCoinMul:1.0,
-      bossCount:2,
-      bosses:['ホークモブ','ミラモブ'],
-      midBossCount:0,
-      enemySpawn:true,
-      showMidBoss:false,
-      label:'ホークモブ + ミラモブ'
-    },
-    {
-      key:'hard',
-      name:'ハード',
-      icon:'mt/game2.png',
-      color:'#6be6ff',
-      firstCoin:8000,
-      firstDiamond:8,
-      clearCoin:800,
-      chestMul:1.4,
-      bossHpMul:1.35,
-      bossCoinMul:1.8,
-      bossCount:2,
-      bosses:['ミラモブⅡ','ネオンモブ'],
-      midBossCount:0,
-      enemySpawn:true,
-      showMidBoss:false,
-      label:'ミラモブⅡ + ネオンモブ'
-    },
-    {
-      key:'veryHard',
-      name:'ベリーハード',
-      icon:'mt/game3.png',
-      color:'#ffcf5b',
-      firstCoin:15000,
-      firstDiamond:10,
-      clearCoin:1500,
-      chestMul:2.2,
-      bossHpMul:1.8,
-      bossCoinMul:3.2,
-      bossCount:2,
-      bosses:['ドラゴンモブ','ドラゴンモブⅡ'],
-      midBossCount:0,
-      enemySpawn:true,
-      showMidBoss:false,
-      label:'ドラゴンモブ + ドラゴンモブⅡ'
-    },
-    {
-      key:'inferno',
-      name:'インフェルノ',
-      icon:'mt/game4.png',
-      color:'#ff5b5b',
-      firstCoin:30000,
-      firstDiamond:20,
-      clearCoin:3000,
-      chestMul:3.5,
-      bossHpMul:2.35,
-      bossCoinMul:6.0,
-      bossCount:2,
-      bosses:['モブリリス','ドラゴンモブⅡ'],
-      midBossCount:0,
-      enemySpawn:true,
-      showMidBoss:false,
-      label:'モブリリス + ドラゴンモブⅡ'
-    },
-    {
-      key:'legend',
-      name:'レジェンド',
-      icon:'mt/game5.png',
-      color:'#d86bff',
-      firstCoin:80000,
-      firstDiamond:50,
-      clearCoin:7000,
-      chestMul:5.5,
-      bossHpMul:3.2,
-      bossCoinMul:10.0,
-      bossCount:2,
-      bosses:['モブリリス','モブ魔王'],
-      midBossCount:0,
-      enemySpawn:true,
-      showMidBoss:false,
-      label:'モブリリス + モブ魔王'
-    }
+    { key:'easy', name:'イージー', icon:'mt/game1.png', color:'#9dff73', firstCoin:3000, firstDiamond:5, clearCoin:300, chestMul:0.8, bossHpMul:1.0, bossCoinMul:1.0, bossCount:2, bosses:['ホークモブ','ミラモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ホークモブ + ミラモブ' },
+    { key:'hard', name:'ハード', icon:'mt/game2.png', color:'#6be6ff', firstCoin:8000, firstDiamond:8, clearCoin:800, chestMul:1.4, bossHpMul:1.35, bossCoinMul:1.8, bossCount:2, bosses:['ミラモブⅡ','ネオンモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ミラモブⅡ + ネオンモブ' },
+    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', firstCoin:15000, firstDiamond:10, clearCoin:1500, chestMul:2.2, bossHpMul:1.8, bossCoinMul:3.2, bossCount:2, bosses:['ドラゴンモブ','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ドラゴンモブ + ドラゴンモブⅡ' },
+    { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', color:'#ff5b5b', firstCoin:30000, firstDiamond:20, clearCoin:3000, chestMul:3.5, bossHpMul:2.35, bossCoinMul:6.0, bossCount:2, bosses:['モブリリス','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + ドラゴンモブⅡ' },
+    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', firstCoin:80000, firstDiamond:50, clearCoin:7000, chestMul:5.5, bossHpMul:3.2, bossCoinMul:10.0, bossCount:2, bosses:['モブリリス','モブ魔王'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + モブ魔王' }
   ];
 
   const DOUBLE_DIFFICULTIES = [
@@ -119,124 +34,29 @@
   ];
 
   const QUEST_DIFFICULTIES = [
-    {
-      key:'easy',
-      name:'イージー',
-      icon:'mt/game1.png',
-      color:'#9dff73',
-      cost:5000,
-      hpMul:0.85,
-      scoreMul:1.0,
-      coinMul:0.8,
-      enemyHpMul:0.8,
-      label:'低難度 / 初回確認向け'
-    },
-    {
-      key:'veryHard',
-      name:'ベリーハード',
-      icon:'mt/game3.png',
-      color:'#ffcf5b',
-      cost:30000,
-      hpMul:1.6,
-      scoreMul:1.6,
-      coinMul:1.2,
-      enemyHpMul:1.35,
-      label:'高難度 / 中盤以降向け'
-    },
-    {
-      key:'legend',
-      name:'レジェンド',
-      icon:'mt/game5.png',
-      color:'#d86bff',
-      cost:100000,
-      hpMul:2.8,
-      scoreMul:2.5,
-      coinMul:1.8,
-      enemyHpMul:2.2,
-      label:'超高難度 / 終盤向け'
-    }
+    { key:'easy', name:'イージー', icon:'mt/game1.png', color:'#9dff73', cost:5000, hpMul:0.85, scoreMul:1.0, coinMul:0.8, enemyHpMul:0.8, label:'低難度 / 初回確認向け' },
+    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', cost:30000, hpMul:1.6, scoreMul:1.6, coinMul:1.2, enemyHpMul:1.35, label:'高難度 / 中盤以降向け' },
+    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', cost:100000, hpMul:2.8, scoreMul:2.5, coinMul:1.8, enemyHpMul:2.2, label:'超高難度 / 終盤向け' }
   ];
 
   const QUEST_STAGES = [
-    {
-      id:1,
-      key:'pterarush',
-      title:'プテラッシュ',
-      areaKey:'grass',
-      areaName:'草原',
-      background:null,
-      desc:'中ボスのプテラが 2匹同時 → 3匹同時 → 5匹同時 に出現。全て倒すとクリア。',
-      label:'プテラ 2→3→5',
-      rank:10
-    },
-    {
-      id:2,
-      key:'thieves',
-      title:'盗賊団',
-      areaKey:'desert',
-      areaName:'砂漠',
-      background:null,
-      desc:'ミラモブ1体と砂漠の雑魚敵30体を倒すとクリア。障害物も出現。',
-      label:'ミラモブ + 雑魚30体',
-      rank:10
-    },
-    {
-      id:3,
-      key:'guardian_test',
-      title:'番人試験',
-      areaKey:'town',
-      areaName:'田舎町',
-      background:null,
-      desc:'ミニサイズの番人が2体同時に出現。両方倒すとクリア。',
-      label:'小番人 2体同時',
-      rank:10
-    },
-    {
-      id:4,
-      key:'nine_heads',
-      title:'9つの首',
-      areaKey:'neon',
-      areaName:'ネオン街',
-      background:null,
-      desc:'ネオンギドラ3体同時 → 大型ネオンギドラ1体。倒すとクリア。',
-      label:'ギドラ3体 + 大型1体',
-      rank:10
-    },
-    {
-      id:5,
-      key:'hot_magma',
-      title:'アチアチマグマ',
-      areaKey:'magma',
-      areaName:'マグマ',
-      background:null,
-      desc:'雑魚30体撃破後、ドラゴンと中ボス2体が同時出現。全て倒すとクリア。',
-      label:'雑魚30体 + ドラゴン + 中ボス2体',
-      rank:10
-    },
-    {
-      id:6,
-      key:'lilith_sisters',
-      title:'リリス四姉妹',
-      areaKey:'castle',
-      areaName:'魔王城',
-      background:null,
-      desc:'小さめのモブリリスが4体同時に出現。全て倒すとクリア。',
-      label:'小モブリリス 4体同時',
-      rank:10
-    }
+    { id:1, key:'pterarush', title:'プテラッシュ', areaKey:'grass', areaName:'草原', background:null, desc:'中ボスのプテラが 2匹同時 → 3匹同時 → 5匹同時 に出現。全て倒すとクリア。', label:'プテラ 2→3→5', rank:10 },
+    { id:2, key:'thieves', title:'盗賊団', areaKey:'desert', areaName:'砂漠', background:null, desc:'ミラモブ1体と砂漠の雑魚敵30体を倒すとクリア。障害物も出現。', label:'ミラモブ + 雑魚30体', rank:10 },
+    { id:3, key:'guardian_test', title:'番人試験', areaKey:'town', areaName:'田舎町', background:null, desc:'ミニサイズの番人が2体同時に出現。両方倒すとクリア。', label:'小番人 2体同時', rank:10 },
+    { id:4, key:'nine_heads', title:'9つの首', areaKey:'neon', areaName:'ネオン街', background:null, desc:'ネオンギドラ3体同時 → 大型ネオンギドラ1体。倒すとクリア。', label:'ギドラ3体 + 大型1体', rank:10 },
+    { id:5, key:'hot_magma', title:'アチアチマグマ', areaKey:'magma', areaName:'マグマ', background:null, desc:'雑魚30体撃破後、ドラゴンと中ボス2体が同時出現。全て倒すとクリア。', label:'雑魚30体 + ドラゴン + 中ボス2体', rank:10 },
+    { id:6, key:'lilith_sisters', title:'リリス四姉妹', areaKey:'castle', areaName:'魔王城', background:null, desc:'小さめのモブリリスが4体同時に出現。全て倒すとクリア。', label:'小モブリリス 4体同時', rank:10 }
   ];
 
   const EVENTS = [
     { key:'gold', name:'GOLD STAGE', image:'mt/event_gold.png', desc:'チケットを使ってコインを稼ぐイベント。' },
     { key:'scoreAttack', name:'スコアアタック', image:'mt/event_score.png', desc:'歴代ボスを順番に倒してハイスコアを目指すイベント。' },
     { key:'doubleBoss', name:'ダブルボス', image:'mt/event_double.png', desc:'2体のボスを同時に撃破する高難易度イベント。' },
-    { key:'eventQuest', name:'イベントクエスト', image:'mt/event_secret.png', desc:'コインを消費して特別クエストに挑戦。複数の中ボスや特殊条件を突破する。' },
+    { key:'eventQuest', name:'イベントクエスト', image:'mt/ieve.png', desc:'' },
     { key:'secretBoss', name:'シークレットボス', image:'mt/event_secret.png', desc:'COMING SOON' }
   ];
 
-  function qs(id){
-    return document.getElementById(id);
-  }
+  function qs(id){ return document.getElementById(id); }
 
   function injectEventStyle(){
     if (document.getElementById('mobEventUiStyle')) return;
@@ -245,37 +65,49 @@
     style.id = 'mobEventUiStyle';
     style.textContent = `
       .event-card{
-        grid-template-columns:82px 1fr !important;
+        grid-template-columns:72px 1fr !important;
         align-items:start !important;
+        gap:10px !important;
+        padding:10px !important;
+      }
+
+      .event-icon{
+        width:64px !important;
+        height:64px !important;
+        object-fit:contain !important;
       }
 
       .event-info h3{
-        font-size:20px !important;
-        margin-bottom:4px !important;
+        font-size:19px !important;
+        margin-bottom:3px !important;
       }
 
       .event-info p{
-        font-size:12px !important;
-        margin-bottom:8px !important;
+        font-size:11px !important;
+        margin-bottom:6px !important;
+      }
+
+      .event-info p:empty{
+        display:none !important;
       }
 
       .event-difficulty-grid{
         display:grid;
         grid-template-columns:1fr;
-        gap:9px;
-        margin-top:10px;
+        gap:7px;
+        margin-top:8px;
       }
 
       .event-difficulty-card{
         position:relative;
         width:100%;
-        min-height:74px;
+        min-height:56px;
         overflow:hidden;
         border:0;
-        border-radius:18px;
+        border-radius:15px;
         padding:0;
         background:rgba(255,255,255,.08);
-        box-shadow:0 5px 0 rgba(0,0,0,.36);
+        box-shadow:0 4px 0 rgba(0,0,0,.34);
       }
 
       .event-difficulty-card:disabled{
@@ -295,16 +127,16 @@
         content:"";
         position:absolute;
         inset:0;
-        background:linear-gradient(90deg,rgba(0,0,0,.68),rgba(0,0,0,.18),rgba(0,0,0,.50));
+        background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.14),rgba(0,0,0,.44));
         pointer-events:none;
       }
 
       .event-difficulty-name{
         position:absolute;
-        left:14px;
-        top:9px;
+        left:12px;
+        top:7px;
         z-index:2;
-        font-size:17px;
+        font-size:15px;
         font-weight:1000;
         color:#fff;
         text-shadow:0 3px 0 #000;
@@ -313,26 +145,26 @@
 
       .event-difficulty-small{
         position:absolute;
-        left:14px;
-        bottom:8px;
+        left:12px;
+        bottom:7px;
         z-index:2;
-        font-size:11px;
-        line-height:1.25;
+        font-size:10px;
+        line-height:1.2;
         font-weight:1000;
         color:#dfe8ff;
         text-shadow:0 2px 0 #000;
         text-align:left;
-        max-width:78%;
+        max-width:76%;
       }
 
       .event-difficulty-badge{
         position:absolute;
-        right:10px;
-        top:9px;
+        right:8px;
+        top:7px;
         z-index:2;
-        padding:5px 8px;
+        padding:4px 7px;
         border-radius:999px;
-        font-size:11px;
+        font-size:10px;
         font-weight:1000;
         color:#151000;
         background:linear-gradient(#ffe66b,#ffb423);
@@ -340,8 +172,9 @@
       }
 
       .event-ticket-text{
-        margin-top:8px;
+        margin-top:6px;
         font-weight:1000;
+        font-size:12px;
         color:#ffcf5b;
         text-shadow:0 2px 0 #000;
       }
@@ -350,15 +183,15 @@
         display:flex;
         align-items:center;
         gap:8px;
-        margin:10px 0 4px;
-        font-size:16px;
+        margin:9px 0 4px;
+        font-size:15px;
         font-weight:1000;
         text-shadow:0 2px 0 #000;
       }
 
       .event-double-title img{
-        width:38px;
-        height:26px;
+        width:34px;
+        height:23px;
         object-fit:cover;
         border-radius:8px;
       }
@@ -366,15 +199,15 @@
       .event-stage-button{
         width:100%;
         border:0;
-        border-radius:16px;
-        padding:10px 12px;
-        font-size:14px;
+        border-radius:14px;
+        padding:8px 10px;
+        font-size:13px;
         font-weight:1000;
         color:#fff;
         text-align:left;
         background:rgba(255,255,255,.12);
         border:2px solid rgba(255,255,255,.22);
-        box-shadow:0 4px 0 rgba(0,0,0,.30);
+        box-shadow:0 3px 0 rgba(0,0,0,.30);
       }
 
       .event-stage-button:disabled{
@@ -384,23 +217,23 @@
 
       .event-stage-button small{
         display:block;
-        margin-top:3px;
-        font-size:10px;
+        margin-top:2px;
+        font-size:9px;
         color:#dfe8ff;
       }
 
       .event-quest-wrap{
         display:grid;
         grid-template-columns:1fr;
-        gap:12px;
-        margin-top:10px;
+        gap:9px;
+        margin-top:8px;
       }
 
       .event-quest-box{
-        padding:10px;
-        border-radius:18px;
-        background:rgba(255,255,255,.08);
-        border:2px solid rgba(255,255,255,.18);
+        padding:8px;
+        border-radius:16px;
+        background:rgba(255,255,255,.07);
+        border:2px solid rgba(255,255,255,.15);
       }
 
       .event-quest-title{
@@ -408,15 +241,73 @@
         font-weight:1000;
         color:#fff;
         text-shadow:0 2px 0 #000;
-        margin-bottom:4px;
+        margin-bottom:7px;
       }
 
-      .event-quest-desc{
-        font-size:11px;
-        line-height:1.45;
-        font-weight:900;
-        color:#dfe8ff;
-        margin-bottom:8px;
+      .event-quest-diff-row{
+        display:grid;
+        grid-template-columns:repeat(3,1fr);
+        gap:6px;
+      }
+
+      .event-quest-diff-btn{
+        position:relative;
+        width:100%;
+        height:48px;
+        overflow:hidden;
+        border:0;
+        border-radius:13px;
+        padding:0;
+        background:rgba(255,255,255,.08);
+        box-shadow:0 3px 0 rgba(0,0,0,.34);
+      }
+
+      .event-quest-diff-btn:disabled{
+        opacity:.45;
+        filter:grayscale(1);
+      }
+
+      .event-quest-diff-btn img{
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        object-fit:cover;
+      }
+
+      .event-quest-diff-btn::after{
+        content:"";
+        position:absolute;
+        inset:0;
+        background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.58));
+        pointer-events:none;
+      }
+
+      .event-quest-diff-name{
+        position:absolute;
+        left:4px;
+        right:4px;
+        bottom:5px;
+        z-index:2;
+        color:#fff;
+        font-size:10px;
+        font-weight:1000;
+        text-align:center;
+        text-shadow:0 2px 0 #000;
+        white-space:nowrap;
+      }
+
+      .event-quest-diff-lock{
+        position:absolute;
+        top:4px;
+        right:4px;
+        z-index:3;
+        padding:2px 5px;
+        border-radius:999px;
+        background:rgba(0,0,0,.68);
+        color:#ffe66b;
+        font-size:8px;
+        font-weight:1000;
       }
     `;
     document.head.appendChild(style);
@@ -998,7 +889,7 @@
       title.textContent = ev.name;
 
       const desc = document.createElement('p');
-      desc.textContent = ev.desc;
+      desc.textContent = ev.desc || '';
 
       info.appendChild(title);
       info.appendChild(desc);
@@ -1125,7 +1016,7 @@
     const wrap = document.createElement('div');
     wrap.style.display = 'grid';
     wrap.style.gridTemplateColumns = '1fr';
-    wrap.style.gap = '8px';
+    wrap.style.gap = '7px';
     wrap.style.marginTop = '8px';
 
     DOUBLE_DIFFICULTIES.forEach(diff => {
@@ -1188,12 +1079,10 @@
       title.className = 'event-quest-title';
       title.textContent = `${stage.id}. ${stage.title}`;
 
-      const desc = document.createElement('div');
-      desc.className = 'event-quest-desc';
-      desc.textContent = stage.desc;
+      const diffRow = document.createElement('div');
+      diffRow.className = 'event-quest-diff-row';
 
       box.appendChild(title);
-      box.appendChild(desc);
 
       QUEST_DIFFICULTIES.forEach(diff => {
         const playOk = unlocked && canPlayQuest(stage, diff);
@@ -1201,21 +1090,19 @@
 
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'event-difficulty-card';
+        btn.className = 'event-quest-diff-btn';
         btn.disabled = !playOk;
-        btn.style.marginTop = '7px';
 
         const status =
           !unlocked ? 'LOCK' :
-          getRank() < Number(stage.rank || 10) ? `RANK${stage.rank}` :
-          cleared ? 'CLEAR済' :
-          'START';
+          getRank() < Number(stage.rank || 10) ? `R${stage.rank}` :
+          cleared ? 'CLEAR' :
+          '';
 
         btn.innerHTML = `
           <img src="${diff.icon}" alt="${diff.name}">
-          <span class="event-difficulty-name">${diff.name}</span>
-          <span class="event-difficulty-small">${stage.label} / ${Number(diff.cost || 0).toLocaleString()} COIN</span>
-          <span class="event-difficulty-badge">${status}</span>
+          <span class="event-quest-diff-name">${diff.name}</span>
+          ${status ? `<span class="event-quest-diff-lock">${status}</span>` : ''}
         `;
 
         btn.addEventListener('click', function(e){
@@ -1237,16 +1124,17 @@
             title:'イベントクエスト',
             sub:`${stage.title} / ${diff.name}に出撃しますか？`,
             reward:rewardTextQuest(diff, stage),
-            extra:`${stage.desc}`,
+            extra:`消費COIN: ${cost.toLocaleString()}`,
             onYes:function(){
               startEvent('eventQuest', diff.key, stage.id);
             }
           });
         });
 
-        box.appendChild(btn);
+        diffRow.appendChild(btn);
       });
 
+      box.appendChild(diffRow);
       wrap.appendChild(box);
     });
 
