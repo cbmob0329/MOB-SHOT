@@ -51,12 +51,14 @@
   const EVENTS = [
     { key:'gold', name:'GOLD STAGE', image:'mt/event_gold.png', desc:'チケットを使ってコインを稼ぐイベント。' },
     { key:'scoreAttack', name:'スコアアタック', image:'mt/event_score.png', desc:'歴代ボスを順番に倒してハイスコアを目指すイベント。' },
-    { key:'doubleBoss', name:'ダブルボス', image:'mt/event_double.png', desc:'2体のボスを同時に撃破する高難易度イベント。' },
-    { key:'eventQuest', name:'イベントクエスト', image:'mt/ieve.png', desc:'' },
+    { key:'doubleBoss', name:'ダブルボス', image:'mt/event_double.png', desc:'ハード全クリアで解放。2体のボスを同時に撃破する高難易度イベント。' },
+    { key:'eventQuest', name:'イベントクエスト', image:'mt/ieve.png', desc:'イージー全クリアで解放。' },
     { key:'secretBoss', name:'シークレットボス', image:'mt/event_secret.png', desc:'COMING SOON' }
   ];
 
-  function qs(id){ return document.getElementById(id); }
+  function qs(id){
+    return document.getElementById(id);
+  }
 
   function injectEventStyle(){
     if (document.getElementById('mobEventUiStyle')) return;
@@ -509,6 +511,31 @@
     return getRank() >= 10;
   }
 
+  function isDifficultyAllCleared(difficultyName){
+    if (!window.MobShotStorage || !window.MobShotStorage.STAGE_LIST || !window.MobShotStorage.load) {
+      return false;
+    }
+
+    const save = window.MobShotStorage.load();
+    const cleared = save.stageProgress && save.stageProgress.clearedStageIds
+      ? save.stageProgress.clearedStageIds
+      : {};
+
+    const targets = window.MobShotStorage.STAGE_LIST.filter(stage => stage.difficulty === difficultyName);
+
+    if (!targets.length) return false;
+
+    return targets.every(stage => !!cleared[stage.id]);
+  }
+
+  function isEventQuestUnlocked(){
+    return isUnlocked() && isDifficultyAllCleared('イージー');
+  }
+
+  function isDoubleBossUnlocked(){
+    return isUnlocked() && isDifficultyAllCleared('ハード');
+  }
+
   function defaultItems(){
     return { goldTicket:TEST_GOLD_TICKET_START, __testInitialized:true };
   }
@@ -705,6 +732,8 @@
   }
 
   function isDoubleDifficultyUnlocked(difficultyKey){
+    if (!isDoubleBossUnlocked()) return false;
+
     if (difficultyKey === 'veryHard') return true;
 
     if (difficultyKey === 'inferno') {
@@ -729,7 +758,7 @@
 
   function canPlayQuest(stage, diff){
     if (!stage || !diff) return false;
-    return isUnlocked() && getRank() >= Number(stage.rank || 10);
+    return isEventQuestUnlocked() && getRank() >= Number(stage.rank || 10);
   }
 
   function consumeCoin(amount){
@@ -865,6 +894,8 @@
     if (!list) return;
 
     const unlocked = isUnlocked();
+    const eventQuestUnlocked = isEventQuestUnlocked();
+    const doubleBossUnlocked = isDoubleBossUnlocked();
 
     if (lock) {
       lock.classList.toggle('hidden', unlocked);
@@ -889,7 +920,14 @@
       title.textContent = ev.name;
 
       const desc = document.createElement('p');
-      desc.textContent = ev.desc || '';
+
+      if (ev.key === 'eventQuest' && !eventQuestUnlocked) {
+        desc.textContent = unlocked ? '通常ステージのイージー全クリアで解放' : 'ランク10で解放';
+      } else if (ev.key === 'doubleBoss' && !doubleBossUnlocked) {
+        desc.textContent = unlocked ? '通常ステージのハード全クリアで解放' : 'ランク10で解放';
+      } else {
+        desc.textContent = ev.desc || '';
+      }
 
       info.appendChild(title);
       info.appendChild(desc);
@@ -899,9 +937,9 @@
       } else if (ev.key === 'scoreAttack') {
         renderScoreAttackButton(info, unlocked);
       } else if (ev.key === 'doubleBoss') {
-        renderDoubleBossButtons(info, unlocked);
+        renderDoubleBossButtons(info, doubleBossUnlocked);
       } else if (ev.key === 'eventQuest') {
-        renderQuestButtons(info, unlocked);
+        renderQuestButtons(info, eventQuestUnlocked);
       } else {
         const btn = document.createElement('button');
         btn.className = 'event-play-btn';
@@ -1142,6 +1180,16 @@
   }
 
   function startEvent(key, difficultyKey, stageId){
+    if (key === 'doubleBoss' && !isDoubleBossUnlocked()) {
+      showMessage('LOCK', '通常ステージのハードを全てクリアすると解放されます。');
+      return;
+    }
+
+    if (key === 'eventQuest' && !isEventQuestUnlocked()) {
+      showMessage('LOCK', '通常ステージのイージーを全てクリアすると解放されます。');
+      return;
+    }
+
     if (key === 'gold') {
       if (!consumeGoldTicket(1)) {
         showMessage('GOLD TICKET不足', '通常ステージの宝箱からまれに入手できます。');
@@ -1325,6 +1373,9 @@
     isDoubleBoss,
     isEventQuest,
     isUnlocked,
+    isEventQuestUnlocked,
+    isDoubleBossUnlocked,
+    isDifficultyAllCleared,
 
     getDifficulty,
     getCurrentGoldDifficulty,
