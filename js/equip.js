@@ -6,7 +6,7 @@
 
   let currentTab = 'avatar';
 
-  const AVATARS = [
+  const FALLBACK_AVATARS = [
     {
       key: 'pink',
       name: 'ピンクモデル',
@@ -14,55 +14,8 @@
       price: 0,
       menuImage: 'play/playpink2.png',
       backImage: 'play/playpink.png',
-      initial: true
-    },
-    {
-      key: 'blue',
-      name: 'ブルーモデル',
-      rank: 1,
-      price: 1000,
-      menuImage: 'play/playblue2.png',
-      backImage: 'play/playblue.png'
-    },
-    {
-      key: 'purple',
-      name: 'パープルモデル',
-      rank: 1,
-      price: 1000,
-      menuImage: 'play/playpar2.png',
-      backImage: 'play/playpar.png'
-    },
-    {
-      key: 'yellow',
-      name: 'イエローモデル',
-      rank: 1,
-      price: 1000,
-      menuImage: 'play/playye2.png',
-      backImage: 'play/playye.png'
-    },
-    {
-      key: 'slime',
-      name: 'スライムモデル',
-      rank: 5,
-      price: 5000,
-      menuImage: 'play/playsura2.png',
-      backImage: 'play/playsura.png'
-    },
-    {
-      key: 'hero',
-      name: '勇者モデル',
-      rank: 10,
-      price: 10000,
-      menuImage: 'play/playyu2.png',
-      backImage: 'play/playyu.png'
-    },
-    {
-      key: 'mobbr',
-      name: 'MOB BRモデル',
-      rank: 15,
-      price: 15000,
-      menuImage: 'play/playbr2.png',
-      backImage: 'play/playbr.png'
+      initial: true,
+      ownedDefault: true
     }
   ];
 
@@ -194,6 +147,18 @@
     return document.getElementById(id);
   }
 
+  function getAvatarMaster(){
+    if (
+      window.MobShotShop &&
+      Array.isArray(window.MobShotShop.AVATAR_MASTER) &&
+      window.MobShotShop.AVATAR_MASTER.length
+    ) {
+      return window.MobShotShop.AVATAR_MASTER;
+    }
+
+    return FALLBACK_AVATARS;
+  }
+
   function defaultEquipState(){
     return {
       avatar: 'pink',
@@ -205,12 +170,12 @@
     const avatars = {};
     const records = {};
 
-    AVATARS.forEach(item => {
-      avatars[item.key] = !!item.initial;
+    getAvatarMaster().forEach(item => {
+      avatars[item.key] = !!(item.initial || item.ownedDefault);
     });
 
     RECORDS.forEach(item => {
-      records[item.key] = true;
+      records[item.key] = !!item.initial;
     });
 
     return {
@@ -265,7 +230,7 @@
   }
 
   function getAvatar(key){
-    return AVATARS.find(item => item.key === key) || null;
+    return getAvatarMaster().find(item => item.key === key) || null;
   }
 
   function getRecord(key){
@@ -302,7 +267,7 @@
 
   function getEquippedAvatar(){
     const state = loadEquipState();
-    return getAvatar(state.avatar) || getAvatar('pink');
+    return getAvatar(state.avatar) || getAvatar('pink') || FALLBACK_AVATARS[0];
   }
 
   function getEquippedRecord(){
@@ -365,12 +330,13 @@
     const save = getSave();
     const rank = Number(save.rank || 1);
     const equip = loadEquipState();
+    const avatars = getAvatarMaster();
 
     list.innerHTML = '';
 
-    AVATARS.forEach(item => {
+    avatars.forEach(item => {
       const owned = isOwned('avatar', item.key);
-      const rankOk = rank >= item.rank;
+      const rankOk = rank >= Number(item.rank || 1);
       const equipped = equip.avatar === item.key;
 
       const card = document.createElement('div');
@@ -682,7 +648,9 @@
   document.addEventListener('DOMContentLoaded', init);
 
   window.MobShotEquip = {
-    AVATARS,
+    get AVATARS(){
+      return getAvatarMaster();
+    },
     RECORDS,
     init,
     open,
