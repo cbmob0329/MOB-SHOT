@@ -7,7 +7,6 @@
   let difficultyKey = '';
   let stageId = 0;
 
-  let phase = 'idle';
   let localFrame = 0;
   let nextEnemyAt = 0;
   let nextChestAt = 0;
@@ -21,7 +20,6 @@
   let questKills = 0;
   let questBossSpawned = false;
   let questWaveSpawned = false;
-  let questTargetKills = 0;
 
   const SCORE_ATTACK_BOSSES = [
     { name:'ホークモブ', image:'boss/hawks.png', hp:600, score:1000, coin:200 },
@@ -34,13 +32,14 @@
     { name:'ウルモブリリス', image:'boss/bossulriri.png', hp:5200, score:9000, coin:1800 }
   ];
 
-  const QUEST_FALLBACK_BOSSES = {
-    ptera:{ name:'プテラ', image:'boss/hawks.png', hp:520, score:700, coin:120 },
-    mira:{ name:'ミラモブ', image:'boss/miraboss.png', hp:900, score:1200, coin:220 },
-    ban:{ name:'番人', image:'boss/bossban.png', hp:850, score:1000, coin:180 },
-    ghidora:{ name:'ネオンギドラ', image:'boss/bossneon.png', hp:900, score:1200, coin:220 },
-    dragon:{ name:'ドラゴンモブ', image:'boss/bossdragoon.png', hp:1500, score:1800, coin:300 },
-    lilith:{ name:'モブリリス', image:'boss/bossriris.png', hp:1200, score:1600, coin:280 }
+  const QUEST_FALLBACK = {
+    ptera:{ name:'モブプテラ', image:'en/enpte.png', hp:80, score:300, coin:30 },
+    mira:{ name:'ミラモブ', image:'boss/miraboss.png', hp:300, score:1300, coin:160 },
+    ban:{ name:'番人', image:'boss/bossban.png', hp:390, score:1600, coin:200 },
+    ghidora:{ name:'モブギドラ', image:'en/neongidra.png', hp:220, score:800, coin:80 },
+    dragon:{ name:'ドラゴンモブ', image:'boss/bossdragoon.png', hp:660, score:2600, coin:340 },
+    magmaMid:{ name:'マグモブレム', image:'en/enmaggolem.png', hp:300, score:1050, coin:110 },
+    lilith:{ name:'モブリリス', image:'boss/bossriris.png', hp:820, score:3200, coin:420 }
   };
 
   function clone(obj){
@@ -57,6 +56,14 @@
 
   function pick(arr){
     return arr && arr.length ? arr[Math.floor(Math.random() * arr.length)] : null;
+  }
+
+  function normalizeName(name){
+    return String(name || '').replace(/\s/g, '').replace(/　/g, '').replace(/Ⅱ/g, 'II').toLowerCase();
+  }
+
+  function sameName(a, b){
+    return normalizeName(a) === normalizeName(b);
   }
 
   function getEvent(){
@@ -79,7 +86,6 @@
       chestMul:1,
       bossHpMul:1,
       bossCoinMul:1,
-      bossCount:2,
       bosses:['ホークモブ','ミラモブ'],
       enemySpawn:true
     };
@@ -91,23 +97,8 @@
     }
 
     return {
-      difficulty:{
-        key:'veryHard',
-        name:'ベリーハード',
-        color:'#ffcf5b',
-        hpMul:1.35,
-        scoreMul:1.25,
-        firstCoin:5000,
-        firstDiamond:5
-      },
-      stage:{
-        id:1,
-        areaKey:'grass',
-        areaName:'草原',
-        title:'草原',
-        bossA:'ホークモブ',
-        bossB:'ミラモブ'
-      }
+      difficulty:{ key:'veryHard', name:'ベリーハード', color:'#ffcf5b', hpMul:1.35, scoreMul:1.25, firstCoin:5000, firstDiamond:5 },
+      stage:{ id:1, areaKey:'grass', areaName:'草原', title:'草原', bossA:'ホークモブ', bossB:'ミラモブ' }
     };
   }
 
@@ -117,23 +108,8 @@
     }
 
     return {
-      difficulty:{
-        key:'easy',
-        name:'イージー',
-        color:'#9dff73',
-        hpMul:0.85,
-        scoreMul:1,
-        coinMul:0.8,
-        enemyHpMul:0.8,
-        cost:5000
-      },
-      stage:{
-        id:1,
-        key:'pterarush',
-        title:'プテラッシュ',
-        areaKey:'grass',
-        areaName:'草原'
-      }
+      difficulty:{ key:'easy', name:'イージー', color:'#9dff73', hpMul:0.85, scoreMul:1, coinMul:0.8, enemyHpMul:0.8, cost:5000 },
+      stage:{ id:1, key:'pterarush', title:'プテラッシュ', areaKey:'grass', areaName:'草原', background:'sta/backsougen.png' }
     };
   }
 
@@ -169,6 +145,108 @@
     saveMainData(save);
   }
 
+  function stageAreaData(areaKey){
+    const stageData = window.MOBSHOT_STAGE_DATA || {};
+    return stageData[areaKey] || null;
+  }
+
+  function areaEnemyList(areaKey, api){
+    const area = stageAreaData(areaKey);
+
+    if (area && Array.isArray(area.zako)) return area.zako;
+    if (area && area.enemies && Array.isArray(area.enemies.zako)) return area.enemies.zako;
+    if (api.D && api.D.enemies && Array.isArray(api.D.enemies.zako)) return api.D.enemies.zako;
+
+    return [];
+  }
+
+  function areaGimmickList(areaKey, api){
+    const area = stageAreaData(areaKey);
+
+    if (area && Array.isArray(area.gimmicks)) return area.gimmicks;
+    if (api.D && Array.isArray(api.D.gimmicks)) return api.D.gimmicks;
+
+    return [];
+  }
+
+  function areaChestList(areaKey, api){
+    const area = stageAreaData(areaKey);
+
+    if (area && Array.isArray(area.chests)) return area.chests;
+    if (api.D && Array.isArray(api.D.chests)) return api.D.chests;
+
+    return [];
+  }
+
+  function findBossDef(api, areaKey, name, fallback){
+    const area = stageAreaData(areaKey);
+    const candidates = [];
+
+    if (area) {
+      ['boss', 'strongBoss', 'legendBoss'].forEach(key => {
+        if (area[key]) candidates.push(area[key]);
+      });
+
+      ['midBoss', 'midboss', 'middleBoss', 'bosses', 'extraBosses', 'bossList'].forEach(key => {
+        if (Array.isArray(area[key])) {
+          area[key].forEach(item => {
+            if (item) candidates.push(item);
+          });
+        } else if (area[key]) {
+          candidates.push(area[key]);
+        }
+      });
+    }
+
+    const allArea = window.MOBSHOT_STAGE_DATA || {};
+    Object.keys(allArea).forEach(key => {
+      const a = allArea[key];
+
+      if (!a) return;
+
+      ['boss', 'strongBoss', 'legendBoss'].forEach(prop => {
+        if (a[prop]) candidates.push(a[prop]);
+      });
+
+      ['midBoss', 'midboss', 'middleBoss', 'bosses', 'extraBosses', 'bossList'].forEach(prop => {
+        if (Array.isArray(a[prop])) {
+          a[prop].forEach(item => {
+            if (item) candidates.push(item);
+          });
+        } else if (a[prop]) {
+          candidates.push(a[prop]);
+        }
+      });
+    });
+
+    const found = candidates.find(item => item && sameName(item.name, name));
+
+    return clone(found || fallback || { name:name || 'BOSS', image:'boss/hawks.png', hp:1000, score:1000, coin:300 });
+  }
+
+  function getMidBossDef(api, areaKey, name, fallback){
+    const area = stageAreaData(areaKey);
+    const list = [];
+
+    if (area) {
+      ['midBoss', 'midboss', 'middleBoss'].forEach(key => {
+        if (Array.isArray(area[key])) {
+          area[key].forEach(item => {
+            if (item) list.push(item);
+          });
+        } else if (area[key]) {
+          list.push(area[key]);
+        }
+      });
+    }
+
+    const found = list.find(item => item && sameName(item.name, name));
+
+    if (found) return clone(found);
+
+    return findBossDef(api, areaKey, name, fallback);
+  }
+
   function setStageVisual(api, title, background, areaKey, areaName){
     const D = api.D;
 
@@ -186,50 +264,6 @@
     }
   }
 
-  function stageAreaData(areaKey){
-    const stageData = window.MOBSHOT_STAGE_DATA || {};
-    return stageData[areaKey] || null;
-  }
-
-  function bossDefByName(name, fallback){
-    const stageData = window.MOBSHOT_STAGE_DATA || {};
-    const all = [];
-
-    Object.keys(stageData).forEach(key => {
-      const area = stageData[key];
-
-      if (area.boss) all.push(area.boss);
-      if (area.strongBoss) all.push(area.strongBoss);
-      if (area.midBoss) all.push(area.midBoss);
-      if (area.midboss) all.push(area.midboss);
-      if (area.middleBoss) all.push(area.middleBoss);
-    });
-
-    const found = all.find(b => b && b.name === name);
-
-    if (found) return clone(found);
-
-    return clone(fallback || {
-      name:name || 'BOSS',
-      image:'boss/hawks.png',
-      hp:1000,
-      score:1000,
-      coin:300
-    });
-  }
-
-  function midBossDef(areaKey, fallback){
-    const area = stageAreaData(areaKey);
-
-    if (area) {
-      if (area.midBoss) return clone(area.midBoss);
-      if (area.midboss) return clone(area.midboss);
-      if (area.middleBoss) return clone(area.middleBoss);
-    }
-
-    return clone(fallback || QUEST_FALLBACK_BOSSES.ptera);
-  }
-
   function makeBossEntity(def, api, opt){
     const W = api.W;
     const H = api.H;
@@ -239,7 +273,6 @@
     const coinMul = opt && opt.coinMul != null ? opt.coinMul : 1;
     const r = opt && opt.r != null ? opt.r : 112;
     const kind = opt && opt.kind ? opt.kind : 'boss';
-
     const hp = Math.ceil(Number(def.hp || 1000) * hpMul);
 
     return {
@@ -258,10 +291,10 @@
       score:Math.ceil(Number(def.score || 1000) * scoreMul),
       coin:Math.ceil(Number(def.coin || 100) * coinMul),
       dead:false,
-      shootCd:opt && opt.shootCd != null ? opt.shootCd : 76,
-      attackCd:opt && opt.attackCd != null ? opt.attackCd : 130,
+      shootCd:opt && opt.shootCd != null ? opt.shootCd : 86,
+      attackCd:opt && opt.attackCd != null ? opt.attackCd : 140,
       attackStep:0,
-      contactDmg:opt && opt.contactDmg != null ? opt.contactDmg : 22,
+      contactDmg:opt && opt.contactDmg != null ? opt.contactDmg : 20,
       hitPlayerCd:0,
       bob:0,
       eventBoss:true,
@@ -349,45 +382,24 @@
   }
 
   function spawnAreaEnemy(api, areaKey, hpMul, coinMul){
-    const D = api.D;
-    let list = [];
+    const def = pick(areaEnemyList(areaKey, api));
+    if (!def) return;
 
-    const area = stageAreaData(areaKey);
-    if (area && area.enemies && area.enemies.zako) list = area.enemies.zako;
-    else if (D.enemies && D.enemies.zako) list = D.enemies.zako;
-
-    const def = pick(list);
-    if (def) {
-      api.state.entities.push(makeEnemyEntity(def, api, hpMul, coinMul));
-    }
+    api.state.entities.push(makeEnemyEntity(def, api, hpMul, coinMul));
   }
 
   function spawnAreaGimmick(api, areaKey, hpMul, coinMul){
-    const D = api.D;
-    let list = [];
+    const def = pick(areaGimmickList(areaKey, api));
+    if (!def) return;
 
-    const area = stageAreaData(areaKey);
-    if (area && area.gimmicks) list = area.gimmicks;
-    else if (D.gimmicks) list = D.gimmicks;
-
-    const def = pick(list);
-    if (def) {
-      api.state.entities.push(makeGimmickEntity(def, api, hpMul, coinMul));
-    }
+    api.state.entities.push(makeGimmickEntity(def, api, hpMul, coinMul));
   }
 
   function spawnAreaChest(api, areaKey, hpMul, coinMul){
-    const D = api.D;
-    let list = [];
+    const def = pick(areaChestList(areaKey, api));
+    if (!def) return;
 
-    const area = stageAreaData(areaKey);
-    if (area && area.chests) list = area.chests;
-    else if (D.chests) list = D.chests;
-
-    const def = pick(list);
-    if (def) {
-      api.state.entities.push(makeChestEntity(def, api, hpMul, coinMul));
-    }
+    api.state.entities.push(makeChestEntity(def, api, hpMul, coinMul));
   }
 
   function spawnGoldBosses(api){
@@ -396,24 +408,21 @@
     const state = api.state;
     const W = api.W;
     const diff = getGoldDifficulty();
-
-    const names = Array.isArray(diff.bosses) && diff.bosses.length
-      ? diff.bosses.slice(0, 2)
-      : ['ホークモブ','ミラモブ'];
+    const names = Array.isArray(diff.bosses) && diff.bosses.length ? diff.bosses.slice(0, 2) : ['ホークモブ', 'ミラモブ'];
 
     while (names.length < 2) {
       names.push(names[0] || 'ホークモブ');
     }
 
     const bosses = [
-      bossDefByName(names[0]),
-      bossDefByName(names[1], bossDefByName(names[0]))
+      findBossDef(api, '', names[0], { name:names[0], image:'boss/hawks.png', hp:600, score:1000, coin:200 }),
+      findBossDef(api, '', names[1], { name:names[1], image:'boss/miraboss.png', hp:800, score:1300, coin:260 })
     ];
 
     const positions = [W * 0.34, W * 0.66];
 
     bosses.forEach((def, index) => {
-      const boss = makeBossEntity(def, api, {
+      state.entities.push(makeBossEntity(def, api, {
         x:positions[index],
         hpMul:Number(diff.bossHpMul || 1),
         scoreMul:Number(diff.bossCoinMul || 1),
@@ -423,9 +432,7 @@
         attackCd:125,
         contactDmg:22,
         r:106
-      });
-
-      state.entities.push(boss);
+      }));
     });
 
     spawnedBoss = true;
@@ -449,15 +456,7 @@
     if (localFrame >= nextEnemyAt) {
       if (diff.enemySpawn !== false && D.enemies && D.enemies.zako) {
         const def = pick(D.enemies.zako);
-
-        if (def) {
-          state.entities.push(makeEnemyEntity(
-            def,
-            api,
-            Number(diff.bossHpMul || 1) * 0.35,
-            Number(diff.bossCoinMul || 1)
-          ));
-        }
+        if (def) state.entities.push(makeEnemyEntity(def, api, Number(diff.bossHpMul || 1) * 0.35, Number(diff.bossCoinMul || 1)));
       }
 
       nextEnemyAt = localFrame + intRand(
@@ -469,15 +468,7 @@
     if (localFrame >= nextGimmickAt) {
       if (D.gimmicks && D.gimmicks.length) {
         const def = pick(D.gimmicks);
-
-        if (def) {
-          state.entities.push(makeGimmickEntity(
-            def,
-            api,
-            Number(diff.bossHpMul || 1) * 0.45,
-            Number(diff.chestMul || 1)
-          ));
-        }
+        if (def) state.entities.push(makeGimmickEntity(def, api, Number(diff.bossHpMul || 1) * 0.45, Number(diff.chestMul || 1)));
       }
 
       nextGimmickAt = localFrame + intRand(160, 240);
@@ -486,24 +477,13 @@
     if (localFrame >= nextChestAt) {
       if (D.chests && D.chests.length && Math.random() < 0.55) {
         const def = pick(D.chests);
-
-        if (def) {
-          state.entities.push(makeChestEntity(
-            def,
-            api,
-            1,
-            Number(diff.chestMul || 1) * 3
-          ));
-        }
+        if (def) state.entities.push(makeChestEntity(def, api, 1, Number(diff.chestMul || 1) * 3));
       }
 
       nextChestAt = localFrame + intRand(170, 260);
     }
 
-    const bossAlive = state.entities.some(e =>
-      !e.dead &&
-      e.kind === 'boss'
-    );
+    const bossAlive = state.entities.some(e => !e.dead && e.kind === 'boss');
 
     if (spawnedBoss && !bossAlive && localFrame > 120) {
       api.finishRun(true);
@@ -521,8 +501,8 @@
     const W = api.W;
     const state = api.state;
 
-    const bossA = bossDefByName(stage.bossA);
-    const bossB = bossDefByName(stage.bossB, bossA);
+    const bossA = findBossDef(api, stage.areaKey, stage.bossA);
+    const bossB = findBossDef(api, stage.areaKey, stage.bossB, bossA);
 
     state.entities.push(makeBossEntity(bossA, api, {
       x:W * 0.34,
@@ -566,23 +546,10 @@
 
     if (localFrame >= nextEnemyAt) {
       if (diff.key !== 'veryHard') {
-        const D = api.D;
-        const def = pick(D.enemies && D.enemies.zako ? D.enemies.zako : []);
-
-        if (def) {
-          state.entities.push(makeEnemyEntity(
-            def,
-            api,
-            Number(diff.hpMul || 1) * 0.4,
-            Number(diff.scoreMul || 1)
-          ));
-        }
+        spawnAreaEnemy(api, info.stage.areaKey, Number(diff.hpMul || 1) * 0.4, Number(diff.scoreMul || 1));
       }
 
-      nextEnemyAt = localFrame + intRand(
-        diff.key === 'legend' ? 90 : 130,
-        diff.key === 'legend' ? 150 : 210
-      );
+      nextEnemyAt = localFrame + intRand(diff.key === 'legend' ? 110 : 150, diff.key === 'legend' ? 170 : 230);
     }
 
     const bossAlive = state.entities.some(e => !e.dead && e.kind === 'boss');
@@ -606,7 +573,7 @@
 
     const hpMul = 1 + scoreAttackIndex * 0.25;
 
-    const boss = makeBossEntity(def, api, {
+    state.entities.push(makeBossEntity(def, api, {
       x:W / 2,
       hpMul,
       scoreMul:1 + scoreAttackIndex * 0.2,
@@ -615,9 +582,8 @@
       shootCd:Math.max(52, 82 - scoreAttackIndex * 3),
       attackCd:Math.max(96, 135 - scoreAttackIndex * 5),
       contactDmg:20 + scoreAttackIndex * 2
-    });
+    }));
 
-    state.entities.push(boss);
     api.showBanner(`${scoreAttackIndex + 1}. ${def.name}`);
     spawnedBoss = true;
   }
@@ -679,17 +645,14 @@
   }
 
   function activeQuestBossAlive(api){
-    return api.state.entities.some(e =>
-      !e.dead &&
-      (e.kind === 'boss' || e.kind === 'midBoss') &&
-      e.questBoss
-    );
+    return api.state.entities.some(e => !e.dead && (e.kind === 'boss' || e.kind === 'midBoss') && e.questBoss);
   }
 
   function spawnQuestBossGroup(api, defs, opt){
     const W = api.W;
+    const H = api.H;
     const count = defs.length;
-    const margin = count <= 2 ? 0.32 : count <= 3 ? 0.24 : 0.16;
+    const margin = count <= 2 ? 0.32 : count <= 3 ? 0.24 : 0.14;
     const spanA = W * margin;
     const spanB = W * (1 - margin);
 
@@ -701,42 +664,48 @@
       api.state.entities.push(makeBossEntity(def, api, {
         kind:opt && opt.kind ? opt.kind : 'midBoss',
         x,
+        y:-170 - index * 24,
+        baseY:H * 0.22 + index * 8,
+        targetY:H * 0.22 + index * 8,
         hpMul:questHpMul(opt && opt.hpMul != null ? opt.hpMul : 1),
         scoreMul:questScoreMul(opt && opt.scoreMul != null ? opt.scoreMul : 1),
         coinMul:questCoinMul(opt && opt.coinMul != null ? opt.coinMul : 1),
         vx:side * Number(opt && opt.vx != null ? opt.vx : 1.15),
-        shootCd:opt && opt.shootCd != null ? opt.shootCd : 82,
-        attackCd:opt && opt.attackCd != null ? opt.attackCd : 135,
+        shootCd:opt && opt.shootCd != null ? opt.shootCd : 92,
+        attackCd:opt && opt.attackCd != null ? opt.attackCd : 145,
         contactDmg:opt && opt.contactDmg != null ? opt.contactDmg : 18,
-        r:opt && opt.r != null ? opt.r : 84,
+        r:opt && opt.r != null ? opt.r : 78,
         questBoss:true
       }));
     });
   }
 
-  function updateQuestFieldSpawns(api, areaKey){
+  function updateQuestFieldSpawns(api, areaKey, opt){
+    const enemyInterval = opt && opt.enemyInterval ? opt.enemyInterval : [115, 175];
+    const gimmickInterval = opt && opt.gimmickInterval ? opt.gimmickInterval : [145, 230];
+
     if (localFrame >= nextEnemyAt) {
-      spawnAreaEnemy(api, areaKey, questEnemyHpMul(0.55), questCoinMul(0.65));
-      nextEnemyAt = localFrame + intRand(95, 155);
+      spawnAreaEnemy(api, areaKey, questEnemyHpMul(0.55), questCoinMul(0.55));
+      nextEnemyAt = localFrame + intRand(enemyInterval[0], enemyInterval[1]);
     }
 
     if (localFrame >= nextGimmickAt) {
-      spawnAreaGimmick(api, areaKey, questEnemyHpMul(0.75), questCoinMul(0.7));
-      nextGimmickAt = localFrame + intRand(135, 210);
+      spawnAreaGimmick(api, areaKey, questEnemyHpMul(0.7), questCoinMul(0.65));
+      nextGimmickAt = localFrame + intRand(gimmickInterval[0], gimmickInterval[1]);
     }
 
     if (localFrame >= nextChestAt) {
-      if (Math.random() < 0.34) {
-        spawnAreaChest(api, areaKey, questEnemyHpMul(0.65), questCoinMul(0.8));
+      if (Math.random() < 0.28) {
+        spawnAreaChest(api, areaKey, questEnemyHpMul(0.6), questCoinMul(0.75));
       }
 
-      nextChestAt = localFrame + intRand(260, 390);
+      nextChestAt = localFrame + intRand(300, 440);
     }
   }
 
   function updatePteraRush(api){
     const stage = currentQuestStage();
-    const ptera = midBossDef('grass', QUEST_FALLBACK_BOSSES.ptera);
+    const ptera = getMidBossDef(api, 'grass', 'モブプテラ', QUEST_FALLBACK.ptera);
     const waves = [2, 3, 5];
 
     updateQuestFieldSpawns(api, stage.areaKey);
@@ -749,11 +718,13 @@
 
       spawnQuestBossGroup(api, defs, {
         kind:'midBoss',
-        hpMul:0.75 + questPhase * 0.12,
+        hpMul:0.72 + questPhase * 0.1,
         scoreMul:0.8,
-        coinMul:0.8,
-        r:76,
-        contactDmg:16 + questPhase * 2
+        coinMul:0.7,
+        r:72,
+        contactDmg:15 + questPhase * 2,
+        shootCd:105,
+        attackCd:150
       });
 
       api.showBanner(`プテラッシュ ${count}体`);
@@ -774,31 +745,32 @@
   function updateThieves(api){
     const stage = currentQuestStage();
 
-    updateQuestFieldSpawns(api, stage.areaKey);
+    updateQuestFieldSpawns(api, stage.areaKey, {
+      enemyInterval:[75, 115],
+      gimmickInterval:[150, 240]
+    });
 
     if (!questBossSpawned && localFrame > 45) {
-      const mira = bossDefByName('ミラモブ', QUEST_FALLBACK_BOSSES.mira);
+      const mira = findBossDef(api, 'desert', 'ミラモブ', QUEST_FALLBACK.mira);
 
       spawnQuestBossGroup(api, [mira], {
         kind:'boss',
-        hpMul:1.0,
-        scoreMul:1.0,
-        coinMul:1.0,
-        r:98,
+        hpMul:1,
+        scoreMul:1,
+        coinMul:0.8,
+        r:96,
         contactDmg:22
       });
 
-      api.showBanner('盗賊団 ミラモブ出現');
+      api.showBanner('盗賊団');
       questBossSpawned = true;
     }
 
-    if (localFrame >= nextEnemyAt - 35 && questKills < 30) {
-      spawnAreaEnemy(api, 'desert', questEnemyHpMul(0.7), questCoinMul(0.55));
+    if (questKills < 30 && localFrame >= nextEnemyAt - 18) {
+      spawnAreaEnemy(api, 'desert', questEnemyHpMul(0.62), questCoinMul(0.45));
     }
 
-    const bossAlive = activeQuestBossAlive(api);
-
-    if (questBossSpawned && !bossAlive && questKills >= 30 && localFrame > 120) {
+    if (questBossSpawned && !activeQuestBossAlive(api) && questKills >= 30 && localFrame > 120) {
       api.finishRun(true);
     }
   }
@@ -809,15 +781,18 @@
     updateQuestFieldSpawns(api, stage.areaKey);
 
     if (!questWaveSpawned && localFrame > 55) {
-      const ban = bossDefByName('番人', QUEST_FALLBACK_BOSSES.ban);
+      const ban = findBossDef(api, 'town', '番人', QUEST_FALLBACK.ban);
 
       spawnQuestBossGroup(api, [ban, ban], {
-        kind:'midBoss',
-        hpMul:0.75,
-        scoreMul:0.9,
-        coinMul:0.8,
-        r:72,
-        contactDmg:18
+        kind:'boss',
+        hpMul:0.58,
+        scoreMul:0.75,
+        coinMul:0.65,
+        r:66,
+        contactDmg:16,
+        vx:1.0,
+        shootCd:105,
+        attackCd:160
       });
 
       api.showBanner('番人試験');
@@ -831,7 +806,7 @@
 
   function updateNineHeads(api){
     const stage = currentQuestStage();
-    const ghidora = midBossDef('neon', QUEST_FALLBACK_BOSSES.ghidora);
+    const ghidora = getMidBossDef(api, 'neon', 'モブギドラ', QUEST_FALLBACK.ghidora);
 
     updateQuestFieldSpawns(api, stage.areaKey);
 
@@ -839,10 +814,12 @@
       spawnQuestBossGroup(api, [ghidora, ghidora, ghidora], {
         kind:'midBoss',
         hpMul:0.9,
-        scoreMul:1.0,
-        coinMul:1.0,
-        r:82,
-        contactDmg:20
+        scoreMul:0.9,
+        coinMul:0.75,
+        r:80,
+        contactDmg:20,
+        shootCd:95,
+        attackCd:140
       });
 
       api.showBanner('9つの首');
@@ -858,15 +835,17 @@
     if (!questWaveSpawned && questPhase === 1 && localFrame > 55) {
       spawnQuestBossGroup(api, [ghidora], {
         kind:'midBoss',
-        hpMul:2.1,
-        scoreMul:2.0,
-        coinMul:1.5,
-        r:118,
+        hpMul:2.05,
+        scoreMul:1.8,
+        coinMul:1.2,
+        r:116,
         contactDmg:28,
-        vx:1.35
+        vx:1.3,
+        shootCd:82,
+        attackCd:125
       });
 
-      api.showBanner('大型ネオンギドラ');
+      api.showBanner('大型モブギドラ');
       questWaveSpawned = true;
     }
 
@@ -878,13 +857,12 @@
   function updateHotMagma(api){
     const stage = currentQuestStage();
 
-    updateQuestFieldSpawns(api, stage.areaKey);
+    updateQuestFieldSpawns(api, stage.areaKey, {
+      enemyInterval:[70, 110],
+      gimmickInterval:[145, 220]
+    });
 
     if (questPhase === 0) {
-      if (localFrame >= nextEnemyAt - 35 && questKills < 30) {
-        spawnAreaEnemy(api, 'magma', questEnemyHpMul(0.8), questCoinMul(0.55));
-      }
-
       if (questKills >= 30) {
         questPhase = 1;
         questWaveSpawned = false;
@@ -896,20 +874,22 @@
     }
 
     if (!questWaveSpawned && questPhase === 1 && localFrame > 55) {
-      const dragon = bossDefByName('ドラゴンモブ', QUEST_FALLBACK_BOSSES.dragon);
-      const mid = midBossDef('magma', QUEST_FALLBACK_BOSSES.dragon);
+      const dragon = findBossDef(api, 'magma', 'ドラゴンモブ', QUEST_FALLBACK.dragon);
+      const magrem = getMidBossDef(api, 'magma', 'マグモブレム', QUEST_FALLBACK.magmaMid);
 
-      spawnQuestBossGroup(api, [dragon, mid, mid], {
+      spawnQuestBossGroup(api, [dragon, magrem, magrem], {
         kind:'midBoss',
-        hpMul:1.15,
-        scoreMul:1.25,
-        coinMul:1.1,
-        r:90,
-        contactDmg:24
+        hpMul:1.1,
+        scoreMul:1.15,
+        coinMul:0.9,
+        r:88,
+        contactDmg:24,
+        shootCd:95,
+        attackCd:145
       });
 
       api.state.entities.forEach(e => {
-        if (e.questBoss && e.name === dragon.name) {
+        if (e.questBoss && sameName(e.name, 'ドラゴンモブ')) {
           e.kind = 'boss';
           e.r = 106;
           e.hp = Math.ceil(e.hp * 1.25);
@@ -932,17 +912,18 @@
     updateQuestFieldSpawns(api, stage.areaKey);
 
     if (!questWaveSpawned && localFrame > 55) {
-      const lilith = bossDefByName('モブリリス', QUEST_FALLBACK_BOSSES.lilith);
+      const lilith = findBossDef(api, 'castle', 'モブリリス', QUEST_FALLBACK.lilith);
 
       spawnQuestBossGroup(api, [lilith, lilith, lilith, lilith], {
         kind:'boss',
-        hpMul:0.72,
-        scoreMul:0.85,
-        coinMul:0.8,
-        r:74,
-        contactDmg:18,
-        shootCd:86,
-        attackCd:145
+        hpMul:0.62,
+        scoreMul:0.75,
+        coinMul:0.65,
+        r:70,
+        contactDmg:17,
+        shootCd:92,
+        attackCd:150,
+        vx:1.35
       });
 
       api.showBanner('リリス四姉妹');
@@ -986,11 +967,10 @@
     difficultyKey = eventData.difficulty || '';
     stageId = Number(eventData.stageId || 0);
 
-    phase = 'event';
     localFrame = 0;
     nextEnemyAt = 120;
-    nextChestAt = 150;
-    nextGimmickAt = 130;
+    nextChestAt = 170;
+    nextGimmickAt = 150;
     spawnedBoss = false;
     scoreAttackIndex = 0;
     finishBonusApplied = false;
@@ -1000,7 +980,6 @@
     questKills = 0;
     questBossSpawned = false;
     questWaveSpawned = false;
-    questTargetKills = 0;
 
     api.state.entities.length = 0;
     api.state.bullets.length = 0;
@@ -1073,10 +1052,6 @@
     if (eventType === 'eventQuest') {
       if (entity.kind === 'enemy') {
         questKills++;
-      }
-
-      if (entity.questBoss && (entity.kind === 'boss' || entity.kind === 'midBoss')) {
-        questTargetKills++;
       }
     }
   }
@@ -1222,7 +1197,7 @@
 
       if (api.hudStage) {
         if (info.stage.key === 'thieves' || info.stage.key === 'hot_magma') {
-          api.hudStage.textContent = `QUEST ${questKills}/30`;
+          api.hudStage.textContent = `QUEST ${Math.min(questKills, 30)}/30`;
         } else {
           api.hudStage.textContent = `QUEST ${info.difficulty.name}`;
         }
