@@ -2,7 +2,7 @@
 
 (function(){
   const SKILL_SAVE_KEY = 'mobshot_skill_state_v1';
-  const TEST_UNLOCK_ALL_SKILLS = true;
+  const TEST_UNLOCK_ALL_SKILLS = false;
   const AUTO_SELL_COIN = 5000;
 
   const SKILL_MASTER = [
