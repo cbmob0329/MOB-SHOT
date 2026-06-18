@@ -8,24 +8,24 @@
   const SKILL_MASTER = [
     { key:'rocket', name:'ロケットランチャー', image:'skill/rocket barrage.png', type:'rocket', bulletImage:'atk/rocket.png', baseCt:24, baseCost:1000, costStep:500, maxLevel:99, maxPlus:30, defaultOwned:true, defaultEquipped:true, desc:'大きなロケット弾を撃ち、着弾時に広範囲爆発を起こす。Lvで弾数が増える。' },
     { key:'energyRush', name:'エネルギーラッシュ', image:'skill/energyrush.png', type:'energyRush', bulletImage:'atk/enetama.png', baseCt:26, baseCost:1000, costStep:500, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'エネルギー弾をバラバラの角度へ乱射する。Lvで弾数と拡散性能が上がる。' },
-    { key:'twinMissile', name:'ツインミサイル', image:'skill/double missile.png', type:'twinMissile', bulletImage:'atk/tuibi.png', baseCt:25, baseCost:1000, costStep:500, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'一番HPが高い敵・障害物・宝箱へ大きな追尾ミサイルを放つ。Lv10で3発になる。' },
+    { key:'twinMissile', name:'ツインミサイル', image:'skill/double missile.png', type:'twinMissile', bulletImage:'atk/tuibi.png', baseCt:23, baseCost:1000, costStep:500, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'追尾ミサイルを2連射する。単発威力は控えめだが、弾数と爆発で安定して削る。' },
     { key:'shadowClone', name:'影分身', image:'skill/shadowclone.png', type:'shadowClone', bulletImage:'', baseCt:45, baseCost:1000, costStep:500, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'自分の単色シルエット分身を出し、分身も攻撃する。WIDE補助もある。' },
     { key:'thunderbolt', name:'サンダーボルト', image:'skill/thunderbolt.png', type:'thunderbolt', bulletImage:'atk/kaminari.png', baseCt:38, baseCost:1000, costStep:500, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'一定時間ランダムに雷を落とす。Lvで持続時間と落雷威力が上がる。' },
     { key:'arcaneBarrier', name:'アルカナバリア', image:'skill/arcane barrier.png', type:'arcaneBarrier', bulletImage:'', baseCt:55, baseCost:1000, costStep:500, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'泡とメタルリングの回転バリアで一定時間無敵になる。Lvで接触ダメージも追加。' },
-    { key:'darkPower', name:'闇の力', image:'skill/dark oblivion.png', type:'darkPower', bulletImage:'atk/hinotama.png', baseCt:60, baseCost:3000, costStep:1500, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'黒い残像膜をまとい、弾を巨大化。さらに巨大な火の玉を1秒に1回放つ。' },
+    { key:'darkPower', name:'闇の力', image:'skill/dark oblivion.png', type:'darkPower', bulletImage:'atk/atkmaoh.png', baseCt:62, baseCost:3000, costStep:1500, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'小さな闇オーラをまとい、魔王弾を前方3ワイドで乱射する。ボス攻撃にも強い。' },
 
     { key:'blackHole', name:'ブラックホール', image:'skill/blackhole.png', type:'blackHole', bulletImage:'atk/blackhole.png', baseCt:48, baseCost:2000, costStep:800, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'画面上部にブラックホールを出し、敵と障害物を吸引する。火力より拘束重視。' },
     { key:'healingBreeze', name:'癒しの風', image:'skill/healingbreeze.png', type:'healingBreeze', bulletImage:'', baseCt:40, baseCost:1200, costStep:600, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'10秒間、2秒ごとにHPを回復する持続スキル。' },
-    { key:'rosePulse', name:'薔薇の鼓動', image:'skill/rosepulse.png', type:'rosePulse', bulletImage:'atk/atkriri.png', baseCt:50, baseCost:2500, costStep:900, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'一定時間、様々な方向から大きい薔薇の弾を飛ばす。火力は抑えめに再調整。' },
+    { key:'rosePulse', name:'薔薇の鼓動', image:'skill/rosepulse.png', type:'rosePulse', bulletImage:'atk/atkriri.png', baseCt:52, baseCost:2500, costStep:900, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'一定時間、様々な方向から薔薇の弾を飛ばす。火力を大きく抑えて再調整。' },
     { key:'goldRush', name:'ゴールドラッシュ', image:'skill/goldrush.png', type:'goldRush', bulletImage:'', baseCt:60, baseCost:1800, costStep:700, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'コインが降る演出後、一定時間獲得コイン倍率が大きく上がる。' },
     { key:'darkThunder', name:'ダークサンダー', image:'skill/darkthunder.png', type:'darkThunder', bulletImage:'atk/blackrai.png', baseCt:42, baseCost:2500, costStep:900, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'5方向以上に闇の雷を放ち、当たった敵に持続ダメージを与える。' },
     { key:'timeMagic', name:'タイムマジック', image:'skill/timemagic.png', type:'timeMagic', bulletImage:'', baseCt:70, baseCost:3500, costStep:1200, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'画面を白いモノクロにし、敵と敵弾を停止させる。火力なしの安全スキル。' },
     { key:'lilithSisters', name:'リリス四姉妹', image:'skill/lili.png', type:'lilithSisters', bulletImage:'', baseCt:75, baseCost:4000, costStep:1500, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'リリス四姉妹を召喚し、一定時間味方として戦わせる。' },
 
-    { key:'neonBomb', name:'ネオンボム', image:'skill/neonbomb.png', type:'neonBomb', bulletImage:'atk/neonbomb.png', baseCt:42, baseCost:3000, costStep:1000, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'巨大なネオンボムをゆっくり飛ばし、画面上部で停滞後に大爆発する。' },
-    { key:'neptuneAttack', name:'ネプチューンアタック', image:'skill/nepatk.png', type:'neptuneAttack', bulletImage:'atk/atknep.png', baseCt:32, baseCost:2500, costStep:900, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'貫通する大きなトライデントを5連発射する。弾速は遅め。' },
-    { key:'miraPoison', name:'ミラポイズン', image:'skill/mira.png', type:'miraPoison', bulletImage:'atk/mira atk.png', baseCt:36, baseCost:2500, costStep:900, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'毒の弾を5ワイドで発射し、当たった敵に強力な毒を付与する。' },
-    { key:'bookHero', name:'読みかけの本', image:'skill/book.png', type:'bookHero', bulletImage:'pet/pet hero.png', baseCt:50, baseCost:3500, costStep:1200, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'黄金に輝くヒーローを召喚し、5秒間敵へ高速突進する。' }
+    { key:'neonBomb', name:'ネオンボム', image:'skill/neonbomb.png', type:'neonBomb', bulletImage:'atk/neonbomb.png', baseCt:44, baseCost:3000, costStep:1000, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'巨大なネオンボムをゆっくり飛ばし、画面上部で停滞後に大爆発する。' },
+    { key:'neptuneAttack', name:'ネプチューンアタック', image:'skill/nepatk.png', type:'neptuneAttack', bulletImage:'atk/atknep.png', baseCt:32, baseCost:2500, costStep:900, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'貫通する大きなトライデントを順番に5連射する。弾速は遅め。' },
+    { key:'miraPoison', name:'ミラポイズン', image:'skill/mira.png', type:'miraPoison', bulletImage:'atk/miraatk.png', baseCt:38, baseCost:2500, costStep:900, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'毒の弾を5ワイドで発射し、当たった敵に強力な毒を付与する。' },
+    { key:'bookHero', name:'読みかけの本', image:'skill/book.png', type:'bookHero', bulletImage:'pet/pet hero.png', baseCt:56, baseCost:3500, costStep:1200, maxLevel:99, maxPlus:30, defaultOwned:false, defaultEquipped:false, desc:'黄金に輝くヒーローを召喚し、一定時間敵へ突進する。火力は抑えめ。' }
   ];
 
   function defaultState(){
@@ -151,17 +151,6 @@
     return Math.max(0, Number(item.plus || 0));
   }
 
-  function clamp(v, min, max){
-    return Math.max(min, Math.min(max, v));
-  }
-
-  function stepLevel(level, lv30, lv50, lv99, base){
-    if (level >= 99) return lv99;
-    if (level >= 50) return lv50;
-    if (level >= 30) return lv30;
-    return base;
-  }
-
   function getCooldown(skill, item){
     const level = lv(item);
     const p = plus(item);
@@ -169,7 +158,7 @@
 
     if (skill.type === 'rocket') ct -= Math.floor(level / 20);
     if (skill.type === 'energyRush') ct -= Math.floor(level / 25);
-    if (skill.type === 'twinMissile') ct -= Math.floor(level / 30);
+    if (skill.type === 'twinMissile') ct -= Math.floor(level / 25);
     if (skill.type === 'thunderbolt') ct -= Math.floor(level / 25);
     if (skill.type === 'darkThunder') ct -= Math.floor(level / 30);
 
@@ -179,35 +168,35 @@
 
     if (skill.type === 'blackHole') ct -= Math.floor(level / 35);
     if (skill.type === 'healingBreeze') ct -= Math.floor(level / 40);
-    if (skill.type === 'rosePulse') ct -= Math.floor(level / 50);
+    if (skill.type === 'rosePulse') ct -= Math.floor(level / 60);
     if (skill.type === 'goldRush') ct -= Math.floor(level / 45);
     if (skill.type === 'timeMagic') ct -= Math.floor(level / 60);
     if (skill.type === 'lilithSisters') ct -= Math.floor(level / 60);
 
-    if (skill.type === 'neonBomb') ct -= Math.floor(level / 45);
+    if (skill.type === 'neonBomb') ct -= Math.floor(level / 50);
     if (skill.type === 'neptuneAttack') ct -= Math.floor(level / 40);
-    if (skill.type === 'miraPoison') ct -= Math.floor(level / 45);
-    if (skill.type === 'bookHero') ct -= Math.floor(level / 60);
+    if (skill.type === 'miraPoison') ct -= Math.floor(level / 50);
+    if (skill.type === 'bookHero') ct -= Math.floor(level / 70);
 
     const minimums = {
       rocket:18,
       energyRush:21,
-      twinMissile:21,
+      twinMissile:18,
       shadowClone:40,
       thunderbolt:32,
       arcaneBarrier:50,
-      darkPower:54,
+      darkPower:56,
       blackHole:43,
       healingBreeze:36,
-      rosePulse:45,
+      rosePulse:48,
       goldRush:55,
       darkThunder:37,
       timeMagic:66,
       lilithSisters:70,
-      neonBomb:38,
+      neonBomb:40,
       neptuneAttack:28,
-      miraPoison:32,
-      bookHero:46
+      miraPoison:34,
+      bookHero:52
     };
 
     return Math.max(minimums[skill.type] || 20, ct);
@@ -231,8 +220,8 @@
 
     if (skill.type === 'twinMissile') {
       return {
-        bullet: 2.4 + ((level - 1) * 0.018),
-        explosion: 0.8 + ((level - 1) * 0.006)
+        bullet: 1.75 + ((level - 1) * 0.012),
+        explosion: 0.65 + ((level - 1) * 0.004)
       };
     }
 
@@ -244,7 +233,7 @@
 
     if (skill.type === 'rosePulse') {
       return {
-        rose: 1.8 + ((level - 1) * 0.016)
+        rose: 0.9 + ((level - 1) * 0.008)
       };
     }
 
@@ -264,34 +253,34 @@
 
     if (skill.type === 'darkPower') {
       return {
-        darkFire: 3.0 + ((level - 1) * 0.015)
+        darkFire: 2.2 + ((level - 1) * 0.010)
       };
     }
 
     if (skill.type === 'neonBomb') {
       return {
-        pierce: 2.0 + ((level - 1) * 0.012),
-        explosion: 3.0 + ((level - 1) * 0.018),
-        dot: 1.0 + ((level - 1) * 0.006)
+        pierce: 1.4 + ((level - 1) * 0.008),
+        explosion: 2.2 + ((level - 1) * 0.014),
+        dot: 0.8 + ((level - 1) * 0.004)
       };
     }
 
     if (skill.type === 'neptuneAttack') {
       return {
-        trident: 2.0 + ((level - 1) * 0.012)
+        trident: 1.8 + ((level - 1) * 0.010)
       };
     }
 
     if (skill.type === 'miraPoison') {
       return {
-        bullet: 0.8 + ((level - 1) * 0.004),
-        poison: 3.0 + ((level - 1) * 0.018)
+        bullet: 0.65 + ((level - 1) * 0.003),
+        poison: 2.2 + ((level - 1) * 0.012)
       };
     }
 
     if (skill.type === 'bookHero') {
       return {
-        hero: 3.0 + ((level - 1) * 0.018)
+        hero: 1.65 + ((level - 1) * 0.010)
       };
     }
 
@@ -331,7 +320,6 @@
     }
 
     if (skill.type === 'neptuneAttack') return 5;
-
     if (skill.type === 'miraPoison') return 5;
 
     return 0;
@@ -340,9 +328,7 @@
   function getDuration(skill, item){
     const level = lv(item);
 
-    if (skill.type === 'thunderbolt') {
-      return Math.min(12, 5 + Math.floor(level / 15));
-    }
+    if (skill.type === 'thunderbolt') return Math.min(12, 5 + Math.floor(level / 15));
 
     if (skill.type === 'shadowClone') {
       if (level >= 99) return 9;
@@ -359,9 +345,9 @@
     }
 
     if (skill.type === 'darkPower') {
-      if (level >= 99) return 12;
-      if (level >= 60) return 10;
-      if (level >= 30) return 8;
+      if (level >= 99) return 11;
+      if (level >= 60) return 9;
+      if (level >= 30) return 7;
       return 6;
     }
 
@@ -372,14 +358,12 @@
       return 3;
     }
 
-    if (skill.type === 'healingBreeze') {
-      return 10;
-    }
+    if (skill.type === 'healingBreeze') return 10;
 
     if (skill.type === 'rosePulse') {
-      if (level >= 99) return 7;
-      if (level >= 60) return 6.5;
-      if (level >= 30) return 6;
+      if (level >= 99) return 6.5;
+      if (level >= 60) return 6;
+      if (level >= 30) return 5.5;
       return 5;
     }
 
@@ -390,9 +374,7 @@
       return 12;
     }
 
-    if (skill.type === 'timeMagic') {
-      return Math.min(6, 3 + ((level - 1) * 0.025));
-    }
+    if (skill.type === 'timeMagic') return Math.min(6, 3 + ((level - 1) * 0.025));
 
     if (skill.type === 'lilithSisters') {
       if (level >= 99) return 12;
@@ -401,9 +383,7 @@
       return 5;
     }
 
-    if (skill.type === 'neonBomb') {
-      return 3;
-    }
+    if (skill.type === 'neonBomb') return 3;
 
     if (skill.type === 'miraPoison') {
       if (level >= 99) return 6;
@@ -412,9 +392,9 @@
     }
 
     if (skill.type === 'bookHero') {
-      if (level >= 99) return 8;
-      if (level >= 60) return 7;
-      if (level >= 30) return 6;
+      if (level >= 99) return 6.5;
+      if (level >= 60) return 6;
+      if (level >= 30) return 5.5;
       return 5;
     }
 
@@ -463,15 +443,19 @@
   function getDarkPowerAttackAdd(skill, item){
     const level = lv(item);
     if (skill.type !== 'darkPower') return 0;
-    if (level >= 99) return 20;
-    if (level >= 60) return 15;
-    if (level >= 30) return 10;
-    return 5 + ((level - 1) * 0.12);
+    if (level >= 99) return 16;
+    if (level >= 60) return 12;
+    if (level >= 30) return 8;
+    return 4 + ((level - 1) * 0.10);
   }
 
   function getDarkFireInterval(skill, item){
+    const level = lv(item);
     if (skill.type !== 'darkPower') return 0;
-    return 60;
+    if (level >= 99) return 44;
+    if (level >= 60) return 50;
+    if (level >= 30) return 56;
+    return 64;
   }
 
   function getHealAmount(skill, item){
@@ -522,16 +506,16 @@
     const level = lv(item);
 
     if (skill.type === 'twinMissile') {
-      if (level >= 99) return 56;
-      if (level >= 60) return 50;
-      if (level >= 30) return 44;
-      if (level >= 10) return 40;
-      return 36;
+      if (level >= 99) return 58;
+      if (level >= 60) return 52;
+      if (level >= 30) return 46;
+      if (level >= 10) return 42;
+      return 38;
     }
 
     if (skill.type === 'neonBomb') {
-      if (level >= 99) return 132;
-      if (level >= 60) return 122;
+      if (level >= 99) return 128;
+      if (level >= 60) return 120;
       if (level >= 30) return 112;
       return 104;
     }
@@ -544,10 +528,10 @@
     }
 
     if (skill.type === 'bookHero') {
-      if (level >= 99) return 96;
-      if (level >= 60) return 88;
-      if (level >= 30) return 80;
-      return 72;
+      if (level >= 99) return 86;
+      if (level >= 60) return 80;
+      if (level >= 30) return 76;
+      return 70;
     }
 
     return 0;
@@ -557,17 +541,17 @@
     const level = lv(item);
 
     if (skill.type === 'twinMissile') {
-      if (level >= 99) return 150;
-      if (level >= 60) return 132;
-      if (level >= 30) return 112;
-      return 96;
+      if (level >= 99) return 156;
+      if (level >= 60) return 138;
+      if (level >= 30) return 118;
+      return 100;
     }
 
     if (skill.type === 'neonBomb') {
-      if (level >= 99) return 260;
-      if (level >= 60) return 238;
-      if (level >= 30) return 220;
-      return 200;
+      if (level >= 99) return 248;
+      if (level >= 60) return 232;
+      if (level >= 30) return 216;
+      return 198;
     }
 
     return 0;
@@ -585,7 +569,19 @@
 
   function getHeroHitInterval(skill, item){
     if (skill.type !== 'bookHero') return 0;
+    return 2.4;
+  }
+
+  function getTwinVolleyCount(skill, item){
+    const level = lv(item);
+    if (skill.type !== 'twinMissile') return 1;
+    if (level >= 60) return 2;
     return 2;
+  }
+
+  function getNeptuneShotInterval(skill, item){
+    if (skill.type !== 'neptuneAttack') return 0;
+    return 8;
   }
 
   function getSkillRuntimeData(key){
@@ -619,6 +615,8 @@
       poisonTick: getPoisonTick(skill, item),
       neonBombHitInterval: getNeonBombHitInterval(skill, item),
       heroHitInterval: getHeroHitInterval(skill, item),
+      twinVolleyCount: getTwinVolleyCount(skill, item),
+      neptuneShotInterval: getNeptuneShotInterval(skill, item),
       powerRate: getPowerRate(skill, item)
     });
   }
