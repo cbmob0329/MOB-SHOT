@@ -113,9 +113,9 @@
     return {
       totalScore: 0,
       bestScore: 0,
-      coin: 10000000,
-      diamond: 0,
-      rank: 10,
+      coin: 10000,
+      diamond: 10,
+      rank: 1,
 
       stageProgress: {
         currentStageIndex: 0,
