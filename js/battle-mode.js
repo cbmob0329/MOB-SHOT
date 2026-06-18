@@ -46,11 +46,13 @@
 
   function img(src){
     if (!src) return null;
+
     if (!images.has(src)) {
       const image = new Image();
       image.src = src;
       images.set(src, image);
     }
+
     return images.get(src);
   }
 
@@ -108,126 +110,147 @@
     style.id = 'mobBattleStyle';
     style.textContent = `
       #battleScreen{
-        position:relative;
-        overflow:hidden;
-        background:#07101f;
+        position:absolute!important;
+        inset:0!important;
+        overflow:hidden!important;
+        background:#07101f!important;
+        width:100vw!important;
+        height:100svh!important;
+      }
+
+      #battleScreen.active{
+        display:block!important;
       }
 
       #battleCanvas{
-        position:absolute;
-        inset:0;
-        width:100%;
-        height:100%;
-        background:#3daf55;
-        touch-action:none;
+        position:absolute!important;
+        inset:0!important;
+        width:100%!important;
+        height:100%!important;
+        background:#3daf55!important;
+        touch-action:none!important;
+        z-index:1!important;
       }
 
       .battle-overlay{
-        position:absolute;
-        inset:0;
-        z-index:20;
-        pointer-events:none;
-        font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+        position:absolute!important;
+        inset:0!important;
+        z-index:50!important;
+        pointer-events:none!important;
+        font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
       }
 
       .battle-menu{
-        position:absolute;
-        inset:0;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding:18px;
-        background:rgba(0,0,0,.52);
-        pointer-events:auto;
+        position:absolute!important;
+        inset:0!important;
+        display:flex!important;
+        align-items:center!important;
+        justify-content:center!important;
+        padding:18px!important;
+        background:rgba(0,0,0,.58)!important;
+        pointer-events:auto!important;
       }
 
       .battle-card{
-        width:min(92vw,440px);
-        max-height:88vh;
-        overflow:auto;
-        border-radius:28px;
-        padding:20px;
-        text-align:center;
-        background:linear-gradient(180deg,rgba(35,28,78,.98),rgba(5,8,22,.98));
-        border:3px solid rgba(255,255,255,.35);
-        box-shadow:0 18px 48px rgba(0,0,0,.7);
+        width:min(92vw,440px)!important;
+        max-height:88svh!important;
+        overflow:auto!important;
+        border-radius:28px!important;
+        padding:20px!important;
+        text-align:center!important;
+        background:linear-gradient(180deg,rgba(35,28,78,.98),rgba(5,8,22,.98))!important;
+        border:3px solid rgba(255,255,255,.35)!important;
+        box-shadow:0 18px 48px rgba(0,0,0,.7)!important;
       }
 
       .battle-title{
-        margin:0 0 14px;
-        font-size:34px;
-        font-weight:1000;
-        color:#ffe66b;
-        text-shadow:0 5px 0 #000;
+        margin:0 0 14px!important;
+        font-size:34px!important;
+        font-weight:1000!important;
+        color:#ffe66b!important;
+        text-shadow:0 5px 0 #000!important;
       }
 
       .battle-help{
-        margin:0 0 16px;
-        color:#dfe8ff;
-        font-size:13px;
-        font-weight:900;
-        line-height:1.55;
+        margin:0 0 16px!important;
+        color:#dfe8ff!important;
+        font-size:13px!important;
+        font-weight:900!important;
+        line-height:1.55!important;
       }
 
-      .battle-actions{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:10px;
+      .battle-actions,
+      .battle-small{
+        display:grid!important;
+        grid-template-columns:1fr 1fr!important;
+        gap:10px!important;
       }
 
       .battle-btn{
-        border:0;
-        border-radius:999px;
-        padding:14px 12px;
-        font-size:18px;
-        font-weight:1000;
-        color:#201100;
-        background:linear-gradient(#ffe66b,#ffb423);
-        box-shadow:0 5px 0 rgba(0,0,0,.36);
+        border:0!important;
+        border-radius:999px!important;
+        padding:14px 12px!important;
+        font-size:18px!important;
+        font-weight:1000!important;
+        color:#201100!important;
+        background:linear-gradient(#ffe66b,#ffb423)!important;
+        box-shadow:0 5px 0 rgba(0,0,0,.36)!important;
       }
 
       .battle-btn.blue{
-        color:#fff;
-        background:linear-gradient(#60d9ff,#1774ee);
+        color:#fff!important;
+        background:linear-gradient(#60d9ff,#1774ee)!important;
       }
 
       .battle-select-grid{
-        display:grid;
-        grid-template-columns:repeat(3,1fr);
-        gap:10px;
-        max-height:48vh;
-        overflow:auto;
-        padding:2px;
-        margin-bottom:14px;
+        display:grid!important;
+        grid-template-columns:repeat(3,1fr)!important;
+        gap:10px!important;
+        max-height:48svh!important;
+        overflow:auto!important;
+        padding:2px!important;
+        margin-bottom:14px!important;
       }
 
       .battle-choice{
-        border:2px solid rgba(255,255,255,.26);
-        border-radius:18px;
-        padding:8px 5px;
-        background:rgba(255,255,255,.10);
-        color:#fff;
-        font-weight:1000;
-        font-size:11px;
+        border:2px solid rgba(255,255,255,.26)!important;
+        border-radius:18px!important;
+        padding:8px 5px!important;
+        background:rgba(255,255,255,.10)!important;
+        color:#fff!important;
+        font-weight:1000!important;
+        font-size:11px!important;
       }
 
       .battle-choice img{
-        width:64px;
-        height:64px;
-        object-fit:contain;
-        display:block;
-        margin:0 auto 4px;
+        width:64px!important;
+        height:64px!important;
+        object-fit:contain!important;
+        display:block!important;
+        margin:0 auto 4px!important;
       }
 
-      .battle-choice.active{
-        border-color:#ffe66b;
-        box-shadow:0 0 14px rgba(255,230,107,.5);
+      #battleTitleLayer,
+      #battleSelectLayer,
+      #battleHud,
+      #battleBanner{
+        display:none!important;
       }
 
-      .battle-small{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:10px;
+      @media (max-height:720px){
+        .battle-title{
+          font-size:28px!important;
+        }
+
+        .battle-btn{
+          font-size:16px!important;
+          padding:12px 10px!important;
+        }
+
+        .battle-choice img{
+          width:54px!important;
+          height:54px!important;
+        }
       }
     `;
     document.head.appendChild(style);
@@ -238,6 +261,8 @@
     injectStyle();
 
     canvas = $('battleCanvas');
+    if (!canvas) return;
+
     ctx = canvas.getContext('2d');
     boundCanvas = false;
 
@@ -248,6 +273,7 @@
 
     if (!boundCanvas) {
       boundCanvas = true;
+
       canvas.addEventListener('pointerdown', onPointer, { passive:false });
       canvas.addEventListener('pointermove', onPointer, { passive:false });
       canvas.addEventListener('pointerup', function(){
@@ -260,7 +286,10 @@
     DPR = Math.min(window.devicePixelRatio || 1, 2);
 
     const screen = $('battleScreen');
-    const rect = screen ? screen.getBoundingClientRect() : { width:window.innerWidth, height:window.innerHeight };
+    const rect = screen ? screen.getBoundingClientRect() : {
+      width:window.innerWidth,
+      height:window.innerHeight
+    };
 
     W = Math.max(1, rect.width || window.innerWidth);
     H = Math.max(1, rect.height || window.innerHeight);
@@ -312,7 +341,10 @@
   function open(){
     initCanvas();
 
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(s => {
+      s.classList.remove('active');
+    });
+
     const screen = $('battleScreen');
     if (screen) screen.classList.add('active');
 
@@ -321,6 +353,9 @@
     state.p2Wins = 0;
     state.round = 1;
     state.rewardDone = false;
+    state.entities.length = 0;
+    state.bullets.length = 0;
+    state.particles.length = 0;
 
     loadChoices();
     renderOverlay();
@@ -339,7 +374,10 @@
       return;
     }
 
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(s => {
+      s.classList.remove('active');
+    });
+
     const main = $('mainScreen') || $('mainView');
     if (main) main.classList.add('active');
   }
@@ -484,6 +522,7 @@
 
     p1.name = '1P';
     p1.image = state.selected.p1.image;
+
     p2.name = mode === 'cpu' ? 'CPU' : '2P';
     p2.image = state.selected.p2.image;
 
@@ -521,14 +560,18 @@
 
   function loop(){
     if (!running) return;
+
     update();
     draw();
+
     raf = requestAnimationFrame(loop);
   }
 
   function update(){
     state.frame++;
+
     if (state.messageTimer > 0) state.messageTimer--;
+
     if (state.screen !== 'battle') return;
 
     updatePlayers();
@@ -546,6 +589,7 @@
       p.x = clamp(p.x, W * 0.12, W * 0.88);
 
       p.shootCd--;
+
       if (p.shootCd <= 0) {
         p.shootCd = Math.max(8, 34 - p.rapid * 4);
         firePlayer(p);
@@ -563,6 +607,7 @@
       p.targetX = p.x + (targetBullet.x < p.x ? 95 : -95);
     } else {
       const targetEntity = state.entities.find(e => e.y > H * 0.43 && e.y < H * 0.57);
+
       if (targetEntity) p.targetX = targetEntity.x;
       else p.targetX += Math.sin(state.frame * 0.025) * 10;
     }
@@ -577,6 +622,7 @@
 
     for (let i = 0; i < count; i++) {
       const off = (i - (count - 1) / 2) * spacing;
+
       state.bullets.push({
         owner:p.id,
         x:p.x + off,
@@ -592,9 +638,11 @@
 
   function updateSpawns(){
     state.spawnCd--;
+
     if (state.spawnCd > 0) return;
 
     state.spawnCd = intRand(90, 150);
+
     const isChest = Math.random() < 0.45;
     const hp = isChest ? intRand(6, 12) : intRand(4, 12);
 
@@ -616,6 +664,7 @@
     state.entities.forEach(e => {
       e.x += e.vx;
       e.y += Math.sin(state.frame * 0.02 + e.wobble) * 0.15;
+
       if (e.x < W * 0.12 || e.x > W * 0.88) e.vx *= -1;
     });
 
@@ -736,6 +785,7 @@
 
     setTimeout(function(){
       if (!running) return;
+
       resetRound();
       state.screen = 'battle';
       showBattleMessage(`ROUND ${state.round}`);
@@ -775,15 +825,23 @@
       save.coin = Number(save.coin || 0) + Number(amount || 0);
       window.MobShotStorage.save(save);
     } else {
-      try { save = JSON.parse(localStorage.getItem('mobshot_split_v1')) || {}; }
-      catch(e) { save = {}; }
+      try {
+        save = JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
+      } catch(e) {
+        save = {};
+      }
 
       save.coin = Number(save.coin || 0) + Number(amount || 0);
 
-      try { localStorage.setItem('mobshot_split_v1', JSON.stringify(save)); } catch(e) {}
+      try {
+        localStorage.setItem('mobshot_split_v1', JSON.stringify(save));
+      } catch(e) {}
     }
 
-    if (window.MobShotMain && window.MobShotMain.refreshMainHud) window.MobShotMain.refreshMainHud();
+    if (window.MobShotMain && window.MobShotMain.refreshMainHud) {
+      window.MobShotMain.refreshMainHud();
+    }
+
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
   }
 
@@ -811,8 +869,9 @@
   function drawBackground(){
     const bg = img(ASSET.bg);
 
-    if (imageReady(bg)) ctx.drawImage(bg, 0, 0, W, H);
-    else {
+    if (imageReady(bg)) {
+      ctx.drawImage(bg, 0, 0, W, H);
+    } else {
       ctx.fillStyle = '#49b852';
       ctx.fillRect(0,0,W,H);
     }
@@ -847,6 +906,7 @@
     ctx.fillStyle = '#ffe66b';
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 5;
+
     const txt = `${state.p1Wins} - ${state.p2Wins}`;
     ctx.strokeText(txt, W / 2, H / 2 - 14);
     ctx.fillText(txt, W / 2, H / 2 - 14);
@@ -884,8 +944,9 @@
 
       if (p.id === 1) ctx.rotate(Math.PI);
 
-      if (imageReady(image)) ctx.drawImage(image, -size / 2, -size / 2, size, size);
-      else {
+      if (imageReady(image)) {
+        ctx.drawImage(image, -size / 2, -size / 2, size, size);
+      } else {
         ctx.fillStyle = p.id === 1 ? '#60d9ff' : '#ff7ab8';
         ctx.beginPath();
         ctx.arc(0,0,28,0,Math.PI*2);
@@ -901,8 +962,9 @@
       const image = img(e.type === 'chest' ? ASSET.chest : ASSET.obstacle);
       const size = e.type === 'chest' ? 54 : 62;
 
-      if (imageReady(image)) ctx.drawImage(image, e.x - size / 2, e.y - size / 2, size, size);
-      else {
+      if (imageReady(image)) {
+        ctx.drawImage(image, e.x - size / 2, e.y - size / 2, size, size);
+      } else {
         ctx.fillStyle = e.type === 'chest' ? '#ffe66b' : '#777';
         ctx.beginPath();
         ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
@@ -923,8 +985,9 @@
     const image = img(ASSET.bullet);
 
     state.bullets.forEach(b => {
-      if (imageReady(image)) ctx.drawImage(image, b.x - 12, b.y - 12, 24, 24);
-      else {
+      if (imageReady(image)) {
+        ctx.drawImage(image, b.x - 12, b.y - 12, 24, 24);
+      } else {
         ctx.fillStyle = '#fff178';
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
@@ -948,6 +1011,7 @@
     if (state.messageTimer <= 0) return;
 
     const alpha = Math.min(1, state.messageTimer / 24);
+
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.font = '1000 34px system-ui';
@@ -978,21 +1042,50 @@
 
   function bindMainButton(){
     const btn = $('openBattleBtn');
-    if (!btn || btn.__mobBattleBound) return;
+    if (!btn) return;
 
-    btn.__mobBattleBound = true;
     btn.disabled = false;
     btn.classList.remove('disabled-btn');
 
-    btn.addEventListener('click', function(e){
-      e.preventDefault();
-      e.stopPropagation();
+    const handler = function(e){
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (e.stopImmediatePropagation) {
+          e.stopImmediatePropagation();
+        }
+      }
+
       open();
-    });
+      return false;
+    };
+
+    btn.onclick = handler;
+    btn.onpointerup = handler;
+    btn.ontouchend = handler;
+
+    if (!btn.__mobBattleCaptureBound) {
+      btn.__mobBattleCaptureBound = true;
+
+      btn.addEventListener('click', handler, true);
+      btn.addEventListener('pointerup', handler, { capture:true, passive:false });
+      btn.addEventListener('touchend', handler, { capture:true, passive:false });
+    }
   }
 
-  document.addEventListener('DOMContentLoaded', bindMainButton);
-  bindMainButton();
+  window.MobShotBattle = {
+    open,
+    close
+  };
 
-  window.MobShotBattle = { open, close };
+  document.addEventListener('DOMContentLoaded', bindMainButton);
+  window.addEventListener('load', bindMainButton);
+
+  setTimeout(bindMainButton, 100);
+  setTimeout(bindMainButton, 500);
+  setTimeout(bindMainButton, 1000);
+  setTimeout(bindMainButton, 1500);
+
+  bindMainButton();
 })();
