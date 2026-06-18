@@ -53,10 +53,11 @@
     coopBoss:null,
     coopScore:0,
     coopKills:0,
+    coopBossKills:0,
     coopClear:false,
     coopResultShown:false,
-    coopSkills:[],
-    coopSkillCd:{}
+    coopBarrierTimer:0,
+    coopWideTimer:0
   };
 
   function $(id){ return document.getElementById(id); }
@@ -90,6 +91,9 @@
       wide:1,
       shootCd:0,
       alive:true,
+      down:false,
+      reviveTimer:0,
+      invincibleTimer:0,
       input:false
     };
   }
@@ -190,7 +194,6 @@
     screen.innerHTML = `
       <canvas id="battleCanvas"></canvas>
       <div id="battleOverlay" class="battle-overlay"></div>
-      <div id="coopSkillHud" class="coop-skill-hud hidden"></div>
     `;
 
     return screen;
@@ -218,14 +221,8 @@
       .battle-select-grid{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:10px!important;max-height:48svh!important;overflow:auto!important;padding:2px!important;margin-bottom:14px!important}
       .battle-choice{border:2px solid rgba(255,255,255,.26)!important;border-radius:18px!important;padding:8px 5px!important;background:rgba(255,255,255,.10)!important;color:#fff!important;font-weight:1000!important;font-size:11px!important}
       .battle-choice img{width:64px!important;height:64px!important;object-fit:contain!important;display:block!important;margin:0 auto 4px!important}
-      .coop-skill-hud{position:absolute;right:8px;bottom:8px;z-index:70;display:flex;gap:8px;pointer-events:auto}
-      .coop-skill-hud.hidden{display:none!important}
-      .coop-skill-btn{position:relative;width:58px;height:58px;border:0;border-radius:15px;padding:0;background:#111;border:3px solid rgba(255,255,255,.35);overflow:hidden;box-shadow:0 5px 0 rgba(0,0,0,.35)}
-      .coop-skill-btn img{width:100%;height:100%;object-fit:cover;display:block}
-      .coop-skill-cd{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.62);color:#fff;font-size:18px;font-weight:1000;text-shadow:0 2px 0 #000}
-      .coop-skill-btn.ready{border-color:#ffe66b;box-shadow:0 0 10px #ffe66b,0 5px 0 rgba(0,0,0,.35)}
       #battleTitleLayer,#battleSelectLayer,#battleHud,#battleBanner{display:none!important}
-      @media (max-width:430px){.battle-actions.three{grid-template-columns:1fr!important}.coop-skill-btn{width:50px;height:50px}}
+      @media (max-width:430px){.battle-actions.three{grid-template-columns:1fr!important}}
     `;
     document.head.appendChild(style);
   }
@@ -309,12 +306,16 @@
     if (mode === 'coop' && state.screen === 'coop') {
       if (x < W / 2) {
         const p1 = state.players[0];
-        p1.targetX = clamp(x, W * 0.08, W * 0.47);
-        p1.input = true;
+        if (!p1.down) {
+          p1.targetX = clamp(x, W * 0.08, W * 0.47);
+          p1.input = true;
+        }
       } else {
         const p2 = state.players[1];
-        p2.targetX = clamp(x, W * 0.53, W * 0.92);
-        p2.input = true;
+        if (!p2.down) {
+          p2.targetX = clamp(x, W * 0.53, W * 0.92);
+          p2.input = true;
+        }
       }
       return;
     }
@@ -340,7 +341,6 @@
     if (screen) screen.classList.add('active');
 
     mode = 'cpu';
-    hideCoopSkillHud();
 
     state.screen = 'title';
     state.p1Wins = 0;
@@ -360,7 +360,6 @@
   function close(){
     running = false;
     cancelAnimationFrame(raf);
-    hideCoopSkillHud();
 
     if (document.exitFullscreen) document.exitFullscreen().catch(function(){});
 
@@ -483,7 +482,6 @@
 
   function startSelect(nextMode){
     mode = nextMode;
-    hideCoopSkillHud();
     state.screen = 'select';
     state.selectSide = 'p1';
     state.selected.p1 = null;
@@ -552,7 +550,6 @@
     p2.image = state.selected.p2.image;
 
     resetCoop();
-    setupCoopSkills();
     renderOverlay();
   }
 
@@ -563,8 +560,11 @@
     state.coopBoss = null;
     state.coopScore = 0;
     state.coopKills = 0;
+    state.coopBossKills = 0;
     state.coopClear = false;
     state.coopResultShown = false;
+    state.coopBarrierTimer = 0;
+    state.coopWideTimer = 0;
     state.spawnCd = 70;
 
     state.players.forEach(p => {
@@ -575,6 +575,10 @@
       p.wide = 2;
       p.shootCd = 20;
       p.alive = true;
+      p.down = false;
+      p.reviveTimer = 0;
+      p.invincibleTimer = 0;
+      p.input = false;
     });
 
     resetPlayerPositions();
@@ -582,19 +586,32 @@
 
   function beginCoopGame(){
     state.screen = 'coop';
-    showCoopSkillHud();
     spawnCoopBoss();
     showBattleMessage('START!');
+  }
+
+  function bossPersonality(index){
+    const table = [
+      { moveDelay:120, shootBase:175, heavyBase:620, spread:3, speed:1.25, name:'grass' },
+      { moveDelay:105, shootBase:165, heavyBase:590, spread:3, speed:1.35, name:'desert' },
+      { moveDelay:95, shootBase:155, heavyBase:560, spread:4, speed:1.42, name:'town' },
+      { moveDelay:90, shootBase:148, heavyBase:530, spread:5, speed:1.48, name:'neon' },
+      { moveDelay:82, shootBase:140, heavyBase:500, spread:5, speed:1.55, name:'magma' },
+      { moveDelay:75, shootBase:132, heavyBase:470, spread:6, speed:1.62, name:'castle' }
+    ];
+
+    return table[index] || table[0];
   }
 
   function spawnCoopBoss(){
     const areaKey = COOP_AREAS[state.coopAreaIndex];
     const area = getAreaDataByKey(areaKey);
     const src = getCoopBossSource();
+    const personality = bossPersonality(state.coopAreaIndex);
 
     if (!src) return;
 
-    const scale = 0.42 + state.coopAreaIndex * 0.16;
+    const scale = 0.42 + state.coopAreaIndex * 0.18;
     const hp = Math.ceil(Number(src.hp || 200) * scale);
 
     state.coopBoss = {
@@ -603,16 +620,20 @@
       image:src.image || '',
       x:W / 2,
       y:H * 0.22,
+      targetX:W / 2,
       hp,
       maxHp:hp,
       r:58,
       score:Math.ceil(Number(src.score || 1000) * scale),
       areaName:(area && area.name) || areaKey,
       dead:false,
-      shootCd:145,
-      heavyCd:520,
+      shootCd:personality.shootBase,
+      heavyCd:personality.heavyBase,
+      moveCd:45,
+      moveDelay:personality.moveDelay,
       patternIndex:0,
-      movePhase:Math.random() * Math.PI * 2
+      movePhase:Math.random() * Math.PI * 2,
+      personality
     };
 
     state.bosses = [state.coopBoss];
@@ -651,180 +672,14 @@
       p.wide = 1;
       p.shootCd = 30;
       p.alive = true;
+      p.down = false;
+      p.reviveTimer = 0;
+      p.invincibleTimer = 0;
       p.x = W / 2;
       p.targetX = W / 2;
     });
 
     resetPlayerPositions();
-  }
-
-  function setupCoopSkills(){
-    state.coopSkills = [];
-    state.coopSkillCd = {};
-
-    if (!window.MobShotSkills || !window.MobShotSkills.loadState) return;
-
-    const skillState = window.MobShotSkills.loadState();
-    const equipped = Array.isArray(skillState.equipped) ? skillState.equipped : [];
-    const master = Array.isArray(window.MobShotSkills.SKILL_MASTER) ? window.MobShotSkills.SKILL_MASTER : [];
-
-    equipped.slice(0, 3).forEach(key => {
-      const base = master.find(s => s.key === key);
-      const owned = skillState.skills && skillState.skills[key] && skillState.skills[key].owned;
-
-      if (!base || !owned) return;
-
-      state.coopSkills.push({
-        key:base.key,
-        name:base.name || base.key,
-        image:base.image || '',
-        cooldown:Math.max(8, Number(base.cooldown || 18))
-      });
-
-      state.coopSkillCd[base.key] = 0;
-    });
-  }
-
-  function showCoopSkillHud(){
-    const hud = $('coopSkillHud');
-    if (!hud) return;
-
-    if (!state.coopSkills.length) {
-      hud.classList.add('hidden');
-      hud.innerHTML = '';
-      return;
-    }
-
-    hud.classList.remove('hidden');
-    renderCoopSkillHud();
-  }
-
-  function hideCoopSkillHud(){
-    const hud = $('coopSkillHud');
-    if (!hud) return;
-    hud.classList.add('hidden');
-    hud.innerHTML = '';
-  }
-
-  function renderCoopSkillHud(){
-    const hud = $('coopSkillHud');
-    if (!hud || mode !== 'coop' || state.screen !== 'coop') return;
-
-    hud.innerHTML = state.coopSkills.map(skill => {
-      const cd = Math.ceil(Number(state.coopSkillCd[skill.key] || 0) / 60);
-      const ready = cd <= 0;
-
-      return `
-        <button class="coop-skill-btn ${ready ? 'ready' : ''}" data-key="${skill.key}" type="button">
-          <img src="${skill.image}" alt="${skill.name}">
-          ${ready ? '' : `<span class="coop-skill-cd">${cd}</span>`}
-        </button>
-      `;
-    }).join('');
-
-    hud.querySelectorAll('.coop-skill-btn').forEach(btn => {
-      btn.onclick = function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        useCoopSkill(this.getAttribute('data-key'));
-      };
-    });
-  }
-
-  function useCoopSkill(key){
-    if (mode !== 'coop' || state.screen !== 'coop') return;
-    if (Number(state.coopSkillCd[key] || 0) > 0) return;
-
-    const skill = state.coopSkills.find(s => s.key === key);
-    if (!skill) return;
-
-    state.coopSkillCd[key] = Number(skill.cooldown || 18) * 60;
-
-    if (key === 'healingBreeze') {
-      state.players.forEach(p => {
-        p.hp = Math.min(p.maxHp, p.hp + 45);
-      });
-      showBattleMessage('HEAL!');
-      renderCoopSkillHud();
-      return;
-    }
-
-    if (key === 'arcaneBarrier') {
-      state.bullets = state.bullets.filter(b => b.kind !== 'enemy');
-      showBattleMessage('BARRIER!');
-      renderCoopSkillHud();
-      return;
-    }
-
-    if (key === 'timeMagic' || key === 'blackHole') {
-      state.enemies.forEach(e => e.hp -= 12);
-      state.entities.forEach(e => {
-        if (e.type === 'heavyAttack') e.hp -= 18;
-        else e.hp -= 8;
-      });
-      state.bosses.forEach(b => b.hp -= 20);
-      cleanupDeadBySkill();
-      showBattleMessage(key === 'timeMagic' ? 'TIME!' : 'BLACK HOLE!');
-      renderCoopSkillHud();
-      return;
-    }
-
-    if (key === 'goldRush') {
-      state.coopScore += 500;
-      showBattleMessage('SCORE UP!');
-      renderCoopSkillHud();
-      return;
-    }
-
-    const damage = key === 'darkPower' || key === 'neonBomb' ? 70 :
-      key === 'lilithSisters' ? 55 :
-      key === 'thunderbolt' || key === 'darkThunder' ? 45 :
-      key === 'rocket' || key === 'twinMissile' ? 38 :
-      32;
-
-    state.enemies.forEach(e => e.hp -= Math.ceil(damage * 0.55));
-    state.entities.forEach(e => {
-      if (e.type === 'heavyAttack') e.hp -= Math.ceil(damage * 0.85);
-    });
-    state.bosses.forEach(b => b.hp -= damage);
-
-    burst(W / 2, H * 0.38, '#ffe66b', 30);
-    cleanupDeadBySkill();
-    showBattleMessage(skill.name + '!');
-    renderCoopSkillHud();
-  }
-
-  function cleanupDeadBySkill(){
-    state.enemies.forEach(e => {
-      if (e.hp <= 0 && !e.dead) {
-        e.dead = true;
-        state.coopKills++;
-        state.coopScore += Number(e.score || 50);
-        burst(e.x, e.y, '#9dff73', 10);
-      }
-    });
-
-    state.entities.forEach(e => {
-      if (e.hp <= 0 && !e.dead) {
-        e.dead = true;
-        state.coopScore += Number(e.score || 80);
-        burst(e.x, e.y, '#ffcf5b', 10);
-      }
-    });
-
-    state.bosses.forEach(b => {
-      if (b.hp <= 0 && !b.dead) {
-        b.dead = true;
-        state.coopKills++;
-        state.coopScore += Number(b.score || 1000);
-        burst(b.x, b.y, '#d86bff', 24);
-        nextCoopBoss();
-      }
-    });
-
-    state.enemies = state.enemies.filter(e => !e.dead);
-    state.entities = state.entities.filter(e => !e.dead);
-    state.bosses = state.bosses.filter(e => !e.dead);
   }
 
   function loop(){
@@ -876,11 +731,14 @@
   }
 
   function updateCoop(){
-    Object.keys(state.coopSkillCd).forEach(key => {
-      state.coopSkillCd[key] = Math.max(0, Number(state.coopSkillCd[key] || 0) - 1);
+    state.coopBarrierTimer = Math.max(0, state.coopBarrierTimer - 1);
+    state.coopWideTimer = Math.max(0, state.coopWideTimer - 1);
+
+    state.players.forEach(p => {
+      p.invincibleTimer = Math.max(0, Number(p.invincibleTimer || 0) - 1);
     });
 
-    if (state.frame % 15 === 0) renderCoopSkillHud();
+    updateCoopDownRevive();
 
     updatePlayers();
     updateCoopSpawns();
@@ -892,8 +750,39 @@
     checkCoopEnd();
   }
 
+  function updateCoopDownRevive(){
+    const alivePlayers = state.players.filter(p => !p.down && p.hp > 0);
+    const downPlayers = state.players.filter(p => p.down);
+
+    if (!alivePlayers.length) return;
+
+    downPlayers.forEach(p => {
+      p.reviveTimer = Math.max(0, Number(p.reviveTimer || 0) - 1);
+
+      if (p.reviveTimer <= 0) {
+        p.down = false;
+        p.alive = true;
+        p.hp = Math.ceil(p.maxHp * 0.5);
+        p.invincibleTimer = 120;
+        showBattleMessage(`${p.name} REVIVE!`);
+      }
+    });
+  }
+
+  function setPlayerDown(p){
+    if (!p || p.down) return;
+
+    p.hp = 0;
+    p.down = true;
+    p.alive = false;
+    p.input = false;
+    p.reviveTimer = 300;
+    showBattleMessage(`${p.name} DOWN!`);
+  }
+
   function updatePlayers(){
     state.players.forEach(p => {
+      if (mode === 'coop' && p.down) return;
       if (!p.alive) return;
 
       p.x += (p.targetX - p.x) * 0.2;
@@ -932,8 +821,10 @@
   }
 
   function firePlayer(p){
+    if (mode === 'coop' && p.down) return;
+
     const dir = mode === 'coop' ? -1 : (p.id === 1 ? 1 : -1);
-    const count = Math.max(1, Number(p.wide || 1));
+    const count = mode === 'coop' && state.coopWideTimer > 0 ? 4 : Math.max(1, Number(p.wide || 1));
     const spacing = 18;
 
     for (let i = 0; i < count; i++) {
@@ -1016,10 +907,10 @@
       if (e.x < W * 0.08 || e.x > W * 0.92) e.vx *= -1;
 
       state.players.forEach(p => {
-        if (!p.alive || e.dead) return;
+        if (p.down || e.dead) return;
 
         if (Math.hypot(e.x - p.x, e.y - p.y) < e.r + 25) {
-          p.hp -= 8 + state.coopAreaIndex * 2;
+          damagePlayer(p, 8 + state.coopAreaIndex * 2);
           e.dead = true;
           burst(e.x, e.y, '#ff5b5b', 10);
         }
@@ -1035,25 +926,29 @@
     state.bosses.forEach(b => {
       if (b.dead) return;
 
-      const amp = Math.max(100, W * 0.31);
-      const subAmp = Math.max(24, W * 0.055);
+      b.moveCd--;
 
-      b.x =
-        W / 2 +
-        Math.sin(state.frame * 0.018 + b.movePhase) * amp +
-        Math.sin(state.frame * 0.061 + b.movePhase) * subAmp;
+      if (b.moveCd <= 0) {
+        const left = W * 0.18;
+        const right = W * 0.82;
+        const centerBias = Math.random() < 0.25 ? W / 2 : rand(left, right);
+        b.targetX = centerBias;
+        b.moveCd = b.moveDelay + intRand(0, 40);
+      }
 
+      b.x += (b.targetX - b.x) * 0.018;
+      b.x += Math.sin(state.frame * 0.018 + b.movePhase) * 0.18;
       b.x = clamp(b.x, W * 0.12, W * 0.88);
 
       b.shootCd--;
       if (b.shootCd <= 0) {
-        b.shootCd = Math.max(115, 160 - state.coopAreaIndex * 6);
+        b.shootCd = Math.max(110, b.personality.shootBase - state.coopAreaIndex * 4);
         fireBossPattern(b);
       }
 
       b.heavyCd--;
       if (b.heavyCd <= 0) {
-        b.heavyCd = Math.max(430, 560 - state.coopAreaIndex * 12);
+        b.heavyCd = Math.max(420, b.personality.heavyBase - state.coopAreaIndex * 10);
         spawnBossHeavyAttack(b);
       }
     });
@@ -1062,31 +957,52 @@
   }
 
   function fireBossPattern(b){
-    const pattern = b.patternIndex % 3;
+    const area = state.coopAreaIndex;
+    const pattern = b.patternIndex % 4;
     b.patternIndex++;
 
-    if (pattern === 0) {
-      fireBossAim(b);
+    if (area <= 1) {
+      if (pattern % 2 === 0) fireBossAim(b);
+      else fireBossSideShot(b);
       return;
     }
 
-    if (pattern === 1) {
-      fireBossSpread(b);
+    if (area === 2) {
+      if (pattern === 0) fireBossAim(b);
+      else if (pattern === 1) fireBossSpread(b, 4);
+      else fireBossSideShot(b);
       return;
     }
 
-    fireBossSideShot(b);
+    if (area === 3) {
+      if (pattern === 0) fireBossSpread(b, 5);
+      else if (pattern === 1) fireBossAim(b);
+      else fireBossWave(b);
+      return;
+    }
+
+    if (area === 4) {
+      if (pattern === 0) fireBossSpread(b, 5);
+      else if (pattern === 1) fireBossSideShot(b);
+      else fireBossWave(b);
+      return;
+    }
+
+    if (pattern === 0) fireBossSpread(b, 6);
+    else if (pattern === 1) fireBossAim(b);
+    else if (pattern === 2) fireBossWave(b);
+    else fireBossSideShot(b);
   }
 
   function fireBossAim(b){
-    const targets = state.players.filter(p => p.alive);
+    const targets = state.players.filter(p => !p.down);
     if (!targets.length) return;
 
     targets.forEach(p => {
       const dx = p.x - b.x;
       const dy = p.y - b.y;
       const len = Math.max(1, Math.hypot(dx, dy));
-      const speed = 1.55 + state.coopAreaIndex * 0.12;
+      const speed = b.personality.speed;
 
       state.bullets.push({
         kind:'enemy',
@@ -1103,11 +1019,16 @@
     });
   }
 
-  function fireBossSpread(b){
-    const speed = 1.45 + state.coopAreaIndex * 0.12;
-    const angles = [-0.50,-0.25,0.25,0.50];
+  function fireBossSpread(b, count){
+    const speed = b.personality.speed * 0.95;
+    const total = count || b.personality.spread || 4;
+    const min = -0.55;
+    const max = 0.55;
 
-    angles.forEach(a => {
+    for (let i = 0; i < total; i++) {
+      const t = total <= 1 ? 0.5 : i / (total - 1);
+      const a = min + (max - min) * t;
+
       state.bullets.push({
         kind:'enemy',
         owner:0,
@@ -1120,7 +1041,7 @@
         power:6 + state.coopAreaIndex * 2,
         dead:false
       });
-    });
+    }
   }
 
   function fireBossSideShot(b){
@@ -1133,7 +1054,7 @@
       const dx = t.x - b.x;
       const dy = t.y - b.y;
       const len = Math.max(1, Math.hypot(dx, dy));
-      const speed = 1.6 + state.coopAreaIndex * 0.12;
+      const speed = b.personality.speed * 1.02;
 
       state.bullets.push({
         kind:'enemy',
@@ -1145,6 +1066,30 @@
         vy:dy / len * speed,
         r:11,
         power:7 + state.coopAreaIndex * 2,
+        dead:false
+      });
+    });
+  }
+
+  function fireBossWave(b){
+    const speed = b.personality.speed * 0.88;
+    const starts = [
+      { x:b.x - 48, a:-0.28 },
+      { x:b.x, a:0 },
+      { x:b.x + 48, a:0.28 }
+    ];
+
+    starts.forEach(s => {
+      state.bullets.push({
+        kind:'enemy',
+        owner:0,
+        image:FALLBACK_ASSET.bossBullet,
+        x:s.x,
+        y:b.y + 38,
+        vx:Math.sin(s.a) * speed,
+        vy:Math.cos(s.a) * speed,
+        r:10,
+        power:6 + state.coopAreaIndex * 2,
         dead:false
       });
     });
@@ -1216,10 +1161,10 @@
 
       if (mode === 'coop') {
         state.players.forEach(p => {
-          if (!p.alive || e.dead) return;
+          if (p.down || e.dead) return;
 
           if (e.type === 'heavyAttack' && Math.hypot(e.x - p.x, e.y - p.y) < e.r + 26) {
-            p.hp -= 30 + state.coopAreaIndex * 4;
+            damagePlayer(p, 30 + state.coopAreaIndex * 4);
             e.dead = true;
             burst(e.x, e.y, '#ff5b5b', 22);
             showBattleMessage('SPECIAL HIT!');
@@ -1227,7 +1172,7 @@
           }
 
           if (e.type === 'obstacle' && Math.hypot(e.x - p.x, e.y - p.y) < e.r + 24) {
-            p.hp -= 5;
+            damagePlayer(p, 5);
             e.dead = true;
             burst(e.x, e.y, '#9deeff', 8);
           }
@@ -1247,10 +1192,10 @@
 
       if (mode === 'coop' && b.kind === 'enemy') {
         state.players.forEach(p => {
-          if (!p.alive || b.dead) return;
+          if (p.down || b.dead) return;
 
           if (Math.hypot(b.x - p.x, b.y - p.y) < b.r + 24) {
-            p.hp -= b.power;
+            damagePlayer(p, b.power);
             b.dead = true;
             burst(b.x, b.y, '#ff5b5b', 8);
           }
@@ -1279,6 +1224,18 @@
     });
 
     state.bullets = state.bullets.filter(b => !b.dead);
+  }
+
+  function damagePlayer(p, amount){
+    if (!p || p.down) return;
+    if (state.coopBarrierTimer > 0) return;
+    if (Number(p.invincibleTimer || 0) > 0) return;
+
+    p.hp -= Number(amount || 0);
+
+    if (p.hp <= 0) {
+      setPlayerDown(p);
+    }
   }
 
   function hitObjectsByPlayerBullet(b){
@@ -1325,6 +1282,7 @@
         if (e.hp <= 0) {
           e.dead = true;
           state.coopKills++;
+          state.coopBossKills++;
           state.coopScore += Number(e.score || 1000);
           burst(e.x, e.y, '#d86bff', 24);
           nextCoopBoss();
@@ -1360,38 +1318,84 @@
 
     if (e.type === 'chest') {
       const rewards = mode === 'coop'
-        ? ['power1','heal10','rapid1','power2','heal30','rapid2']
+        ? ['power1','heal30','rapid1','barrier','wideTemp']
         : ['power1','heal10','rapid1','power2','heal30','rapid2','wide1'];
 
       const reward = rewards[intRand(0, rewards.length - 1)];
 
-      if (reward === 'power1') p.power += 1;
-      if (reward === 'power2') p.power += 2;
-      if (reward === 'rapid1') p.rapid += 1;
-      if (reward === 'rapid2') p.rapid += 2;
-      if (reward === 'wide1') p.wide += 1;
-      if (reward === 'heal10') p.hp = Math.min(p.maxHp, p.hp + 10);
-      if (reward === 'heal30') p.hp = Math.min(p.maxHp, p.hp + 30);
+      if (reward === 'power1') {
+        state.players.forEach(player => player.power += 1);
+        showBattleMessage('POWER UP!');
+      }
+
+      if (reward === 'power2') {
+        p.power += 2;
+        showBattleMessage(ownerText(owner) + ' POWER UP!');
+      }
+
+      if (reward === 'rapid1') {
+        state.players.forEach(player => player.rapid += 1);
+        showBattleMessage('RAPID UP!');
+      }
+
+      if (reward === 'rapid2') {
+        p.rapid += 2;
+        showBattleMessage(ownerText(owner) + ' RAPID UP!');
+      }
+
+      if (reward === 'wide1') {
+        p.wide += 1;
+        showBattleMessage(ownerText(owner) + ' WIDE UP!');
+      }
+
+      if (reward === 'heal10') {
+        p.hp = Math.min(p.maxHp, p.hp + 10);
+        showBattleMessage(ownerText(owner) + ' HEAL!');
+      }
+
+      if (reward === 'heal30') {
+        state.players.forEach(player => {
+          if (!player.down) player.hp = Math.min(player.maxHp, player.hp + 30);
+        });
+        showBattleMessage('HEAL!');
+      }
+
+      if (reward === 'barrier') {
+        state.coopBarrierTimer = 300;
+        state.players.forEach(player => player.invincibleTimer = Math.max(player.invincibleTimer, 300));
+        showBattleMessage('BARRIER 5s!');
+      }
+
+      if (reward === 'wideTemp') {
+        state.coopWideTimer = 300;
+        showBattleMessage('4 WIDE 5s!');
+      }
 
       state.coopScore += 80;
-      showBattleMessage(ownerText(owner) + ' POWER UP!');
       return;
     }
 
-    p.maxHp += 5;
-    p.hp += 5;
-    state.coopScore += Number(e.score || 20);
+    if (mode === 'coop') {
+      state.players.forEach(player => {
+        if (!player.down) {
+          player.maxHp += 5;
+          player.hp = Math.min(player.maxHp, player.hp + 5);
+        }
+      });
+    } else {
+      p.maxHp += 5;
+      p.hp += 5;
 
-    if (mode !== 'coop') {
       const other = state.players[owner === 1 ? 1 : 0];
       other.hp -= Math.max(1, Math.ceil(e.maxHp * 0.35));
     }
 
+    state.coopScore += Number(e.score || 20);
     showBattleMessage(ownerText(owner) + ' BREAK!');
   }
 
   function checkCoopEnd(){
-    const alive = state.players.some(p => p.hp > 0);
+    const alive = state.players.some(p => !p.down && p.hp > 0);
 
     if (!alive) {
       finishCoop(false);
@@ -1404,11 +1408,15 @@
     state.coopResultShown = true;
     state.screen = 'coopResult';
     state.coopClear = !!clear;
-    hideCoopSkillHud();
+
+    const diamondReward = Number(state.coopBossKills || 0);
 
     if (clear) {
       addCoin(COOP_CLEAR_REWARD_COIN);
-      dropSSRStone();
+    }
+
+    if (diamondReward > 0) {
+      addDiamond(diamondReward);
     }
 
     const overlay = $('battleOverlay');
@@ -1421,7 +1429,9 @@
           <p class="battle-help">
             SCORE: ${Number(state.coopScore || 0).toLocaleString()}<br>
             KILL: ${Number(state.coopKills || 0).toLocaleString()}<br>
-            ${clear ? `報酬: ${COOP_CLEAR_REWARD_COIN.toLocaleString()} COIN + SSR石板1枚` : '報酬なし'}
+            BOSS撃破: ${Number(state.coopBossKills || 0).toLocaleString()}<br>
+            DIAMOND: +${diamondReward.toLocaleString()}<br>
+            ${clear ? `CLEAR報酬: ${COOP_CLEAR_REWARD_COIN.toLocaleString()} COIN` : 'CLEAR報酬なし'}
           </p>
           <button id="mobCoopRetryBtn" class="battle-btn green" type="button">もう一度</button>
           <button id="mobCoopFinishMain" class="battle-btn blue" type="button" style="margin-top:10px;width:100%">メインへ戻る</button>
@@ -1434,16 +1444,6 @@
     };
 
     $('mobCoopFinishMain').onclick = close;
-  }
-
-  function dropSSRStone(){
-    if (!window.MobShotGacha || !window.MobShotGacha.allStones || !window.MobShotGacha.addResult) return null;
-
-    const pool = window.MobShotGacha.allStones().filter(s => s.rarity === 'SSR');
-    if (!pool.length) return null;
-
-    const stone = Object.assign({}, pickFrom(pool), { type:'stone', fromCoop:true });
-    return window.MobShotGacha.addResult(stone);
   }
 
   function ownerText(owner){
@@ -1541,6 +1541,31 @@
       }
 
       save.coin = Number(save.coin || 0) + Number(amount || 0);
+
+      try {
+        localStorage.setItem('mobshot_split_v1', JSON.stringify(save));
+      } catch(e) {}
+    }
+
+    if (window.MobShotMain && window.MobShotMain.refreshMainHud) window.MobShotMain.refreshMainHud();
+    window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
+  }
+
+  function addDiamond(amount){
+    let save = null;
+
+    if (window.MobShotStorage && window.MobShotStorage.load) {
+      save = window.MobShotStorage.load();
+      save.diamond = Number(save.diamond || 0) + Number(amount || 0);
+      window.MobShotStorage.save(save);
+    } else {
+      try {
+        save = JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
+      } catch(e) {
+        save = {};
+      }
+
+      save.diamond = Number(save.diamond || 0) + Number(amount || 0);
 
       try {
         localStorage.setItem('mobshot_split_v1', JSON.stringify(save));
@@ -1653,7 +1678,9 @@
       ctx.strokeStyle = '#000';
       ctx.lineWidth = 5;
       const area = getAreaDataByKey(COOP_AREAS[state.coopAreaIndex] || 'grass');
-      const txt = `${area ? area.name : 'AREA'} / SCORE ${Number(state.coopScore || 0).toLocaleString()}`;
+      const barrier = state.coopBarrierTimer > 0 ? ` / BARRIER ${Math.ceil(state.coopBarrierTimer / 60)}` : '';
+      const wide = state.coopWideTimer > 0 ? ` / 4WIDE ${Math.ceil(state.coopWideTimer / 60)}` : '';
+      const txt = `${area ? area.name : 'AREA'} / SCORE ${Number(state.coopScore || 0).toLocaleString()}${barrier}${wide}`;
       ctx.strokeText(txt, W / 2, 54);
       ctx.fillText(txt, W / 2, 54);
       return;
@@ -1676,18 +1703,23 @@
     roundRect(x, y, w, 36, 14);
     ctx.fill();
 
-    ctx.fillStyle = '#ff5b5b';
+    ctx.fillStyle = p.down ? '#59657f' : '#ff5b5b';
     roundRect(x + 8, y + 8, (w - 16) * rate, 10, 999);
     ctx.fill();
 
     ctx.font = '900 13px system-ui';
     ctx.textAlign = 'left';
     ctx.fillStyle = '#fff';
-    ctx.fillText(`${p.name} HP ${Math.max(0, Math.ceil(p.hp))}/${p.maxHp}`, x + 10, y + 29);
+
+    const text = p.down
+      ? `${p.name} DOWN ${Math.ceil(p.reviveTimer / 60)}`
+      : `${p.name} HP ${Math.max(0, Math.ceil(p.hp))}/${p.maxHp}`;
+
+    ctx.fillText(text, x + 10, y + 29);
 
     ctx.textAlign = 'right';
     ctx.fillStyle = '#9deeff';
-    ctx.fillText(`P${p.power} R${p.rapid} W${p.wide}`, x + w - 10, y + 29);
+    ctx.fillText(`P${p.power} R${p.rapid} W${state.coopWideTimer > 0 ? 4 : p.wide}`, x + w - 10, y + 29);
   }
 
   function drawPlayerHud(p, x, y, upsideDown){
@@ -1780,6 +1812,8 @@
 
   function drawPlayers(){
     state.players.forEach(p => {
+      if (mode === 'coop' && p.down && Math.floor(state.frame / 8) % 2 === 0) return;
+
       const image = img(p.image);
       const size = mode === 'coop' ? 52 : 62;
 
@@ -1788,12 +1822,26 @@
 
       if (mode !== 'coop' && p.id === 1) ctx.rotate(Math.PI);
 
+      if (state.coopBarrierTimer > 0 || p.invincibleTimer > 0) {
+        ctx.globalAlpha = 0.72;
+      }
+
       if (imageReady(image)) ctx.drawImage(image, -size / 2, -size / 2, size, size);
       else {
         ctx.fillStyle = p.id === 1 ? '#60d9ff' : '#ff7ab8';
         ctx.beginPath();
         ctx.arc(0,0,28,0,Math.PI*2);
         ctx.fill();
+      }
+
+      ctx.globalAlpha = 1;
+
+      if (state.coopBarrierTimer > 0 || p.invincibleTimer > 0) {
+        ctx.strokeStyle = '#9deeff';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0,0,size * 0.58,0,Math.PI * 2);
+        ctx.stroke();
       }
 
       ctx.restore();
