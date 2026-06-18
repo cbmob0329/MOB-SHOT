@@ -48,8 +48,9 @@
     'atk/hinotama.png',
     'atk/neonbomb.png',
     'atk/atknep.png',
-    'atk/mira atk.png',
-    'pet/pet hero.png'
+    'atk/miraatk.png',
+    'pet/pet hero2.png'
+    'atk/atkmaoh.png',
   ];
 
   function img(src){
