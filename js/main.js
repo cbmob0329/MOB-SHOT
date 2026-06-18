@@ -15,6 +15,10 @@
     document.getElementById('gameScreen') ||
     document.getElementById('gameView');
 
+  const battleScreen =
+    document.getElementById('battleScreen') ||
+    document.getElementById('battleView');
+
   const DELETE_KEYS = [
     'mobshot_split_v1',
     'mobshot_save',
@@ -500,12 +504,26 @@
     }, 1450);
   }
 
+  function stopActiveGames(){
+    if (window.MobShotGame && window.MobShotGame.stop) {
+      window.MobShotGame.stop();
+    }
+
+    if (window.MobShotBattle && window.MobShotBattle.stop) {
+      window.MobShotBattle.stop();
+    }
+  }
+
   function showScreen(name){
     document.querySelectorAll('.screen').forEach(screen => {
       screen.classList.remove('active');
     });
 
     if (name === 'game') {
+      if (window.MobShotBattle && window.MobShotBattle.stop) {
+        window.MobShotBattle.stop();
+      }
+
       if (gameScreen) gameScreen.classList.add('active');
 
       if (window.MobShotGame && window.MobShotGame.start) {
@@ -518,9 +536,34 @@
       return;
     }
 
-    if (window.MobShotGame && window.MobShotGame.stop) {
-      window.MobShotGame.stop();
+    if (name === 'battle') {
+      if (window.MobShotGame && window.MobShotGame.stop) {
+        window.MobShotGame.stop();
+      }
+
+      if (battleScreen) {
+        battleScreen.classList.add('active');
+
+        if (window.MobShotBattle && window.MobShotBattle.openTitle) {
+          window.MobShotBattle.openTitle();
+        } else if (window.MobShotBattle && window.MobShotBattle.startTitle) {
+          window.MobShotBattle.startTitle();
+        } else if (window.MobShotBattle && window.MobShotBattle.start) {
+          window.MobShotBattle.start();
+        } else {
+          showToast('対戦モードが読み込まれていません');
+          showScreen('main');
+        }
+      } else {
+        showToast('対戦画面がありません');
+        showScreen('main');
+      }
+
+      setTimeout(applyAdminModeVisuals, 80);
+      return;
     }
+
+    stopActiveGames();
 
     if (mainScreen) mainScreen.classList.add('active');
 
@@ -684,6 +727,9 @@
       setImage('gachaImg', D.menu.gacha);
       setImage('missionImg', D.menu.mission);
       setImage('collectionImg', D.menu.collection);
+
+      if (D.menu.battle) setImage('battleImg', D.menu.battle);
+      if (D.menu.pvp) setImage('battleImg', D.menu.pvp);
     }
 
     if (D.player) {
@@ -699,15 +745,16 @@
   }
 
   function goMain(){
-    if (window.MobShotGame && window.MobShotGame.stop) {
-      window.MobShotGame.stop();
-    }
-
+    stopActiveGames();
     showScreen('main');
   }
 
   function goGame(){
     showScreen('game');
+  }
+
+  function goBattle(){
+    showScreen('battle');
   }
 
   function openPetEquip(){
@@ -864,7 +911,8 @@
     initModules();
 
     wireButton(['sortieBtn', 'btnSortie', 'mainSortieBtn'], goGame);
-    wireButton(['backBtn', 'gameBackBtn'], goMain);
+    wireButton(['battleBtn', 'openBattleBtn', 'pvpBtn', 'versusBtn'], goBattle);
+    wireButton(['backBtn', 'gameBackBtn', 'battleBackBtn'], goMain);
 
     bindFallbackButton('openShopBtn', openShop, '__mobShopFallbackBound');
     bindFallbackButton('openEquipBtn', openEquip, '__mobEquipFallbackBound');
@@ -913,6 +961,7 @@
     refreshMainStoneDisplay,
     goMain,
     goGame,
+    goBattle,
     openShop,
     openEquip,
     openMission,
