@@ -21,6 +21,7 @@
 
   const SCROLL_SPEED = 1.15;
   const FIELD_ENTITY_SPEED = 0.72;
+  const ADMIN_SAVE_KEY = 'mobshot_admin_mode_v1';
 
   const DIFFICULTY_ICONS = {
     'イージー': 'mt/game1.png',
@@ -100,6 +101,37 @@
     particles: [],
     texts: []
   };
+
+  function isAdminMode(){
+    if (window.MobShotMain && window.MobShotMain.isAdminMode) {
+      return !!window.MobShotMain.isAdminMode();
+    }
+
+    try {
+      return localStorage.getItem(ADMIN_SAVE_KEY) === '1';
+    } catch(e) {
+      return false;
+    }
+  }
+
+  function refreshAdminButtons(){
+    const admin = isAdminMode();
+
+    ['gameBackBtn', 'backBtn'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.style.display = admin ? '' : 'none';
+    });
+
+    const testBtn = document.getElementById('testClearBtn');
+
+    if (testBtn) {
+      if (admin) {
+        testBtn.style.display = '';
+      } else {
+        testBtn.remove();
+      }
+    }
+  }
 
   function getCollectionBonus(){
     if (
@@ -420,7 +452,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260618_collection_bonus';
+      image.src = src + '?v=20260618_admin_mode';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -582,6 +614,7 @@
 
     injectHudStyle();
     ensureRankUpModal();
+    refreshAdminButtons();
     restoreBaseData();
 
     const shopBonus = getShopBonus();
@@ -686,6 +719,7 @@
 
   function start(){
     resize();
+    refreshAdminButtons();
     createTestClearButton();
     stopLoopOnly();
     running = true;
@@ -1179,8 +1213,18 @@
     const gameScreen = document.getElementById('gameScreen');
     if (!gameScreen) return;
 
+    if (!isAdminMode()) {
+      const oldBtn = document.getElementById('testClearBtn');
+      if (oldBtn) oldBtn.remove();
+      return;
+    }
+
     let btn = document.getElementById('testClearBtn');
-    if (btn) return;
+
+    if (btn) {
+      btn.style.display = '';
+      return;
+    }
 
     btn = document.createElement('button');
     btn.id = 'testClearBtn';
@@ -1191,11 +1235,10 @@
     btn.style.left = '96px';
     btn.style.bottom = 'calc(78px + env(safe-area-inset-bottom))';
     btn.style.zIndex = '27';
-    btn.style.border = '0';
+    btn.style.border = '2px solid rgba(255,255,255,.45)';
     btn.style.borderRadius = '999px';
     btn.style.background = 'linear-gradient(#9dff73,#26b63e)';
     btn.style.color = '#07370f';
-    btn.style.border = '2px solid rgba(255,255,255,.45)';
     btn.style.padding = '9px 14px';
     btn.style.fontSize = '14px';
     btn.style.fontWeight = '1000';
@@ -1295,12 +1338,18 @@
       btn.addEventListener('click', function(e){
         e.preventDefault();
         e.stopPropagation();
+
+        if ((id === 'gameBackBtn' || id === 'backBtn') && !isAdminMode()) return;
+
         goMainFromResult();
       });
 
       btn.addEventListener('pointerup', function(e){
         e.preventDefault();
         e.stopPropagation();
+
+        if ((id === 'gameBackBtn' || id === 'backBtn') && !isAdminMode()) return;
+
         goMainFromResult();
       }, { passive:false });
     });
@@ -1308,6 +1357,7 @@
 
   function updateHud(){
     injectHudStyle();
+    refreshAdminButtons();
 
     if (
       window.MobShotGameEvents &&
@@ -1436,6 +1486,9 @@
       goMainFromResult,
       showRankUpModal,
 
+      isAdminMode,
+      refreshAdminButtons,
+
       getCollectionBonus(){
         return Object.assign({}, state.collectionBonus || {});
       },
@@ -1490,14 +1543,21 @@
     pendingRankUp = e && e.detail ? e.detail : null;
   });
 
+  window.addEventListener('mobshot:adminModeChanged', function(){
+    refreshAdminButtons();
+    createTestClearButton();
+  });
+
   window.addEventListener('DOMContentLoaded', function(){
     bindResultButtons();
+    refreshAdminButtons();
     createTestClearButton();
     injectHudStyle();
     ensureRankUpModal();
   });
 
   bindResultButtons();
+  refreshAdminButtons();
   createTestClearButton();
   injectHudStyle();
   ensureRankUpModal();
@@ -1517,6 +1577,8 @@
     showBanner,
     goMainFromResult,
     testClearNow,
-    showRankUpModal
+    showRankUpModal,
+    isAdminMode,
+    refreshAdminButtons
   };
 })();
