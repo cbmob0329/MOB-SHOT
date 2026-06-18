@@ -262,18 +262,20 @@
 
   function setStageVisual(api, title, background, areaKey, areaName){
     const D = api.D;
-
     if (!D || !D.stage) return;
+
+    const area = stageAreaData(areaKey);
+    const bg = background || (area && area.background) || D.stage.background;
 
     D.stage.id = title || 'EVENT';
     D.stage.name = title || 'EVENT';
-    D.stage.areaName = areaName || title || 'EVENT';
+    D.stage.areaName = areaName || (area && area.name) || title || 'EVENT';
     D.stage.areaType = areaKey || title || 'EVENT';
     D.stage.areaKey = areaKey || D.stage.areaKey;
     D.stage.difficulty = title || 'EVENT';
 
-    if (background) {
-      D.stage.background = background;
+    if (bg) {
+      D.stage.background = bg;
     }
   }
 
@@ -403,21 +405,18 @@
   function spawnAreaEnemy(api, areaKey, hpMul, coinMul){
     const def = pick(areaEnemyList(areaKey, api));
     if (!def) return;
-
     api.state.entities.push(makeEnemyEntity(def, api, hpMul, coinMul));
   }
 
   function spawnAreaGimmick(api, areaKey, hpMul, coinMul){
     const def = pick(areaGimmickList(areaKey, api));
     if (!def) return;
-
     api.state.entities.push(makeGimmickEntity(def, api, hpMul, coinMul));
   }
 
   function spawnAreaChest(api, areaKey, hpMul, coinMul){
     const def = pick(areaChestList(areaKey, api));
     if (!def) return;
-
     api.state.entities.push(makeChestEntity(def, api, hpMul, coinMul));
   }
 
@@ -429,9 +428,7 @@
     const diff = getGoldDifficulty();
     const names = Array.isArray(diff.bosses) && diff.bosses.length ? diff.bosses.slice(0, 2) : ['ホークモブ', 'ミラモブ'];
 
-    while (names.length < 2) {
-      names.push(names[0] || 'ホークモブ');
-    }
+    while (names.length < 2) names.push(names[0] || 'ホークモブ');
 
     const bosses = [
       findBossDef(api, '', names[0], { name:names[0], image:'boss/hawks.png', hp:600, score:1000, coin:200 }),
@@ -465,25 +462,13 @@
 
     localFrame++;
 
-    if (localFrame === 1) {
-      api.showBanner(`GOLD STAGE ${diff.name}`);
-    }
-
-    if (localFrame >= 40) {
-      spawnGoldBosses(api);
-    }
+    if (localFrame === 1) api.showBanner(`GOLD STAGE ${diff.name}`);
+    if (localFrame >= 40) spawnGoldBosses(api);
 
     if (localFrame >= nextEnemyAt) {
       if (diff.enemySpawn !== false && D.enemies && D.enemies.zako) {
         const def = pick(D.enemies.zako);
-        if (def) {
-          state.entities.push(makeEnemyEntity(
-            def,
-            api,
-            Number(diff.bossHpMul || 1) * 0.35 * enemyPower,
-            Number(diff.bossCoinMul || 1)
-          ));
-        }
+        if (def) state.entities.push(makeEnemyEntity(def, api, Number(diff.bossHpMul || 1) * 0.35 * enemyPower, Number(diff.bossCoinMul || 1)));
       }
 
       nextEnemyAt = localFrame + intRand(
@@ -495,14 +480,7 @@
     if (localFrame >= nextGimmickAt) {
       if (D.gimmicks && D.gimmicks.length) {
         const def = pick(D.gimmicks);
-        if (def) {
-          state.entities.push(makeGimmickEntity(
-            def,
-            api,
-            Number(diff.bossHpMul || 1) * 0.45 * enemyPower,
-            Number(diff.chestMul || 1)
-          ));
-        }
+        if (def) state.entities.push(makeGimmickEntity(def, api, Number(diff.bossHpMul || 1) * 0.45 * enemyPower, Number(diff.chestMul || 1)));
       }
 
       nextGimmickAt = localFrame + intRand(150, 230);
@@ -511,14 +489,7 @@
     if (localFrame >= nextChestAt) {
       if (D.chests && D.chests.length && Math.random() < 0.55) {
         const def = pick(D.chests);
-        if (def) {
-          state.entities.push(makeChestEntity(
-            def,
-            api,
-            Math.max(1, enemyPower * 0.45),
-            Number(diff.chestMul || 1) * 3
-          ));
-        }
+        if (def) state.entities.push(makeChestEntity(def, api, Math.max(1, enemyPower * 0.45), Number(diff.chestMul || 1) * 3));
       }
 
       nextChestAt = localFrame + intRand(170, 260);
@@ -526,9 +497,7 @@
 
     const bossAlive = state.entities.some(e => !e.dead && e.kind === 'boss');
 
-    if (spawnedBoss && !bossAlive && localFrame > 120) {
-      api.finishRun(true);
-    }
+    if (spawnedBoss && !bossAlive && localFrame > 120) api.finishRun(true);
 
     return true;
   }
@@ -578,13 +547,8 @@
 
     localFrame++;
 
-    if (localFrame === 1) {
-      api.showBanner(`ダブルボス ${diff.name}`);
-    }
-
-    if (localFrame >= 60) {
-      spawnDoubleBosses(api);
-    }
+    if (localFrame === 1) api.showBanner(`ダブルボス ${diff.name}`);
+    if (localFrame >= 60) spawnDoubleBosses(api);
 
     if (localFrame >= nextEnemyAt) {
       if (diff.key !== 'veryHard') {
@@ -596,9 +560,7 @@
 
     const bossAlive = state.entities.some(e => !e.dead && e.kind === 'boss');
 
-    if (spawnedBoss && !bossAlive && localFrame > 120) {
-      api.finishRun(true);
-    }
+    if (spawnedBoss && !bossAlive && localFrame > 120) api.finishRun(true);
 
     return true;
   }
@@ -635,13 +597,8 @@
 
     localFrame++;
 
-    if (localFrame === 1) {
-      api.showBanner('スコアアタック');
-    }
-
-    if (!spawnedBoss && localFrame > 60) {
-      spawnScoreAttackBoss(api);
-    }
+    if (localFrame === 1) api.showBanner('スコアアタック');
+    if (!spawnedBoss && localFrame > 60) spawnScoreAttackBoss(api);
 
     const bossAlive = state.entities.some(e => !e.dead && e.kind === 'boss');
 
@@ -650,9 +607,7 @@
       spawnedBoss = false;
       localFrame = 40;
 
-      if (scoreAttackIndex >= SCORE_ATTACK_BOSSES.length) {
-        api.finishRun(true);
-      }
+      if (scoreAttackIndex >= SCORE_ATTACK_BOSSES.length) api.finishRun(true);
     }
 
     return true;
@@ -738,10 +693,7 @@
     }
 
     if (localFrame >= nextChestAt) {
-      if (Math.random() < 0.28) {
-        spawnAreaChest(api, areaKey, questEnemyHpMul(0.6), questCoinMul(0.75));
-      }
-
+      if (Math.random() < 0.28) spawnAreaChest(api, areaKey, questEnemyHpMul(0.6), questCoinMul(0.75));
       nextChestAt = localFrame + intRand(300, 440);
     }
   }
@@ -779,9 +731,7 @@
       questWaveSpawned = false;
       localFrame = 35;
 
-      if (questPhase >= waves.length) {
-        api.finishRun(true);
-      }
+      if (questPhase >= waves.length) api.finishRun(true);
     }
   }
 
@@ -813,9 +763,7 @@
       spawnAreaEnemy(api, 'desert', questEnemyHpMul(0.62), questCoinMul(0.45));
     }
 
-    if (questBossSpawned && !activeQuestBossAlive(api) && questKills >= 30 && localFrame > 120) {
-      api.finishRun(true);
-    }
+    if (questBossSpawned && !activeQuestBossAlive(api) && questKills >= 30 && localFrame > 120) api.finishRun(true);
   }
 
   function updateGuardianTest(api){
@@ -842,9 +790,7 @@
       questWaveSpawned = true;
     }
 
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
+    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) api.finishRun(true);
   }
 
   function updateNineHeads(api){
@@ -892,9 +838,7 @@
       questWaveSpawned = true;
     }
 
-    if (questPhase === 1 && questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
+    if (questPhase === 1 && questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) api.finishRun(true);
   }
 
   function updateHotMagma(api){
@@ -944,9 +888,7 @@
       questWaveSpawned = true;
     }
 
-    if (questPhase === 1 && questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
+    if (questPhase === 1 && questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) api.finishRun(true);
   }
 
   function updateLilithSisters(api){
@@ -986,9 +928,7 @@
       questWaveSpawned = true;
     }
 
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
+    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) api.finishRun(true);
   }
 
   function updateEventQuest(api){
@@ -996,9 +936,7 @@
 
     localFrame++;
 
-    if (localFrame === 1) {
-      api.showBanner(`${stage.title} ${currentQuestDiff().name}`);
-    }
+    if (localFrame === 1) api.showBanner(`${stage.title} ${currentQuestDiff().name}`);
 
     if (stage.key === 'pterarush') updatePteraRush(api);
     else if (stage.key === 'thieves') updateThieves(api);
@@ -1008,6 +946,200 @@
     else if (stage.key === 'lilith_sisters') updateLilithSisters(api);
 
     return true;
+  }
+
+  function rollDropCount(){
+    let count = 0;
+    if (Math.random() < 0.90) count++;
+    if (Math.random() < 0.40) count++;
+    if (Math.random() < 0.20) count++;
+    return count;
+  }
+
+  function stoneMaster(no){
+    if (!window.MobShotGacha || !window.MobShotGacha.allStones) return null;
+    return window.MobShotGacha.allStones().find(s => Number(s.no) === Number(no)) || null;
+  }
+
+  function addDropStone(no, count, drops){
+    const stone = stoneMaster(no);
+    if (!stone || count <= 0) return;
+
+    if (window.MobShotGacha && window.MobShotGacha.addStoneByNo) {
+      window.MobShotGacha.addStoneByNo(no, count);
+    }
+
+    drops.push({
+      no,
+      name:stone.name,
+      image:stone.image,
+      rarity:stone.rarity,
+      count
+    });
+  }
+
+  function rollEventQuestDrops(diffKey, stage){
+    const drops = [];
+
+    if (diffKey === 'easy') {
+      addDropStone(91, rollDropCount(), drops);
+    }
+
+    if (diffKey === 'veryHard') {
+      addDropStone(92, rollDropCount(), drops);
+      addDropStone(93, rollDropCount(), drops);
+    }
+
+    if (diffKey === 'legend') {
+      addDropStone(94, rollDropCount(), drops);
+      addDropStone(95, rollDropCount(), drops);
+    }
+
+    if (stage && stage.key === 'lilith_sisters') {
+      const chance96 = diffKey === 'legend' ? 0.60 : diffKey === 'veryHard' ? 0.30 : 0.15;
+      const chance106 = diffKey === 'legend' ? 0.15 : diffKey === 'veryHard' ? 0.10 : 0.05;
+
+      if (Math.random() < chance96) addDropStone(96, 1, drops);
+      if (Math.random() < chance106) addDropStone(106, 1, drops);
+    }
+
+    return drops;
+  }
+
+  function injectDropStyle(){
+    if (document.getElementById('mobEventDropStyle')) return;
+
+    const style = document.createElement('style');
+    style.id = 'mobEventDropStyle';
+    style.textContent = `
+      .mob-event-drop-pop{
+        position:absolute;
+        inset:0;
+        z-index:190;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:18px;
+        background:rgba(0,0,0,.68);
+      }
+      .mob-event-drop-pop.hidden{display:none}
+      .mob-event-drop-card{
+        width:min(92vw,440px);
+        border-radius:28px;
+        padding:18px;
+        text-align:center;
+        background:linear-gradient(180deg,rgba(35,28,78,.98),rgba(5,8,22,.98));
+        border:3px solid rgba(255,255,255,.38);
+        box-shadow:0 18px 48px rgba(0,0,0,.72);
+      }
+      .mob-event-drop-title{
+        font-size:25px;
+        font-weight:1000;
+        color:#ffe66b;
+        text-shadow:0 3px 0 #000,0 0 14px rgba(255,230,107,.7);
+        margin-bottom:12px;
+      }
+      .mob-event-drop-list{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:10px;
+        margin-bottom:14px;
+      }
+      .mob-event-drop-item{
+        display:grid;
+        grid-template-columns:74px 1fr;
+        gap:10px;
+        align-items:center;
+        padding:10px;
+        border-radius:18px;
+        background:rgba(255,255,255,.10);
+        border:2px solid rgba(255,255,255,.20);
+      }
+      .mob-event-drop-item img{
+        width:68px;
+        height:68px;
+        object-fit:contain;
+        filter:drop-shadow(0 5px 0 rgba(0,0,0,.35));
+      }
+      .mob-event-drop-name{
+        color:#fff;
+        font-size:15px;
+        font-weight:1000;
+        line-height:1.35;
+        text-align:left;
+        text-shadow:0 2px 0 #000;
+      }
+      .mob-event-drop-count{
+        margin-top:4px;
+        color:#ffcf5b;
+        font-size:13px;
+        font-weight:1000;
+        text-align:left;
+      }
+      .mob-event-drop-ok{
+        border:0;
+        border-radius:999px;
+        padding:12px 28px;
+        font-size:16px;
+        font-weight:1000;
+        color:#181000;
+        background:linear-gradient(#ffe66b,#ffb423);
+        box-shadow:0 5px 0 rgba(0,0,0,.35);
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function ensureDropPop(){
+    injectDropStyle();
+
+    let pop = document.getElementById('mobEventDropPop');
+    if (pop) return pop;
+
+    pop = document.createElement('div');
+    pop.id = 'mobEventDropPop';
+    pop.className = 'mob-event-drop-pop hidden';
+    pop.innerHTML = `
+      <div class="mob-event-drop-card">
+        <div class="mob-event-drop-title">STONE DROP!</div>
+        <div id="mobEventDropList" class="mob-event-drop-list"></div>
+        <button id="mobEventDropOk" class="mob-event-drop-ok" type="button">OK</button>
+      </div>
+    `;
+
+    const app = document.getElementById('app') || document.body;
+    app.appendChild(pop);
+
+    document.getElementById('mobEventDropOk').addEventListener('click', function(){
+      pop.classList.add('hidden');
+    });
+
+    pop.addEventListener('click', function(e){
+      if (e.target === pop) pop.classList.add('hidden');
+    });
+
+    return pop;
+  }
+
+  function showDropPop(drops){
+    if (!drops || !drops.length) return;
+
+    const pop = ensureDropPop();
+    const list = document.getElementById('mobEventDropList');
+
+    if (!list) return;
+
+    list.innerHTML = drops.map(drop => `
+      <div class="mob-event-drop-item">
+        <img src="${drop.image}" alt="${drop.name}" onerror="this.style.display='none'">
+        <div>
+          <div class="mob-event-drop-name">${drop.name}</div>
+          <div class="mob-event-drop-count">${drop.name}が${drop.count}枚ドロップ！</div>
+        </div>
+      </div>
+    `).join('');
+
+    pop.classList.remove('hidden');
   }
 
   function startCurrentEvent(api){
@@ -1106,9 +1238,7 @@
     }
 
     if (eventType === 'eventQuest') {
-      if (entity.kind === 'enemy') {
-        questKills++;
-      }
+      if (entity.kind === 'enemy') questKills++;
     }
   }
 
@@ -1195,12 +1325,18 @@
         window.MobShotEvents.recordEventQuestClear(diff.key, stage.id, api.state.coin);
       }
 
+      const drops = rollEventQuestDrops(diff.key, stage);
+
+      if (drops.length) {
+        setTimeout(function(){
+          showDropPop(drops);
+        }, 420);
+      }
+
       text = `${stage.title} ${diff.name} クリア！`;
     }
 
-    if (!clear) {
-      text = 'イベント失敗';
-    }
+    if (!clear) text = 'イベント失敗';
 
     if (window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
       window.MobShotEvents.clearCurrentEvent();
@@ -1231,7 +1367,7 @@
     if (eventType === 'doubleBoss') {
       const info = getDoubleInfo();
 
-      if (api.hudStage) api.hudStage.textContent = `DOUBLE ${info.difficulty.name}`;
+      if (api.hudStage) api.hudStage.textContent = `DOUBLE ${info.stage.title}`;
       if (api.hudScore) api.hudScore.textContent = Math.floor(api.state.score).toLocaleString();
       if (api.hudCoin) api.hudCoin.textContent = Math.floor(api.state.coin).toLocaleString();
       if (api.hudLife) api.hudLife.textContent = Math.max(0, Math.ceil(api.state.hp));
