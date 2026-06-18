@@ -3,6 +3,9 @@
 (function(){
   const D = window.MOBSHOT_DATA;
 
+  const ADMIN_SAVE_KEY = 'mobshot_admin_mode_v1';
+  const ADMIN_PASSWORD = 'Cb110329';
+
   const mainScreen =
     document.getElementById('mainScreen') ||
     document.getElementById('mainView') ||
@@ -41,6 +44,61 @@
     return document.getElementById(id);
   }
 
+  function isAdminMode(){
+    try {
+      return localStorage.getItem(ADMIN_SAVE_KEY) === '1';
+    } catch(e) {
+      return false;
+    }
+  }
+
+  function setAdminMode(value){
+    try {
+      localStorage.setItem(ADMIN_SAVE_KEY, value ? '1' : '0');
+    } catch(e) {}
+
+    applyAdminModeVisuals();
+
+    window.dispatchEvent(new CustomEvent('mobshot:adminModeChanged', {
+      detail:{ active:!!value }
+    }));
+  }
+
+  function applyAdminModeVisuals(){
+    const active = isAdminMode();
+
+    [
+      'testClearBtn',
+      'testStageBtn',
+      'testSortieBtn',
+      'gameBackBtn',
+      'backBtn'
+    ].forEach(id => {
+      const el = $(id);
+      if (el) el.style.display = active ? '' : 'none';
+    });
+
+    document.querySelectorAll('.test-sortie,.test-stage-open,.admin-only,.mob-admin-only').forEach(el => {
+      el.style.display = active ? '' : 'none';
+    });
+
+    document.body.classList.toggle('mob-admin-mode', active);
+  }
+
+  function setupAdminObserver(){
+    if (document.__mobAdminObserverBound) return;
+    document.__mobAdminObserverBound = true;
+
+    const observer = new MutationObserver(function(){
+      applyAdminModeVisuals();
+    });
+
+    observer.observe(document.body, {
+      childList:true,
+      subtree:true
+    });
+  }
+
   function preventSmartphoneZoom(){
     let lastTouchEnd = 0;
 
@@ -62,308 +120,109 @@
     const style = document.createElement('style');
     style.id = 'mobMainExtraStyle';
     style.textContent = `
-      .player-showcase{
-        isolation:isolate;
-      }
-
-      .main-stone-display-layer{
-        position:absolute;
-        inset:0;
-        z-index:0;
-        pointer-events:none;
-        overflow:visible;
-      }
-
-      #mainPlayer{
-        z-index:5;
-      }
-
-      #mainPetFloatLayer,
-      .main-pet-float-layer{
-        z-index:6;
-        pointer-events:none;
-      }
+      .player-showcase{isolation:isolate}
+      .main-stone-display-layer{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:visible}
+      #mainPlayer{z-index:5}
+      #mainPetFloatLayer,.main-pet-float-layer{z-index:6;pointer-events:none}
 
       .main-stone-display-item{
-        position:absolute;
-        width:92px;
-        height:116px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        opacity:.72;
-        filter:drop-shadow(0 8px 0 rgba(0,0,0,.22));
-        animation:mobStoneFloat 4.8s ease-in-out infinite;
+        position:absolute;width:92px;height:116px;display:flex;align-items:center;justify-content:center;
+        opacity:.72;filter:drop-shadow(0 8px 0 rgba(0,0,0,.22));animation:mobStoneFloat 4.8s ease-in-out infinite;
       }
+      .main-stone-display-item.left{left:-18px;top:38%;transform:translateY(-50%) rotate(-8deg)}
+      .main-stone-display-item.top{left:50%;top:-18px;transform:translateX(-50%) rotate(3deg);animation-delay:-1.4s}
+      .main-stone-display-item.right{right:-18px;top:38%;transform:translateY(-50%) rotate(8deg);animation-delay:-2.7s}
+      .main-stone-display-item img{width:92px;height:116px;object-fit:contain}
 
-      .main-stone-display-item.left{
-        left:-18px;
-        top:38%;
-        transform:translateY(-50%) rotate(-8deg);
-      }
-
-      .main-stone-display-item.top{
-        left:50%;
-        top:-18px;
-        transform:translateX(-50%) rotate(3deg);
-        animation-delay:-1.4s;
-      }
-
-      .main-stone-display-item.right{
-        right:-18px;
-        top:38%;
-        transform:translateY(-50%) rotate(8deg);
-        animation-delay:-2.7s;
-      }
-
-      .main-stone-display-item img{
-        width:92px;
-        height:116px;
-        object-fit:contain;
-      }
-
-      @keyframes mobStoneFloat{
-        0%{margin-top:8px}
-        50%{margin-top:-10px}
-        100%{margin-top:8px}
-      }
+      @keyframes mobStoneFloat{0%{margin-top:8px}50%{margin-top:-10px}100%{margin-top:8px}}
 
       .main-rank-next-badge{
-        position:absolute;
-        left:3vw;
-        right:32vw;
-        top:auto;
-        bottom:calc(11.8svh + 108px);
-        z-index:21;
-        min-width:0;
-        padding:7px 10px;
-        border-radius:999px;
-        background:rgba(5,8,22,.74);
-        border:2px solid rgba(255,255,255,.28);
-        box-shadow:0 4px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
-        color:#fff;
-        font-size:11px;
-        font-weight:1000;
-        line-height:1.15;
-        text-align:center;
-        text-shadow:0 2px 0 #000;
-        pointer-events:none;
+        position:absolute;left:3vw;right:32vw;top:auto;bottom:calc(11.8svh + 108px);z-index:21;
+        min-width:0;padding:7px 10px;border-radius:999px;background:rgba(5,8,22,.74);
+        border:2px solid rgba(255,255,255,.28);box-shadow:0 4px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
+        color:#fff;font-size:11px;font-weight:1000;line-height:1.15;text-align:center;text-shadow:0 2px 0 #000;pointer-events:none;
       }
+      .main-rank-next-badge strong{color:#ffe66b;font-size:12px}
 
-      .main-rank-next-badge strong{
-        color:#ffe66b;
-        font-size:12px;
-      }
-
-      .pet-equip-panel{
-        padding:9px !important;
-      }
-
-      .pet-slot{
-        height:62px !important;
-      }
-
-      .pet-slot img{
-        width:44px !important;
-        height:44px !important;
-      }
-
-      .main-float-pet{
-        width:62px !important;
-        height:62px !important;
-        font-size:30px !important;
-      }
-
-      .main-float-pet img{
-        width:46px !important;
-        height:46px !important;
-      }
+      .pet-equip-panel{padding:9px!important}
+      .pet-slot{height:62px!important}
+      .pet-slot img{width:44px!important;height:44px!important}
+      .main-float-pet{width:62px!important;height:62px!important;font-size:30px!important}
+      .main-float-pet img{width:46px!important;height:46px!important}
 
       @media (max-height:720px){
-        .main-rank-next-badge{
-          bottom:calc(10.8svh + 92px);
-        }
-
-        .pet-slot{
-          height:52px !important;
-        }
-
-        .pet-slot img{
-          width:38px !important;
-          height:38px !important;
-        }
-
-        .main-float-pet{
-          width:52px !important;
-          height:52px !important;
-          font-size:25px !important;
-        }
-
-        .main-float-pet img{
-          width:38px !important;
-          height:38px !important;
-        }
+        .main-rank-next-badge{bottom:calc(10.8svh + 92px)}
+        .pet-slot{height:52px!important}
+        .pet-slot img{width:38px!important;height:38px!important}
+        .main-float-pet{width:52px!important;height:52px!important;font-size:25px!important}
+        .main-float-pet img{width:38px!important;height:38px!important}
       }
 
-      .mob-rankup-modal{
-        position:absolute;
-        inset:0;
-        z-index:190;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding:18px;
-        background:rgba(0,0,0,.72);
+      .mob-rankup-modal,.mob-game-confirm,.mob-admin-pass-modal{
+        position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.72);
+      }
+      .mob-rankup-modal{z-index:190}
+      .mob-game-confirm{z-index:160}
+      .mob-admin-pass-modal{z-index:175}
+      .mob-rankup-modal.hidden,.mob-game-confirm.hidden,.mob-admin-pass-modal.hidden{display:none}
+
+      .mob-rankup-card,.mob-game-confirm-card,.mob-admin-pass-card{
+        width:min(92vw,430px);border-radius:26px;padding:18px;text-align:center;
+        background:linear-gradient(180deg,rgba(34,27,72,.98),rgba(5,8,22,.98));
+        border:3px solid rgba(255,255,255,.36);box-shadow:0 18px 48px rgba(0,0,0,.7);
       }
 
-      .mob-rankup-modal.hidden{
-        display:none;
-      }
-
-      .mob-rankup-card{
-        width:min(90vw,420px);
-        border-radius:30px;
-        padding:22px 18px 18px;
-        text-align:center;
-        background:linear-gradient(180deg,rgba(39,31,88,.98),rgba(8,10,28,.98));
-        border:4px solid rgba(255,230,107,.78);
-        box-shadow:0 18px 50px rgba(0,0,0,.72), inset 0 0 0 2px rgba(255,255,255,.12);
-        animation:mobRankPop .26s ease-out;
-      }
-
-      .mob-rankup-title{
-        margin:0 0 8px;
-        color:#ffe66b;
-        font-size:34px;
-        font-weight:1000;
-        text-shadow:0 5px 0 #000;
-        letter-spacing:.04em;
+      .mob-rankup-title,.mob-game-confirm-title,.mob-admin-pass-title{
+        margin:0 0 10px;font-size:24px;font-weight:1000;color:#fff;text-shadow:0 3px 0 #000;
       }
 
       .mob-rankup-rank{
-        margin:0 0 12px;
-        color:#fff;
-        font-size:42px;
-        font-weight:1000;
-        text-shadow:0 5px 0 #000;
+        margin:0 0 12px;color:#ffe66b;font-size:36px;font-weight:1000;text-shadow:0 5px 0 #000;
       }
 
-      .mob-rankup-text{
-        margin:0 0 16px;
-        color:#dfe8ff;
-        font-size:15px;
-        font-weight:900;
-        line-height:1.55;
-        white-space:pre-line;
+      .mob-rankup-text,.mob-game-confirm-text,.mob-admin-pass-text{
+        font-size:14px;line-height:1.6;font-weight:900;color:#dfe8ff;margin-bottom:14px;white-space:pre-line;
       }
 
-      .mob-rankup-btn{
-        border:0;
-        border-radius:999px;
-        padding:13px 28px;
-        color:#210800;
-        background:linear-gradient(#ffe66b,#ff9f1f);
-        font-size:18px;
-        font-weight:1000;
-        box-shadow:0 5px 0 rgba(0,0,0,.38);
+      .mob-game-confirm-actions,.mob-admin-pass-actions{
+        display:grid;grid-template-columns:1fr 1fr;gap:10px;
       }
 
-      @keyframes mobRankPop{
-        0%{transform:scale(.82); opacity:0}
-        100%{transform:scale(1); opacity:1}
+      .mob-game-confirm-btn,.mob-admin-pass-btn,.mob-rankup-btn{
+        border:0;border-radius:999px;padding:12px 14px;font-size:15px;font-weight:1000;box-shadow:0 4px 0 rgba(0,0,0,.35);
       }
 
-      .mob-game-confirm{
-        position:absolute;
-        inset:0;
-        z-index:160;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding:18px;
-        background:rgba(0,0,0,.68);
+      .mob-game-confirm-btn.yes,.mob-admin-pass-btn.ok,.mob-rankup-btn{
+        color:#210800;background:linear-gradient(#ffe66b,#ffb423);
       }
 
-      .mob-game-confirm.hidden{
-        display:none;
+      .mob-game-confirm-btn.no,.mob-admin-pass-btn.cancel{
+        color:#102033;background:linear-gradient(#ffffff,#b7c1d5);
       }
 
-      .mob-game-confirm-card{
-        width:min(92vw,430px);
-        border-radius:26px;
-        padding:18px;
-        background:linear-gradient(180deg,rgba(34,27,72,.98),rgba(5,8,22,.98));
-        border:3px solid rgba(255,255,255,.36);
-        box-shadow:0 18px 48px rgba(0,0,0,.7);
-        text-align:center;
-      }
-
-      .mob-game-confirm-title{
-        font-size:24px;
-        font-weight:1000;
-        color:#fff;
-        text-shadow:0 3px 0 #000;
-        margin-bottom:10px;
-      }
-
-      .mob-game-confirm-text{
-        font-size:14px;
-        line-height:1.6;
-        font-weight:900;
-        color:#dfe8ff;
-        margin-bottom:14px;
-        white-space:pre-line;
-      }
-
-      .mob-game-confirm-actions{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:10px;
-      }
-
-      .mob-game-confirm-btn{
-        border:0;
-        border-radius:999px;
-        padding:12px 14px;
-        font-size:15px;
-        font-weight:1000;
-        box-shadow:0 4px 0 rgba(0,0,0,.35);
-      }
-
-      .mob-game-confirm-btn.yes{
-        color:#210800;
-        background:linear-gradient(#ff8b8b,#e22a2a);
-      }
-
-      .mob-game-confirm-btn.no{
-        color:#102033;
-        background:linear-gradient(#ffffff,#b7c1d5);
+      .mob-admin-pass-input{
+        width:100%;margin:0 0 12px;padding:13px 14px;border-radius:16px;border:2px solid rgba(255,255,255,.35);
+        background:rgba(0,0,0,.32);color:#fff;font-size:18px;font-weight:900;text-align:center;outline:none;
       }
 
       .mob-game-toast{
-        position:absolute;
-        left:50%;
-        top:22%;
-        transform:translateX(-50%);
-        z-index:170;
-        min-width:220px;
-        max-width:86vw;
-        padding:12px 16px;
-        border-radius:999px;
-        background:linear-gradient(#ffe66b,#ffb423);
-        color:#181000;
-        font-size:14px;
-        font-weight:1000;
-        text-align:center;
-        box-shadow:0 6px 0 rgba(0,0,0,.35);
-        pointer-events:none;
-        opacity:0;
-        transition:opacity .2s, transform .2s;
+        position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:170;min-width:220px;max-width:86vw;
+        padding:12px 16px;border-radius:999px;background:linear-gradient(#ffe66b,#ffb423);color:#181000;
+        font-size:14px;font-weight:1000;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.35);
+        pointer-events:none;opacity:0;transition:opacity .2s, transform .2s;
       }
+      .mob-game-toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
 
-      .mob-game-toast.show{
-        opacity:1;
-        transform:translateX(-50%) translateY(-4px);
+      body:not(.mob-admin-mode) #testClearBtn,
+      body:not(.mob-admin-mode) #testStageBtn,
+      body:not(.mob-admin-mode) #testSortieBtn,
+      body:not(.mob-admin-mode) #gameBackBtn,
+      body:not(.mob-admin-mode) #backBtn,
+      body:not(.mob-admin-mode) .test-sortie,
+      body:not(.mob-admin-mode) .test-stage-open,
+      body:not(.mob-admin-mode) .admin-only,
+      body:not(.mob-admin-mode) .mob-admin-only{
+        display:none!important;
       }
     `;
 
@@ -372,7 +231,6 @@
 
   function ensureRankNextBadge(){
     injectMainStyle();
-
     if (!mainScreen) return null;
 
     let badge = $('mainRankNextBadge');
@@ -382,7 +240,6 @@
     badge.id = 'mainRankNextBadge';
     badge.className = 'main-rank-next-badge';
     badge.innerHTML = 'NEXT RANK<br><strong>---</strong>';
-
     mainScreen.appendChild(badge);
     return badge;
   }
@@ -448,20 +305,17 @@
     const totalScore = Number(detail && detail.totalScore || 0);
     const maxRank = window.MobShotStorage ? Number(window.MobShotStorage.RANK_MAX || 100) : 100;
 
-    const rankEl = $('mobRankUpRank');
-    const textEl = $('mobRankUpText');
+    if ($('mobRankUpRank')) $('mobRankUpRank').textContent = `RANK ${beforeRank} → ${rank}`;
 
-    if (rankEl) rankEl.textContent = `RANK ${beforeRank} → ${rank}`;
-
-    if (textEl) {
+    if ($('mobRankUpText')) {
       if (rank >= maxRank) {
-        textEl.textContent = `最高ランクに到達しました！\nTOTAL SCORE ${totalScore.toLocaleString()}`;
+        $('mobRankUpText').textContent = `最高ランクに到達しました！\nTOTAL SCORE ${totalScore.toLocaleString()}`;
       } else if (window.MobShotStorage && window.MobShotStorage.scoreNeedForRank) {
         const nextNeed = Number(window.MobShotStorage.scoreNeedForRank(rank + 1) || 0);
         const rest = Math.max(0, nextNeed - totalScore);
-        textEl.textContent = `TOTAL SCORE ${totalScore.toLocaleString()}\n次のランクまで あと ${rest.toLocaleString()} SCORE`;
+        $('mobRankUpText').textContent = `TOTAL SCORE ${totalScore.toLocaleString()}\n次のランクまで あと ${rest.toLocaleString()} SCORE`;
       } else {
-        textEl.textContent = `TOTAL SCORE ${totalScore.toLocaleString()}`;
+        $('mobRankUpText').textContent = `TOTAL SCORE ${totalScore.toLocaleString()}`;
       }
     }
 
@@ -492,7 +346,7 @@
     return modal;
   }
 
-  function showGameConfirm(title, text, yesText, noText, onYes){
+  function showGameConfirm(title, text, yesText, noText, onYes, onNo){
     const modal = ensureGameConfirm();
 
     $('mobGameConfirmTitle').textContent = title || '確認';
@@ -511,9 +365,118 @@
       e.preventDefault();
       e.stopPropagation();
       modal.classList.add('hidden');
+      if (onNo) onNo();
     };
 
     modal.classList.remove('hidden');
+  }
+
+  function ensureAdminPassModal(){
+    injectMainStyle();
+
+    let modal = $('mobAdminPassModal');
+    if (modal) return modal;
+
+    modal = document.createElement('div');
+    modal.id = 'mobAdminPassModal';
+    modal.className = 'mob-admin-pass-modal hidden';
+    modal.innerHTML = `
+      <div class="mob-admin-pass-card">
+        <div id="mobAdminPassTitle" class="mob-admin-pass-title">管理者パスワード</div>
+        <div id="mobAdminPassText" class="mob-admin-pass-text"></div>
+        <input id="mobAdminPassInput" class="mob-admin-pass-input" type="password" autocomplete="off" inputmode="text">
+        <div class="mob-admin-pass-actions">
+          <button id="mobAdminPassOk" class="mob-admin-pass-btn ok" type="button">決定</button>
+          <button id="mobAdminPassCancel" class="mob-admin-pass-btn cancel" type="button">戻る</button>
+        </div>
+      </div>
+    `;
+
+    (mainScreen || $('app') || document.body).appendChild(modal);
+
+    $('mobAdminPassCancel').addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      modal.classList.add('hidden');
+    }, { passive:false });
+
+    $('mobAdminPassInput').addEventListener('keydown', function(e){
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        $('mobAdminPassOk').click();
+      }
+    });
+
+    return modal;
+  }
+
+  function openAdminPassword(){
+    const modal = ensureAdminPassModal();
+    const input = $('mobAdminPassInput');
+    const active = isAdminMode();
+
+    $('mobAdminPassText').textContent = active
+      ? '現在は管理者モードです。\nパスワードを入力すると解除します。'
+      : 'パスワードを入力すると管理者モードになります。';
+
+    input.value = '';
+
+    $('mobAdminPassOk').onclick = function(e){
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (input.value !== ADMIN_PASSWORD) {
+        showToast('パスワードが違います');
+        input.value = '';
+        return;
+      }
+
+      const next = !isAdminMode();
+      setAdminMode(next);
+      modal.classList.add('hidden');
+
+      showToast(next ? '管理者モードになりました' : '管理者モードを解除しました');
+    };
+
+    modal.classList.remove('hidden');
+
+    setTimeout(function(){
+      input.focus();
+    }, 80);
+  }
+
+  function openTrashMenu(){
+    showGameConfirm(
+      '管理メニュー',
+      isAdminMode()
+        ? '操作を選択してください。\n現在：管理者モード ON'
+        : '操作を選択してください。\n現在：通常モード',
+      'セーブ削除',
+      isAdminMode() ? '管理者解除' : '管理者として入場',
+      function(){
+        confirmDeleteSave();
+      },
+      function(){
+        openAdminPassword();
+      }
+    );
+  }
+
+  function confirmDeleteSave(){
+    showGameConfirm(
+      'セーブ削除',
+      '本当にセーブデータを削除しますか？\nコイン・ランク・ステージ進行・ショップ・装備・ペット・ミッション・ガチャ・コレクションを初期化します。',
+      'はい',
+      'いいえ',
+      function(){
+        clearAllMobShotLocalStorage();
+        showToast('セーブデータを削除しました');
+
+        setTimeout(function(){
+          location.reload();
+        }, 700);
+      }
+    );
   }
 
   function showToast(text){
@@ -551,6 +514,7 @@
         showToast('ゲーム本体が読み込まれていません');
       }
 
+      setTimeout(applyAdminModeVisuals, 80);
       return;
     }
 
@@ -562,6 +526,7 @@
 
     refreshMainHud();
     refreshMainVisuals();
+    applyAdminModeVisuals();
   }
 
   function setImage(id, src){
@@ -582,13 +547,7 @@
       return window.MobShotStorage.load();
     }
 
-    return {
-      totalScore:0,
-      bestScore:0,
-      coin:0,
-      diamond:0,
-      rank:1
-    };
+    return { totalScore:0, bestScore:0, coin:0, diamond:0, rank:1 };
   }
 
   function currentStageText(){
@@ -612,6 +571,8 @@
 
     const sortieBtn = $('sortieBtn');
     if (sortieBtn) sortieBtn.setAttribute('data-stage', currentStageText());
+
+    applyAdminModeVisuals();
   }
 
   function ensureMainStoneLayer(){
@@ -638,19 +599,12 @@
   }
 
   function fallbackDisplayStones(){
-    if (!window.MobShotCollection || !window.MobShotCollection.loadDisplayState) {
-      return [];
-    }
+    if (!window.MobShotCollection || !window.MobShotCollection.loadDisplayState) return [];
 
     const state = window.MobShotCollection.loadDisplayState();
     const display = Array.isArray(state.display) ? state.display : [];
 
-    return display
-      .filter(no => no)
-      .map(no => ({
-        no,
-        image:`co/co${no}.png`
-      }));
+    return display.filter(no => no).map(no => ({ no, image:`co/co${no}.png` }));
   }
 
   function getMainDisplayStones(){
@@ -687,25 +641,13 @@
   function refreshMainVisuals(){
     refreshMainStoneDisplay();
 
-    if (window.MobShotEquip && window.MobShotEquip.updateMainPlayerImage) {
-      window.MobShotEquip.updateMainPlayerImage();
-    }
+    if (window.MobShotEquip && window.MobShotEquip.updateMainPlayerImage) window.MobShotEquip.updateMainPlayerImage();
+    if (window.MobShotPets && window.MobShotPets.renderAll) window.MobShotPets.renderAll();
+    if (window.MobShotShop && window.MobShotShop.render) window.MobShotShop.render();
+    if (window.MobShotEquip && window.MobShotEquip.render) window.MobShotEquip.render();
+    if (window.MobShotMission && window.MobShotMission.render) window.MobShotMission.render();
 
-    if (window.MobShotPets && window.MobShotPets.renderAll) {
-      window.MobShotPets.renderAll();
-    }
-
-    if (window.MobShotShop && window.MobShotShop.render) {
-      window.MobShotShop.render();
-    }
-
-    if (window.MobShotEquip && window.MobShotEquip.render) {
-      window.MobShotEquip.render();
-    }
-
-    if (window.MobShotMission && window.MobShotMission.render) {
-      window.MobShotMission.render();
-    }
+    applyAdminModeVisuals();
   }
 
   function runHandler(handler, e){
@@ -762,8 +704,6 @@
     }
 
     showScreen('main');
-    refreshMainHud();
-    refreshMainVisuals();
   }
 
   function goGame(){
@@ -821,7 +761,7 @@
     btn.type = 'button';
     btn.textContent = '🗑';
     btn.className = 'delete-save-btn';
-    btn.setAttribute('aria-label', 'セーブ削除');
+    btn.setAttribute('aria-label', '管理メニュー');
 
     btn.style.position = 'absolute';
     btn.style.left = '6.2vw';
@@ -891,21 +831,13 @@
     btn.addEventListener('click', function(e){
       e.preventDefault();
       e.stopPropagation();
+      openTrashMenu();
+    }, { passive:false });
 
-      showGameConfirm(
-        'セーブ削除',
-        '本当にセーブデータを削除しますか？\nコイン・ランク・ステージ進行・ショップ・装備・ペット・ミッション・ガチャ・コレクションを初期化します。',
-        '削除する',
-        'やめる',
-        function(){
-          clearAllMobShotLocalStorage();
-          showToast('セーブデータを削除しました');
-
-          setTimeout(function(){
-            location.reload();
-          }, 700);
-        }
-      );
+    btn.addEventListener('pointerup', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      openTrashMenu();
     }, { passive:false });
   }
 
@@ -920,6 +852,7 @@
   function init(){
     preventSmartphoneZoom();
     injectMainStyle();
+    setupAdminObserver();
     initImages();
     refreshMainHud();
 
@@ -927,6 +860,7 @@
     ensureRankNextBadge();
     ensureRankUpModal();
     ensureGameConfirm();
+    ensureAdminPassModal();
     initModules();
 
     wireButton(['sortieBtn', 'btnSortie', 'mainSortieBtn'], goGame);
@@ -941,6 +875,7 @@
     bindDeleteSave();
 
     refreshMainVisuals();
+    applyAdminModeVisuals();
 
     window.addEventListener('mobshot:saveUpdated', function(){
       refreshMainHud();
@@ -963,6 +898,14 @@
 
   window.addEventListener('DOMContentLoaded', init);
 
+  window.MobShotAdmin = {
+    ADMIN_SAVE_KEY,
+    isAdminMode,
+    setAdminMode,
+    applyAdminModeVisuals,
+    openAdminPassword
+  };
+
   window.MobShotMain = {
     showScreen,
     refreshMainHud,
@@ -977,6 +920,8 @@
     showGameConfirm,
     showToast,
     showRankUp,
-    clearAllMobShotLocalStorage
+    clearAllMobShotLocalStorage,
+    isAdminMode,
+    setAdminMode
   };
 })();
