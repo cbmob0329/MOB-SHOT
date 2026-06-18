@@ -63,6 +63,15 @@
     baseWide: 1,
     wide: 1,
     attackSpeed: 1,
+    collectionBonus: {
+      score:0,
+      coin:0,
+      hp:0,
+      power:0,
+      range:0
+    },
+    scoreMultiplier: 1,
+    coinMultiplier: 1,
     playerImage: 'play/playpink.png',
     bulletImage: 'mt/atk.png',
     score: 0,
@@ -91,6 +100,31 @@
     particles: [],
     texts: []
   };
+
+  function getCollectionBonus(){
+    if (
+      window.MobShotCollection &&
+      window.MobShotCollection.calcCollectionBonus
+    ) {
+      const bonus = window.MobShotCollection.calcCollectionBonus() || {};
+
+      return {
+        score:Math.max(0, Number(bonus.score || 0)),
+        coin:Math.max(0, Number(bonus.coin || 0)),
+        hp:Math.max(0, Number(bonus.hp || 0)),
+        power:Math.max(0, Number(bonus.power || 0)),
+        range:Math.max(0, Number(bonus.range || 0))
+      };
+    }
+
+    return {
+      score:0,
+      coin:0,
+      hp:0,
+      power:0,
+      range:0
+    };
+  }
 
   function injectHudStyle(){
     if (document.getElementById('mobShotGameHudStyle')) return;
@@ -386,7 +420,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260617_rankup';
+      image.src = src + '?v=20260618_collection_bonus';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -552,13 +586,34 @@
 
     const shopBonus = getShopBonus();
     const equipBonus = getEquipBonus();
+    const collectionBonus = getCollectionBonus();
     const avatar = getEquippedAvatar();
     const record = getEquippedRecord();
 
-    state.maxHp = D.player.maxHp + shopBonus.hp + equipBonus.hp;
+    state.collectionBonus = collectionBonus;
+    state.scoreMultiplier = 1 + Number(collectionBonus.score || 0);
+    state.coinMultiplier = 1 + Number(collectionBonus.coin || 0);
+
+    state.maxHp = Math.ceil(
+      Number(D.player.maxHp || 50) +
+      Number(shopBonus.hp || 0) +
+      Number(equipBonus.hp || 0) +
+      Number(collectionBonus.hp || 0)
+    );
+
     state.hp = state.maxHp;
-    state.power = D.player.power + shopBonus.power + equipBonus.power;
-    state.range = D.player.range + shopBonus.range;
+
+    state.power =
+      Number(D.player.power || 1) +
+      Number(shopBonus.power || 0) +
+      Number(equipBonus.power || 0) +
+      Number(collectionBonus.power || 0);
+
+    state.range =
+      Number(D.player.range || 3) +
+      Number(shopBonus.range || 0) +
+      Number(collectionBonus.range || 0);
+
     state.baseWide = D.player.wide;
     state.wide = state.baseWide;
     state.attackSpeed = D.player.attackSpeed + shopBonus.rapid + equipBonus.rapid;
@@ -1380,6 +1435,18 @@
       stopLoopOnly,
       goMainFromResult,
       showRankUpModal,
+
+      getCollectionBonus(){
+        return Object.assign({}, state.collectionBonus || {});
+      },
+
+      getScoreMultiplier(){
+        return Math.max(1, Number(state.scoreMultiplier || 1));
+      },
+
+      getCoinMultiplier(){
+        return Math.max(1, Number(state.coinMultiplier || 1));
+      },
 
       setGateEndAt(value){
         state.gateEndAt = Number(value || 0);
