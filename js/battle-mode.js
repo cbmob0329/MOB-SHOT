@@ -8,6 +8,8 @@
   const FALLBACK_ASSET = {
     bg:'sta/backsougen.png',
     bullet:'mt/atk.png',
+    bossBullet:'atk/hinotama.png',
+    heavyAttack:'atk/hinotama.png',
     chest:'gimi/takagin.png',
     obstacle:'gimi/gimihako.png'
   };
@@ -549,7 +551,7 @@
     state.coopKills = 0;
     state.coopClear = false;
     state.coopResultShown = false;
-    state.spawnCd = 40;
+    state.spawnCd = 60;
 
     state.players.forEach(p => {
       p.hp = 100;
@@ -586,14 +588,16 @@
       image:src.image || '',
       x:W / 2,
       y:H * 0.22,
-      targetX:W / 2,
       hp,
       maxHp:hp,
-      r:42,
+      r:58,
       score:Math.ceil(Number(src.score || 1000) * scale),
       areaName:(area && area.name) || areaKey,
       dead:false,
-      shootCd:80
+      shootCd:70,
+      heavyCd:150,
+      patternIndex:0,
+      movePhase:Math.random() * Math.PI * 2
     };
 
     state.bosses = [state.coopBoss];
@@ -763,16 +767,16 @@
     state.spawnCd--;
     if (state.spawnCd > 0) return;
 
-    state.spawnCd = intRand(40, 80);
+    state.spawnCd = intRand(70, 125);
 
     const roll = Math.random();
 
-    if (roll < 0.50) {
+    if (roll < 0.45) {
       spawnCoopEnemy();
       return;
     }
 
-    const isChest = roll < 0.72;
+    const isChest = roll < 0.68;
     const src = isChest ? pickFrom(getBattleChests()) : pickFrom(getBattleGimmicks());
     const hp = Math.max(1, Math.ceil(Number(src && src.hp || (isChest ? 10 : 8)) * 0.75));
 
@@ -781,9 +785,9 @@
       name:src && src.name ? src.name : (isChest ? '宝箱' : '障害物'),
       image:src && src.image ? src.image : (isChest ? FALLBACK_ASSET.chest : FALLBACK_ASSET.obstacle),
       x:rand(W * 0.10, W * 0.90),
-      y:rand(H * 0.20, H * 0.48),
-      vx:rand(-0.9, 0.9),
-      vy:rand(0.2, 0.8),
+      y:rand(H * 0.20, H * 0.42),
+      vx:rand(-0.35, 0.35),
+      vy:rand(0.08, 0.22),
       hp,
       maxHp:hp,
       r:isChest ? 22 : 25,
@@ -804,8 +808,8 @@
       image:src.image || '',
       x:rand(W * 0.10, W * 0.90),
       y:-40,
-      vx:rand(-0.7, 0.7),
-      vy:rand(0.75, 1.3),
+      vx:rand(-0.35, 0.35),
+      vy:rand(0.42, 0.78),
       hp,
       maxHp:hp,
       r:24,
@@ -841,20 +845,49 @@
     state.bosses.forEach(b => {
       if (b.dead) return;
 
-      b.x += Math.sin(state.frame * 0.025 + state.coopAreaIndex) * 1.2;
-      b.x = clamp(b.x, W * 0.18, W * 0.82);
+      const amp = Math.max(100, W * 0.31);
+      const subAmp = Math.max(24, W * 0.055);
+      b.x =
+        W / 2 +
+        Math.sin(state.frame * 0.018 + b.movePhase) * amp +
+        Math.sin(state.frame * 0.061 + b.movePhase) * subAmp;
+
+      b.x = clamp(b.x, W * 0.12, W * 0.88);
 
       b.shootCd--;
       if (b.shootCd <= 0) {
-        b.shootCd = Math.max(35, 85 - state.coopAreaIndex * 7);
-        fireBossBullet(b);
+        b.shootCd = Math.max(44, 86 - state.coopAreaIndex * 7);
+        fireBossPattern(b);
+      }
+
+      b.heavyCd--;
+      if (b.heavyCd <= 0) {
+        b.heavyCd = Math.max(125, 185 - state.coopAreaIndex * 8);
+        spawnBossHeavyAttack(b);
       }
     });
 
     state.bosses = state.bosses.filter(b => !b.dead);
   }
 
-  function fireBossBullet(b){
+  function fireBossPattern(b){
+    const pattern = b.patternIndex % 3;
+    b.patternIndex++;
+
+    if (pattern === 0) {
+      fireBossAim(b);
+      return;
+    }
+
+    if (pattern === 1) {
+      fireBossSpread(b);
+      return;
+    }
+
+    fireBossSideShot(b);
+  }
+
+  function fireBossAim(b){
     const targets = state.players.filter(p => p.alive);
     if (!targets.length) return;
 
@@ -862,20 +895,93 @@
       const dx = p.x - b.x;
       const dy = p.y - b.y;
       const len = Math.max(1, Math.hypot(dx, dy));
-      const speed = 2.2 + state.coopAreaIndex * 0.25;
+      const speed = 1.75 + state.coopAreaIndex * 0.16;
 
       state.bullets.push({
         kind:'enemy',
         owner:0,
+        image:FALLBACK_ASSET.bossBullet,
         x:b.x,
-        y:b.y + 30,
+        y:b.y + 38,
         vx:dx / len * speed,
         vy:dy / len * speed,
-        r:9,
-        power:8 + state.coopAreaIndex * 2,
+        r:11,
+        power:7 + state.coopAreaIndex * 2,
         dead:false
       });
     });
+  }
+
+  function fireBossSpread(b){
+    const speed = 1.65 + state.coopAreaIndex * 0.15;
+    const angles = [-0.62,-0.34,-0.12,0.12,0.34,0.62];
+
+    angles.forEach(a => {
+      state.bullets.push({
+        kind:'enemy',
+        owner:0,
+        image:FALLBACK_ASSET.bossBullet,
+        x:b.x,
+        y:b.y + 38,
+        vx:Math.sin(a) * speed,
+        vy:Math.cos(a) * speed,
+        r:10,
+        power:6 + state.coopAreaIndex * 2,
+        dead:false
+      });
+    });
+  }
+
+  function fireBossSideShot(b){
+    const targets = [
+      { x:W * 0.18, y:H * 0.82 },
+      { x:W * 0.82, y:H * 0.82 }
+    ];
+
+    targets.forEach(t => {
+      const dx = t.x - b.x;
+      const dy = t.y - b.y;
+      const len = Math.max(1, Math.hypot(dx, dy));
+      const speed = 1.85 + state.coopAreaIndex * 0.15;
+
+      state.bullets.push({
+        kind:'enemy',
+        owner:0,
+        image:FALLBACK_ASSET.bossBullet,
+        x:b.x,
+        y:b.y + 38,
+        vx:dx / len * speed,
+        vy:dy / len * speed,
+        r:11,
+        power:7 + state.coopAreaIndex * 2,
+        dead:false
+      });
+    });
+  }
+
+  function spawnBossHeavyAttack(b){
+    const hp = 22 + state.coopAreaIndex * 8;
+
+    state.entities.push({
+      type:'heavyAttack',
+      name:'巨大火の玉',
+      image:FALLBACK_ASSET.heavyAttack,
+      x:b.x,
+      baseX:b.x,
+      y:b.y + 56,
+      vx:0,
+      vy:0.36 + state.coopAreaIndex * 0.035,
+      amp:Math.max(70, W * 0.14),
+      phase:Math.random() * Math.PI * 2,
+      hp,
+      maxHp:hp,
+      r:48,
+      score:500 + state.coopAreaIndex * 220,
+      dead:false,
+      wobble:0
+    });
+
+    showBattleMessage('BIG FIRE!');
   }
 
   function updateSpawns(){
@@ -906,14 +1012,29 @@
 
   function updateEntities(){
     state.entities.forEach(e => {
-      e.x += e.vx;
-      e.y += e.vy || Math.sin(state.frame * 0.02 + e.wobble) * 0.15;
+      if (mode === 'coop' && e.type === 'heavyAttack') {
+        e.y += e.vy;
+        e.x = e.baseX + Math.sin(state.frame * 0.035 + e.phase) * e.amp;
+        e.x = clamp(e.x, W * 0.10, W * 0.90);
+      } else {
+        e.x += e.vx;
+        e.y += e.vy || Math.sin(state.frame * 0.02 + e.wobble) * 0.15;
+      }
 
       if (e.x < W * 0.08 || e.x > W * 0.92) e.vx *= -1;
 
       if (mode === 'coop') {
         state.players.forEach(p => {
           if (!p.alive || e.dead) return;
+
+          if (e.type === 'heavyAttack' && Math.hypot(e.x - p.x, e.y - p.y) < e.r + 26) {
+            p.hp -= 28 + state.coopAreaIndex * 4;
+            e.dead = true;
+            burst(e.x, e.y, '#ff5b5b', 22);
+            showBattleMessage('DAMAGE!');
+            return;
+          }
+
           if (e.type === 'obstacle' && Math.hypot(e.x - p.x, e.y - p.y) < e.r + 24) {
             p.hp -= 5;
             e.dead = true;
@@ -921,7 +1042,7 @@
           }
         });
 
-        if (e.y > H + 80) e.dead = true;
+        if (e.y > H + 90) e.dead = true;
       }
     });
 
@@ -976,7 +1097,7 @@
       if (Math.hypot(b.x - e.x, b.y - e.y) <= e.r + b.r) {
         e.hp -= b.power;
         b.dead = true;
-        burst(e.x, e.y, e.type === 'chest' ? '#ffe66b' : '#9deeff', 6);
+        burst(e.x, e.y, e.type === 'chest' ? '#ffe66b' : e.type === 'heavyAttack' ? '#ff5b5b' : '#9deeff', 6);
 
         if (e.hp <= 0) {
           e.dead = true;
@@ -1038,6 +1159,13 @@
 
   function onEntityDestroyed(e, owner){
     const p = state.players[owner - 1];
+
+    if (e.type === 'heavyAttack') {
+      state.coopScore += Number(e.score || 500);
+      showBattleMessage('BIG FIRE BREAK!');
+      burst(e.x, e.y, '#ffcf5b', 18);
+      return;
+    }
 
     if (e.type === 'chest') {
       const reward = ['power1','heal10','rapid1','power2','heal30','rapid2','wide1'][intRand(0, 6)];
@@ -1479,11 +1607,13 @@
   function drawEntities(){
     state.entities.forEach(e => {
       const image = img(e.image);
-      const size = mode === 'coop' ? (e.type === 'chest' ? 42 : 46) : (e.type === 'chest' ? 54 : 62);
+      let size = mode === 'coop' ? (e.type === 'chest' ? 42 : 46) : (e.type === 'chest' ? 54 : 62);
+
+      if (e.type === 'heavyAttack') size = 92;
 
       if (imageReady(image)) ctx.drawImage(image, e.x - size / 2, e.y - size / 2, size, size);
       else {
-        ctx.fillStyle = e.type === 'chest' ? '#ffe66b' : '#777';
+        ctx.fillStyle = e.type === 'chest' ? '#ffe66b' : e.type === 'heavyAttack' ? '#ff5b5b' : '#777';
         ctx.beginPath();
         ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
         ctx.fill();
@@ -1513,7 +1643,7 @@
   function drawBosses(){
     state.bosses.forEach(e => {
       const image = img(e.image);
-      const size = 84;
+      const size = 116;
 
       if (imageReady(image)) ctx.drawImage(image, e.x - size / 2, e.y - size / 2, size, size);
       else {
@@ -1531,7 +1661,7 @@
     const text = String(Math.max(0, Math.ceil(e.hp)));
 
     if (mode === 'coop') {
-      drawSideText(text, e.x, e.y - 26, false, 15);
+      drawSideText(text, e.x, e.y - 32, false, 16);
       return;
     }
 
@@ -1540,11 +1670,12 @@
   }
 
   function drawBullets(){
-    const image = img(FALLBACK_ASSET.bullet);
-
     state.bullets.forEach(b => {
-      if (imageReady(image) && b.kind !== 'enemy') {
-        ctx.drawImage(image, b.x - 12, b.y - 12, 24, 24);
+      const image = img(b.kind === 'enemy' ? FALLBACK_ASSET.bossBullet : FALLBACK_ASSET.bullet);
+      const size = b.kind === 'enemy' ? 30 : 24;
+
+      if (imageReady(image)) {
+        ctx.drawImage(image, b.x - size / 2, b.y - size / 2, size, size);
       } else {
         ctx.fillStyle = b.kind === 'enemy' ? '#ff5b5b' : '#fff178';
         ctx.beginPath();
