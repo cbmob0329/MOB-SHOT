@@ -276,7 +276,20 @@
       { key:'energyRush', name:'エネルギーラッシュ', image:'skill/energyrush.png', desc:'エネルギー弾を乱射する。', maxPlus:30 },
       { key:'twinMissile', name:'ツインミサイル', image:'skill/double missile.png', desc:'追尾ミサイルを放つ。', maxPlus:30 },
       { key:'shadowClone', name:'影分身', image:'skill/shadowclone.png', desc:'分身を召喚する。', maxPlus:30 },
-      { key:'thunderbolt', name:'サンダーボルト', image:'skill/thunderbolt.png', desc:'雷を落とす。', maxPlus:30 }
+      { key:'thunderbolt', name:'サンダーボルト', image:'skill/thunderbolt.png', desc:'雷を落とす。', maxPlus:30 },
+      { key:'arcaneBarrier', name:'アルカナバリア', image:'skill/arcane barrier.png', desc:'一定時間無敵になる。', maxPlus:30 },
+      { key:'darkPower', name:'闇の力', image:'skill/dark oblivion.png', desc:'闇をまとい巨大な火の玉を放つ。', maxPlus:30 },
+      { key:'blackHole', name:'ブラックホール', image:'skill/blackhole.png', desc:'敵と障害物を吸引する。', maxPlus:30 },
+      { key:'healingBreeze', name:'癒しの風', image:'skill/healingbreeze.png', desc:'一定時間HPを回復する。', maxPlus:30 },
+      { key:'rosePulse', name:'薔薇の鼓動', image:'skill/rosepulse.png', desc:'薔薇の弾を飛ばす。', maxPlus:30 },
+      { key:'goldRush', name:'ゴールドラッシュ', image:'skill/goldrush.png', desc:'獲得コイン倍率を上げる。', maxPlus:30 },
+      { key:'darkThunder', name:'ダークサンダー', image:'skill/darkthunder.png', desc:'闇の雷と持続ダメージを与える。', maxPlus:30 },
+      { key:'timeMagic', name:'タイムマジック', image:'skill/timemagic.png', desc:'敵と敵弾を停止させる。', maxPlus:30 },
+      { key:'lilithSisters', name:'リリス四姉妹', image:'skill/lili.png', desc:'四姉妹を召喚する。', maxPlus:30 },
+      { key:'neonBomb', name:'ネオンボム', image:'skill/neonbomb.png', desc:'巨大なネオンボムを飛ばし大爆発させる。', maxPlus:30 },
+      { key:'neptuneAttack', name:'ネプチューンアタック', image:'skill/nepatk.png', desc:'貫通トライデントを5連発射する。', maxPlus:30 },
+      { key:'miraPoison', name:'ミラポイズン', image:'skill/mira.png', desc:'毒弾を5ワイドで発射する。', maxPlus:30 },
+      { key:'bookHero', name:'読みかけの本', image:'skill/book.png', desc:'黄金のヒーローを召喚する。', maxPlus:30 }
     ];
   }
 
@@ -307,12 +320,16 @@
 
     item.owned = true;
     item.level = Math.max(1, Number(item.level || 1));
-    item.plus = Number(result.plusAfter || item.plus || 0);
+    item.plus = Number(result.plusAfter || 0);
 
     if (!Array.isArray(skillState.equipped)) skillState.equipped = [];
     if (!skillState.equipped.length) skillState.equipped.push(key);
 
     window.MobShotSkills.saveState(skillState);
+
+    if (window.MobShotEquip && window.MobShotEquip.render) {
+      window.MobShotEquip.render();
+    }
   }
 
   function addResult(result){
@@ -330,16 +347,26 @@
         owned:false
       };
 
+      const wasOwned = !!current.owned;
+
       current.owned = true;
       current.rarity = result.rarity;
 
-      if (Number(current.plus || 0) >= max) {
+      if (!wasOwned) {
+        current.plus = 0;
+        result.isNew = true;
+        result.converted = false;
+        result.convertCoin = 0;
+        result.plusAfter = 0;
+      } else if (Number(current.plus || 0) >= max) {
+        result.isNew = false;
         result.converted = true;
         result.convertCoin = convertCoin;
         result.plusAfter = max;
         addCoin(convertCoin);
       } else {
         current.plus = Math.min(max, Number(current.plus || 0) + 1);
+        result.isNew = false;
         result.converted = false;
         result.convertCoin = 0;
         result.plusAfter = current.plus;
@@ -360,18 +387,28 @@
         plus:0
       };
 
+      const wasOwned = !!current.owned;
+
       current.owned = true;
       current.name = result.name;
       current.image = result.image;
       current.desc = result.desc || '';
 
-      if (Number(current.plus || 0) >= max) {
+      if (!wasOwned) {
+        current.plus = 0;
+        result.isNew = true;
+        result.converted = false;
+        result.convertCoin = 0;
+        result.plusAfter = 0;
+      } else if (Number(current.plus || 0) >= max) {
+        result.isNew = false;
         result.converted = true;
         result.convertCoin = 10000;
         result.plusAfter = max;
         addCoin(10000);
       } else {
         current.plus = Math.min(max, Number(current.plus || 0) + 1);
+        result.isNew = false;
         result.converted = false;
         result.convertCoin = 0;
         result.plusAfter = current.plus;
@@ -472,6 +509,7 @@
       @keyframes urLineRotate{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
 
       .gacha-skill-tag{display:inline-block;margin-bottom:5px;padding:3px 8px;border-radius:999px;background:linear-gradient(#9deeff,#4bb8ff);color:#00172a;font-size:12px;font-weight:1000}
+      .gacha-new-tag{display:inline-block;margin-top:3px;padding:3px 8px;border-radius:999px;background:linear-gradient(#fffa9b,#ffbc2e);color:#2a1700;font-size:10px;font-weight:1000}
       .gacha-cost-diamond{display:inline-flex;align-items:center;justify-content:center;gap:5px}
       .gacha-cost-diamond:before{content:'◆';color:#7be7ff;text-shadow:0 0 8px #7be7ff}
 
@@ -681,7 +719,7 @@
         <div class="gacha-skill-tag">SKILL</div>
         <img class="gacha-main-result-img" src="${r.image}" alt="${r.name}" onerror="this.style.display='none'">
         <div class="gacha-result-name">${r.name}</div>
-        <div class="gacha-result-note">${r.converted ? `MAX変換 +${Number(r.convertCoin || 0).toLocaleString()} COIN` : `+${r.plusAfter}/${r.maxPlus}`}</div>
+        <div class="gacha-result-note">${r.converted ? `MAX変換 +${Number(r.convertCoin || 0).toLocaleString()} COIN` : r.isNew ? 'NEW!! アンロック' : `+${r.plusAfter}/${r.maxPlus}`}</div>
       `;
     }
 
@@ -689,7 +727,7 @@
       <img class="gacha-result-rarity-img" src="${rarityImage(r.rarity)}" alt="${r.rarity}">
       <img class="gacha-main-result-img" src="${r.image}" alt="${r.name}" onerror="this.style.display='none'">
       <div class="gacha-result-name">No.${String(r.no).padStart(2, '0')} ${r.name}</div>
-      <div class="gacha-result-note">${r.converted ? `MAX変換 +${Number(r.convertCoin || 0).toLocaleString()} COIN` : `+${r.plusAfter}/${r.maxPlus}`}</div>
+      <div class="gacha-result-note">${r.converted ? `MAX変換 +${Number(r.convertCoin || 0).toLocaleString()} COIN` : r.isNew ? 'NEW!! アンロック' : `+${r.plusAfter}/${r.maxPlus}`}</div>
     `;
   }
 
