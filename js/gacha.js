@@ -143,12 +143,8 @@
 
   function getSave(){
     if (window.MobShotStorage && window.MobShotStorage.load) return window.MobShotStorage.load();
-
-    try {
-      return JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
-    } catch(e) {
-      return {};
-    }
+    try { return JSON.parse(localStorage.getItem('mobshot_split_v1')) || {}; }
+    catch(e) { return {}; }
   }
 
   function saveMain(save){
@@ -156,36 +152,24 @@
       window.MobShotStorage.save(save);
       return;
     }
-
-    try {
-      localStorage.setItem('mobshot_split_v1', JSON.stringify(save));
-    } catch(e) {}
+    try { localStorage.setItem('mobshot_split_v1', JSON.stringify(save)); } catch(e) {}
   }
 
   function addCoin(amount){
     if (!amount) return;
-
     const save = getSave();
     save.coin = Number(save.coin || 0) + Number(amount || 0);
     saveMain(save);
-
-    if (window.MobShotMain && window.MobShotMain.refreshMainHud) {
-      window.MobShotMain.refreshMainHud();
-    }
-
+    if (window.MobShotMain && window.MobShotMain.refreshMainHud) window.MobShotMain.refreshMainHud();
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
   }
 
-  function defaultState(){
-    return { stones:{}, skills:{} };
-  }
+  function defaultState(){ return { stones:{}, skills:{} }; }
 
   function loadState(){
     let state = defaultState();
-
     try {
       const raw = localStorage.getItem(GACHA_SAVE_KEY);
-
       if (raw) {
         const parsed = JSON.parse(raw);
         state = Object.assign(state, parsed || {});
@@ -193,14 +177,11 @@
         state.skills = Object.assign({}, parsed.skills || {});
       }
     } catch(e) {}
-
     return state;
   }
 
   function saveState(state){
-    try {
-      localStorage.setItem(GACHA_SAVE_KEY, JSON.stringify(state || defaultState()));
-    } catch(e) {}
+    try { localStorage.setItem(GACHA_SAVE_KEY, JSON.stringify(state || defaultState())); } catch(e) {}
   }
 
   function rarityMax(rarity){ return RARITY[rarity] ? RARITY[rarity].max : 99; }
@@ -221,10 +202,7 @@
     if (stone.category === 'MOB ARTIST') return 'コイン＆スコア増加';
     if (stone.category === 'MOB SHOT BOSS SP') return 'パワー増加';
     if (stone.category === 'MOB PET') return '射程増加';
-    if (stone.category === 'MOB EVENT') {
-      if (stone.rarity === 'UR') return 'パワー＆射程増加';
-      return 'ライフ増加';
-    }
+    if (stone.category === 'MOB EVENT') return stone.rarity === 'UR' ? 'パワー＆射程増加' : 'ライフ増加';
     return '';
   }
 
@@ -237,39 +215,28 @@
     }));
   }
 
-  function gachaStonePool(){
-    return allStones().filter(stone => stone.gacha !== false);
-  }
+  function gachaStonePool(){ return allStones().filter(stone => stone.gacha !== false); }
 
   function rollRarity(){
     const total = Object.keys(RARITY).reduce((sum, key) => sum + Number(RARITY[key].rate || 0), 0);
     let roll = Math.random() * total;
-
     for (const key of ['R','SR','SSR','UR']) {
       roll -= Number(RARITY[key].rate || 0);
       if (roll <= 0) return key;
     }
-
     return 'R';
   }
 
   function rollStone(){
-    let rarity = rollRarity();
+    const rarity = rollRarity();
     let pool = gachaStonePool().filter(stone => stone.rarity === rarity);
-
-    if (!pool.length) {
-      pool = gachaStonePool();
-    }
-
+    if (!pool.length) pool = gachaStonePool();
     const stone = pool[Math.floor(Math.random() * pool.length)] || gachaStonePool()[0];
-
     return Object.assign({}, stone, { type:'stone' });
   }
 
   function getSkillPool(){
-    if (window.MobShotSkills && Array.isArray(window.MobShotSkills.SKILL_MASTER)) {
-      return window.MobShotSkills.SKILL_MASTER;
-    }
+    if (window.MobShotSkills && Array.isArray(window.MobShotSkills.SKILL_MASTER)) return window.MobShotSkills.SKILL_MASTER;
 
     return [
       { key:'rocket', name:'ロケットランチャー', image:'skill/rocket barrage.png', desc:'ロケット弾で攻撃する。', maxPlus:30 },
@@ -296,7 +263,6 @@
   function rollSkill(){
     const pool = getSkillPool();
     const skill = pool[Math.floor(Math.random() * pool.length)] || pool[0];
-
     return {
       type:'skill',
       id:skill.key || skill.id || skill.name,
@@ -317,7 +283,6 @@
     if (!skillState.skills[key]) skillState.skills[key] = { owned:false, level:1, plus:0 };
 
     const item = skillState.skills[key];
-
     item.owned = true;
     item.level = Math.max(1, Number(item.level || 1));
     item.plus = Number(result.plusAfter || 0);
@@ -327,9 +292,7 @@
 
     window.MobShotSkills.saveState(skillState);
 
-    if (window.MobShotEquip && window.MobShotEquip.render) {
-      window.MobShotEquip.render();
-    }
+    if (window.MobShotEquip && window.MobShotEquip.render) window.MobShotEquip.render();
   }
 
   function addResult(result){
@@ -340,13 +303,7 @@
       const max = rarityMax(result.rarity);
       const convertCoin = rarityCoin(result.rarity);
 
-      const current = state.stones[key] || {
-        no:result.no,
-        rarity:result.rarity,
-        plus:0,
-        owned:false
-      };
-
+      const current = state.stones[key] || { no:result.no, rarity:result.rarity, plus:0, owned:false };
       const wasOwned = !!current.owned;
 
       current.owned = true;
@@ -429,7 +386,6 @@
     const stone = allStones().find(s => Number(s.no) === Number(no));
     const results = [];
     const amount = Math.max(1, Number(count || 1));
-
     if (!stone) return results;
 
     for (let i = 0; i < amount; i++) {
@@ -442,16 +398,12 @@
   function spendDiamond(cost){
     const save = getSave();
     const have = Number(save.diamond || 0);
-
     if (have < cost) return false;
 
     save.diamond = have - cost;
     saveMain(save);
 
-    if (window.MobShotMain && window.MobShotMain.refreshMainHud) {
-      window.MobShotMain.refreshMainHud();
-    }
-
+    if (window.MobShotMain && window.MobShotMain.refreshMainHud) window.MobShotMain.refreshMainHud();
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
     return true;
   }
@@ -482,7 +434,6 @@
       .gacha-anim.zoom img{animation:gachaZoom 2s ease-out forwards}
       @keyframes gachaShake{0%{transform:translateX(-4px) rotate(-2deg)}50%{transform:translateX(4px) rotate(2deg)}100%{transform:translateX(-4px) rotate(-2deg)}}
       @keyframes gachaZoom{0%{transform:scale(1);filter:brightness(1)}100%{transform:scale(1.42);filter:brightness(2.4)}}
-
       .gacha-results.one{display:grid;grid-template-columns:1fr;gap:12px;justify-items:center}
       .gacha-results.ten{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
       .gacha-result{position:relative;border-radius:20px;padding:22px 8px 10px;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.22);text-align:center;overflow:visible;min-height:138px}
@@ -497,7 +448,6 @@
       .gacha-result-rarity-img{position:absolute;left:8px;top:-16px;width:78px;height:42px;object-fit:contain;z-index:8;filter:drop-shadow(0 4px 0 rgba(0,0,0,.55));animation:gachaRarityFloat 1.7s ease-in-out infinite}
       .gacha-results.one .gacha-result-rarity-img{left:14px;top:-26px;width:132px;height:72px}
       @keyframes gachaRarityFloat{0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)}}
-
       .rarity-frame-r{border-color:rgba(255,255,255,.24)}
       .rarity-frame-sr{border-color:#58dfff;box-shadow:0 0 8px #58dfff,inset 0 0 8px rgba(88,223,255,.45)}
       .rarity-frame-ssr{border-color:#ffd83d;box-shadow:0 0 12px #ffd83d,0 0 22px rgba(255,216,61,.78),0 0 34px rgba(255,80,230,.28),inset 0 0 12px rgba(255,216,61,.48);animation:ssrCardGlow 2s ease-in-out infinite}
@@ -507,12 +457,10 @@
       .rarity-frame-ur:after{content:'';position:absolute;inset:-3px;border-radius:23px;border:2px solid rgba(255,60,255,.72);box-shadow:0 0 14px #ff3cff,0 0 26px #6d00ff;pointer-events:none;z-index:1;animation:urLineRotate 2.4s linear infinite}
       @keyframes urFramePulse{0%{filter:brightness(1)}50%{filter:brightness(1.45)}100%{filter:brightness(1)}}
       @keyframes urLineRotate{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
-
       .gacha-skill-tag{display:inline-block;margin-bottom:5px;padding:3px 8px;border-radius:999px;background:linear-gradient(#9deeff,#4bb8ff);color:#00172a;font-size:12px;font-weight:1000}
       .gacha-new-tag{display:inline-block;margin-top:3px;padding:3px 8px;border-radius:999px;background:linear-gradient(#fffa9b,#ffbc2e);color:#2a1700;font-size:10px;font-weight:1000}
       .gacha-cost-diamond{display:inline-flex;align-items:center;justify-content:center;gap:5px}
       .gacha-cost-diamond:before{content:'◆';color:#7be7ff;text-shadow:0 0 8px #7be7ff}
-
       @media (max-width:430px){
         .gacha-results.ten{grid-template-columns:repeat(5,1fr);gap:6px}
         .gacha-result{min-height:116px;padding:18px 4px 6px;border-radius:15px}
@@ -574,7 +522,6 @@
 
   function close(){
     if (isAnimating) return;
-
     const modal = $('gachaModal');
     if (modal) modal.classList.add('hidden');
   }
@@ -609,7 +556,7 @@
     const content = $('gachaContent');
     const title = type === 'stone' ? '石板ガチャ' : 'スキルガチャ';
     const oneCost = type === 'stone' ? 1 : 5;
-    const tenCost = 10 : 50;
+    const tenCost = type === 'stone' ? 10 : 50;
 
     content.innerHTML = `
       <img class="gacha-main-img" src="${GACHA_IMAGES.top}" alt="GACHA">
@@ -635,7 +582,6 @@
     lastType = type;
 
     const results = [];
-
     for (let i = 0; i < count; i++) {
       const result = type === 'stone' ? rollStone() : rollSkill();
       results.push(addResult(result));
@@ -649,7 +595,6 @@
     setCloseVisible(false);
 
     const content = $('gachaContent');
-
     content.innerHTML = `
       <div id="gachaAnim" class="gacha-anim">
         <img id="gachaAnimImg" src="${GACHA_IMAGES.start}" alt="GACHA">
@@ -657,17 +602,15 @@
     `;
 
     setTimeout(function(){
-      const img = $('gachaAnimImg');
-      if (img) img.src = GACHA_IMAGES.shake;
-
+      const imgEl = $('gachaAnimImg');
+      if (imgEl) imgEl.src = GACHA_IMAGES.shake;
       const anim = $('gachaAnim');
       if (anim) anim.classList.add('shake');
     }, 520);
 
     setTimeout(function(){
-      const img = $('gachaAnimImg');
-      if (img) img.src = GACHA_IMAGES.open;
-
+      const imgEl = $('gachaAnimImg');
+      if (imgEl) imgEl.src = GACHA_IMAGES.open;
       const anim = $('gachaAnim');
       if (anim) {
         anim.classList.remove('shake');
@@ -700,11 +643,7 @@
     results.forEach(result => {
       const card = document.createElement('div');
       card.className = 'gacha-result';
-
-      if (result.type === 'stone') {
-        card.classList.add(rarityClass(result.rarity));
-      }
-
+      if (result.type === 'stone') card.classList.add(rarityClass(result.rarity));
       card.innerHTML = resultCardHtml(result);
       list.appendChild(card);
     });
@@ -736,7 +675,6 @@
     setCloseVisible(true);
 
     const content = $('gachaContent');
-
     content.innerHTML = `
       <div class="gacha-diamond">${diamondText()}</div>
       <div style="padding:22px;text-align:center;color:#fff;font-weight:1000">${text}</div>
@@ -747,9 +685,7 @@
   }
 
   function bind(){
-    const gachaBtn =
-      $('openGachaBtn') ||
-      ($('gachaImg') && $('gachaImg').closest('button'));
+    const gachaBtn = $('openGachaBtn') || ($('gachaImg') && $('gachaImg').closest('button'));
 
     if (gachaBtn && !gachaBtn.__mobGachaBound) {
       gachaBtn.__mobGachaBound = true;
