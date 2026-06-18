@@ -29,7 +29,7 @@
       image = img('atk/atkriri.png');
     }
 
-    if (bullet.type === 'darkFire') image = img('atk/hinotama.png');
+    if (bullet.type === 'darkFire') image = img('atk/atkmaoh.png');
     if (bullet.type === 'bookHero') image = img('pet/pet hero.png');
 
     let size = 34;
@@ -39,8 +39,8 @@
     if (bullet.type === 'twinMissile') size = Number((bullet.skill && bullet.skill.bulletSize) || 44);
     if (bullet.type === 'rosePulse') size = 58;
     if (bullet.type === 'darkThunder') size = 44;
-    if (bullet.type === 'darkAura') size = 76;
-    if (bullet.type === 'darkFire') size = 104;
+    if (bullet.type === 'darkAura') size = 58;
+    if (bullet.type === 'darkFire') size = 72;
     if (bullet.type === 'neonBomb') size = Number((bullet.skill && bullet.skill.bulletSize) || 104);
     if (bullet.type === 'neptuneAttack') size = Number((bullet.skill && bullet.skill.bulletSize) || 64);
     if (bullet.type === 'miraPoison') size = 48;
@@ -57,7 +57,7 @@
         bullet.type === 'twinMissile'
       )
     ) {
-      size *= 1.55;
+      size *= 1.35;
     }
 
     if (bullet.type === 'darkAura') {
@@ -81,7 +81,7 @@
     }
 
     if (bullet.type === 'darkFire') {
-      drawRotatedBullet(ctx, bullet, image, size, '#ff7a22', true);
+      drawRotatedBullet(ctx, bullet, image, size, '#8b3cff', true);
       return;
     }
 
@@ -118,10 +118,10 @@
     ctx.rotate(angle);
 
     if (glow) {
-      ctx.globalAlpha = 0.28;
+      ctx.globalAlpha = 0.22;
       ctx.fillStyle = fallbackColor;
       ctx.beginPath();
-      ctx.arc(0, 0, size * 0.52, 0, Math.PI * 2);
+      ctx.arc(0, 0, size * 0.50, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1;
     }
@@ -183,23 +183,23 @@
     ctx.translate(bullet.x, bullet.y);
     ctx.rotate(bullet.rot || 0);
 
-    ctx.globalAlpha = 0.65;
+    ctx.globalAlpha = 0.50;
     ctx.fillStyle = '#08000d';
     ctx.beginPath();
-    ctx.ellipse(0, 0, size * 0.45, size * 0.22, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, size * 0.42, size * 0.20, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = 0.55;
+    ctx.globalAlpha = 0.45;
     ctx.fillStyle = '#36004f';
     ctx.beginPath();
-    ctx.ellipse(0, 0, size * 0.38, size * 0.17, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, size * 0.34, size * 0.15, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = 0.72;
+    ctx.globalAlpha = 0.62;
     ctx.strokeStyle = '#b45cff';
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.ellipse(0, 0, size * 0.48, size * 0.24, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, size * 0.46, size * 0.23, 0, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.globalAlpha = 1;
@@ -338,7 +338,7 @@
       if (effect.type === 'darkPower') drawDarkPower(ctx, effect, p);
       if (effect.type === 'darkAfterImage') drawDarkAfterImage(ctx, effect);
       if (effect.type === 'darkBurst') drawDarkBurst(ctx, effect);
-      if (effect.type === 'darkFireFlash') drawCircleFlash(ctx, effect, '#ff7a22', 62, 18);
+      if (effect.type === 'darkFireFlash') drawCircleFlash(ctx, effect, '#8b3cff', 50, 18);
 
       if (effect.type === 'shadowClone') drawShadowClone(ctx, effect, p);
       if (effect.type === 'healBreeze') drawHealBreeze(ctx, effect);
@@ -703,17 +703,17 @@
     const alpha = effect.timer / 18;
 
     ctx.save();
-    ctx.globalAlpha = alpha * 0.5;
+    ctx.globalAlpha = alpha * 0.38;
     ctx.strokeStyle = '#b45cff';
-    ctx.lineWidth = 7;
+    ctx.lineWidth = 5;
     ctx.beginPath();
-    ctx.arc(effect.x, effect.y, 92 * (1 - alpha * 0.35), 0, Math.PI * 2);
+    ctx.arc(effect.x, effect.y, 72 * (1 - alpha * 0.35), 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.globalAlpha = alpha * 0.22;
+    ctx.globalAlpha = alpha * 0.16;
     ctx.fillStyle = '#08000d';
     ctx.beginPath();
-    ctx.arc(effect.x, effect.y, 74 * (1 - alpha * 0.15), 0, Math.PI * 2);
+    ctx.arc(effect.x, effect.y, 54 * (1 - alpha * 0.15), 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
@@ -752,48 +752,78 @@
   }
 
   function drawDarkPower(ctx, effect, p){
-    const pulse = 1 + Math.sin(frame() * 0.16) * 0.075;
-    const wobble = Math.sin(frame() * 0.27) * 3;
+    const pulse = 1 + Math.sin(frame() * 0.16) * 0.055;
+    const wobble = Math.sin(frame() * 0.27) * 2;
 
     ctx.save();
 
-    ctx.globalAlpha = 0.18;
+    ctx.globalAlpha = 0.12;
     ctx.fillStyle = '#000000';
     ctx.beginPath();
-    ctx.ellipse(p.x, p.y - 8, 54 * pulse, 68 * pulse, wobble * 0.02, 0, Math.PI * 2);
+    ctx.ellipse(p.x, p.y - 8, 38 * pulse, 48 * pulse, wobble * 0.02, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = 0.25;
+    ctx.globalAlpha = 0.18;
     ctx.fillStyle = '#3a005a';
     ctx.beginPath();
-    ctx.ellipse(p.x, p.y - 8, 84 * pulse, 98 * pulse, wobble * 0.015, 0, 0, Math.PI * 2);
+    ctx.ellipse(p.x, p.y - 8, 52 * pulse, 62 * pulse, wobble * 0.015, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = 0.34;
+    ctx.globalAlpha = 0.28;
     ctx.strokeStyle = '#b45cff';
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.ellipse(p.x, p.y - 8, 90 * pulse, 104 * pulse, 0, 0, Math.PI * 2);
+    ctx.ellipse(p.x, p.y - 8, 58 * pulse, 68 * pulse, 0, 0, Math.PI * 2);
     ctx.stroke();
+
+    drawDarkOrbitBullets(ctx, p);
 
     ctx.restore();
     ctx.globalAlpha = 1;
   }
 
-  function drawDarkAfterImage(ctx, effect){
-    const alpha = effect.timer / 24;
+  function drawDarkOrbitBullets(ctx, p){
+    const image = img('atk/atkmaoh.png');
 
-    ctx.globalAlpha = alpha * 0.28;
+    for (let i = 0; i < 5; i++) {
+      const a = frame() * 0.045 + (Math.PI * 2 / 5) * i;
+      const r = 44 + Math.sin(frame() * 0.08 + i) * 6;
+      const x = p.x + Math.cos(a) * r;
+      const y = p.y - 12 + Math.sin(a) * r * 0.72;
+      const size = 18 + Math.sin(frame() * 0.13 + i) * 3;
+
+      ctx.save();
+      ctx.globalAlpha = 0.82;
+      ctx.translate(x, y);
+      ctx.rotate(a + Math.PI / 2);
+
+      if (imageReady(image)) {
+        ctx.drawImage(image, -size / 2, -size / 2, size, size);
+      } else {
+        ctx.fillStyle = '#8b3cff';
+        ctx.beginPath();
+        ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  function drawDarkAfterImage(ctx, effect){
+    const alpha = effect.timer / 18;
+
+    ctx.globalAlpha = alpha * 0.18;
     ctx.fillStyle = '#07000d';
     ctx.beginPath();
-    ctx.ellipse(effect.x, effect.y - 8, 34, 44, 0, 0, Math.PI * 2);
+    ctx.ellipse(effect.x, effect.y - 8, 26, 34, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = alpha * 0.28;
+    ctx.globalAlpha = alpha * 0.20;
     ctx.strokeStyle = '#b45cff';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.ellipse(effect.x, effect.y - 8, 38, 48, 0, 0, Math.PI * 2);
+    ctx.ellipse(effect.x, effect.y - 8, 30, 38, 0, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.globalAlpha = 1;
@@ -801,11 +831,11 @@
 
   function drawDarkBurst(ctx, effect){
     const alpha = effect.timer / 36;
-    const radius = 120 * (1 - alpha);
+    const radius = 100 * (1 - alpha);
 
-    ctx.globalAlpha = alpha * 0.55;
+    ctx.globalAlpha = alpha * 0.45;
     ctx.strokeStyle = '#b45cff';
-    ctx.lineWidth = 8;
+    ctx.lineWidth = 7;
     ctx.beginPath();
     ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
     ctx.stroke();
@@ -922,7 +952,7 @@
 
   function drawBookHero(ctx, effect){
     const image = img(effect.image || 'pet/pet hero.png');
-    const size = Number(effect.size || 72);
+    const size = Number(effect.size || 70);
     const pulse = 1 + Math.sin(frame() * 0.2) * 0.06;
     const angle = Math.atan2(Number(effect.vy || -1), Number(effect.vx || 0)) + Math.PI / 2;
 
@@ -930,17 +960,17 @@
     ctx.translate(effect.x, effect.y);
     ctx.rotate(angle);
 
-    ctx.globalAlpha = 0.32;
+    ctx.globalAlpha = 0.26;
     ctx.fillStyle = '#ffe66b';
     ctx.beginPath();
-    ctx.arc(0, 0, size * 0.62 * pulse, 0, Math.PI * 2);
+    ctx.arc(0, 0, size * 0.58 * pulse, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = 0.55;
+    ctx.globalAlpha = 0.48;
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.arc(0, 0, size * 0.48 * pulse, 0, Math.PI * 2);
+    ctx.arc(0, 0, size * 0.45 * pulse, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.globalAlpha = 1;
@@ -962,11 +992,11 @@
 
   function drawBookHeroSummon(ctx, effect){
     const alpha = effect.timer / 34;
-    const r = 96 * (1 - alpha * 0.35);
+    const r = 88 * (1 - alpha * 0.35);
 
     ctx.save();
 
-    ctx.globalAlpha = alpha * 0.55;
+    ctx.globalAlpha = alpha * 0.48;
     ctx.fillStyle = '#ffe66b';
     ctx.beginPath();
     ctx.arc(effect.x, effect.y, r, 0, Math.PI * 2);
@@ -974,7 +1004,7 @@
 
     ctx.globalAlpha = alpha;
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 7;
+    ctx.lineWidth = 6;
     ctx.beginPath();
     ctx.arc(effect.x, effect.y, r * 0.75, 0, Math.PI * 2);
     ctx.stroke();
