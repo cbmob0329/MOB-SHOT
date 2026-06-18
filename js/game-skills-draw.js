@@ -3,31 +3,12 @@
 (function(){
   const S = window.MobShotGameSkillsShared = window.MobShotGameSkillsShared || {};
 
-  function state(){
-    return S.gameState;
-  }
-
-  function effects(){
-    return S.skillEffects || [];
-  }
-
-  function bullets(){
-    return S.skillBullets || [];
-  }
-
-  function frame(){
-    return Number(S.frameCount || 0);
-  }
-
-  function img(src){
-    if (S.img) return S.img(src);
-    return null;
-  }
-
-  function imageReady(image){
-    if (S.imageReady) return S.imageReady(image);
-    return image && image.complete && image.naturalWidth > 0;
-  }
+  function state(){ return S.gameState; }
+  function effects(){ return S.skillEffects || []; }
+  function bullets(){ return S.skillBullets || []; }
+  function frame(){ return Number(S.frameCount || 0); }
+  function img(src){ return S.img ? S.img(src) : null; }
+  function imageReady(image){ return S.imageReady ? S.imageReady(image) : image && image.complete && image.naturalWidth > 0; }
 
   function draw(ctx){
     if (!state()) return;
@@ -37,28 +18,32 @@
       drawSkillBullet(ctx, bullet);
     }
 
-    drawDarkThunderStuck(ctx);
+    drawStuckDots(ctx);
     drawEffects(ctx);
   }
 
   function drawSkillBullet(ctx, bullet){
     let image = img(bullet.skill && bullet.skill.bulletImage);
 
-    if (
-      bullet.type === 'sisterBlue' ||
-      bullet.type === 'sisterYellow' ||
-      bullet.type === 'sisterRed'
-    ) {
+    if (bullet.type === 'sisterBlue' || bullet.type === 'sisterYellow' || bullet.type === 'sisterRed') {
       image = img('atk/atkriri.png');
     }
+
+    if (bullet.type === 'darkFire') image = img('atk/hinotama.png');
+    if (bullet.type === 'bookHero') image = img('pet/pet hero.png');
 
     let size = 34;
 
     if (bullet.type === 'rocket') size = 54;
-    if (bullet.type === 'twinMissile') size = 34;
+    if (bullet.type === 'energyRush') size = 32;
+    if (bullet.type === 'twinMissile') size = Number((bullet.skill && bullet.skill.bulletSize) || 44);
     if (bullet.type === 'rosePulse') size = 58;
     if (bullet.type === 'darkThunder') size = 44;
     if (bullet.type === 'darkAura') size = 76;
+    if (bullet.type === 'darkFire') size = 104;
+    if (bullet.type === 'neonBomb') size = Number((bullet.skill && bullet.skill.bulletSize) || 104);
+    if (bullet.type === 'neptuneAttack') size = Number((bullet.skill && bullet.skill.bulletSize) || 64);
+    if (bullet.type === 'miraPoison') size = 48;
     if (bullet.type === 'sisterRed') size = 38;
     if (bullet.type === 'sisterBlue' || bullet.type === 'sisterYellow') size = 28;
 
@@ -72,11 +57,31 @@
         bullet.type === 'twinMissile'
       )
     ) {
-      size *= 1.75;
+      size *= 1.55;
     }
 
     if (bullet.type === 'darkAura') {
       drawDarkAuraBullet(ctx, bullet, size);
+      return;
+    }
+
+    if (bullet.type === 'neonBomb') {
+      drawNeonBombBullet(ctx, bullet, size, image);
+      return;
+    }
+
+    if (bullet.type === 'neptuneAttack') {
+      drawRotatedBullet(ctx, bullet, image, size, '#6be6ff');
+      return;
+    }
+
+    if (bullet.type === 'miraPoison') {
+      drawRotatedBullet(ctx, bullet, image, size, '#a6ff5c');
+      return;
+    }
+
+    if (bullet.type === 'darkFire') {
+      drawRotatedBullet(ctx, bullet, image, size, '#ff7a22', true);
       return;
     }
 
@@ -103,6 +108,74 @@
       ctx.arc(bullet.x, bullet.y, bullet.r, 0, Math.PI * 2);
       ctx.fill();
     }
+  }
+
+  function drawRotatedBullet(ctx, bullet, image, size, fallbackColor, glow){
+    const angle = Math.atan2(Number(bullet.vy || -1), Number(bullet.vx || 0)) + Math.PI / 2;
+
+    ctx.save();
+    ctx.translate(bullet.x, bullet.y);
+    ctx.rotate(angle);
+
+    if (glow) {
+      ctx.globalAlpha = 0.28;
+      ctx.fillStyle = fallbackColor;
+      ctx.beginPath();
+      ctx.arc(0, 0, size * 0.52, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    if (imageReady(image)) {
+      ctx.drawImage(image, -size / 2, -size / 2, size, size);
+    } else {
+      ctx.fillStyle = fallbackColor;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, size * 0.28, size * 0.48, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawNeonBombBullet(ctx, bullet, size, image){
+    const pulse = 1 + Math.sin(frame() * 0.18) * 0.08;
+    const rot = Math.sin(frame() * 0.08) * 0.22;
+
+    ctx.save();
+    ctx.translate(bullet.x, bullet.y);
+    ctx.rotate(rot);
+
+    ctx.globalAlpha = 0.28;
+    ctx.fillStyle = '#ff3ff2';
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.62 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = '#37e8ff';
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.48 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 1;
+
+    if (imageReady(image)) {
+      ctx.drawImage(image, -size / 2, -size / 2, size, size);
+    } else {
+      ctx.fillStyle = '#ff3ff2';
+      ctx.strokeStyle = '#37e8ff';
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.arc(0, 0, size * 0.42, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    ctx.restore();
   }
 
   function drawDarkAuraBullet(ctx, bullet, size){
@@ -133,32 +206,76 @@
     ctx.restore();
   }
 
-  function drawDarkThunderStuck(ctx){
+  function drawStuckDots(ctx){
     if (!state()) return;
 
     state().entities.forEach(e => {
-      if (!e.__darkDot || e.dead) return;
+      if (e.dead) return;
 
-      const image = img('atk/blackrai.png');
-      const size = 38 + Math.sin(frame() * 0.5) * 4;
-
-      ctx.save();
-
-      if (imageReady(image)) {
-        ctx.drawImage(image, e.x - size / 2, e.y - size / 2, size, size);
-      } else {
-        ctx.strokeStyle = '#b45cff';
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.moveTo(e.x, e.y - 24);
-        ctx.lineTo(e.x - 10, e.y);
-        ctx.lineTo(e.x + 12, e.y - 4);
-        ctx.lineTo(e.x, e.y + 24);
-        ctx.stroke();
-      }
-
-      ctx.restore();
+      if (e.__darkDot) drawDotIcon(ctx, e, 'atk/blackrai.png', '#b45cff', 38);
+      if (e.__miraPoison) drawPoisonStuck(ctx, e);
+      if (e.__neonBurn) drawNeonStuck(ctx, e);
     });
+  }
+
+  function drawDotIcon(ctx, e, src, color, baseSize){
+    const image = img(src);
+    const size = baseSize + Math.sin(frame() * 0.5) * 4;
+
+    ctx.save();
+
+    if (imageReady(image)) {
+      ctx.drawImage(image, e.x - size / 2, e.y - size / 2, size, size);
+    } else {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(e.x, e.y - 24);
+      ctx.lineTo(e.x - 10, e.y);
+      ctx.lineTo(e.x + 12, e.y - 4);
+      ctx.lineTo(e.x, e.y + 24);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawPoisonStuck(ctx, e){
+    const size = 34 + Math.sin(frame() * 0.35) * 4;
+
+    ctx.save();
+    ctx.globalAlpha = 0.75;
+    ctx.strokeStyle = '#a6ff5c';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, size, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.globalAlpha = 0.28;
+    ctx.fillStyle = '#6dff6d';
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, size * 0.65, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawNeonStuck(ctx, e){
+    const size = 40 + Math.sin(frame() * 0.4) * 6;
+
+    ctx.save();
+    ctx.globalAlpha = 0.8;
+    ctx.strokeStyle = '#ff3ff2';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, size, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#37e8ff';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, size * 0.72, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
   }
 
   function drawEffects(ctx){
@@ -170,7 +287,6 @@
     effects().forEach(effect => {
       if (effect.type === 'timeMagic') {
         const alpha = Math.min(0.78, 0.35 + (effect.timer / effect.total) * 0.25);
-
         ctx.save();
         ctx.globalAlpha = alpha;
         ctx.fillStyle = '#ffffff';
@@ -181,205 +297,146 @@
         ctx.restore();
       }
 
-      if (effect.type === 'blackHole') {
-        drawBlackHole(ctx, effect);
-      }
+      if (effect.type === 'blackHole') drawBlackHole(ctx, effect);
+      if (effect.type === 'goldRush') drawGoldRushCounter(ctx, effect);
+      if (effect.type === 'explosion') drawExplosion(ctx, effect);
+      if (effect.type === 'smallExplosion') drawSmallExplosion(ctx, effect);
+      if (effect.type === 'neonExplosion') drawNeonExplosion(ctx, effect);
 
-      if (effect.type === 'blackHoleDamage') {
-        const alpha = effect.timer / 18;
-
-        ctx.globalAlpha = alpha;
-        ctx.font = '900 18px system-ui';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#ffffff';
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 5;
-        ctx.strokeText('-1', effect.x, effect.y - (1 - alpha) * 20);
-        ctx.fillText('-1', effect.x, effect.y - (1 - alpha) * 20);
-        ctx.globalAlpha = 1;
-      }
-
-      if (effect.type === 'goldRush') {
-        drawGoldRushCounter(ctx, effect);
-      }
-
-      if (effect.type === 'smoke') {
-        const alpha = Math.max(0, effect.timer / 20);
-
-        ctx.globalAlpha = alpha * 0.38;
-        ctx.fillStyle = '#777';
-        ctx.beginPath();
-        ctx.arc(effect.x, effect.y, effect.radius * (1.2 - alpha * .2), 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
-
-      if (effect.type === 'muzzleFlash') {
-        const alpha = effect.timer / 16;
-
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = '#9deeff';
-        ctx.beginPath();
-        ctx.arc(effect.x, effect.y, 34 * alpha, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
+      if (effect.type === 'blackHoleDamage') drawDamageText(ctx, effect, '-1', '#ffffff', 18, 18);
+      if (effect.type === 'smoke') drawSmoke(ctx, effect);
+      if (effect.type === 'muzzleFlash') drawCircleFlash(ctx, effect, '#9deeff', 34, 16);
 
       if (
         effect.type === 'energyHit' ||
         effect.type === 'roseHit' ||
         effect.type === 'darkThunderHit' ||
         effect.type === 'dotHit' ||
-        effect.type === 'darkHit'
+        effect.type === 'darkHit' ||
+        effect.type === 'darkFireHit' ||
+        effect.type === 'neonHit' ||
+        effect.type === 'neptuneHit' ||
+        effect.type === 'miraPoisonHit' ||
+        effect.type === 'miraPoisonSpark' ||
+        effect.type === 'bookHeroHit' ||
+        effect.type === 'bookHeroSpark'
       ) {
-        const alpha = effect.timer / 20;
-
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle =
-          effect.type === 'roseHit' ? '#ff8cff' :
-          effect.type === 'darkHit' ||
-          effect.type === 'darkThunderHit' ||
-          effect.type === 'dotHit' ? '#b45cff' :
-          '#9deeff';
-
-        ctx.beginPath();
-        ctx.arc(effect.x, effect.y, 42 * (1 - alpha + .25), 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
+        drawHitEffect(ctx, effect);
       }
 
-      if (effect.type === 'darkSpark') {
-        const alpha = effect.timer / 10;
+      if (effect.type === 'darkSpark') drawDarkSpark(ctx, effect);
+      if (effect.type === 'darkAuraPulse') drawDarkAuraPulse(ctx, effect);
 
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.strokeStyle = '#c04fff';
-        ctx.lineWidth = 3;
-
-        for (let i = 0; i < 5; i++) {
-          const a = (Math.PI * 2 / 5) * i + frame() * 0.35;
-
-          ctx.beginPath();
-          ctx.moveTo(effect.x, effect.y);
-          ctx.lineTo(
-            effect.x + Math.cos(a) * 24,
-            effect.y + Math.sin(a) * 24
-          );
-          ctx.stroke();
-        }
-
-        ctx.restore();
-      }
-
-      if (effect.type === 'darkAuraPulse') {
-        const alpha = effect.timer / 18;
-
-        ctx.save();
-
-        ctx.globalAlpha = alpha * 0.5;
-        ctx.strokeStyle = '#b45cff';
-        ctx.lineWidth = 7;
-        ctx.beginPath();
-        ctx.arc(effect.x, effect.y, 92 * (1 - alpha * 0.35), 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.globalAlpha = alpha * 0.22;
-        ctx.fillStyle = '#08000d';
-        ctx.beginPath();
-        ctx.arc(effect.x, effect.y, 74 * (1 - alpha * 0.15), 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
-      }
-
-      if (effect.type === 'explosion') {
-        drawExplosion(ctx, effect);
-      }
-
-      if (effect.type === 'smallExplosion') {
-        drawSmallExplosion(ctx, effect);
-      }
-
-      if (
-        effect.type === 'boomText' ||
-        effect.type === 'skillText' ||
-        effect.type === 'healNumber'
-      ) {
+      if (effect.type === 'boomText' || effect.type === 'skillText' || effect.type === 'healNumber') {
         drawFloatingText(ctx, effect);
       }
 
-      if (effect.type === 'thunderFall') {
-        drawThunderFall(ctx, effect);
-      }
+      if (effect.type === 'thunderFall') drawThunderFall(ctx, effect);
+      if (effect.type === 'thunderImpact') drawThunderImpact(ctx, effect);
 
-      if (effect.type === 'thunderImpact') {
-        drawThunderImpact(ctx, effect);
-      }
+      if (effect.type === 'arcaneBarrier') drawArcaneBarrier(ctx, effect, p);
+      if (effect.type === 'darkPower') drawDarkPower(ctx, effect, p);
+      if (effect.type === 'darkAfterImage') drawDarkAfterImage(ctx, effect);
+      if (effect.type === 'darkBurst') drawDarkBurst(ctx, effect);
+      if (effect.type === 'darkFireFlash') drawCircleFlash(ctx, effect, '#ff7a22', 62, 18);
 
-      if (effect.type === 'arcaneBarrier') {
-        drawArcaneBarrier(ctx, effect, p);
-      }
+      if (effect.type === 'shadowClone') drawShadowClone(ctx, effect, p);
+      if (effect.type === 'healBreeze') drawHealBreeze(ctx, effect);
+      if (effect.type === 'goldRushBurst') drawGoldRushBurst(ctx, effect);
+      if (effect.type === 'darkThunderFlash') drawCircleStroke(ctx, effect, '#b45cff', 72, 20);
 
-      if (effect.type === 'darkPower') {
-        drawDarkPower(ctx, effect, p);
-      }
+      if (effect.type === 'lilithSisters') drawLilithSisters(ctx, effect);
+      if (effect.type === 'whiteHealMini') drawCircleFlash(ctx, effect, '#ffffff', 26, 16);
 
-      if (effect.type === 'darkAfterImage') {
-        drawDarkAfterImage(ctx, effect);
-      }
-
-      if (effect.type === 'darkBurst') {
-        const alpha = effect.timer / 36;
-        const radius = 120 * (1 - alpha);
-
-        ctx.globalAlpha = alpha * 0.55;
-        ctx.strokeStyle = '#b45cff';
-        ctx.lineWidth = 8;
-        ctx.beginPath();
-        ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-      }
-
-      if (effect.type === 'shadowClone') {
-        drawShadowClone(ctx, effect, p);
-      }
-
-      if (effect.type === 'healBreeze') {
-        drawHealBreeze(ctx, effect);
-      }
-
-      if (effect.type === 'goldRushBurst') {
-        drawGoldRushBurst(ctx, effect);
-      }
-
-      if (effect.type === 'darkThunderFlash') {
-        const alpha = effect.timer / 20;
-
-        ctx.globalAlpha = alpha * 0.8;
-        ctx.strokeStyle = '#b45cff';
-        ctx.lineWidth = 7;
-        ctx.beginPath();
-        ctx.arc(effect.x, effect.y, 72 * (1 - alpha * 0.4), 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-      }
-
-      if (effect.type === 'lilithSisters') {
-        drawLilithSisters(ctx, effect);
-      }
-
-      if (effect.type === 'whiteHealMini') {
-        const alpha = effect.timer / 16;
-
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(effect.x, effect.y, 26 * (1 - alpha * 0.4), 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
+      if (effect.type === 'neptuneFlash') drawCircleFlash(ctx, effect, '#6be6ff', 64, 22);
+      if (effect.type === 'miraPoisonFlash') drawCircleFlash(ctx, effect, '#a6ff5c', 58, 20);
+      if (effect.type === 'bookHero') drawBookHero(ctx, effect);
+      if (effect.type === 'bookHeroSummon') drawBookHeroSummon(ctx, effect);
     });
+  }
+
+  function drawHitEffect(ctx, effect){
+    const max =
+      effect.type === 'bookHeroSpark' ? 12 :
+      effect.type === 'miraPoisonSpark' ? 14 :
+      20;
+
+    const alpha = effect.timer / max;
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    ctx.fillStyle =
+      effect.type === 'roseHit' ? '#ff8cff' :
+      effect.type === 'darkHit' || effect.type === 'darkThunderHit' || effect.type === 'dotHit' || effect.type === 'darkFireHit' ? '#b45cff' :
+      effect.type === 'neonHit' ? '#ff3ff2' :
+      effect.type === 'neptuneHit' ? '#6be6ff' :
+      effect.type === 'miraPoisonHit' || effect.type === 'miraPoisonSpark' ? '#a6ff5c' :
+      effect.type === 'bookHeroHit' || effect.type === 'bookHeroSpark' ? '#ffe66b' :
+      '#9deeff';
+
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, 42 * (1 - alpha + .25), 0, Math.PI * 2);
+    ctx.fill();
+
+    if (effect.type === 'neonHit') {
+      ctx.strokeStyle = '#37e8ff';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(effect.x, effect.y, 54 * (1 - alpha * 0.45), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawSmoke(ctx, effect){
+    const alpha = Math.max(0, effect.timer / 20);
+    ctx.globalAlpha = alpha * 0.38;
+    ctx.fillStyle = '#777';
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, effect.radius * (1.2 - alpha * .2), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  function drawCircleFlash(ctx, effect, color, radius, maxTimer){
+    const alpha = effect.timer / maxTimer;
+
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.75;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, radius * (1 - alpha * 0.4), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCircleStroke(ctx, effect, color, radius, maxTimer){
+    const alpha = effect.timer / maxTimer;
+
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.8;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, radius * (1 - alpha * 0.4), 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawDamageText(ctx, effect, text, color, fontSize, maxTimer){
+    const alpha = effect.timer / maxTimer;
+
+    ctx.globalAlpha = alpha;
+    ctx.font = `900 ${fontSize}px system-ui`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = color;
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 5;
+    ctx.strokeText(text, effect.x, effect.y - (1 - alpha) * 20);
+    ctx.fillText(text, effect.x, effect.y - (1 - alpha) * 20);
+    ctx.globalAlpha = 1;
   }
 
   function drawBlackHole(ctx, effect){
@@ -420,27 +477,37 @@
 
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = '#ffcf5b';
-
-    if (ctx.roundRect) {
-      ctx.beginPath();
-      ctx.roundRect(-104, -28, 208, 48, 18);
-      ctx.fill();
-    } else {
-      ctx.fillRect(-104, -28, 208, 48);
-    }
+    roundedRect(ctx, -118, -30, 236, 52, 18);
+    ctx.fill();
 
     ctx.globalAlpha = 1;
-    ctx.font = '900 26px system-ui';
+    ctx.font = '900 24px system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 8;
     ctx.fillStyle = '#ffd93d';
 
-    ctx.strokeText(`RUSH中!! ${sec}`, 0, 0);
-    ctx.fillText(`RUSH中!! ${sec}`, 0, 0);
+    ctx.strokeText(`RUSH ×${Number(effect.multiplier || 1).toFixed(1)} ${sec}`, 0, 0);
+    ctx.fillText(`RUSH ×${Number(effect.multiplier || 1).toFixed(1)} ${sec}`, 0, 0);
 
     ctx.restore();
+  }
+
+  function roundedRect(ctx, x, y, w, h, r){
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, r);
+      return;
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
   }
 
   function drawExplosion(ctx, effect){
@@ -476,7 +543,7 @@
   }
 
   function drawSmallExplosion(ctx, effect){
-    const alpha = effect.timer / 18;
+    const alpha = effect.timer / 20;
 
     ctx.globalAlpha = alpha * 0.75;
     ctx.fillStyle = '#ffb02e';
@@ -494,9 +561,52 @@
     ctx.globalAlpha = 1;
   }
 
+  function drawNeonExplosion(ctx, effect){
+    const alpha = Math.max(0, effect.timer / 44);
+    const grow = 1 - alpha;
+
+    ctx.save();
+
+    ctx.globalAlpha = alpha * 0.28;
+    ctx.fillStyle = '#ff3ff2';
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, effect.radius * (.70 + grow * .20), 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = alpha * 0.34;
+    ctx.fillStyle = '#37e8ff';
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, effect.radius * (.48 + grow * .18), 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = alpha * 0.68;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, effect.radius * (.22 + grow * .70), 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.globalAlpha = alpha * 0.95;
+    ctx.strokeStyle = '#ff3ff2';
+    ctx.lineWidth = 5;
+
+    for (let i = 0; i < 12; i++) {
+      const a = (Math.PI * 2 / 12) * i + frame() * 0.08;
+      ctx.beginPath();
+      ctx.moveTo(effect.x, effect.y);
+      ctx.lineTo(
+        effect.x + Math.cos(a) * effect.radius * (0.35 + grow * 0.65),
+        effect.y + Math.sin(a) * effect.radius * (0.35 + grow * 0.65)
+      );
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
   function drawFloatingText(ctx, effect){
     const max =
-      effect.type === 'boomText' ? 34 :
+      effect.type === 'boomText' ? 44 :
       effect.type === 'healNumber' ? 56 :
       42;
 
@@ -541,13 +651,8 @@
 
     ctx.globalAlpha = 1;
 
-    if (
-      effect.timer <= 1 &&
-      window.MobShotGameSkillsShared &&
-      window.MobShotGameSkillsShared.FX &&
-      window.MobShotGameSkillsShared.FX.thunderImpact
-    ) {
-      window.MobShotGameSkillsShared.FX.thunderImpact(effect);
+    if (effect.timer <= 1 && S.FX && S.FX.thunderImpact) {
+      S.FX.thunderImpact(effect);
     }
   }
 
@@ -566,7 +671,6 @@
 
     for (let i = 0; i < 6; i++) {
       const a = (Math.PI * 2 / 6) * i + frame() * 0.08;
-
       ctx.beginPath();
       ctx.moveTo(effect.x, effect.y);
       ctx.lineTo(effect.x + Math.cos(a) * 62, effect.y + Math.sin(a) * 62);
@@ -576,13 +680,50 @@
     ctx.globalAlpha = 1;
   }
 
+  function drawDarkSpark(ctx, effect){
+    const alpha = effect.timer / 10;
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = '#c04fff';
+    ctx.lineWidth = 3;
+
+    for (let i = 0; i < 5; i++) {
+      const a = (Math.PI * 2 / 5) * i + frame() * 0.35;
+      ctx.beginPath();
+      ctx.moveTo(effect.x, effect.y);
+      ctx.lineTo(effect.x + Math.cos(a) * 24, effect.y + Math.sin(a) * 24);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawDarkAuraPulse(ctx, effect){
+    const alpha = effect.timer / 18;
+
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.5;
+    ctx.strokeStyle = '#b45cff';
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, 92 * (1 - alpha * 0.35), 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.globalAlpha = alpha * 0.22;
+    ctx.fillStyle = '#08000d';
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, 74 * (1 - alpha * 0.15), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   function drawArcaneBarrier(ctx, effect, p){
     const r1 = 72 + Math.sin(frame() * 0.12) * 4;
     const r2 = 88 + Math.cos(frame() * 0.1) * 4;
     const r3 = 104 + Math.sin(frame() * 0.18) * 5;
 
     ctx.save();
-
     ctx.globalAlpha = 0.34;
     ctx.fillStyle = '#dff9ff';
     ctx.beginPath();
@@ -601,39 +742,9 @@
 
     for (let i = 0; i < 12; i++) {
       const a = effect.rot + (Math.PI * 2 / 12) * i;
-
       ctx.beginPath();
       ctx.moveTo(p.x + Math.cos(a) * (r1 - 8), p.y + Math.sin(a) * (r1 - 8));
       ctx.lineTo(p.x + Math.cos(a) * (r2 + 8), p.y + Math.sin(a) * (r2 + 8));
-      ctx.stroke();
-    }
-
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 3;
-
-    for (let i = 0; i < 9; i++) {
-      const a = effect.rot2 + (Math.PI * 2 / 9) * i;
-
-      ctx.beginPath();
-      ctx.arc(
-        p.x + Math.cos(a) * r1,
-        p.y + Math.sin(a) * r1,
-        9 + Math.sin(frame() * 0.2 + i) * 2,
-        0,
-        Math.PI * 2
-      );
-      ctx.stroke();
-    }
-
-    ctx.strokeStyle = '#60d9ff';
-    ctx.lineWidth = 3;
-
-    for (let i = 0; i < 8; i++) {
-      const a = effect.rot3 + (Math.PI * 2 / 8) * i;
-
-      ctx.beginPath();
-      ctx.moveTo(p.x + Math.cos(a) * 48, p.y + Math.sin(a) * 48);
-      ctx.lineTo(p.x + Math.cos(a + .18) * 88, p.y + Math.sin(a + .18) * 88);
       ctx.stroke();
     }
 
@@ -652,16 +763,10 @@
     ctx.ellipse(p.x, p.y - 8, 54 * pulse, 68 * pulse, wobble * 0.02, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = 0.22;
-    ctx.fillStyle = '#17001f';
-    ctx.beginPath();
-    ctx.ellipse(p.x, p.y - 8, 68 * pulse, 82 * pulse, -wobble * 0.018, 0, Math.PI * 2);
-    ctx.fill();
-
     ctx.globalAlpha = 0.25;
     ctx.fillStyle = '#3a005a';
     ctx.beginPath();
-    ctx.ellipse(p.x, p.y - 8, 84 * pulse, 98 * pulse, wobble * 0.015, 0, Math.PI * 2);
+    ctx.ellipse(p.x, p.y - 8, 84 * pulse, 98 * pulse, wobble * 0.015, 0, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.globalAlpha = 0.34;
@@ -670,33 +775,6 @@
     ctx.beginPath();
     ctx.ellipse(p.x, p.y - 8, 90 * pulse, 104 * pulse, 0, 0, Math.PI * 2);
     ctx.stroke();
-
-    ctx.globalAlpha = 0.24;
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.ellipse(p.x, p.y - 8, 72 * pulse, 86 * pulse, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    for (let i = 0; i < 8; i++) {
-      const a = frame() * 0.08 + (Math.PI * 2 / 8) * i;
-      const r = 84 + Math.sin(frame() * 0.16 + i) * 12;
-
-      ctx.globalAlpha = 0.26;
-      ctx.strokeStyle = '#5b008c';
-      ctx.lineWidth = 4;
-
-      ctx.beginPath();
-      ctx.moveTo(
-        p.x + Math.cos(a) * 42,
-        p.y - 8 + Math.sin(a) * 48
-      );
-      ctx.lineTo(
-        p.x + Math.cos(a) * r,
-        p.y - 8 + Math.sin(a) * r
-      );
-      ctx.stroke();
-    }
 
     ctx.restore();
     ctx.globalAlpha = 1;
@@ -718,6 +796,19 @@
     ctx.ellipse(effect.x, effect.y - 8, 38, 48, 0, 0, Math.PI * 2);
     ctx.stroke();
 
+    ctx.globalAlpha = 1;
+  }
+
+  function drawDarkBurst(ctx, effect){
+    const alpha = effect.timer / 36;
+    const radius = 120 * (1 - alpha);
+
+    ctx.globalAlpha = alpha * 0.55;
+    ctx.strokeStyle = '#b45cff';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.globalAlpha = 1;
   }
 
@@ -747,12 +838,13 @@
   function drawHealBreeze(ctx, effect){
     ctx.save();
 
-    const alpha = effect.timer / 70;
+    const alpha = Math.min(1, effect.timer / Math.max(1, effect.total || 600));
+    const pulse = 1 + Math.sin(frame() * 0.16) * 0.05;
 
-    ctx.globalAlpha = alpha * 0.38;
+    ctx.globalAlpha = 0.24 + alpha * 0.18;
     ctx.fillStyle = '#9dff73';
     ctx.beginPath();
-    ctx.arc(effect.x, effect.y, 92 * (1 - alpha * 0.25), 0, Math.PI * 2);
+    ctx.arc(effect.x, effect.y, 96 * pulse, 0, Math.PI * 2);
     ctx.fill();
 
     effect.leaves.forEach(l => {
@@ -828,10 +920,72 @@
     });
   }
 
+  function drawBookHero(ctx, effect){
+    const image = img(effect.image || 'pet/pet hero.png');
+    const size = Number(effect.size || 72);
+    const pulse = 1 + Math.sin(frame() * 0.2) * 0.06;
+    const angle = Math.atan2(Number(effect.vy || -1), Number(effect.vx || 0)) + Math.PI / 2;
+
+    ctx.save();
+    ctx.translate(effect.x, effect.y);
+    ctx.rotate(angle);
+
+    ctx.globalAlpha = 0.32;
+    ctx.fillStyle = '#ffe66b';
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.62 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.55;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.48 * pulse, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.globalAlpha = 1;
+
+    if (imageReady(image)) {
+      ctx.drawImage(image, -size / 2, -size / 2, size, size);
+    } else {
+      ctx.fillStyle = '#ffe66b';
+      ctx.strokeStyle = '#7a4300';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(0, 0, size * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawBookHeroSummon(ctx, effect){
+    const alpha = effect.timer / 34;
+    const r = 96 * (1 - alpha * 0.35);
+
+    ctx.save();
+
+    ctx.globalAlpha = alpha * 0.55;
+    ctx.fillStyle = '#ffe66b';
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, r * 0.75, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
   S.Draw = {
     draw,
     drawSkillBullet,
     drawEffects,
-    drawDarkThunderStuck
+    drawDarkThunderStuck: drawStuckDots
   };
 })();
