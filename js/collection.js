@@ -16,7 +16,9 @@
     { key:'mid', name:'MID BOSS', label:'MOB SHOT MID BOSS' },
     { key:'boss', name:'BOSS', label:'MOB SHOT BOSS' },
     { key:'artist', name:'ARTIST', label:'MOB ARTIST' },
-    { key:'sp', name:'BOSS SP', label:'MOB SHOT BOSS SP' }
+    { key:'sp', name:'BOSS SP', label:'MOB SHOT BOSS SP' },
+    { key:'pet', name:'PET', label:'MOB PET' },
+    { key:'event', name:'EVENT', label:'MOB EVENT' }
   ];
 
   let currentCategory = 'all';
@@ -55,6 +57,8 @@
     if (stone.category === 'MOB SHOT BOSS') return 'boss';
     if (stone.category === 'MOB ARTIST') return 'artist';
     if (stone.category === 'MOB SHOT BOSS SP') return 'sp';
+    if (stone.category === 'MOB PET') return 'pet';
+    if (stone.category === 'MOB EVENT') return 'event';
 
     return 'enemy';
   }
@@ -115,7 +119,7 @@
 
     state.display = state.display.map(no => {
       const n = Number(no || 0);
-      return n >= 1 && n <= 85 ? n : null;
+      return n >= 1 && n <= 107 ? n : null;
     });
 
     return state;
@@ -178,7 +182,8 @@
       score:0,
       coin:0,
       hp:0,
-      power:0
+      power:0,
+      range:0
     };
 
     allStones().forEach(stone => {
@@ -189,14 +194,39 @@
       const plus = Number(data.plus || 0);
       const key = categoryKey(stone);
 
-      if (key === 'enemy') bonus.score += plus * 0.001;
-      if (key === 'mid') bonus.coin += plus * 0.001;
-      if (key === 'boss') bonus.hp += plus;
+      if (key === 'enemy') {
+        bonus.score += plus * 0.001;
+      }
+
+      if (key === 'mid') {
+        bonus.coin += plus * 0.001;
+      }
+
+      if (key === 'boss') {
+        bonus.hp += plus;
+      }
+
       if (key === 'artist') {
         bonus.score += plus * 0.0007;
         bonus.coin += plus * 0.0007;
       }
-      if (key === 'sp') bonus.power += plus * 0.01;
+
+      if (key === 'sp') {
+        bonus.power += plus * 0.01;
+      }
+
+      if (key === 'pet') {
+        bonus.range += plus * 0.001;
+      }
+
+      if (key === 'event') {
+        if (stone.rarity === 'UR') {
+          bonus.power += plus * 0.05;
+          bonus.range += plus * 0.0005;
+        } else {
+          bonus.hp += plus * 5;
+        }
+      }
     });
 
     return bonus;
@@ -501,7 +531,8 @@
       `効果: SCORE +${Math.floor(bonus.score * 1000) / 10}% / ` +
       `COIN +${Math.floor(bonus.coin * 1000) / 10}% / ` +
       `LIFE +${Math.floor(bonus.hp)} / ` +
-      `POWER +${Math.floor(bonus.power * 100) / 100}` +
+      `POWER +${Math.floor(bonus.power * 100) / 100} / ` +
+      `RANGE +${Math.floor(bonus.range * 1000) / 10}%` +
       `<div class="collection-rarity-row">
         ${['R','SR','SSR','UR'].map(rarity => `
           <div class="collection-rarity-pill">
