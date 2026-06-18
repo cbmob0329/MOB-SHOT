@@ -4,11 +4,11 @@
   const BATTLE_REWARD_COIN = 1000;
   const WIN_NEED = 3;
 
-  const ASSET = {
+  const FALLBACK_ASSET = {
     bg:'sta/backsougen.png',
     bullet:'mt/atk.png',
-    chest:'mt/takara.png',
-    obstacle:'mt/iwa.png'
+    chest:'gimi/takagin.png',
+    obstacle:'gimi/gimihako.png'
   };
 
   let canvas = null;
@@ -84,6 +84,78 @@
   function intRand(a,b){ return Math.floor(rand(a, b + 1)); }
   function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
 
+  function getCurrentStageInfo(){
+    if (window.MobShotStorage && window.MobShotStorage.getCurrentStage) {
+      return window.MobShotStorage.getCurrentStage();
+    }
+
+    if (window.MOBSHOT_DATA && window.MOBSHOT_DATA.stage) {
+      return window.MOBSHOT_DATA.stage;
+    }
+
+    return { areaKey:'grass', background:FALLBACK_ASSET.bg };
+  }
+
+  function getCurrentAreaData(){
+    const info = getCurrentStageInfo();
+    const key = info.areaKey || 'grass';
+
+    if (window.MOBSHOT_STAGE_DATA && window.MOBSHOT_STAGE_DATA[key]) {
+      return window.MOBSHOT_STAGE_DATA[key];
+    }
+
+    if (window.MOBSHOT_STAGE_DATA && window.MOBSHOT_STAGE_DATA.grass) {
+      return window.MOBSHOT_STAGE_DATA.grass;
+    }
+
+    return null;
+  }
+
+  function getBattleBackground(){
+    const info = getCurrentStageInfo();
+    const area = getCurrentAreaData();
+
+    return (
+      info.background ||
+      (window.MOBSHOT_DATA && window.MOBSHOT_DATA.stage && window.MOBSHOT_DATA.stage.background) ||
+      (area && area.background) ||
+      FALLBACK_ASSET.bg
+    );
+  }
+
+  function getBattleChests(){
+    if (window.MOBSHOT_DATA && Array.isArray(window.MOBSHOT_DATA.chests) && window.MOBSHOT_DATA.chests.length) {
+      return window.MOBSHOT_DATA.chests;
+    }
+
+    return [
+      { name:'銀の宝箱', image:'gimi/takagin.png', hp:10, score:80, coinMin:10, coinMax:25 },
+      { name:'金の宝箱', image:'gimi/takagol.png', hp:18, score:160, coinMin:25, coinMax:60 }
+    ];
+  }
+
+  function getBattleGimmicks(){
+    if (window.MOBSHOT_DATA && Array.isArray(window.MOBSHOT_DATA.gimmicks) && window.MOBSHOT_DATA.gimmicks.length) {
+      return window.MOBSHOT_DATA.gimmicks;
+    }
+
+    const area = getCurrentAreaData();
+
+    if (area && Array.isArray(area.gimmicks) && area.gimmicks.length) {
+      return area.gimmicks;
+    }
+
+    return [
+      { name:'木箱', image:'gimi/gimihako.png', hp:5, score:10, coinMin:1, coinMax:2 },
+      { name:'丸岩', image:'gimi/gimiiwa.png', hp:12, score:20, coinMin:2, coinMax:4 }
+    ];
+  }
+
+  function pickFrom(list){
+    if (!Array.isArray(list) || !list.length) return null;
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
   function ensureScreen(){
     let screen = $('battleScreen');
     const app = $('app') || document.body;
@@ -118,9 +190,7 @@
         height:100svh!important;
       }
 
-      #battleScreen.active{
-        display:block!important;
-      }
+      #battleScreen.active{display:block!important}
 
       #battleCanvas{
         position:absolute!important;
@@ -179,8 +249,7 @@
         line-height:1.55!important;
       }
 
-      .battle-actions,
-      .battle-small{
+      .battle-actions,.battle-small{
         display:grid!important;
         grid-template-columns:1fr 1fr!important;
         gap:10px!important;
@@ -230,10 +299,7 @@
         margin:0 auto 4px!important;
       }
 
-      #battleTitleLayer,
-      #battleSelectLayer,
-      #battleHud,
-      #battleBanner{
+      #battleTitleLayer,#battleSelectLayer,#battleHud,#battleBanner{
         display:none!important;
       }
     `;
@@ -325,9 +391,7 @@
   function open(){
     initCanvas();
 
-    document.querySelectorAll('.screen').forEach(s => {
-      s.classList.remove('active');
-    });
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
 
     const screen = $('battleScreen');
     if (screen) screen.classList.add('active');
@@ -358,12 +422,18 @@
       return;
     }
 
-    document.querySelectorAll('.screen').forEach(s => {
-      s.classList.remove('active');
-    });
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
 
     const main = $('mainScreen') || $('mainView');
     if (main) main.classList.add('active');
+  }
+
+  function avatarName(a){
+    return a.displayName || a.avatarName || a.title || a.label || a.name || 'アバター';
+  }
+
+  function avatarBackImage(a){
+    return a.backImage || a.stageImage || a.stageBackImage || a.playImage || a.gameImage || '';
   }
 
   function loadChoices(){
@@ -371,23 +441,23 @@
 
     if (window.MobShotEquip && window.MobShotEquip.getOwnedAvatars) {
       window.MobShotEquip.getOwnedAvatars().forEach(a => {
-        const backImage = a.backImage || a.stageImage || a.playImage || '';
-
+        const backImage = avatarBackImage(a);
         if (!backImage) return;
 
         list.push({
           type:'avatar',
-          name:a.name || 'AVATAR',
+          name:avatarName(a),
           image:backImage
         });
       });
     }
 
     if (!list.length) {
-      list.push(
-        { type:'avatar', name:'PINK', image:'play/playpink.png' },
-        { type:'avatar', name:'GREEN', image:'play/green.png' }
-      );
+      list.push({
+        type:'avatar',
+        name:'PINK',
+        image:'play/playpink.png'
+      });
     }
 
     state.choices = list;
@@ -621,10 +691,13 @@
     state.spawnCd = intRand(90, 150);
 
     const isChest = Math.random() < 0.45;
-    const hp = isChest ? intRand(6, 12) : intRand(4, 12);
+    const src = isChest ? pickFrom(getBattleChests()) : pickFrom(getBattleGimmicks());
+    const hp = Math.max(1, Number(src && src.hp || (isChest ? 10 : 8)));
 
     state.entities.push({
       type:isChest ? 'chest' : 'obstacle',
+      name:src && src.name ? src.name : (isChest ? '宝箱' : '障害物'),
+      image:src && src.image ? src.image : (isChest ? FALLBACK_ASSET.chest : FALLBACK_ASSET.obstacle),
       x:rand(W * 0.16, W * 0.84),
       y:H / 2,
       vx:rand(-0.75, 0.75),
@@ -710,7 +783,7 @@
     const other = state.players[owner === 1 ? 1 : 0];
     other.hp -= Math.max(1, Math.ceil(e.maxHp * 0.35));
 
-    showBattleMessage(ownerText(owner) + ' WALL BREAK!');
+    showBattleMessage(ownerText(owner) + ' BREAK!');
   }
 
   function ownerText(owner){
@@ -844,7 +917,7 @@
   }
 
   function drawBackground(){
-    const bg = img(ASSET.bg);
+    const bg = img(getBattleBackground());
 
     if (imageReady(bg)) {
       ctx.drawImage(bg, 0, 0, W, H);
@@ -957,7 +1030,7 @@
 
   function drawEntities(){
     state.entities.forEach(e => {
-      const image = img(e.type === 'chest' ? ASSET.chest : ASSET.obstacle);
+      const image = img(e.image);
       const size = e.type === 'chest' ? 54 : 62;
 
       if (imageReady(image)) {
@@ -969,18 +1042,19 @@
         ctx.fill();
       }
 
-      ctx.font = '900 16px system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#fff';
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 5;
-      ctx.strokeText(String(Math.max(0, Math.ceil(e.hp))), e.x, e.y + 6);
-      ctx.fillText(String(Math.max(0, Math.ceil(e.hp))), e.x, e.y + 6);
+      drawEntityNumber(e);
     });
   }
 
+  function drawEntityNumber(e){
+    const text = String(Math.max(0, Math.ceil(e.hp)));
+
+    drawSideText(text, e.x, e.y - 11, true, 16);
+    drawSideText(text, e.x, e.y + 17, false, 16);
+  }
+
   function drawBullets(){
-    const image = img(ASSET.bullet);
+    const image = img(FALLBACK_ASSET.bullet);
 
     state.bullets.forEach(b => {
       if (imageReady(image)) {
