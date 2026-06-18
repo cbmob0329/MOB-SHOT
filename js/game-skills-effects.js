@@ -53,6 +53,7 @@
 
     getTargets().forEach(e => {
       const hp = Number(e.hp || 0);
+
       if (hp > bestHp) {
         bestHp = hp;
         target = e;
@@ -111,9 +112,17 @@
   }
 
   function fireTwinMissile(skill){
+    const volleyCount = Math.max(1, Number(skill.twinVolleyCount || 2));
+
+    for (let volley = 0; volley < volleyCount; volley++) {
+      fireTwinMissileVolley(skill, volley * 12);
+    }
+  }
+
+  function fireTwinMissileVolley(skill, delay){
     const st = state();
     const count = Math.max(1, Number(skill.count || 2));
-    const radius = Math.max(18, Number(skill.bulletSize || 36) * 0.42);
+    const radius = Math.max(18, Number(skill.bulletSize || 38) * 0.42);
 
     for (let i = 0; i < count; i++) {
       const spread = (i - (count - 1) / 2) * 22;
@@ -130,6 +139,7 @@
         openTimer: 18 + i * 2,
         target: findStrongestTarget(),
         smokeTick: 0,
+        delay,
         dead: false
       });
     }
@@ -176,9 +186,8 @@
       type: 'darkPower',
       skill,
       timer: Math.floor(Number(skill.duration || 6) * 60),
-      attackAdd: Number(skill.darkPowerAttackAdd || 5),
+      attackAdd: Number(skill.darkPowerAttackAdd || 4),
       ghostTick: 0,
-      auraShotCd: 30,
       darkFireCd: 0
     });
 
@@ -193,59 +202,30 @@
   function fireDarkFire(effect){
     const st = state();
     const p = st.player;
+    const angles = [-0.20, 0, 0.20];
+    const speed = 4.9;
 
-    bullets().push({
-      type: 'darkFire',
-      skill: effect.skill,
-      x: p.x,
-      y: p.y - 46,
-      vx: 0,
-      vy: -5.2,
-      r: 42,
-      damage: playerPower() * Number((effect.skill.powerRate && effect.skill.powerRate.darkFire) || 3),
-      smokeTick: 0,
-      dead: false
+    angles.forEach((offset, index) => {
+      const angle = -Math.PI / 2 + offset;
+
+      bullets().push({
+        type: 'darkFire',
+        skill: effect.skill,
+        x: p.x + (index - 1) * 24,
+        y: p.y - 46,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        r: 31,
+        damage: playerPower() * Number((effect.skill.powerRate && effect.skill.powerRate.darkFire) || 2.2),
+        smokeTick: 0,
+        dead: false
+      });
     });
 
     effects().push({
       type: 'darkFireFlash',
       x: p.x,
       y: p.y - 46,
-      timer: 18
-    });
-  }
-
-  function fireDarkAuraWave(effect){
-    const st = state();
-    const p = st.player;
-    const damage = playerPower();
-    const speed = 5.0;
-
-    [
-      { vx: 0, vy: -speed },
-      { vx: 0, vy: speed },
-      { vx: -speed, vy: 0 },
-      { vx: speed, vy: 0 }
-    ].forEach((d, i) => {
-      bullets().push({
-        type: 'darkAura',
-        skill: effect.skill,
-        x: p.x,
-        y: p.y - 6,
-        vx: d.vx,
-        vy: d.vy,
-        r: 34,
-        damage,
-        timer: 46,
-        rot: i * Math.PI / 2,
-        dead: false
-      });
-    });
-
-    effects().push({
-      type: 'darkAuraPulse',
-      x: p.x,
-      y: p.y,
       timer: 18
     });
   }
@@ -429,17 +409,18 @@
   function fireNeptuneAttack(skill){
     const st = state();
     const count = Math.max(5, Number(skill.count || 5));
+    const interval = Math.max(1, Number(skill.neptuneShotInterval || 8));
 
     for (let i = 0; i < count; i++) {
       bullets().push({
         type: 'neptuneAttack',
         skill,
-        x: st.player.x + (i - (count - 1) / 2) * 12,
-        y: st.player.y - 48 - i * 18,
+        x: st.player.x,
+        y: st.player.y - 48,
         vx: 0,
         vy: -4.25,
         r: Math.max(28, Number(skill.bulletSize || 64) * 0.36),
-        delay: i * 8,
+        delay: i * interval,
         pierce: true,
         hitMap: {},
         dead: false
@@ -497,7 +478,7 @@
       vy: -2,
       timer: Math.floor(Number(skill.duration || 5) * 60),
       total: Math.floor(Number(skill.duration || 5) * 60),
-      size: Number(skill.bulletSize || 72),
+      size: Number(skill.bulletSize || 70),
       target: findStrongestTarget(),
       hitMap: {},
       retargetCd: 0,
@@ -518,6 +499,7 @@
 
       if (effect.type === 'thunderbolt') {
         effect.tick--;
+
         if (effect.tick <= 0) {
           effect.tick = 18;
           createThunder(effect.skill);
@@ -533,33 +515,31 @@
 
       if (effect.type === 'darkPower') {
         effect.ghostTick--;
+
         if (effect.ghostTick <= 0) {
-          effect.ghostTick = 5;
+          effect.ghostTick = 8;
+
           effects().push({
             type: 'darkAfterImage',
             x: state().player.x,
             y: state().player.y,
-            timer: 24
+            timer: 18
           });
         }
 
-        effect.auraShotCd--;
-        if (effect.auraShotCd <= 0) {
-          effect.auraShotCd = 30;
-          fireDarkAuraWave(effect);
-        }
-
         effect.darkFireCd--;
+
         if (effect.darkFireCd <= 0) {
-          effect.darkFireCd = Math.max(1, Number(effect.skill.darkFireInterval || 60));
+          effect.darkFireCd = Math.max(1, Number(effect.skill.darkFireInterval || 64));
           fireDarkFire(effect);
         }
       }
 
       if (effect.type === 'rosePulse') {
         effect.tick--;
+
         if (effect.tick <= 0) {
-          effect.tick = 10;
+          effect.tick = 12;
           fireRoseBullet(effect.skill);
         }
       }
@@ -638,6 +618,7 @@
       if (bullet.type === 'darkAura') {
         bullet.timer--;
         bullet.rot += 0.18;
+
         if (bullet.timer <= 0) {
           bullet.dead = true;
           continue;
@@ -646,13 +627,15 @@
 
       if (bullet.type === 'rocket' || bullet.type === 'twinMissile' || bullet.type === 'darkFire') {
         bullet.smokeTick--;
+
         if (bullet.smokeTick <= 0) {
           bullet.smokeTick = 5;
+
           effects().push({
             type: 'smoke',
             x: bullet.x,
             y: bullet.y + 12,
-            radius: bullet.type === 'darkFire' ? 26 : bullet.type === 'rocket' ? 18 : 14,
+            radius: bullet.type === 'darkFire' ? 20 : bullet.type === 'rocket' ? 18 : 14,
             timer: 20
           });
         }
@@ -749,6 +732,7 @@
     if (!e.__skillHitId) {
       e.__skillHitId = 'hit_' + Math.random().toString(36).slice(2);
     }
+
     return e.__skillHitId;
   }
 
@@ -785,7 +769,7 @@
       }
 
       if (bullet.type === 'darkFire') {
-        damageEntity(e, Number(bullet.damage || playerPower() * 3) + plusDamage(bullet.skill));
+        damageEntity(e, Number(bullet.damage || playerPower() * 2.2) + plusDamage(bullet.skill));
         effects().push({ type:'darkFireHit', x:bullet.x, y:bullet.y, timer:22 });
         bullet.dead = true;
         break;
@@ -799,7 +783,7 @@
       }
 
       if (bullet.type === 'rosePulse') {
-        damageEntity(e, playerPower() * Number((bullet.skill.powerRate && bullet.skill.powerRate.rose) || 1.8) + plusDamage(bullet.skill));
+        damageEntity(e, playerPower() * Number((bullet.skill.powerRate && bullet.skill.powerRate.rose) || 0.9) + plusDamage(bullet.skill));
         effects().push({ type:'roseHit', x:bullet.x, y:bullet.y, timer:16 });
         bullet.dead = true;
         break;
@@ -822,25 +806,29 @@
 
       if (bullet.type === 'neonBomb') {
         const key = entityHitKey(e);
+
         if (canIntervalHit(bullet.hitMap, key, Math.floor(Number(bullet.skill.neonBombHitInterval || 2) * 60))) {
-          damageEntity(e, playerPower() * Number((bullet.skill.powerRate && bullet.skill.powerRate.pierce) || 2) + plusDamage(bullet.skill));
+          damageEntity(e, playerPower() * Number((bullet.skill.powerRate && bullet.skill.powerRate.pierce) || 1.4) + plusDamage(bullet.skill));
           effects().push({ type:'neonHit', x:e.x, y:e.y, timer:18 });
         }
+
         continue;
       }
 
       if (bullet.type === 'neptuneAttack') {
         const key = entityHitKey(e);
+
         if (!bullet.hitMap[key]) {
           bullet.hitMap[key] = true;
-          damageEntity(e, playerPower() * Number((bullet.skill.powerRate && bullet.skill.powerRate.trident) || 2) + plusDamage(bullet.skill));
+          damageEntity(e, playerPower() * Number((bullet.skill.powerRate && bullet.skill.powerRate.trident) || 1.8) + plusDamage(bullet.skill));
           effects().push({ type:'neptuneHit', x:e.x, y:e.y, timer:16 });
         }
+
         continue;
       }
 
       if (bullet.type === 'miraPoison') {
-        damageEntity(e, playerPower() * Number((bullet.skill.powerRate && bullet.skill.powerRate.bullet) || 0.8) + plusDamage(bullet.skill));
+        damageEntity(e, playerPower() * Number((bullet.skill.powerRate && bullet.skill.powerRate.bullet) || 0.65) + plusDamage(bullet.skill));
         addMiraPoison(e, bullet.skill);
         effects().push({ type:'miraPoisonHit', x:e.x, y:e.y, timer:18 });
         bullet.dead = true;
@@ -876,13 +864,13 @@
   }
 
   function smallExplode(x, y, skill){
-    const radius = Number(skill.explosionRange || 96);
+    const radius = Number(skill.explosionRange || 100);
 
     effects().push({ type:'smallExplosion', x, y, radius, timer:20 });
 
     getTargets().forEach(e => {
       if (Math.hypot(e.x - x, e.y - y) <= radius) {
-        damageEntity(e, playerPower() * Number((skill.powerRate && skill.powerRate.explosion) || 0.8) + plusDamage(skill));
+        damageEntity(e, playerPower() * Number((skill.powerRate && skill.powerRate.explosion) || 0.65) + plusDamage(skill));
       }
     });
   }
@@ -891,14 +879,14 @@
     bullet.dead = true;
 
     const skill = bullet.skill;
-    const radius = Number(skill.explosionRange || 200);
+    const radius = Number(skill.explosionRange || 198);
 
     effects().push({ type:'neonExplosion', x:bullet.x, y:bullet.y, radius, timer:44 });
     effects().push({ type:'boomText', text:'NEON BOOM!!', x:bullet.x, y:bullet.y - 24, timer:44 });
 
     getTargets().forEach(e => {
       if (Math.hypot(e.x - bullet.x, e.y - bullet.y) <= radius + (e.r || 28)) {
-        damageEntity(e, playerPower() * Number((skill.powerRate && skill.powerRate.explosion) || 3) + plusDamage(skill));
+        damageEntity(e, playerPower() * Number((skill.powerRate && skill.powerRate.explosion) || 2.2) + plusDamage(skill));
         addNeonBurn(e, skill);
       }
     });
@@ -990,7 +978,7 @@
     entity.__miraPoison = {
       timer: Math.floor(Number(skill.duration || 4) * 60),
       tick: Math.floor(Number(skill.poisonTick || 2) * 60),
-      damage: playerPower() * Number((skill.powerRate && skill.powerRate.poison) || 3),
+      damage: playerPower() * Number((skill.powerRate && skill.powerRate.poison) || 2.2),
       spark: 0
     };
   }
@@ -999,7 +987,7 @@
     entity.__neonBurn = {
       timer: 5 * 60,
       tick: 60,
-      damage: playerPower() * Number((skill.powerRate && skill.powerRate.dot) || 1),
+      damage: playerPower() * Number((skill.powerRate && skill.powerRate.dot) || 0.8),
       spark: 0
     };
   }
@@ -1036,7 +1024,7 @@
         }
 
         if (e.__miraPoison.tick <= 0) {
-          e.__miraPoison.tick = 120;
+          e.__miraPoison.tick = Math.floor(Number(e.__miraPoison.interval || 120));
           damageEntity(e, e.__miraPoison.damage);
           effects().push({ type:'miraPoisonHit', x:e.x, y:e.y, timer:18 });
         }
@@ -1093,6 +1081,7 @@
 
       getTargets().forEach(e => {
         const dist = Math.hypot(e.x - hole.x, e.y - hole.y);
+
         if (dist <= hole.range) {
           damageEntity(e, 1);
           effects().push({ type:'blackHoleDamage', x:e.x, y:e.y, timer:18 });
@@ -1172,25 +1161,27 @@
     if (!hero) return;
 
     hero.spark--;
+
     if (hero.spark <= 0) {
-      hero.spark = 6;
+      hero.spark = 8;
       effects().push({ type:'bookHeroSpark', x:hero.x, y:hero.y, timer:12 });
     }
 
     hero.retargetCd--;
+
     if (!hero.target || hero.target.dead || hero.retargetCd <= 0) {
       hero.target = findStrongestTarget();
-      hero.retargetCd = 28;
+      hero.retargetCd = 34;
     }
 
     if (hero.target) {
       const dx = hero.target.x - hero.x;
       const dy = hero.target.y - hero.y;
       const d = Math.max(1, Math.hypot(dx, dy));
-      const speed = 8.6;
+      const speed = 7.4;
 
-      hero.vx += (dx / d) * 1.0;
-      hero.vy += (dy / d) * 1.0;
+      hero.vx += (dx / d) * 0.78;
+      hero.vy += (dy / d) * 0.78;
 
       const sp = Math.max(1, Math.hypot(hero.vx, hero.vy));
       hero.vx = hero.vx / sp * speed;
@@ -1200,12 +1191,14 @@
       hero.y += hero.vy;
 
       getTargets().forEach(e => {
-        const hit = Math.hypot(hero.x - e.x, hero.y - e.y) <= (e.r || 28) + 42;
+        const hit = Math.hypot(hero.x - e.x, hero.y - e.y) <= (e.r || 28) + 38;
         if (!hit) return;
 
         const key = entityHitKey(e);
-        if (canIntervalHit(hero.hitMap, key, Math.floor(Number(hero.skill.heroHitInterval || 2) * 60))) {
-          damageEntity(e, playerPower() * Number((hero.skill.powerRate && hero.skill.powerRate.hero) || 3) + plusDamage(hero.skill));
+        const interval = Math.floor(Number(hero.skill.heroHitInterval || 2.4) * 60);
+
+        if (canIntervalHit(hero.hitMap, key, interval)) {
+          damageEntity(e, playerPower() * Number((hero.skill.powerRate && hero.skill.powerRate.hero) || 1.65) + plusDamage(hero.skill));
           effects().push({ type:'bookHeroHit', x:e.x, y:e.y, timer:18 });
           hero.retargetCd = 0;
         }
