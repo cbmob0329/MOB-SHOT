@@ -54,7 +54,9 @@
     coopScore:0,
     coopKills:0,
     coopClear:false,
-    coopResultShown:false
+    coopResultShown:false,
+    coopSkills:[],
+    coopSkillCd:{}
   };
 
   function $(id){ return document.getElementById(id); }
@@ -188,6 +190,7 @@
     screen.innerHTML = `
       <canvas id="battleCanvas"></canvas>
       <div id="battleOverlay" class="battle-overlay"></div>
+      <div id="coopSkillHud" class="coop-skill-hud hidden"></div>
     `;
 
     return screen;
@@ -215,8 +218,14 @@
       .battle-select-grid{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:10px!important;max-height:48svh!important;overflow:auto!important;padding:2px!important;margin-bottom:14px!important}
       .battle-choice{border:2px solid rgba(255,255,255,.26)!important;border-radius:18px!important;padding:8px 5px!important;background:rgba(255,255,255,.10)!important;color:#fff!important;font-weight:1000!important;font-size:11px!important}
       .battle-choice img{width:64px!important;height:64px!important;object-fit:contain!important;display:block!important;margin:0 auto 4px!important}
+      .coop-skill-hud{position:absolute;right:8px;bottom:8px;z-index:70;display:flex;gap:8px;pointer-events:auto}
+      .coop-skill-hud.hidden{display:none!important}
+      .coop-skill-btn{position:relative;width:58px;height:58px;border:0;border-radius:15px;padding:0;background:#111;border:3px solid rgba(255,255,255,.35);overflow:hidden;box-shadow:0 5px 0 rgba(0,0,0,.35)}
+      .coop-skill-btn img{width:100%;height:100%;object-fit:cover;display:block}
+      .coop-skill-cd{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.62);color:#fff;font-size:18px;font-weight:1000;text-shadow:0 2px 0 #000}
+      .coop-skill-btn.ready{border-color:#ffe66b;box-shadow:0 0 10px #ffe66b,0 5px 0 rgba(0,0,0,.35)}
       #battleTitleLayer,#battleSelectLayer,#battleHud,#battleBanner{display:none!important}
-      @media (max-width:430px){.battle-actions.three{grid-template-columns:1fr!important}}
+      @media (max-width:430px){.battle-actions.three{grid-template-columns:1fr!important}.coop-skill-btn{width:50px;height:50px}}
     `;
     document.head.appendChild(style);
   }
@@ -331,6 +340,8 @@
     if (screen) screen.classList.add('active');
 
     mode = 'cpu';
+    hideCoopSkillHud();
+
     state.screen = 'title';
     state.p1Wins = 0;
     state.p2Wins = 0;
@@ -349,6 +360,7 @@
   function close(){
     running = false;
     cancelAnimationFrame(raf);
+    hideCoopSkillHud();
 
     if (document.exitFullscreen) document.exitFullscreen().catch(function(){});
 
@@ -471,6 +483,7 @@
 
   function startSelect(nextMode){
     mode = nextMode;
+    hideCoopSkillHud();
     state.screen = 'select';
     state.selectSide = 'p1';
     state.selected.p1 = null;
@@ -539,6 +552,7 @@
     p2.image = state.selected.p2.image;
 
     resetCoop();
+    setupCoopSkills();
     renderOverlay();
   }
 
@@ -551,14 +565,14 @@
     state.coopKills = 0;
     state.coopClear = false;
     state.coopResultShown = false;
-    state.spawnCd = 60;
+    state.spawnCd = 70;
 
     state.players.forEach(p => {
-      p.hp = 100;
-      p.maxHp = 100;
-      p.power = 1;
+      p.hp = 140;
+      p.maxHp = 140;
+      p.power = 2;
       p.rapid = 1;
-      p.wide = 1;
+      p.wide = 2;
       p.shootCd = 20;
       p.alive = true;
     });
@@ -568,6 +582,7 @@
 
   function beginCoopGame(){
     state.screen = 'coop';
+    showCoopSkillHud();
     spawnCoopBoss();
     showBattleMessage('START!');
   }
@@ -594,8 +609,8 @@
       score:Math.ceil(Number(src.score || 1000) * scale),
       areaName:(area && area.name) || areaKey,
       dead:false,
-      shootCd:70,
-      heavyCd:150,
+      shootCd:145,
+      heavyCd:520,
       patternIndex:0,
       movePhase:Math.random() * Math.PI * 2
     };
@@ -641,6 +656,175 @@
     });
 
     resetPlayerPositions();
+  }
+
+  function setupCoopSkills(){
+    state.coopSkills = [];
+    state.coopSkillCd = {};
+
+    if (!window.MobShotSkills || !window.MobShotSkills.loadState) return;
+
+    const skillState = window.MobShotSkills.loadState();
+    const equipped = Array.isArray(skillState.equipped) ? skillState.equipped : [];
+    const master = Array.isArray(window.MobShotSkills.SKILL_MASTER) ? window.MobShotSkills.SKILL_MASTER : [];
+
+    equipped.slice(0, 3).forEach(key => {
+      const base = master.find(s => s.key === key);
+      const owned = skillState.skills && skillState.skills[key] && skillState.skills[key].owned;
+
+      if (!base || !owned) return;
+
+      state.coopSkills.push({
+        key:base.key,
+        name:base.name || base.key,
+        image:base.image || '',
+        cooldown:Math.max(8, Number(base.cooldown || 18))
+      });
+
+      state.coopSkillCd[base.key] = 0;
+    });
+  }
+
+  function showCoopSkillHud(){
+    const hud = $('coopSkillHud');
+    if (!hud) return;
+
+    if (!state.coopSkills.length) {
+      hud.classList.add('hidden');
+      hud.innerHTML = '';
+      return;
+    }
+
+    hud.classList.remove('hidden');
+    renderCoopSkillHud();
+  }
+
+  function hideCoopSkillHud(){
+    const hud = $('coopSkillHud');
+    if (!hud) return;
+    hud.classList.add('hidden');
+    hud.innerHTML = '';
+  }
+
+  function renderCoopSkillHud(){
+    const hud = $('coopSkillHud');
+    if (!hud || mode !== 'coop' || state.screen !== 'coop') return;
+
+    hud.innerHTML = state.coopSkills.map(skill => {
+      const cd = Math.ceil(Number(state.coopSkillCd[skill.key] || 0) / 60);
+      const ready = cd <= 0;
+
+      return `
+        <button class="coop-skill-btn ${ready ? 'ready' : ''}" data-key="${skill.key}" type="button">
+          <img src="${skill.image}" alt="${skill.name}">
+          ${ready ? '' : `<span class="coop-skill-cd">${cd}</span>`}
+        </button>
+      `;
+    }).join('');
+
+    hud.querySelectorAll('.coop-skill-btn').forEach(btn => {
+      btn.onclick = function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        useCoopSkill(this.getAttribute('data-key'));
+      };
+    });
+  }
+
+  function useCoopSkill(key){
+    if (mode !== 'coop' || state.screen !== 'coop') return;
+    if (Number(state.coopSkillCd[key] || 0) > 0) return;
+
+    const skill = state.coopSkills.find(s => s.key === key);
+    if (!skill) return;
+
+    state.coopSkillCd[key] = Number(skill.cooldown || 18) * 60;
+
+    if (key === 'healingBreeze') {
+      state.players.forEach(p => {
+        p.hp = Math.min(p.maxHp, p.hp + 45);
+      });
+      showBattleMessage('HEAL!');
+      renderCoopSkillHud();
+      return;
+    }
+
+    if (key === 'arcaneBarrier') {
+      state.bullets = state.bullets.filter(b => b.kind !== 'enemy');
+      showBattleMessage('BARRIER!');
+      renderCoopSkillHud();
+      return;
+    }
+
+    if (key === 'timeMagic' || key === 'blackHole') {
+      state.enemies.forEach(e => e.hp -= 12);
+      state.entities.forEach(e => {
+        if (e.type === 'heavyAttack') e.hp -= 18;
+        else e.hp -= 8;
+      });
+      state.bosses.forEach(b => b.hp -= 20);
+      cleanupDeadBySkill();
+      showBattleMessage(key === 'timeMagic' ? 'TIME!' : 'BLACK HOLE!');
+      renderCoopSkillHud();
+      return;
+    }
+
+    if (key === 'goldRush') {
+      state.coopScore += 500;
+      showBattleMessage('SCORE UP!');
+      renderCoopSkillHud();
+      return;
+    }
+
+    const damage = key === 'darkPower' || key === 'neonBomb' ? 70 :
+      key === 'lilithSisters' ? 55 :
+      key === 'thunderbolt' || key === 'darkThunder' ? 45 :
+      key === 'rocket' || key === 'twinMissile' ? 38 :
+      32;
+
+    state.enemies.forEach(e => e.hp -= Math.ceil(damage * 0.55));
+    state.entities.forEach(e => {
+      if (e.type === 'heavyAttack') e.hp -= Math.ceil(damage * 0.85);
+    });
+    state.bosses.forEach(b => b.hp -= damage);
+
+    burst(W / 2, H * 0.38, '#ffe66b', 30);
+    cleanupDeadBySkill();
+    showBattleMessage(skill.name + '!');
+    renderCoopSkillHud();
+  }
+
+  function cleanupDeadBySkill(){
+    state.enemies.forEach(e => {
+      if (e.hp <= 0 && !e.dead) {
+        e.dead = true;
+        state.coopKills++;
+        state.coopScore += Number(e.score || 50);
+        burst(e.x, e.y, '#9dff73', 10);
+      }
+    });
+
+    state.entities.forEach(e => {
+      if (e.hp <= 0 && !e.dead) {
+        e.dead = true;
+        state.coopScore += Number(e.score || 80);
+        burst(e.x, e.y, '#ffcf5b', 10);
+      }
+    });
+
+    state.bosses.forEach(b => {
+      if (b.hp <= 0 && !b.dead) {
+        b.dead = true;
+        state.coopKills++;
+        state.coopScore += Number(b.score || 1000);
+        burst(b.x, b.y, '#d86bff', 24);
+        nextCoopBoss();
+      }
+    });
+
+    state.enemies = state.enemies.filter(e => !e.dead);
+    state.entities = state.entities.filter(e => !e.dead);
+    state.bosses = state.bosses.filter(e => !e.dead);
   }
 
   function loop(){
@@ -692,6 +876,12 @@
   }
 
   function updateCoop(){
+    Object.keys(state.coopSkillCd).forEach(key => {
+      state.coopSkillCd[key] = Math.max(0, Number(state.coopSkillCd[key] || 0) - 1);
+    });
+
+    if (state.frame % 15 === 0) renderCoopSkillHud();
+
     updatePlayers();
     updateCoopSpawns();
     updateCoopBosses();
@@ -767,7 +957,7 @@
     state.spawnCd--;
     if (state.spawnCd > 0) return;
 
-    state.spawnCd = intRand(70, 125);
+    state.spawnCd = intRand(85, 145);
 
     const roll = Math.random();
 
@@ -786,8 +976,8 @@
       image:src && src.image ? src.image : (isChest ? FALLBACK_ASSET.chest : FALLBACK_ASSET.obstacle),
       x:rand(W * 0.10, W * 0.90),
       y:rand(H * 0.20, H * 0.42),
-      vx:rand(-0.35, 0.35),
-      vy:rand(0.08, 0.22),
+      vx:rand(-0.30, 0.30),
+      vy:rand(0.06, 0.18),
       hp,
       maxHp:hp,
       r:isChest ? 22 : 25,
@@ -808,8 +998,8 @@
       image:src.image || '',
       x:rand(W * 0.10, W * 0.90),
       y:-40,
-      vx:rand(-0.35, 0.35),
-      vy:rand(0.42, 0.78),
+      vx:rand(-0.28, 0.28),
+      vy:rand(0.36, 0.66),
       hp,
       maxHp:hp,
       r:24,
@@ -847,6 +1037,7 @@
 
       const amp = Math.max(100, W * 0.31);
       const subAmp = Math.max(24, W * 0.055);
+
       b.x =
         W / 2 +
         Math.sin(state.frame * 0.018 + b.movePhase) * amp +
@@ -856,13 +1047,13 @@
 
       b.shootCd--;
       if (b.shootCd <= 0) {
-        b.shootCd = Math.max(44, 86 - state.coopAreaIndex * 7);
+        b.shootCd = Math.max(115, 160 - state.coopAreaIndex * 6);
         fireBossPattern(b);
       }
 
       b.heavyCd--;
       if (b.heavyCd <= 0) {
-        b.heavyCd = Math.max(125, 185 - state.coopAreaIndex * 8);
+        b.heavyCd = Math.max(430, 560 - state.coopAreaIndex * 12);
         spawnBossHeavyAttack(b);
       }
     });
@@ -895,7 +1086,7 @@
       const dx = p.x - b.x;
       const dy = p.y - b.y;
       const len = Math.max(1, Math.hypot(dx, dy));
-      const speed = 1.75 + state.coopAreaIndex * 0.16;
+      const speed = 1.55 + state.coopAreaIndex * 0.12;
 
       state.bullets.push({
         kind:'enemy',
@@ -913,8 +1104,8 @@
   }
 
   function fireBossSpread(b){
-    const speed = 1.65 + state.coopAreaIndex * 0.15;
-    const angles = [-0.62,-0.34,-0.12,0.12,0.34,0.62];
+    const speed = 1.45 + state.coopAreaIndex * 0.12;
+    const angles = [-0.50,-0.25,0.25,0.50];
 
     angles.forEach(a => {
       state.bullets.push({
@@ -934,15 +1125,15 @@
 
   function fireBossSideShot(b){
     const targets = [
-      { x:W * 0.18, y:H * 0.82 },
-      { x:W * 0.82, y:H * 0.82 }
+      { x:W * 0.20, y:H * 0.82 },
+      { x:W * 0.80, y:H * 0.82 }
     ];
 
     targets.forEach(t => {
       const dx = t.x - b.x;
       const dy = t.y - b.y;
       const len = Math.max(1, Math.hypot(dx, dy));
-      const speed = 1.85 + state.coopAreaIndex * 0.15;
+      const speed = 1.6 + state.coopAreaIndex * 0.12;
 
       state.bullets.push({
         kind:'enemy',
@@ -960,28 +1151,28 @@
   }
 
   function spawnBossHeavyAttack(b){
-    const hp = 22 + state.coopAreaIndex * 8;
+    const hp = 34 + state.coopAreaIndex * 10;
 
     state.entities.push({
       type:'heavyAttack',
-      name:'巨大火の玉',
+      name:'必殺・巨大火の玉',
       image:FALLBACK_ASSET.heavyAttack,
       x:b.x,
       baseX:b.x,
       y:b.y + 56,
       vx:0,
-      vy:0.36 + state.coopAreaIndex * 0.035,
+      vy:0.30 + state.coopAreaIndex * 0.025,
       amp:Math.max(70, W * 0.14),
       phase:Math.random() * Math.PI * 2,
       hp,
       maxHp:hp,
       r:48,
-      score:500 + state.coopAreaIndex * 220,
+      score:700 + state.coopAreaIndex * 260,
       dead:false,
       wobble:0
     });
 
-    showBattleMessage('BIG FIRE!');
+    showBattleMessage('BOSS SPECIAL!');
   }
 
   function updateSpawns(){
@@ -1028,10 +1219,10 @@
           if (!p.alive || e.dead) return;
 
           if (e.type === 'heavyAttack' && Math.hypot(e.x - p.x, e.y - p.y) < e.r + 26) {
-            p.hp -= 28 + state.coopAreaIndex * 4;
+            p.hp -= 30 + state.coopAreaIndex * 4;
             e.dead = true;
             burst(e.x, e.y, '#ff5b5b', 22);
-            showBattleMessage('DAMAGE!');
+            showBattleMessage('SPECIAL HIT!');
             return;
           }
 
@@ -1161,14 +1352,18 @@
     const p = state.players[owner - 1];
 
     if (e.type === 'heavyAttack') {
-      state.coopScore += Number(e.score || 500);
-      showBattleMessage('BIG FIRE BREAK!');
+      state.coopScore += Number(e.score || 700);
+      showBattleMessage('SPECIAL BREAK!');
       burst(e.x, e.y, '#ffcf5b', 18);
       return;
     }
 
     if (e.type === 'chest') {
-      const reward = ['power1','heal10','rapid1','power2','heal30','rapid2','wide1'][intRand(0, 6)];
+      const rewards = mode === 'coop'
+        ? ['power1','heal10','rapid1','power2','heal30','rapid2']
+        : ['power1','heal10','rapid1','power2','heal30','rapid2','wide1'];
+
+      const reward = rewards[intRand(0, rewards.length - 1)];
 
       if (reward === 'power1') p.power += 1;
       if (reward === 'power2') p.power += 2;
@@ -1209,6 +1404,7 @@
     state.coopResultShown = true;
     state.screen = 'coopResult';
     state.coopClear = !!clear;
+    hideCoopSkillHud();
 
     if (clear) {
       addCoin(COOP_CLEAR_REWARD_COIN);
