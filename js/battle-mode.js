@@ -19,6 +19,7 @@
   let raf = 0;
   let running = false;
   let mode = 'cpu';
+  let boundCanvas = false;
 
   const images = new Map();
 
@@ -31,19 +32,13 @@
     message:'',
     messageTimer:0,
     rewardDone:false,
-    selected:{
-      p1:null,
-      p2:null
-    },
+    selected:{ p1:null, p2:null },
     selectSide:'p1',
     choices:[],
     entities:[],
     bullets:[],
     particles:[],
-    players:[
-      makePlayer(1),
-      makePlayer(2)
-    ],
+    players:[makePlayer(1), makePlayer(2)],
     spawnCd:90
   };
 
@@ -89,19 +84,20 @@
 
   function ensureScreen(){
     let screen = $('battleScreen');
-    if (screen) return screen;
-
     const app = $('app') || document.body;
 
-    screen = document.createElement('section');
-    screen.id = 'battleScreen';
-    screen.className = 'screen';
+    if (!screen) {
+      screen = document.createElement('section');
+      screen.id = 'battleScreen';
+      screen.className = 'screen';
+      app.appendChild(screen);
+    }
+
     screen.innerHTML = `
       <canvas id="battleCanvas"></canvas>
       <div id="battleOverlay" class="battle-overlay"></div>
     `;
 
-    app.appendChild(screen);
     return screen;
   }
 
@@ -111,12 +107,19 @@
     const style = document.createElement('style');
     style.id = 'mobBattleStyle';
     style.textContent = `
+      #battleScreen{
+        position:relative;
+        overflow:hidden;
+        background:#07101f;
+      }
+
       #battleCanvas{
         position:absolute;
         inset:0;
-        width:100vw;
-        height:100vh;
+        width:100%;
+        height:100%;
         background:#3daf55;
+        touch-action:none;
       }
 
       .battle-overlay{
@@ -140,6 +143,8 @@
 
       .battle-card{
         width:min(92vw,440px);
+        max-height:88vh;
+        overflow:auto;
         border-radius:28px;
         padding:20px;
         text-align:center;
@@ -150,7 +155,7 @@
 
       .battle-title{
         margin:0 0 14px;
-        font-size:38px;
+        font-size:34px;
         font-weight:1000;
         color:#ffe66b;
         text-shadow:0 5px 0 #000;
@@ -225,7 +230,6 @@
         gap:10px;
       }
     `;
-
     document.head.appendChild(style);
   }
 
@@ -235,23 +239,33 @@
 
     canvas = $('battleCanvas');
     ctx = canvas.getContext('2d');
+    boundCanvas = false;
 
     resize();
 
+    window.removeEventListener('resize', resize);
     window.addEventListener('resize', resize);
-    canvas.addEventListener('pointerdown', onPointer, { passive:false });
-    canvas.addEventListener('pointermove', onPointer, { passive:false });
-    canvas.addEventListener('pointerup', function(){
-      state.players.forEach(p => p.input = false);
-    }, { passive:false });
+
+    if (!boundCanvas) {
+      boundCanvas = true;
+      canvas.addEventListener('pointerdown', onPointer, { passive:false });
+      canvas.addEventListener('pointermove', onPointer, { passive:false });
+      canvas.addEventListener('pointerup', function(){
+        state.players.forEach(p => p.input = false);
+      }, { passive:false });
+    }
   }
 
   function resize(){
     DPR = Math.min(window.devicePixelRatio || 1, 2);
-    W = window.innerWidth;
-    H = window.innerHeight;
 
-    if (!canvas) return;
+    const screen = $('battleScreen');
+    const rect = screen ? screen.getBoundingClientRect() : { width:window.innerWidth, height:window.innerHeight };
+
+    W = Math.max(1, rect.width || window.innerWidth);
+    H = Math.max(1, rect.height || window.innerHeight);
+
+    if (!canvas || !ctx) return;
 
     canvas.width = Math.floor(W * DPR);
     canvas.height = Math.floor(H * DPR);
@@ -280,19 +294,18 @@
     e.preventDefault();
     e.stopPropagation();
 
-    const y = e.clientY;
-    const x = e.clientX;
+    const rect = canvas.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const x = e.clientX - rect.left;
 
     if (y < H / 2) {
       const p1 = state.players[0];
       p1.targetX = x;
       p1.input = true;
-    } else {
+    } else if (mode === 'pvp') {
       const p2 = state.players[1];
-      if (mode === 'pvp') {
-        p2.targetX = x;
-        p2.input = true;
-      }
+      p2.targetX = x;
+      p2.input = true;
     }
   }
 
@@ -300,13 +313,15 @@
     initCanvas();
 
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    $('battleScreen').classList.add('active');
+    const screen = $('battleScreen');
+    if (screen) screen.classList.add('active');
 
     state.screen = 'title';
     state.p1Wins = 0;
     state.p2Wins = 0;
     state.round = 1;
     state.rewardDone = false;
+
     loadChoices();
     renderOverlay();
 
@@ -372,17 +387,21 @@
         <div class="battle-menu">
           <div class="battle-card">
             <h1 class="battle-title">BATTLE MODE</h1>
-            <p class="battle-help">3本先取の対戦モードです。横スワイプだけで操作します。</p>
+            <p class="battle-help">3本先取の対戦モードです。上半分が1P、下半分が2Pです。</p>
             <div class="battle-actions">
-              <button id="battlePvpBtn" class="battle-btn blue" type="button">PvP</button>
-              <button id="battleCpuBtn" class="battle-btn" type="button">CPU</button>
+              <button id="mobBattlePvpBtn" class="battle-btn blue" type="button">PvP</button>
+              <button id="mobBattleCpuBtn" class="battle-btn" type="button">CPU</button>
+            </div>
+            <div style="margin-top:10px">
+              <button id="mobBattleMainBtn" class="battle-btn blue" type="button" style="width:100%">メインへ戻る</button>
             </div>
           </div>
         </div>
       `;
 
-      $('battlePvpBtn').onclick = function(){ startSelect('pvp'); };
-      $('battleCpuBtn').onclick = function(){ startSelect('cpu'); };
+      $('mobBattlePvpBtn').onclick = function(){ startSelect('pvp'); };
+      $('mobBattleCpuBtn').onclick = function(){ startSelect('cpu'); };
+      $('mobBattleMainBtn').onclick = close;
       return;
     }
 
@@ -403,8 +422,8 @@
               `).join('')}
             </div>
             <div class="battle-small">
-              <button id="battleBackTitle" class="battle-btn blue" type="button">戻る</button>
-              <button id="battleCancelMain" class="battle-btn" type="button">メインへ</button>
+              <button id="mobBattleBackTitle" class="battle-btn blue" type="button">戻る</button>
+              <button id="mobBattleCancelMain" class="battle-btn" type="button">メインへ</button>
             </div>
           </div>
         </div>
@@ -416,12 +435,12 @@
         };
       });
 
-      $('battleBackTitle').onclick = function(){
+      $('mobBattleBackTitle').onclick = function(){
         state.screen = 'title';
         renderOverlay();
       };
 
-      $('battleCancelMain').onclick = close;
+      $('mobBattleCancelMain').onclick = close;
       return;
     }
 
@@ -502,18 +521,14 @@
 
   function loop(){
     if (!running) return;
-
     update();
     draw();
-
     raf = requestAnimationFrame(loop);
   }
 
   function update(){
     state.frame++;
-
     if (state.messageTimer > 0) state.messageTimer--;
-
     if (state.screen !== 'battle') return;
 
     updatePlayers();
@@ -562,7 +577,6 @@
 
     for (let i = 0; i < count; i++) {
       const off = (i - (count - 1) / 2) * spacing;
-
       state.bullets.push({
         owner:p.id,
         x:p.x + off,
@@ -581,7 +595,6 @@
     if (state.spawnCd > 0) return;
 
     state.spawnCd = intRand(90, 150);
-
     const isChest = Math.random() < 0.45;
     const hp = isChest ? intRand(6, 12) : intRand(4, 12);
 
@@ -603,7 +616,6 @@
     state.entities.forEach(e => {
       e.x += e.vx;
       e.y += Math.sin(state.frame * 0.02 + e.wobble) * 0.15;
-
       if (e.x < W * 0.12 || e.x > W * 0.88) e.vx *= -1;
     });
 
@@ -616,6 +628,7 @@
       b.y += b.vy;
 
       const enemyPlayer = state.players[b.owner === 1 ? 1 : 0];
+
       if (
         enemyPlayer.alive &&
         Math.abs(b.x - enemyPlayer.x) < 28 + b.r &&
@@ -651,15 +664,7 @@
     const p = state.players[owner - 1];
 
     if (e.type === 'chest') {
-      const reward = [
-        'power1',
-        'heal10',
-        'rapid1',
-        'power2',
-        'heal30',
-        'rapid2',
-        'wide1'
-      ][intRand(0, 6)];
+      const reward = ['power1','heal10','rapid1','power2','heal30','rapid2','wide1'][intRand(0, 6)];
 
       if (reward === 'power1') p.power += 1;
       if (reward === 'power2') p.power += 2;
@@ -726,9 +731,13 @@
     }
 
     state.round++;
+    state.screen = 'roundWait';
     showBattleMessage(`${ownerText(winner)} ROUND GET!`);
+
     setTimeout(function(){
+      if (!running) return;
       resetRound();
+      state.screen = 'battle';
       showBattleMessage(`ROUND ${state.round}`);
     }, 1350);
   }
@@ -743,17 +752,19 @@
     }
 
     const overlay = $('battleOverlay');
+    if (!overlay) return;
+
     overlay.innerHTML = `
       <div class="battle-menu">
         <div class="battle-card">
           <h1 class="battle-title">${ownerText(winner)} WIN!</h1>
           <p class="battle-help">対戦終了！報酬として ${BATTLE_REWARD_COIN.toLocaleString()} COIN を獲得しました。</p>
-          <button id="battleFinishMain" class="battle-btn" type="button">メインへ戻る</button>
+          <button id="mobBattleFinishMain" class="battle-btn" type="button">メインへ戻る</button>
         </div>
       </div>
     `;
 
-    $('battleFinishMain').onclick = close;
+    $('mobBattleFinishMain').onclick = close;
   }
 
   function addCoin(amount){
@@ -764,19 +775,15 @@
       save.coin = Number(save.coin || 0) + Number(amount || 0);
       window.MobShotStorage.save(save);
     } else {
-      try {
-        save = JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
-      } catch(e) {
-        save = {};
-      }
+      try { save = JSON.parse(localStorage.getItem('mobshot_split_v1')) || {}; }
+      catch(e) { save = {}; }
 
       save.coin = Number(save.coin || 0) + Number(amount || 0);
 
-      try {
-        localStorage.setItem('mobshot_split_v1', JSON.stringify(save));
-      } catch(e) {}
+      try { localStorage.setItem('mobshot_split_v1', JSON.stringify(save)); } catch(e) {}
     }
 
+    if (window.MobShotMain && window.MobShotMain.refreshMainHud) window.MobShotMain.refreshMainHud();
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
   }
 
@@ -792,7 +799,7 @@
     drawCenterLine();
     drawHud();
 
-    if (state.screen === 'battle' || state.screen === 'finish') {
+    if (state.screen === 'battle' || state.screen === 'finish' || state.screen === 'roundWait') {
       drawEntities();
       drawBullets();
       drawPlayers();
@@ -804,9 +811,8 @@
   function drawBackground(){
     const bg = img(ASSET.bg);
 
-    if (imageReady(bg)) {
-      ctx.drawImage(bg, 0, 0, W, H);
-    } else {
+    if (imageReady(bg)) ctx.drawImage(bg, 0, 0, W, H);
+    else {
       ctx.fillStyle = '#49b852';
       ctx.fillRect(0,0,W,H);
     }
@@ -828,7 +834,7 @@
   }
 
   function drawHud(){
-    if (state.screen !== 'battle' && state.screen !== 'finish') return;
+    if (state.screen !== 'battle' && state.screen !== 'finish' && state.screen !== 'roundWait') return;
 
     const p1 = state.players[0];
     const p2 = state.players[1];
@@ -878,9 +884,8 @@
 
       if (p.id === 1) ctx.rotate(Math.PI);
 
-      if (imageReady(image)) {
-        ctx.drawImage(image, -size / 2, -size / 2, size, size);
-      } else {
+      if (imageReady(image)) ctx.drawImage(image, -size / 2, -size / 2, size, size);
+      else {
         ctx.fillStyle = p.id === 1 ? '#60d9ff' : '#ff7ab8';
         ctx.beginPath();
         ctx.arc(0,0,28,0,Math.PI*2);
@@ -896,9 +901,8 @@
       const image = img(e.type === 'chest' ? ASSET.chest : ASSET.obstacle);
       const size = e.type === 'chest' ? 54 : 62;
 
-      if (imageReady(image)) {
-        ctx.drawImage(image, e.x - size / 2, e.y - size / 2, size, size);
-      } else {
+      if (imageReady(image)) ctx.drawImage(image, e.x - size / 2, e.y - size / 2, size, size);
+      else {
         ctx.fillStyle = e.type === 'chest' ? '#ffe66b' : '#777';
         ctx.beginPath();
         ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
@@ -919,9 +923,8 @@
     const image = img(ASSET.bullet);
 
     state.bullets.forEach(b => {
-      if (imageReady(image)) {
-        ctx.drawImage(image, b.x - 12, b.y - 12, 24, 24);
-      } else {
+      if (imageReady(image)) ctx.drawImage(image, b.x - 12, b.y - 12, 24, 24);
+      else {
         ctx.fillStyle = '#fff178';
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
@@ -973,8 +976,23 @@
     ctx.closePath();
   }
 
-  window.MobShotBattle = {
-    open,
-    close
-  };
+  function bindMainButton(){
+    const btn = $('openBattleBtn');
+    if (!btn || btn.__mobBattleBound) return;
+
+    btn.__mobBattleBound = true;
+    btn.disabled = false;
+    btn.classList.remove('disabled-btn');
+
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      open();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', bindMainButton);
+  bindMainButton();
+
+  window.MobShotBattle = { open, close };
 })();
