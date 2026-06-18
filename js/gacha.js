@@ -609,7 +609,7 @@
     const content = $('gachaContent');
     const title = type === 'stone' ? '石板ガチャ' : 'スキルガチャ';
     const oneCost = type === 'stone' ? 1 : 5;
-    const tenCost = 10;
+    const tenCost = 10 : 50;
 
     content.innerHTML = `
       <img class="gacha-main-img" src="${GACHA_IMAGES.top}" alt="GACHA">
