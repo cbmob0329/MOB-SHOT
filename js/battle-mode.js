@@ -1,8 +1,9 @@
-　'use strict';
+'use strict';
 
 (function(){
   const BATTLE_REWARD_COIN = 1000;
   const WIN_NEED = 3;
+  const COOP_CLEAR_REWARD_COIN = 5000;
 
   const FALLBACK_ASSET = {
     bg:'sta/backsougen.png',
@@ -10,6 +11,8 @@
     chest:'gimi/takagin.png',
     obstacle:'gimi/gimihako.png'
   };
+
+  const COOP_AREAS = ['grass','desert','town','neon','magma','castle'];
 
   let canvas = null;
   let ctx = null;
@@ -38,10 +41,18 @@
     entities:[],
     bullets:[],
     particles:[],
+    enemies:[],
+    bosses:[],
     players:[makePlayer(1), makePlayer(2)],
     spawnCd:90,
     coopCountdownStart:0,
-    coopCountdownStarted:false
+    coopCountdownStarted:false,
+    coopAreaIndex:0,
+    coopBoss:null,
+    coopScore:0,
+    coopKills:0,
+    coopClear:false,
+    coopResultShown:false
   };
 
   function $(id){ return document.getElementById(id); }
@@ -68,8 +79,8 @@
       x:0,
       y:0,
       targetX:0,
-      hp:50,
-      maxHp:50,
+      hp:100,
+      maxHp:100,
       power:1,
       rapid:1,
       wide:1,
@@ -84,33 +95,28 @@
   function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
 
   function getCurrentStageInfo(){
-    if (window.MobShotStorage && window.MobShotStorage.getCurrentStage) {
-      return window.MobShotStorage.getCurrentStage();
-    }
-
-    if (window.MOBSHOT_DATA && window.MOBSHOT_DATA.stage) {
-      return window.MOBSHOT_DATA.stage;
-    }
-
+    if (window.MobShotStorage && window.MobShotStorage.getCurrentStage) return window.MobShotStorage.getCurrentStage();
+    if (window.MOBSHOT_DATA && window.MOBSHOT_DATA.stage) return window.MOBSHOT_DATA.stage;
     return { areaKey:'grass', background:FALLBACK_ASSET.bg };
+  }
+
+  function getAreaDataByKey(key){
+    if (window.MOBSHOT_STAGE_DATA && window.MOBSHOT_STAGE_DATA[key]) return window.MOBSHOT_STAGE_DATA[key];
+    if (window.MOBSHOT_STAGE_DATA && window.MOBSHOT_STAGE_DATA.grass) return window.MOBSHOT_STAGE_DATA.grass;
+    return null;
   }
 
   function getCurrentAreaData(){
     const info = getCurrentStageInfo();
-    const key = info.areaKey || 'grass';
-
-    if (window.MOBSHOT_STAGE_DATA && window.MOBSHOT_STAGE_DATA[key]) {
-      return window.MOBSHOT_STAGE_DATA[key];
-    }
-
-    if (window.MOBSHOT_STAGE_DATA && window.MOBSHOT_STAGE_DATA.grass) {
-      return window.MOBSHOT_STAGE_DATA.grass;
-    }
-
-    return null;
+    return getAreaDataByKey(info.areaKey || 'grass');
   }
 
   function getBattleBackground(){
+    if (mode === 'coop') {
+      const area = getAreaDataByKey(COOP_AREAS[state.coopAreaIndex] || 'grass');
+      return (area && area.background) || FALLBACK_ASSET.bg;
+    }
+
     const info = getCurrentStageInfo();
     const area = getCurrentAreaData();
 
@@ -128,8 +134,8 @@
     }
 
     return [
-      { name:'銀の宝箱', image:'gimi/takagin.png', hp:10 },
-      { name:'金の宝箱', image:'gimi/takagol.png', hp:18 }
+      { name:'銀の宝箱', image:'gimi/takagin.png', hp:10, score:80 },
+      { name:'金の宝箱', image:'gimi/takagol.png', hp:18, score:160 }
     ];
   }
 
@@ -138,16 +144,27 @@
       return window.MOBSHOT_DATA.gimmicks;
     }
 
-    const area = getCurrentAreaData();
+    const area = mode === 'coop'
+      ? getAreaDataByKey(COOP_AREAS[state.coopAreaIndex] || 'grass')
+      : getCurrentAreaData();
 
-    if (area && Array.isArray(area.gimmicks) && area.gimmicks.length) {
-      return area.gimmicks;
-    }
+    if (area && Array.isArray(area.gimmicks) && area.gimmicks.length) return area.gimmicks;
 
     return [
-      { name:'木箱', image:'gimi/gimihako.png', hp:5 },
-      { name:'丸岩', image:'gimi/gimiiwa.png', hp:12 }
+      { name:'木箱', image:'gimi/gimihako.png', hp:5, score:10 },
+      { name:'丸岩', image:'gimi/gimiiwa.png', hp:12, score:20 }
     ];
+  }
+
+  function getCoopZako(){
+    const area = getAreaDataByKey(COOP_AREAS[state.coopAreaIndex] || 'grass');
+    return area && Array.isArray(area.zako) ? area.zako : [];
+  }
+
+  function getCoopBossSource(){
+    const area = getAreaDataByKey(COOP_AREAS[state.coopAreaIndex] || 'grass');
+    if (!area) return null;
+    return area.strongBoss || area.boss || null;
   }
 
   function pickFrom(list){
@@ -180,142 +197,24 @@
     const style = document.createElement('style');
     style.id = 'mobBattleStyle';
     style.textContent = `
-      #battleScreen{
-        position:absolute!important;
-        inset:0!important;
-        overflow:hidden!important;
-        background:#07101f!important;
-        width:100vw!important;
-        height:100svh!important;
-      }
-
+      #battleScreen{position:absolute!important;inset:0!important;overflow:hidden!important;background:#07101f!important;width:100vw!important;height:100svh!important}
       #battleScreen.active{display:block!important}
-
-      #battleCanvas{
-        position:absolute!important;
-        inset:0!important;
-        width:100%!important;
-        height:100%!important;
-        background:#3daf55!important;
-        touch-action:none!important;
-        z-index:1!important;
-      }
-
-      .battle-overlay{
-        position:absolute!important;
-        inset:0!important;
-        z-index:50!important;
-        pointer-events:none!important;
-        font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
-      }
-
-      .battle-menu{
-        position:absolute!important;
-        inset:0!important;
-        display:flex!important;
-        align-items:center!important;
-        justify-content:center!important;
-        padding:18px!important;
-        background:rgba(0,0,0,.58)!important;
-        pointer-events:auto!important;
-      }
-
-      .battle-card{
-        width:min(92vw,440px)!important;
-        max-height:88svh!important;
-        overflow:auto!important;
-        border-radius:28px!important;
-        padding:20px!important;
-        text-align:center!important;
-        background:linear-gradient(180deg,rgba(35,28,78,.98),rgba(5,8,22,.98))!important;
-        border:3px solid rgba(255,255,255,.35)!important;
-        box-shadow:0 18px 48px rgba(0,0,0,.7)!important;
-      }
-
-      .battle-title{
-        margin:0 0 14px!important;
-        font-size:34px!important;
-        font-weight:1000!important;
-        color:#ffe66b!important;
-        text-shadow:0 5px 0 #000!important;
-      }
-
-      .battle-help{
-        margin:0 0 16px!important;
-        color:#dfe8ff!important;
-        font-size:13px!important;
-        font-weight:900!important;
-        line-height:1.55!important;
-      }
-
-      .battle-actions,.battle-small{
-        display:grid!important;
-        grid-template-columns:1fr 1fr!important;
-        gap:10px!important;
-      }
-
-      .battle-actions.three{
-        grid-template-columns:1fr 1fr 1fr!important;
-      }
-
-      .battle-btn{
-        border:0!important;
-        border-radius:999px!important;
-        padding:14px 12px!important;
-        font-size:18px!important;
-        font-weight:1000!important;
-        color:#201100!important;
-        background:linear-gradient(#ffe66b,#ffb423)!important;
-        box-shadow:0 5px 0 rgba(0,0,0,.36)!important;
-      }
-
-      .battle-btn.blue{
-        color:#fff!important;
-        background:linear-gradient(#60d9ff,#1774ee)!important;
-      }
-
-      .battle-btn.green{
-        color:#07370f!important;
-        background:linear-gradient(#9dff73,#26b63e)!important;
-      }
-
-      .battle-select-grid{
-        display:grid!important;
-        grid-template-columns:repeat(3,1fr)!important;
-        gap:10px!important;
-        max-height:48svh!important;
-        overflow:auto!important;
-        padding:2px!important;
-        margin-bottom:14px!important;
-      }
-
-      .battle-choice{
-        border:2px solid rgba(255,255,255,.26)!important;
-        border-radius:18px!important;
-        padding:8px 5px!important;
-        background:rgba(255,255,255,.10)!important;
-        color:#fff!important;
-        font-weight:1000!important;
-        font-size:11px!important;
-      }
-
-      .battle-choice img{
-        width:64px!important;
-        height:64px!important;
-        object-fit:contain!important;
-        display:block!important;
-        margin:0 auto 4px!important;
-      }
-
-      #battleTitleLayer,#battleSelectLayer,#battleHud,#battleBanner{
-        display:none!important;
-      }
-
-      @media (max-width:430px){
-        .battle-actions.three{
-          grid-template-columns:1fr!important;
-        }
-      }
+      #battleCanvas{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;background:#3daf55!important;touch-action:none!important;z-index:1!important}
+      .battle-overlay{position:absolute!important;inset:0!important;z-index:50!important;pointer-events:none!important;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+      .battle-menu{position:absolute!important;inset:0!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:18px!important;background:rgba(0,0,0,.58)!important;pointer-events:auto!important}
+      .battle-card{width:min(92vw,440px)!important;max-height:88svh!important;overflow:auto!important;border-radius:28px!important;padding:20px!important;text-align:center!important;background:linear-gradient(180deg,rgba(35,28,78,.98),rgba(5,8,22,.98))!important;border:3px solid rgba(255,255,255,.35)!important;box-shadow:0 18px 48px rgba(0,0,0,.7)!important}
+      .battle-title{margin:0 0 14px!important;font-size:34px!important;font-weight:1000!important;color:#ffe66b!important;text-shadow:0 5px 0 #000!important}
+      .battle-help{margin:0 0 16px!important;color:#dfe8ff!important;font-size:13px!important;font-weight:900!important;line-height:1.55!important}
+      .battle-actions,.battle-small{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important}
+      .battle-actions.three{grid-template-columns:1fr 1fr 1fr!important}
+      .battle-btn{border:0!important;border-radius:999px!important;padding:14px 12px!important;font-size:18px!important;font-weight:1000!important;color:#201100!important;background:linear-gradient(#ffe66b,#ffb423)!important;box-shadow:0 5px 0 rgba(0,0,0,.36)!important}
+      .battle-btn.blue{color:#fff!important;background:linear-gradient(#60d9ff,#1774ee)!important}
+      .battle-btn.green{color:#07370f!important;background:linear-gradient(#9dff73,#26b63e)!important}
+      .battle-select-grid{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:10px!important;max-height:48svh!important;overflow:auto!important;padding:2px!important;margin-bottom:14px!important}
+      .battle-choice{border:2px solid rgba(255,255,255,.26)!important;border-radius:18px!important;padding:8px 5px!important;background:rgba(255,255,255,.10)!important;color:#fff!important;font-weight:1000!important;font-size:11px!important}
+      .battle-choice img{width:64px!important;height:64px!important;object-fit:contain!important;display:block!important;margin:0 auto 4px!important}
+      #battleTitleLayer,#battleSelectLayer,#battleHud,#battleBanner{display:none!important}
+      @media (max-width:430px){.battle-actions.three{grid-template-columns:1fr!important}}
     `;
     document.head.appendChild(style);
   }
@@ -350,10 +249,7 @@
     DPR = Math.min(window.devicePixelRatio || 1, 2);
 
     const screen = $('battleScreen');
-    const rect = screen ? screen.getBoundingClientRect() : {
-      width:window.innerWidth,
-      height:window.innerHeight
-    };
+    const rect = screen ? screen.getBoundingClientRect() : { width:window.innerWidth, height:window.innerHeight };
 
     W = Math.max(1, rect.width || window.innerWidth);
     H = Math.max(1, rect.height || window.innerHeight);
@@ -429,7 +325,6 @@
     initCanvas();
 
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-
     const screen = $('battleScreen');
     if (screen) screen.classList.add('active');
 
@@ -439,9 +334,7 @@
     state.p2Wins = 0;
     state.round = 1;
     state.rewardDone = false;
-    state.entities.length = 0;
-    state.bullets.length = 0;
-    state.particles.length = 0;
+    clearBattleObjects();
 
     loadChoices();
     renderOverlay();
@@ -455,9 +348,7 @@
     running = false;
     cancelAnimationFrame(raf);
 
-    if (document.exitFullscreen) {
-      document.exitFullscreen().catch(function(){});
-    }
+    if (document.exitFullscreen) document.exitFullscreen().catch(function(){});
 
     if (window.MobShotMain && window.MobShotMain.goMain) {
       window.MobShotMain.goMain();
@@ -465,7 +356,6 @@
     }
 
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-
     const main = $('mainScreen') || $('mainView');
     if (main) main.classList.add('active');
   }
@@ -481,17 +371,12 @@
   function loadChoices(){
     const list = [];
 
-    if (
-      window.MobShotShop &&
-      Array.isArray(window.MobShotShop.AVATAR_MASTER) &&
-      window.MobShotShop.loadState
-    ) {
+    if (window.MobShotShop && Array.isArray(window.MobShotShop.AVATAR_MASTER) && window.MobShotShop.loadState) {
       const shopState = window.MobShotShop.loadState();
       const owned = shopState && shopState.avatars ? shopState.avatars : {};
 
       window.MobShotShop.AVATAR_MASTER.forEach(a => {
         if (!owned[a.key]) return;
-
         const backImage = avatarBackImage(a);
         if (!backImage) return;
 
@@ -505,12 +390,7 @@
     }
 
     if (!list.length) {
-      list.push({
-        type:'avatar',
-        key:'pink',
-        name:'ピンクモデル',
-        image:'play/playpink.png'
-      });
+      list.push({ type:'avatar', key:'pink', name:'ピンクモデル', image:'play/playpink.png' });
     }
 
     state.choices = list;
@@ -627,13 +507,16 @@
   function tryLandscape(){
     const root = document.documentElement;
 
-    if (root.requestFullscreen) {
-      root.requestFullscreen().catch(function(){});
-    }
+    if (root.requestFullscreen) root.requestFullscreen().catch(function(){});
+    if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(function(){});
+  }
 
-    if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(function(){});
-    }
+  function clearBattleObjects(){
+    state.entities.length = 0;
+    state.enemies.length = 0;
+    state.bosses.length = 0;
+    state.bullets.length = 0;
+    state.particles.length = 0;
   }
 
   function beginCoopReady(){
@@ -650,7 +533,6 @@
 
     p1.name = '1P';
     p1.image = state.selected.p1.image;
-
     p2.name = '2P';
     p2.image = state.selected.p2.image;
 
@@ -659,9 +541,15 @@
   }
 
   function resetCoop(){
-    state.entities.length = 0;
-    state.bullets.length = 0;
-    state.particles.length = 0;
+    clearBattleObjects();
+
+    state.coopAreaIndex = 0;
+    state.coopBoss = null;
+    state.coopScore = 0;
+    state.coopKills = 0;
+    state.coopClear = false;
+    state.coopResultShown = false;
+    state.spawnCd = 40;
 
     state.players.forEach(p => {
       p.hp = 100;
@@ -669,7 +557,7 @@
       p.power = 1;
       p.rapid = 1;
       p.wide = 1;
-      p.shootCd = 30;
+      p.shootCd = 20;
       p.alive = true;
     });
 
@@ -678,7 +566,38 @@
 
   function beginCoopGame(){
     state.screen = 'coop';
+    spawnCoopBoss();
     showBattleMessage('START!');
+  }
+
+  function spawnCoopBoss(){
+    const areaKey = COOP_AREAS[state.coopAreaIndex];
+    const area = getAreaDataByKey(areaKey);
+    const src = getCoopBossSource();
+
+    if (!src) return;
+
+    const scale = 0.42 + state.coopAreaIndex * 0.16;
+    const hp = Math.ceil(Number(src.hp || 200) * scale);
+
+    state.coopBoss = {
+      type:'boss',
+      name:src.name || 'BOSS',
+      image:src.image || '',
+      x:W / 2,
+      y:H * 0.22,
+      targetX:W / 2,
+      hp,
+      maxHp:hp,
+      r:42,
+      score:Math.ceil(Number(src.score || 1000) * scale),
+      areaName:(area && area.name) || areaKey,
+      dead:false,
+      shootCd:80
+    };
+
+    state.bosses = [state.coopBoss];
+    showBattleMessage(`${state.coopBoss.areaName} BOSS!`);
   }
 
   function beginMatch(){
@@ -687,7 +606,6 @@
 
     p1.name = '1P';
     p1.image = state.selected.p1.image;
-
     p2.name = mode === 'cpu' ? 'CPU' : '2P';
     p2.image = state.selected.p2.image;
 
@@ -703,9 +621,7 @@
   }
 
   function resetRound(){
-    state.entities.length = 0;
-    state.bullets.length = 0;
-    state.particles.length = 0;
+    clearBattleObjects();
     state.spawnCd = 80;
 
     state.players.forEach(p => {
@@ -768,19 +684,24 @@
     }
 
     const left = 5000 - (Date.now() - state.coopCountdownStart);
-
-    if (left <= 0) {
-      beginCoopGame();
-    }
+    if (left <= 0) beginCoopGame();
   }
 
   function updateCoop(){
     updatePlayers();
+    updateCoopSpawns();
+    updateCoopBosses();
+    updateCoopEnemies();
+    updateEntities();
+    updateBullets();
     updateParticles();
+    checkCoopEnd();
   }
 
   function updatePlayers(){
     state.players.forEach(p => {
+      if (!p.alive) return;
+
       p.x += (p.targetX - p.x) * 0.2;
 
       if (mode === 'coop') {
@@ -825,6 +746,7 @@
       const off = (i - (count - 1) / 2) * spacing;
 
       state.bullets.push({
+        kind:'player',
         owner:p.id,
         x:p.x + off,
         y:p.y + dir * 32,
@@ -835,6 +757,125 @@
         dead:false
       });
     }
+  }
+
+  function updateCoopSpawns(){
+    state.spawnCd--;
+    if (state.spawnCd > 0) return;
+
+    state.spawnCd = intRand(40, 80);
+
+    const roll = Math.random();
+
+    if (roll < 0.50) {
+      spawnCoopEnemy();
+      return;
+    }
+
+    const isChest = roll < 0.72;
+    const src = isChest ? pickFrom(getBattleChests()) : pickFrom(getBattleGimmicks());
+    const hp = Math.max(1, Math.ceil(Number(src && src.hp || (isChest ? 10 : 8)) * 0.75));
+
+    state.entities.push({
+      type:isChest ? 'chest' : 'obstacle',
+      name:src && src.name ? src.name : (isChest ? '宝箱' : '障害物'),
+      image:src && src.image ? src.image : (isChest ? FALLBACK_ASSET.chest : FALLBACK_ASSET.obstacle),
+      x:rand(W * 0.10, W * 0.90),
+      y:rand(H * 0.20, H * 0.48),
+      vx:rand(-0.9, 0.9),
+      vy:rand(0.2, 0.8),
+      hp,
+      maxHp:hp,
+      r:isChest ? 22 : 25,
+      dead:false,
+      wobble:Math.random() * Math.PI * 2
+    });
+  }
+
+  function spawnCoopEnemy(){
+    const src = pickFrom(getCoopZako());
+    if (!src) return;
+
+    const hp = Math.max(2, Math.ceil(Number(src.hp || 10) * (0.7 + state.coopAreaIndex * 0.18)));
+
+    state.enemies.push({
+      type:'zako',
+      name:src.name || 'ENEMY',
+      image:src.image || '',
+      x:rand(W * 0.10, W * 0.90),
+      y:-40,
+      vx:rand(-0.7, 0.7),
+      vy:rand(0.75, 1.3),
+      hp,
+      maxHp:hp,
+      r:24,
+      score:Math.ceil(Number(src.score || 50) * (1 + state.coopAreaIndex * 0.4)),
+      dead:false
+    });
+  }
+
+  function updateCoopEnemies(){
+    state.enemies.forEach(e => {
+      e.x += e.vx;
+      e.y += e.vy;
+
+      if (e.x < W * 0.08 || e.x > W * 0.92) e.vx *= -1;
+
+      state.players.forEach(p => {
+        if (!p.alive || e.dead) return;
+
+        if (Math.hypot(e.x - p.x, e.y - p.y) < e.r + 25) {
+          p.hp -= 8 + state.coopAreaIndex * 2;
+          e.dead = true;
+          burst(e.x, e.y, '#ff5b5b', 10);
+        }
+      });
+
+      if (e.y > H + 80) e.dead = true;
+    });
+
+    state.enemies = state.enemies.filter(e => !e.dead);
+  }
+
+  function updateCoopBosses(){
+    state.bosses.forEach(b => {
+      if (b.dead) return;
+
+      b.x += Math.sin(state.frame * 0.025 + state.coopAreaIndex) * 1.2;
+      b.x = clamp(b.x, W * 0.18, W * 0.82);
+
+      b.shootCd--;
+      if (b.shootCd <= 0) {
+        b.shootCd = Math.max(35, 85 - state.coopAreaIndex * 7);
+        fireBossBullet(b);
+      }
+    });
+
+    state.bosses = state.bosses.filter(b => !b.dead);
+  }
+
+  function fireBossBullet(b){
+    const targets = state.players.filter(p => p.alive);
+    if (!targets.length) return;
+
+    targets.forEach(p => {
+      const dx = p.x - b.x;
+      const dy = p.y - b.y;
+      const len = Math.max(1, Math.hypot(dx, dy));
+      const speed = 2.2 + state.coopAreaIndex * 0.25;
+
+      state.bullets.push({
+        kind:'enemy',
+        owner:0,
+        x:b.x,
+        y:b.y + 30,
+        vx:dx / len * speed,
+        vy:dy / len * speed,
+        r:9,
+        power:8 + state.coopAreaIndex * 2,
+        dead:false
+      });
+    });
   }
 
   function updateSpawns(){
@@ -866,9 +907,22 @@
   function updateEntities(){
     state.entities.forEach(e => {
       e.x += e.vx;
-      e.y += Math.sin(state.frame * 0.02 + e.wobble) * 0.15;
+      e.y += e.vy || Math.sin(state.frame * 0.02 + e.wobble) * 0.15;
 
-      if (e.x < W * 0.12 || e.x > W * 0.88) e.vx *= -1;
+      if (e.x < W * 0.08 || e.x > W * 0.92) e.vx *= -1;
+
+      if (mode === 'coop') {
+        state.players.forEach(p => {
+          if (!p.alive || e.dead) return;
+          if (e.type === 'obstacle' && Math.hypot(e.x - p.x, e.y - p.y) < e.r + 24) {
+            p.hp -= 5;
+            e.dead = true;
+            burst(e.x, e.y, '#9deeff', 8);
+          }
+        });
+
+        if (e.y > H + 80) e.dead = true;
+      }
     });
 
     state.entities = state.entities.filter(e => !e.dead);
@@ -879,7 +933,19 @@
       b.x += b.vx;
       b.y += b.vy;
 
-      if (mode !== 'coop') {
+      if (mode === 'coop' && b.kind === 'enemy') {
+        state.players.forEach(p => {
+          if (!p.alive || b.dead) return;
+
+          if (Math.hypot(b.x - p.x, b.y - p.y) < b.r + 24) {
+            p.hp -= b.power;
+            b.dead = true;
+            burst(b.x, b.y, '#ff5b5b', 8);
+          }
+        });
+      }
+
+      if (mode !== 'coop' && b.kind !== 'enemy') {
         const enemyPlayer = state.players[b.owner === 1 ? 1 : 0];
 
         if (
@@ -893,25 +959,81 @@
         }
       }
 
-      state.entities.forEach(e => {
-        if (e.dead || b.dead) return;
+      if (b.kind !== 'enemy') {
+        hitObjectsByPlayerBullet(b);
+      }
 
-        if (Math.hypot(b.x - e.x, b.y - e.y) <= e.r + b.r) {
-          e.hp -= b.power;
-          b.dead = true;
-          burst(e.x, e.y, e.type === 'chest' ? '#ffe66b' : '#9deeff', 6);
-
-          if (e.hp <= 0) {
-            e.dead = true;
-            onEntityDestroyed(e, b.owner);
-          }
-        }
-      });
-
-      if (b.y < -80 || b.y > H + 80) b.dead = true;
+      if (b.y < -100 || b.y > H + 100 || b.x < -100 || b.x > W + 100) b.dead = true;
     });
 
     state.bullets = state.bullets.filter(b => !b.dead);
+  }
+
+  function hitObjectsByPlayerBullet(b){
+    state.entities.forEach(e => {
+      if (e.dead || b.dead) return;
+
+      if (Math.hypot(b.x - e.x, b.y - e.y) <= e.r + b.r) {
+        e.hp -= b.power;
+        b.dead = true;
+        burst(e.x, e.y, e.type === 'chest' ? '#ffe66b' : '#9deeff', 6);
+
+        if (e.hp <= 0) {
+          e.dead = true;
+          onEntityDestroyed(e, b.owner);
+        }
+      }
+    });
+
+    state.enemies.forEach(e => {
+      if (e.dead || b.dead) return;
+
+      if (Math.hypot(b.x - e.x, b.y - e.y) <= e.r + b.r) {
+        e.hp -= b.power;
+        b.dead = true;
+        burst(e.x, e.y, '#ffcf5b', 5);
+
+        if (e.hp <= 0) {
+          e.dead = true;
+          state.coopKills++;
+          state.coopScore += Number(e.score || 50);
+          burst(e.x, e.y, '#9dff73', 12);
+        }
+      }
+    });
+
+    state.bosses.forEach(e => {
+      if (e.dead || b.dead) return;
+
+      if (Math.hypot(b.x - e.x, b.y - e.y) <= e.r + b.r) {
+        e.hp -= b.power;
+        b.dead = true;
+        burst(e.x, e.y, '#ffe66b', 6);
+
+        if (e.hp <= 0) {
+          e.dead = true;
+          state.coopKills++;
+          state.coopScore += Number(e.score || 1000);
+          burst(e.x, e.y, '#d86bff', 24);
+          nextCoopBoss();
+        }
+      }
+    });
+  }
+
+  function nextCoopBoss(){
+    state.coopAreaIndex++;
+
+    if (state.coopAreaIndex >= COOP_AREAS.length) {
+      state.coopClear = true;
+      finishCoop(true);
+      return;
+    }
+
+    setTimeout(function(){
+      if (!running || mode !== 'coop' || state.screen !== 'coop') return;
+      spawnCoopBoss();
+    }, 900);
   }
 
   function onEntityDestroyed(e, owner){
@@ -928,12 +1050,14 @@
       if (reward === 'heal10') p.hp = Math.min(p.maxHp, p.hp + 10);
       if (reward === 'heal30') p.hp = Math.min(p.maxHp, p.hp + 30);
 
+      state.coopScore += 80;
       showBattleMessage(ownerText(owner) + ' POWER UP!');
       return;
     }
 
     p.maxHp += 5;
     p.hp += 5;
+    state.coopScore += Number(e.score || 20);
 
     if (mode !== 'coop') {
       const other = state.players[owner === 1 ? 1 : 0];
@@ -941,6 +1065,61 @@
     }
 
     showBattleMessage(ownerText(owner) + ' BREAK!');
+  }
+
+  function checkCoopEnd(){
+    const alive = state.players.some(p => p.hp > 0);
+
+    if (!alive) {
+      finishCoop(false);
+    }
+  }
+
+  function finishCoop(clear){
+    if (state.coopResultShown) return;
+
+    state.coopResultShown = true;
+    state.screen = 'coopResult';
+    state.coopClear = !!clear;
+
+    if (clear) {
+      addCoin(COOP_CLEAR_REWARD_COIN);
+      dropSSRStone();
+    }
+
+    const overlay = $('battleOverlay');
+    if (!overlay) return;
+
+    overlay.innerHTML = `
+      <div class="battle-menu">
+        <div class="battle-card">
+          <h1 class="battle-title">${clear ? 'COOP CLEAR!' : 'GAME OVER'}</h1>
+          <p class="battle-help">
+            SCORE: ${Number(state.coopScore || 0).toLocaleString()}<br>
+            KILL: ${Number(state.coopKills || 0).toLocaleString()}<br>
+            ${clear ? `報酬: ${COOP_CLEAR_REWARD_COIN.toLocaleString()} COIN + SSR石板1枚` : '報酬なし'}
+          </p>
+          <button id="mobCoopRetryBtn" class="battle-btn green" type="button">もう一度</button>
+          <button id="mobCoopFinishMain" class="battle-btn blue" type="button" style="margin-top:10px;width:100%">メインへ戻る</button>
+        </div>
+      </div>
+    `;
+
+    $('mobCoopRetryBtn').onclick = function(){
+      beginCoopReady();
+    };
+
+    $('mobCoopFinishMain').onclick = close;
+  }
+
+  function dropSSRStone(){
+    if (!window.MobShotGacha || !window.MobShotGacha.allStones || !window.MobShotGacha.addResult) return null;
+
+    const pool = window.MobShotGacha.allStones().filter(s => s.rarity === 'SSR');
+    if (!pool.length) return null;
+
+    const stone = Object.assign({}, pickFrom(pool), { type:'stone', fromCoop:true });
+    return window.MobShotGacha.addResult(stone);
   }
 
   function ownerText(owner){
@@ -1044,10 +1223,7 @@
       } catch(e) {}
     }
 
-    if (window.MobShotMain && window.MobShotMain.refreshMainHud) {
-      window.MobShotMain.refreshMainHud();
-    }
-
+    if (window.MobShotMain && window.MobShotMain.refreshMainHud) window.MobShotMain.refreshMainHud();
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
   }
 
@@ -1061,11 +1237,8 @@
 
     drawBackground();
 
-    if (mode === 'coop') {
-      drawCoopLine();
-    } else {
-      drawCenterLine();
-    }
+    if (mode === 'coop') drawCoopLine();
+    else drawCenterLine();
 
     drawHud();
 
@@ -1076,6 +1249,9 @@
     }
 
     if (state.screen === 'coop') {
+      drawEntities();
+      drawEnemies();
+      drawBosses();
       drawBullets();
       drawPlayers();
       drawParticles();
@@ -1095,15 +1271,16 @@
   function drawBackground(){
     const bg = img(getBattleBackground());
 
-    if (imageReady(bg)) {
-      ctx.drawImage(bg, 0, 0, W, H);
-    } else {
+    if (imageReady(bg)) ctx.drawImage(bg, 0, 0, W, H);
+    else {
       ctx.fillStyle = '#49b852';
       ctx.fillRect(0,0,W,H);
     }
 
-    ctx.fillStyle = 'rgba(0,0,0,.16)';
-    ctx.fillRect(0, H / 2 - 3, W, 6);
+    if (mode !== 'coop') {
+      ctx.fillStyle = 'rgba(0,0,0,.16)';
+      ctx.fillRect(0, H / 2 - 3, W, 6);
+    }
   }
 
   function drawCenterLine(){
@@ -1145,6 +1322,16 @@
 
       drawCoopHud(p1, 10, 10, W / 2 - 20);
       drawCoopHud(p2, W / 2 + 10, 10, W / 2 - 20);
+
+      ctx.font = '900 15px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffe66b';
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 5;
+      const area = getAreaDataByKey(COOP_AREAS[state.coopAreaIndex] || 'grass');
+      const txt = `${area ? area.name : 'AREA'} / SCORE ${Number(state.coopScore || 0).toLocaleString()}`;
+      ctx.strokeText(txt, W / 2, 54);
+      ctx.fillText(txt, W / 2, 54);
       return;
     }
 
@@ -1277,9 +1464,8 @@
 
       if (mode !== 'coop' && p.id === 1) ctx.rotate(Math.PI);
 
-      if (imageReady(image)) {
-        ctx.drawImage(image, -size / 2, -size / 2, size, size);
-      } else {
+      if (imageReady(image)) ctx.drawImage(image, -size / 2, -size / 2, size, size);
+      else {
         ctx.fillStyle = p.id === 1 ? '#60d9ff' : '#ff7ab8';
         ctx.beginPath();
         ctx.arc(0,0,28,0,Math.PI*2);
@@ -1293,12 +1479,45 @@
   function drawEntities(){
     state.entities.forEach(e => {
       const image = img(e.image);
-      const size = e.type === 'chest' ? 54 : 62;
+      const size = mode === 'coop' ? (e.type === 'chest' ? 42 : 46) : (e.type === 'chest' ? 54 : 62);
 
-      if (imageReady(image)) {
-        ctx.drawImage(image, e.x - size / 2, e.y - size / 2, size, size);
-      } else {
+      if (imageReady(image)) ctx.drawImage(image, e.x - size / 2, e.y - size / 2, size, size);
+      else {
         ctx.fillStyle = e.type === 'chest' ? '#ffe66b' : '#777';
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      drawEntityNumber(e);
+    });
+  }
+
+  function drawEnemies(){
+    state.enemies.forEach(e => {
+      const image = img(e.image);
+      const size = 42;
+
+      if (imageReady(image)) ctx.drawImage(image, e.x - size / 2, e.y - size / 2, size, size);
+      else {
+        ctx.fillStyle = '#ff7ab8';
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      drawEntityNumber(e);
+    });
+  }
+
+  function drawBosses(){
+    state.bosses.forEach(e => {
+      const image = img(e.image);
+      const size = 84;
+
+      if (imageReady(image)) ctx.drawImage(image, e.x - size / 2, e.y - size / 2, size, size);
+      else {
+        ctx.fillStyle = '#d86bff';
         ctx.beginPath();
         ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
         ctx.fill();
@@ -1311,6 +1530,11 @@
   function drawEntityNumber(e){
     const text = String(Math.max(0, Math.ceil(e.hp)));
 
+    if (mode === 'coop') {
+      drawSideText(text, e.x, e.y - 26, false, 15);
+      return;
+    }
+
     drawSideText(text, e.x, e.y - 11, true, 16);
     drawSideText(text, e.x, e.y + 17, false, 16);
   }
@@ -1319,10 +1543,10 @@
     const image = img(FALLBACK_ASSET.bullet);
 
     state.bullets.forEach(b => {
-      if (imageReady(image)) {
+      if (imageReady(image) && b.kind !== 'enemy') {
         ctx.drawImage(image, b.x - 12, b.y - 12, 24, 24);
       } else {
-        ctx.fillStyle = '#fff178';
+        ctx.fillStyle = b.kind === 'enemy' ? '#ff5b5b' : '#fff178';
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
         ctx.fill();
