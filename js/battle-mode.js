@@ -1,4 +1,4 @@
-'use strict';
+　'use strict';
 
 (function(){
   const BATTLE_REWARD_COIN = 1000;
@@ -39,7 +39,9 @@
     bullets:[],
     particles:[],
     players:[makePlayer(1), makePlayer(2)],
-    spawnCd:90
+    spawnCd:90,
+    coopCountdownStart:0,
+    coopCountdownStarted:false
   };
 
   function $(id){ return document.getElementById(id); }
@@ -252,6 +254,10 @@
         gap:10px!important;
       }
 
+      .battle-actions.three{
+        grid-template-columns:1fr 1fr 1fr!important;
+      }
+
       .battle-btn{
         border:0!important;
         border-radius:999px!important;
@@ -266,6 +272,11 @@
       .battle-btn.blue{
         color:#fff!important;
         background:linear-gradient(#60d9ff,#1774ee)!important;
+      }
+
+      .battle-btn.green{
+        color:#07370f!important;
+        background:linear-gradient(#9dff73,#26b63e)!important;
       }
 
       .battle-select-grid{
@@ -298,6 +309,12 @@
 
       #battleTitleLayer,#battleSelectLayer,#battleHud,#battleBanner{
         display:none!important;
+      }
+
+      @media (max-width:430px){
+        .battle-actions.three{
+          grid-template-columns:1fr!important;
+        }
       }
     `;
     document.head.appendChild(style);
@@ -354,18 +371,26 @@
     const p1 = state.players[0];
     const p2 = state.players[1];
 
+    if (mode === 'coop') {
+      p1.x = W * 0.25;
+      p2.x = W * 0.75;
+      p1.targetX = W * 0.25;
+      p2.targetX = W * 0.75;
+      p1.y = H * 0.82;
+      p2.y = H * 0.82;
+      return;
+    }
+
     p1.x = p1.x || W / 2;
     p2.x = p2.x || W / 2;
-
     p1.targetX = p1.targetX || W / 2;
     p2.targetX = p2.targetX || W / 2;
-
     p1.y = H * 0.22;
     p2.y = H * 0.78;
   }
 
   function onPointer(e){
-    if (!running || state.screen !== 'battle') return;
+    if (!running) return;
 
     e.preventDefault();
     e.stopPropagation();
@@ -373,6 +398,21 @@
     const rect = canvas.getBoundingClientRect();
     const y = e.clientY - rect.top;
     const x = e.clientX - rect.left;
+
+    if (mode === 'coop' && state.screen === 'coop') {
+      if (x < W / 2) {
+        const p1 = state.players[0];
+        p1.targetX = clamp(x, W * 0.08, W * 0.47);
+        p1.input = true;
+      } else {
+        const p2 = state.players[1];
+        p2.targetX = clamp(x, W * 0.53, W * 0.92);
+        p2.input = true;
+      }
+      return;
+    }
+
+    if (state.screen !== 'battle') return;
 
     if (y < H / 2) {
       const p1 = state.players[0];
@@ -393,6 +433,7 @@
     const screen = $('battleScreen');
     if (screen) screen.classList.add('active');
 
+    mode = 'cpu';
     state.screen = 'title';
     state.p1Wins = 0;
     state.p2Wins = 0;
@@ -413,6 +454,10 @@
   function close(){
     running = false;
     cancelAnimationFrame(raf);
+
+    if (document.exitFullscreen) {
+      document.exitFullscreen().catch(function(){});
+    }
 
     if (window.MobShotMain && window.MobShotMain.goMain) {
       window.MobShotMain.goMain();
@@ -480,10 +525,11 @@
         <div class="battle-menu">
           <div class="battle-card">
             <h1 class="battle-title">BATTLE MODE</h1>
-            <p class="battle-help">3本先取の対戦モードです。所持アバターの後ろ姿だけ使用できます。</p>
-            <div class="battle-actions">
+            <p class="battle-help">対戦・CPU戦・協力モードを選べます。</p>
+            <div class="battle-actions three">
               <button id="mobBattlePvpBtn" class="battle-btn blue" type="button">PvP</button>
               <button id="mobBattleCpuBtn" class="battle-btn" type="button">CPU</button>
+              <button id="mobBattleCoopBtn" class="battle-btn green" type="button">協力</button>
             </div>
             <div style="margin-top:10px">
               <button id="mobBattleMainBtn" class="battle-btn blue" type="button" style="width:100%">メインへ戻る</button>
@@ -494,6 +540,7 @@
 
       $('mobBattlePvpBtn').onclick = function(){ startSelect('pvp'); };
       $('mobBattleCpuBtn').onclick = function(){ startSelect('cpu'); };
+      $('mobBattleCoopBtn').onclick = function(){ startSelect('coop'); };
       $('mobBattleMainBtn').onclick = close;
       return;
     }
@@ -568,7 +615,70 @@
     }
 
     state.selected.p2 = choice;
+
+    if (mode === 'coop') {
+      beginCoopReady();
+      return;
+    }
+
     beginMatch();
+  }
+
+  function tryLandscape(){
+    const root = document.documentElement;
+
+    if (root.requestFullscreen) {
+      root.requestFullscreen().catch(function(){});
+    }
+
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(function(){});
+    }
+  }
+
+  function beginCoopReady(){
+    tryLandscape();
+
+    state.screen = 'coopCountdown';
+    state.message = '';
+    state.messageTimer = 0;
+    state.coopCountdownStart = 0;
+    state.coopCountdownStarted = false;
+
+    const p1 = state.players[0];
+    const p2 = state.players[1];
+
+    p1.name = '1P';
+    p1.image = state.selected.p1.image;
+
+    p2.name = '2P';
+    p2.image = state.selected.p2.image;
+
+    resetCoop();
+    renderOverlay();
+  }
+
+  function resetCoop(){
+    state.entities.length = 0;
+    state.bullets.length = 0;
+    state.particles.length = 0;
+
+    state.players.forEach(p => {
+      p.hp = 100;
+      p.maxHp = 100;
+      p.power = 1;
+      p.rapid = 1;
+      p.wide = 1;
+      p.shootCd = 30;
+      p.alive = true;
+    });
+
+    resetPlayerPositions();
+  }
+
+  function beginCoopGame(){
+    state.screen = 'coop';
+    showBattleMessage('START!');
   }
 
   function beginMatch(){
@@ -622,8 +732,18 @@
 
   function update(){
     state.frame++;
-
     if (state.messageTimer > 0) state.messageTimer--;
+
+    if (state.screen === 'coopCountdown') {
+      updateCoopCountdown();
+      return;
+    }
+
+    if (state.screen === 'coop') {
+      updateCoop();
+      return;
+    }
+
     if (state.screen !== 'battle') return;
 
     updatePlayers();
@@ -635,10 +755,40 @@
     checkRoundEnd();
   }
 
+  function updateCoopCountdown(){
+    if (H > W) {
+      state.coopCountdownStart = 0;
+      state.coopCountdownStarted = false;
+      return;
+    }
+
+    if (!state.coopCountdownStarted) {
+      state.coopCountdownStarted = true;
+      state.coopCountdownStart = Date.now();
+    }
+
+    const left = 5000 - (Date.now() - state.coopCountdownStart);
+
+    if (left <= 0) {
+      beginCoopGame();
+    }
+  }
+
+  function updateCoop(){
+    updatePlayers();
+    updateParticles();
+  }
+
   function updatePlayers(){
     state.players.forEach(p => {
       p.x += (p.targetX - p.x) * 0.2;
-      p.x = clamp(p.x, W * 0.12, W * 0.88);
+
+      if (mode === 'coop') {
+        if (p.id === 1) p.x = clamp(p.x, W * 0.08, W * 0.47);
+        else p.x = clamp(p.x, W * 0.53, W * 0.92);
+      } else {
+        p.x = clamp(p.x, W * 0.12, W * 0.88);
+      }
 
       p.shootCd--;
 
@@ -667,7 +817,7 @@
   }
 
   function firePlayer(p){
-    const dir = p.id === 1 ? 1 : -1;
+    const dir = mode === 'coop' ? -1 : (p.id === 1 ? 1 : -1);
     const count = Math.max(1, Number(p.wide || 1));
     const spacing = 18;
 
@@ -729,16 +879,18 @@
       b.x += b.vx;
       b.y += b.vy;
 
-      const enemyPlayer = state.players[b.owner === 1 ? 1 : 0];
+      if (mode !== 'coop') {
+        const enemyPlayer = state.players[b.owner === 1 ? 1 : 0];
 
-      if (
-        enemyPlayer.alive &&
-        Math.abs(b.x - enemyPlayer.x) < 28 + b.r &&
-        Math.abs(b.y - enemyPlayer.y) < 34 + b.r
-      ) {
-        enemyPlayer.hp -= b.power;
-        b.dead = true;
-        burst(b.x, b.y, '#ff5b5b', 8);
+        if (
+          enemyPlayer.alive &&
+          Math.abs(b.x - enemyPlayer.x) < 28 + b.r &&
+          Math.abs(b.y - enemyPlayer.y) < 34 + b.r
+        ) {
+          enemyPlayer.hp -= b.power;
+          b.dead = true;
+          burst(b.x, b.y, '#ff5b5b', 8);
+        }
       }
 
       state.entities.forEach(e => {
@@ -783,8 +935,10 @@
     p.maxHp += 5;
     p.hp += 5;
 
-    const other = state.players[owner === 1 ? 1 : 0];
-    other.hp -= Math.max(1, Math.ceil(e.maxHp * 0.35));
+    if (mode !== 'coop') {
+      const other = state.players[owner === 1 ? 1 : 0];
+      other.hp -= Math.max(1, Math.ceil(e.maxHp * 0.35));
+    }
 
     showBattleMessage(ownerText(owner) + ' BREAK!');
   }
@@ -906,8 +1060,28 @@
     if (!ctx) return;
 
     drawBackground();
-    drawCenterLine();
+
+    if (mode === 'coop') {
+      drawCoopLine();
+    } else {
+      drawCenterLine();
+    }
+
     drawHud();
+
+    if (state.screen === 'coopCountdown') {
+      drawPlayers();
+      drawCoopCountdown();
+      return;
+    }
+
+    if (state.screen === 'coop') {
+      drawBullets();
+      drawPlayers();
+      drawParticles();
+      drawMessage();
+      return;
+    }
 
     if (state.screen === 'battle' || state.screen === 'finish' || state.screen === 'roundWait') {
       drawEntities();
@@ -944,8 +1118,35 @@
     ctx.restore();
   }
 
+  function drawCoopLine(){
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,.9)';
+    ctx.lineWidth = 4;
+    ctx.setLineDash([18, 14]);
+    ctx.beginPath();
+    ctx.moveTo(W / 2, 0);
+    ctx.lineTo(W / 2, H);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   function drawHud(){
-    if (state.screen !== 'battle' && state.screen !== 'finish' && state.screen !== 'roundWait') return;
+    if (
+      state.screen !== 'battle' &&
+      state.screen !== 'finish' &&
+      state.screen !== 'roundWait' &&
+      state.screen !== 'coopCountdown' &&
+      state.screen !== 'coop'
+    ) return;
+
+    if (mode === 'coop') {
+      const p1 = state.players[0];
+      const p2 = state.players[1];
+
+      drawCoopHud(p1, 10, 10, W / 2 - 20);
+      drawCoopHud(p2, W / 2 + 10, 10, W / 2 - 20);
+      return;
+    }
 
     const p1 = state.players[0];
     const p2 = state.players[1];
@@ -955,6 +1156,27 @@
 
     drawSideText(`${state.p1Wins} - ${state.p2Wins}`, W / 2, H * 0.44, true, 18);
     drawSideText(`${state.p1Wins} - ${state.p2Wins}`, W / 2, H * 0.56, false, 18);
+  }
+
+  function drawCoopHud(p, x, y, w){
+    const rate = clamp(p.hp / p.maxHp, 0, 1);
+
+    ctx.fillStyle = 'rgba(0,0,0,.58)';
+    roundRect(x, y, w, 36, 14);
+    ctx.fill();
+
+    ctx.fillStyle = '#ff5b5b';
+    roundRect(x + 8, y + 8, (w - 16) * rate, 10, 999);
+    ctx.fill();
+
+    ctx.font = '900 13px system-ui';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(`${p.name} HP ${Math.max(0, Math.ceil(p.hp))}/${p.maxHp}`, x + 10, y + 29);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#9deeff';
+    ctx.fillText(`P${p.power} R${p.rapid} W${p.wide}`, x + w - 10, y + 29);
   }
 
   function drawPlayerHud(p, x, y, upsideDown){
@@ -1007,15 +1229,53 @@
     ctx.restore();
   }
 
+  function drawCoopCountdown(){
+    if (H > W) {
+      drawOverlayText('スマホを横向きにしてください', '横向きになったら5秒カウントが始まります');
+      return;
+    }
+
+    let left = 5;
+
+    if (state.coopCountdownStarted && state.coopCountdownStart) {
+      left = Math.max(0, Math.ceil((5000 - (Date.now() - state.coopCountdownStart)) / 1000));
+    }
+
+    drawOverlayText(String(left), '協力モード準備中');
+  }
+
+  function drawOverlayText(main, sub){
+    ctx.save();
+
+    ctx.fillStyle = 'rgba(0,0,0,.58)';
+    ctx.fillRect(0,0,W,H);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffe66b';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 8;
+    ctx.font = '1000 42px system-ui';
+    ctx.strokeText(main, W / 2, H / 2 - 10);
+    ctx.fillText(main, W / 2, H / 2 - 10);
+
+    ctx.font = '900 18px system-ui';
+    ctx.fillStyle = '#fff';
+    ctx.lineWidth = 5;
+    ctx.strokeText(sub, W / 2, H / 2 + 32);
+    ctx.fillText(sub, W / 2, H / 2 + 32);
+
+    ctx.restore();
+  }
+
   function drawPlayers(){
     state.players.forEach(p => {
       const image = img(p.image);
-      const size = 62;
+      const size = mode === 'coop' ? 52 : 62;
 
       ctx.save();
       ctx.translate(p.x, p.y);
 
-      if (p.id === 1) ctx.rotate(Math.PI);
+      if (mode !== 'coop' && p.id === 1) ctx.rotate(Math.PI);
 
       if (imageReady(image)) {
         ctx.drawImage(image, -size / 2, -size / 2, size, size);
@@ -1089,8 +1349,12 @@
     ctx.save();
     ctx.globalAlpha = alpha;
 
-    drawSideText(state.message, W / 2, H * 0.34, true, 30);
-    drawSideText(state.message, W / 2, H * 0.66, false, 30);
+    if (mode === 'coop') {
+      drawSideText(state.message, W / 2, H * 0.5, false, 30);
+    } else {
+      drawSideText(state.message, W / 2, H * 0.34, true, 30);
+      drawSideText(state.message, W / 2, H * 0.66, false, 30);
+    }
 
     ctx.restore();
   }
