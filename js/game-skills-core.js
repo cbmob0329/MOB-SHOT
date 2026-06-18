@@ -28,6 +28,11 @@
     'skill/timemagic.png',
     'skill/lili.png',
 
+    'skill/neonbomb.png',
+    'skill/nepatk.png',
+    'skill/mira.png',
+    'skill/book.png',
+
     'atk/rocket.png',
     'atk/enetama.png',
     'atk/tuibi.png',
@@ -38,7 +43,13 @@
     'atk/rib.png',
     'atk/riy.png',
     'atk/riw.png',
-    'atk/rir.png'
+    'atk/rir.png',
+
+    'atk/hinotama.png',
+    'atk/neonbomb.png',
+    'atk/atknep.png',
+    'atk/mira atk.png',
+    'pet/pet hero.png'
   ];
 
   function img(src){
@@ -46,7 +57,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=skill_split_core_20260614';
+      image.src = src + '?v=skill_split_core_20260618_newskills';
       images.set(src, image);
     }
 
@@ -169,6 +180,11 @@
     if (skill.type === 'darkThunder') FX.fireDarkThunder(skill);
     if (skill.type === 'timeMagic') FX.startTimeMagic(skill);
     if (skill.type === 'lilithSisters') FX.startLilithSisters(skill);
+
+    if (skill.type === 'neonBomb') FX.fireNeonBomb(skill);
+    if (skill.type === 'neptuneAttack') FX.fireNeptuneAttack(skill);
+    if (skill.type === 'miraPoison') FX.fireMiraPoison(skill);
+    if (skill.type === 'bookHero') FX.startBookHero(skill);
   }
 
   function update(){
@@ -186,6 +202,8 @@
       FX.updateBlackHole();
       FX.updateDots();
       FX.updateLilithSisters();
+
+      if (FX.updateBookHero) FX.updateBookHero();
     } else {
       updateCooldowns();
     }
@@ -213,6 +231,11 @@
       y: S.gameState.player.y - 85,
       timer: 42
     });
+  }
+
+  function basePlayerPower(){
+    if (!S.gameState) return 1;
+    return Number(S.gameState.power || 1);
   }
 
   function playerPower(){
@@ -270,6 +293,14 @@
   function coinMultiplier(){
     const gold = S.skillEffects.find(e => e.type === 'goldRush');
     return gold ? Number(gold.multiplier || 1.5) : 1;
+  }
+
+  function playerBulletScale(){
+    return S.skillEffects.some(e => e.type === 'darkPower') ? 3 : 1;
+  }
+
+  function playerBulletDamageAdd(){
+    return S.skillEffects.some(e => e.type === 'darkPower') ? 5 : 0;
   }
 
   function reduceCooldownAll(sec){
@@ -344,6 +375,7 @@
   S.img = img;
   S.imageReady = imageReady;
   S.showSkillText = showSkillText;
+  S.basePlayerPower = basePlayerPower;
   S.playerPower = playerPower;
 
   window.MobShotGameSkills = {
@@ -354,6 +386,8 @@
     isInvincibleAgainst,
     isTimeStopped,
     coinMultiplier,
+    playerBulletScale,
+    playerBulletDamageAdd,
     reduceCooldownAll,
     fillAll
   };
