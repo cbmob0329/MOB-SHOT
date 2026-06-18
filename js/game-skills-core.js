@@ -45,12 +45,11 @@
     'atk/riw.png',
     'atk/rir.png',
 
-    'atk/hinotama.png',
+    'atk/atkmaoh.png',
     'atk/neonbomb.png',
     'atk/atknep.png',
     'atk/miraatk.png',
-    'pet/pet hero2.png'
-    'atk/atkmaoh.png',
+    'pet/pet hero.png'
   ];
 
   function img(src){
@@ -58,7 +57,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=skill_split_core_20260618_newskills';
+      image.src = src + '?v=skill_split_core_20260618_balance2';
       images.set(src, image);
     }
 
@@ -297,11 +296,11 @@
   }
 
   function playerBulletScale(){
-    return S.skillEffects.some(e => e.type === 'darkPower') ? 3 : 1;
+    return S.skillEffects.some(e => e.type === 'darkPower') ? 2.1 : 1;
   }
 
   function playerBulletDamageAdd(){
-    return S.skillEffects.some(e => e.type === 'darkPower') ? 5 : 0;
+    return S.skillEffects.some(e => e.type === 'darkPower') ? 3 : 0;
   }
 
   function reduceCooldownAll(sec){
