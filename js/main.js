@@ -48,6 +48,10 @@
     return document.getElementById(id);
   }
 
+  function getBattleApi(){
+    return window.MobShotBattleMode || window.MobShotBattle || null;
+  }
+
   function isAdminMode(){
     try {
       return localStorage.getItem(ADMIN_SAVE_KEY) === '1';
@@ -509,8 +513,9 @@
       window.MobShotGame.stop();
     }
 
-    if (window.MobShotBattle && window.MobShotBattle.stop) {
-      window.MobShotBattle.stop();
+    const battleApi = getBattleApi();
+    if (battleApi && battleApi.stop) {
+      battleApi.stop();
     }
   }
 
@@ -520,9 +525,8 @@
     });
 
     if (name === 'game') {
-      if (window.MobShotBattle && window.MobShotBattle.stop) {
-        window.MobShotBattle.stop();
-      }
+      const battleApi = getBattleApi();
+      if (battleApi && battleApi.stop) battleApi.stop();
 
       if (gameScreen) gameScreen.classList.add('active');
 
@@ -541,21 +545,24 @@
         window.MobShotGame.stop();
       }
 
-      if (battleScreen) {
-        battleScreen.classList.add('active');
+      const battleApi = getBattleApi();
 
-        if (window.MobShotBattle && window.MobShotBattle.openTitle) {
-          window.MobShotBattle.openTitle();
-        } else if (window.MobShotBattle && window.MobShotBattle.startTitle) {
-          window.MobShotBattle.startTitle();
-        } else if (window.MobShotBattle && window.MobShotBattle.start) {
-          window.MobShotBattle.start();
-        } else {
-          showToast('対戦モードが読み込まれていません');
-          showScreen('main');
-        }
-      } else {
+      if (!battleScreen) {
         showToast('対戦画面がありません');
+        showScreen('main');
+        return;
+      }
+
+      battleScreen.classList.add('active');
+
+      if (battleApi && battleApi.openTitle) {
+        battleApi.openTitle();
+      } else if (battleApi && battleApi.startTitle) {
+        battleApi.startTitle();
+      } else if (battleApi && battleApi.start) {
+        battleApi.start();
+      } else {
+        showToast('対戦モードが読み込まれていません');
         showScreen('main');
       }
 
@@ -797,6 +804,46 @@
     if (modal) modal.classList.remove('hidden');
   }
 
+  function openGacha(){
+    if (window.MobShotGacha && window.MobShotGacha.open) {
+      window.MobShotGacha.open();
+      return;
+    }
+
+    if (window.MobShotGacha && window.MobShotGacha.openModal) {
+      window.MobShotGacha.openModal();
+      return;
+    }
+
+    const modal = $('gachaModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      return;
+    }
+
+    showToast('ガチャが読み込まれていません');
+  }
+
+  function openCollection(){
+    if (window.MobShotCollection && window.MobShotCollection.open) {
+      window.MobShotCollection.open();
+      return;
+    }
+
+    if (window.MobShotCollection && window.MobShotCollection.openModal) {
+      window.MobShotCollection.openModal();
+      return;
+    }
+
+    const modal = $('collectionModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      return;
+    }
+
+    showToast('コレクションが読み込まれていません');
+  }
+
   function createDeleteSaveButton(){
     if (!mainScreen) return;
 
@@ -894,6 +941,7 @@
     if (window.MobShotMission && window.MobShotMission.init) window.MobShotMission.init();
     if (window.MobShotPets && window.MobShotPets.init) window.MobShotPets.init();
     if (window.MobShotCollection && window.MobShotCollection.render) window.MobShotCollection.render();
+    if (window.MobShotGacha && window.MobShotGacha.render) window.MobShotGacha.render();
   }
 
   function init(){
@@ -918,6 +966,8 @@
     bindFallbackButton('openEquipBtn', openEquip, '__mobEquipFallbackBound');
     bindFallbackButton('openMissionBtn', openMission, '__mobMissionFallbackBound');
     bindFallbackButton('openPetEquipBtn', openPetEquip, '__mobPetFallbackBound');
+    bindFallbackButton('openGachaBtn', openGacha, '__mobGachaFallbackBound');
+    bindFallbackButton('openCollectionBtn', openCollection, '__mobCollectionFallbackBound');
 
     bindResultButtons();
     bindDeleteSave();
@@ -941,6 +991,10 @@
 
     window.addEventListener('mobshot:collectionDisplayUpdated', function(){
       refreshMainStoneDisplay();
+    });
+
+    window.addEventListener('mobshot:adminModeChanged', function(){
+      applyAdminModeVisuals();
     });
   }
 
@@ -966,6 +1020,8 @@
     openEquip,
     openMission,
     openPetEquip,
+    openGacha,
+    openCollection,
     showGameConfirm,
     showToast,
     showRankUp,
