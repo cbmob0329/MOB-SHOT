@@ -297,3 +297,72 @@ button{font-family:inherit;touch-action:manipulation}
   padding:30px;
   color:#fff;
 }
+/* =========================================
+   メイン画面調整：ランク表示移動 / ペット拡大
+========================================= */
+
+/* NEXT RANKをPET一覧の上へ移動 */
+.main-rank-next-badge{
+  left:3vw !important;
+  right:32vw !important;
+  top:auto !important;
+  bottom:calc(11.8svh + 112px) !important;
+  min-width:0 !important;
+  width:auto !important;
+  font-size:11px !important;
+  z-index:21 !important;
+}
+
+/* PET一覧の枠を大きく */
+.pet-slot{
+  height:62px !important;
+}
+
+.pet-slot img{
+  width:44px !important;
+  height:44px !important;
+}
+
+.pet-slot-name{
+  font-size:9px !important;
+}
+
+/* メイン画面で浮いているペットを大きく */
+.main-float-pet{
+  width:64px !important;
+  height:64px !important;
+  font-size:30px !important;
+}
+
+.main-float-pet img{
+  width:48px !important;
+  height:48px !important;
+}
+
+/* 低めの画面でも小さくなりすぎないように上書き */
+@media (max-height:720px){
+  .main-rank-next-badge{
+    bottom:calc(10.8svh + 106px) !important;
+    font-size:10px !important;
+  }
+
+  .pet-slot{
+    height:56px !important;
+  }
+
+  .pet-slot img{
+    width:40px !important;
+    height:40px !important;
+  }
+
+  .main-float-pet{
+    width:56px !important;
+    height:56px !important;
+    font-size:27px !important;
+  }
+
+  .main-float-pet img{
+    width:42px !important;
+    height:42px !important;
+  }
+}
