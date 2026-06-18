@@ -852,3 +852,282 @@ button{font-family:inherit;touch-action:manipulation}
     padding:12px 10px;
   }
 }
+/* =========================================
+   対戦 読み込み強制修正
+========================================= */
+
+#battleScreen{
+  position:absolute!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100svh!important;
+  background:#246b32!important;
+  overflow:hidden!important;
+}
+
+#battleScreen.active{
+  display:block!important;
+}
+
+#battleCanvas{
+  position:absolute!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100svh!important;
+  background:#3fb84b!important;
+  z-index:1!important;
+}
+
+.battle-overlay{
+  position:absolute!important;
+  inset:0!important;
+  z-index:999!important;
+  pointer-events:none!important;
+}
+
+.battle-menu{
+  position:absolute!important;
+  inset:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:18px!important;
+  background:rgba(0,0,0,.62)!important;
+  pointer-events:auto!important;
+}
+
+.battle-card{
+  width:min(92vw,440px)!important;
+  max-height:88svh!important;
+  overflow:auto!important;
+  border-radius:28px!important;
+  padding:20px!important;
+  text-align:center!important;
+  background:linear-gradient(180deg,rgba(35,28,78,.98),rgba(5,8,22,.98))!important;
+  border:3px solid rgba(255,255,255,.35)!important;
+  box-shadow:0 18px 48px rgba(0,0,0,.7)!important;
+}
+
+.battle-title{
+  margin:0 0 14px!important;
+  font-size:34px!important;
+  font-weight:1000!important;
+  color:#ffe66b!important;
+  text-shadow:0 5px 0 #000!important;
+}
+
+.battle-help{
+  margin:0 0 16px!important;
+  color:#dfe8ff!important;
+  font-size:13px!important;
+  font-weight:900!important;
+  line-height:1.55!important;
+}
+
+.battle-actions,
+.battle-small{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:10px!important;
+}
+
+.battle-btn{
+  border:0!important;
+  border-radius:999px!important;
+  padding:14px 12px!important;
+  font-size:18px!important;
+  font-weight:1000!important;
+  color:#201100!important;
+  background:linear-gradient(#ffe66b,#ffb423)!important;
+  box-shadow:0 5px 0 rgba(0,0,0,.36)!important;
+}
+
+.battle-btn.blue{
+  color:#fff!important;
+  background:linear-gradient(#60d9ff,#1774ee)!important;
+}
+
+.battle-select-grid{
+  display:grid!important;
+  grid-template-columns:repeat(3,1fr)!important;
+  gap:10px!important;
+  max-height:48svh!important;
+  overflow:auto!important;
+  padding:2px!important;
+  margin-bottom:14px!important;
+}
+
+.battle-choice{
+  border:2px solid rgba(255,255,255,.26)!important;
+  border-radius:18px!important;
+  padding:8px 5px!important;
+  background:rgba(255,255,255,.10)!important;
+  color:#fff!important;
+  font-weight:1000!important;
+  font-size:11px!important;
+}
+
+.battle-choice img{
+  width:64px!important;
+  height:64px!important;
+  object-fit:contain!important;
+  display:block!important;
+  margin:0 auto 4px!important;
+}
+
+/* 古い対戦UIを非表示 */
+#battleTitleLayer,
+#battleSelectLayer,
+#battleHud,
+#battleBanner{
+  display:none!important;
+}
+
+
+/* =========================================
+   イベントCSS 強制修正
+========================================= */
+
+.event-modal{
+  position:absolute!important;
+  inset:0!important;
+  z-index:120!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:16px!important;
+  background:rgba(0,0,0,.68)!important;
+}
+
+.event-modal.hidden{
+  display:none!important;
+}
+
+.event-modal-card{
+  width:min(94vw,520px)!important;
+  max-height:88svh!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  border-radius:26px!important;
+  padding:16px!important;
+  background:linear-gradient(180deg,rgba(25,24,62,.98),rgba(5,8,22,.98))!important;
+  border:3px solid rgba(255,255,255,.32)!important;
+  box-shadow:0 18px 48px rgba(0,0,0,.62)!important;
+}
+
+.event-modal-head{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  margin-bottom:10px!important;
+}
+
+.event-modal-head h2{
+  margin:0!important;
+  font-size:26px!important;
+  font-weight:1000!important;
+  color:#ffe66b!important;
+  text-shadow:0 3px 0 #000!important;
+}
+
+#eventCloseBtn{
+  border:0!important;
+  border-radius:999px!important;
+  padding:9px 13px!important;
+  font-weight:1000!important;
+  color:#fff!important;
+  background:linear-gradient(#59657f,#222c44)!important;
+  box-shadow:0 4px 0 rgba(0,0,0,.35)!important;
+}
+
+.event-help{
+  margin:0 0 12px!important;
+  font-size:13px!important;
+  font-weight:900!important;
+  color:#dfe8ff!important;
+  line-height:1.45!important;
+}
+
+.event-lock.hidden{
+  display:none!important;
+}
+
+#eventList{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:10px!important;
+}
+
+/* events.js側のクラス名が違っても整える */
+#eventList > *{
+  width:100%!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  border-radius:20px!important;
+  padding:10px!important;
+  background:linear-gradient(135deg,rgba(38,50,76,.96),rgba(13,19,35,.96))!important;
+  border:2px solid rgba(255,255,255,.22)!important;
+  color:#fff!important;
+  box-shadow:0 5px 0 rgba(0,0,0,.25)!important;
+}
+
+#eventList img{
+  width:76px!important;
+  height:76px!important;
+  object-fit:contain!important;
+  flex:none!important;
+}
+
+#eventList button{
+  border:0!important;
+  border-radius:999px!important;
+  padding:10px 12px!important;
+  font-weight:1000!important;
+  background:linear-gradient(#ffe66b,#ffb423)!important;
+  color:#241400!important;
+  box-shadow:0 4px 0 rgba(0,0,0,.35)!important;
+}
+
+#eventList h3,
+#eventList h4,
+#eventList .event-title,
+#eventList .event-item-title{
+  margin:0!important;
+  font-size:17px!important;
+  font-weight:1000!important;
+  color:#ffe66b!important;
+  line-height:1.2!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+#eventList p,
+#eventList .event-desc,
+#eventList .event-item-desc{
+  margin:4px 0 0!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  color:rgba(255,255,255,.86)!important;
+  line-height:1.35!important;
+}
+
+@media (max-width:430px){
+  .event-modal-card{
+    width:96vw!important;
+    padding:12px!important;
+  }
+
+  #eventList img{
+    width:58px!important;
+    height:58px!important;
+  }
+
+  #eventList h3,
+  #eventList h4,
+  #eventList .event-title,
+  #eventList .event-item-title{
+    font-size:15px!important;
+  }
+}
