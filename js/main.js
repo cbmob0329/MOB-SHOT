@@ -78,7 +78,8 @@
         z-index:5;
       }
 
-      #mainPetFloatLayer{
+      #mainPetFloatLayer,
+      .main-pet-float-layer{
         z-index:6;
         pointer-events:none;
       }
@@ -129,10 +130,12 @@
 
       .main-rank-next-badge{
         position:absolute;
-        left:6.2vw;
-        top:22.8svh;
+        left:3vw;
+        right:32vw;
+        top:auto;
+        bottom:calc(11.8svh + 108px);
         z-index:21;
-        min-width:142px;
+        min-width:0;
         padding:7px 10px;
         border-radius:999px;
         background:rgba(5,8,22,.74);
@@ -150,6 +153,56 @@
       .main-rank-next-badge strong{
         color:#ffe66b;
         font-size:12px;
+      }
+
+      .pet-equip-panel{
+        padding:9px !important;
+      }
+
+      .pet-slot{
+        height:62px !important;
+      }
+
+      .pet-slot img{
+        width:44px !important;
+        height:44px !important;
+      }
+
+      .main-float-pet{
+        width:62px !important;
+        height:62px !important;
+        font-size:30px !important;
+      }
+
+      .main-float-pet img{
+        width:46px !important;
+        height:46px !important;
+      }
+
+      @media (max-height:720px){
+        .main-rank-next-badge{
+          bottom:calc(10.8svh + 92px);
+        }
+
+        .pet-slot{
+          height:52px !important;
+        }
+
+        .pet-slot img{
+          width:38px !important;
+          height:38px !important;
+        }
+
+        .main-float-pet{
+          width:52px !important;
+          height:52px !important;
+          font-size:25px !important;
+        }
+
+        .main-float-pet img{
+          width:38px !important;
+          height:38px !important;
+        }
       }
 
       .mob-rankup-modal{
