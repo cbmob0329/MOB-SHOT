@@ -366,3 +366,197 @@ button{font-family:inherit;touch-action:manipulation}
     height:42px !important;
   }
 }
+/* =========================================
+   対戦モード
+========================================= */
+
+#battleScreen{
+  background:#246b32;
+}
+
+#battleCanvas{
+  position:absolute;
+  inset:0;
+  width:100vw;
+  height:100vh;
+  background:#3fb84b;
+}
+
+.battle-title-layer,
+.battle-select-layer{
+  position:absolute;
+  inset:0;
+  z-index:80;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.68);
+}
+
+.battle-title-layer.hidden,
+.battle-select-layer.hidden,
+.battle-hud.hidden,
+.battle-banner.hidden{
+  display:none;
+}
+
+.battle-title-card,
+.battle-select-card{
+  width:min(92vw,440px);
+  max-height:86svh;
+  overflow:auto;
+  border-radius:28px;
+  padding:20px;
+  text-align:center;
+  background:linear-gradient(180deg,rgba(31,28,78,.98),rgba(5,8,22,.98));
+  border:4px solid rgba(255,255,255,.35);
+  box-shadow:0 20px 55px rgba(0,0,0,.65);
+}
+
+.battle-title-card h1,
+.battle-select-card h2{
+  margin:0 0 18px;
+  color:#ffe66b;
+  font-size:34px;
+  font-weight:1000;
+  text-shadow:0 4px 0 #000;
+}
+
+.battle-title-card button,
+.battle-select-card button{
+  width:100%;
+  margin-top:10px;
+  border:0;
+  border-radius:999px;
+  padding:14px 16px;
+  font-size:18px;
+  font-weight:1000;
+  color:#201000;
+  background:linear-gradient(#ffe66b,#ff9f1f);
+  box-shadow:0 6px 0 rgba(0,0,0,.38);
+}
+
+.battle-title-card button:nth-of-type(2){
+  background:linear-gradient(#60d9ff,#1774ee);
+  color:#fff;
+  box-shadow:0 6px 0 #084b9d;
+}
+
+.battle-select-list{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+
+.battle-select-item{
+  border:2px solid rgba(255,255,255,.25);
+  border-radius:18px;
+  padding:8px;
+  background:rgba(255,255,255,.10);
+  color:#fff;
+  font-weight:1000;
+  min-height:118px;
+}
+
+.battle-select-item img{
+  width:68px;
+  height:68px;
+  object-fit:contain;
+  display:block;
+  margin:0 auto 6px;
+}
+
+.battle-hud{
+  position:absolute;
+  inset:0;
+  z-index:20;
+  pointer-events:none;
+}
+
+.battle-player-hud{
+  position:absolute;
+  left:10px;
+  right:10px;
+  height:44px;
+  border-radius:16px;
+  background:rgba(8,14,28,.78);
+  border:2px solid rgba(255,255,255,.28);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 14px;
+  font-weight:1000;
+  text-shadow:0 2px 0 #000;
+  box-shadow:0 4px 0 rgba(0,0,0,.28);
+}
+
+.battle-player-hud.top{
+  top:max(8px,env(safe-area-inset-top));
+}
+
+.battle-player-hud.bottom{
+  bottom:max(8px,env(safe-area-inset-bottom));
+}
+
+.battle-player-hud b{
+  color:#9dff73;
+  font-size:24px;
+}
+
+.battle-player-hud em{
+  font-style:normal;
+  color:#ffe66b;
+  font-size:18px;
+}
+
+.battle-banner{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  z-index:90;
+  min-width:260px;
+  max-width:86vw;
+  border-radius:26px;
+  padding:18px 20px;
+  text-align:center;
+  background:linear-gradient(#ffe66b,#ff9f1f);
+  color:#241100;
+  font-size:28px;
+  font-weight:1000;
+  text-shadow:0 1px 0 rgba(255,255,255,.45);
+  box-shadow:0 8px 0 rgba(0,0,0,.38);
+}
+
+/* 対戦追加で右メニューが6個になるため調整 */
+.right-menu{
+  grid-template-rows:repeat(6,1fr) !important;
+  gap:1.2svh !important;
+}
+
+@media (max-height:720px){
+  .battle-select-list{
+    gap:7px;
+  }
+
+  .battle-select-item{
+    min-height:100px;
+  }
+
+  .battle-select-item img{
+    width:56px;
+    height:56px;
+  }
+
+  .battle-title-card h1,
+  .battle-select-card h2{
+    font-size:28px;
+  }
+
+  .battle-title-card button,
+  .battle-select-card button{
+    padding:12px 14px;
+    font-size:16px;
+  }
+}
