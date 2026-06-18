@@ -3,6 +3,22 @@
 (function(){
   const PLAYER_ENEMY_BULLET_HIT_R = 12;
 
+  function collectionScoreMultiplier(state){
+    if (state && state.scoreMultiplier != null) {
+      return Math.max(1, Number(state.scoreMultiplier || 1));
+    }
+
+    return 1;
+  }
+
+  function collectionCoinMultiplier(state){
+    if (state && state.coinMultiplier != null) {
+      return Math.max(1, Number(state.coinMultiplier || 1));
+    }
+
+    return 1;
+  }
+
   function skillCoinMultiplier(){
     if (
       window.MobShotGameSkills &&
@@ -12,6 +28,10 @@
     }
 
     return 1;
+  }
+
+  function totalCoinMultiplier(state){
+    return collectionCoinMultiplier(state) * skillCoinMultiplier();
   }
 
   function isSkillInvincible(entity){
@@ -371,7 +391,7 @@
     );
 
     let baseCoin = 0;
-    const score = Number(e.score || 0);
+    const baseScore = Number(e.score || 0);
 
     if (e.kind === 'midBoss' || e.kind === 'boss') {
       baseCoin = Number(e.coin || 0);
@@ -379,8 +399,11 @@
       baseCoin = intRand(e.coinMin || 1, e.coinMax || 3);
     }
 
-    const multiplier = skillCoinMultiplier();
-    const coin = Math.max(0, Math.ceil(baseCoin * multiplier));
+    const scoreMul = collectionScoreMultiplier(state);
+    const coinMul = totalCoinMultiplier(state);
+
+    const score = Math.max(0, Math.ceil(baseScore * scoreMul));
+    const coin = Math.max(0, Math.ceil(baseCoin * coinMul));
 
     state.coin += coin;
     state.score += score;
@@ -397,10 +420,14 @@
       addText('ボス撃破！', e.x, e.y - 56, '#ff4aff');
     }
 
-    addText(`+${score} SCORE`, e.x, e.y - 24, '#6be6ff');
+    if (scoreMul > 1) {
+      addText(`+${score} SCORE ×${scoreMul.toFixed(1)}`, e.x, e.y - 24, '#6be6ff');
+    } else {
+      addText(`+${score} SCORE`, e.x, e.y - 24, '#6be6ff');
+    }
 
-    if (multiplier > 1) {
-      addText(`+${coin} COIN ×${multiplier.toFixed(1)}`, e.x, e.y, '#ffcf5b');
+    if (coinMul > 1) {
+      addText(`+${coin} COIN ×${coinMul.toFixed(1)}`, e.x, e.y, '#ffcf5b');
     } else {
       addText(`+${coin} COIN`, e.x, e.y, '#ffcf5b');
     }
