@@ -3,6 +3,17 @@
 (function(){
   const PLAYER_ENEMY_BULLET_HIT_R = 12;
 
+  function skillCoinMultiplier(){
+    if (
+      window.MobShotGameSkills &&
+      window.MobShotGameSkills.coinMultiplier
+    ) {
+      return Math.max(1, Number(window.MobShotGameSkills.coinMultiplier() || 1));
+    }
+
+    return 1;
+  }
+
   function isSkillInvincible(entity){
     if (
       window.MobShotGameSkills &&
@@ -359,14 +370,17 @@
       e.kind === 'boss' ? 70 : e.kind === 'midBoss' ? 42 : 24
     );
 
-    let coin = 0;
+    let baseCoin = 0;
     const score = Number(e.score || 0);
 
     if (e.kind === 'midBoss' || e.kind === 'boss') {
-      coin = Number(e.coin || 0);
+      baseCoin = Number(e.coin || 0);
     } else {
-      coin = intRand(e.coinMin || 1, e.coinMax || 3);
+      baseCoin = intRand(e.coinMin || 1, e.coinMax || 3);
     }
+
+    const multiplier = skillCoinMultiplier();
+    const coin = Math.max(0, Math.ceil(baseCoin * multiplier));
 
     state.coin += coin;
     state.score += score;
@@ -384,7 +398,12 @@
     }
 
     addText(`+${score} SCORE`, e.x, e.y - 24, '#6be6ff');
-    addText(`+${coin} COIN`, e.x, e.y, '#ffcf5b');
+
+    if (multiplier > 1) {
+      addText(`+${coin} COIN ×${multiplier.toFixed(1)}`, e.x, e.y, '#ffcf5b');
+    } else {
+      addText(`+${coin} COIN`, e.x, e.y, '#ffcf5b');
+    }
   }
 
   function hitEntity(x, y, r, e){
