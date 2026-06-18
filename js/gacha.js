@@ -75,9 +75,11 @@
     { no:53, name:'モブガーディアン', image:'co/co53.png', rarity:'SR', category:'MOB SHOT BOSS' },
     { no:54, name:'ネオンモブ', image:'co/co54.png', rarity:'SR', category:'MOB SHOT BOSS' },
     { no:55, name:'ドラゴンモブ', image:'co/co55.png', rarity:'SR', category:'MOB SHOT BOSS' },
-    { no:56, name:'ホークモブⅡ', image:'co/co56.png', rarity:'SR', category:'MOB SHOT BOSS' },
-    { no:57, name:'番人Ⅱ', image:'co/co57.png', rarity:'SR', category:'MOB SHOT BOSS' },
-    { no:58, name:'ネオンモブⅡ', image:'co/co58.png', rarity:'SR', category:'MOB SHOT BOSS' },
+
+    { no:56, name:'モブドラゴン', image:'co/co56.png', rarity:'SR', category:'MOB PET', gacha:false },
+    { no:57, name:'モブイルカエル', image:'co/co57.png', rarity:'SR', category:'MOB PET', gacha:false },
+    { no:58, name:'モブデンデン', image:'co/co58.png', rarity:'SR', category:'MOB PET', gacha:false },
+
     { no:59, name:'モブリリス', image:'co/co59.png', rarity:'SR', category:'MOB SHOT BOSS' },
     { no:60, name:'ミラモブⅡ', image:'co/co60.png', rarity:'SR', category:'MOB SHOT BOSS' },
     { no:61, name:'モブ魔王', image:'co/co61.png', rarity:'SR', category:'MOB SHOT BOSS' },
@@ -106,7 +108,32 @@
     { no:82, name:'モブ魔王 カラー', image:'co/co82.png', rarity:'UR', category:'MOB SHOT BOSS SP' },
     { no:83, name:'ネオンモブ カラー', image:'co/co83.png', rarity:'UR', category:'MOB SHOT BOSS SP' },
     { no:84, name:'モブリリス カラー', image:'co/co84.png', rarity:'UR', category:'MOB SHOT BOSS SP' },
-    { no:85, name:'ウルモブリリス カラー', image:'co/co85.png', rarity:'UR', category:'MOB SHOT BOSS SP' }
+    { no:85, name:'ウルモブリリス カラー', image:'co/co85.png', rarity:'UR', category:'MOB SHOT BOSS SP' },
+
+    { no:86, name:'モブウルフ', image:'co/co86.png', rarity:'SR', category:'MOB PET', gacha:false },
+    { no:87, name:'ミニミラモブ', image:'co/co87.png', rarity:'SR', category:'MOB PET', gacha:false },
+    { no:88, name:'ミニネオンモブ', image:'co/co88.png', rarity:'SR', category:'MOB PET', gacha:false },
+    { no:89, name:'ミニあのヒーロー', image:'co/co89.png', rarity:'SR', category:'MOB PET', gacha:false },
+    { no:90, name:'ミニミラモブ カラー', image:'co/co90.png', rarity:'SSR', category:'MOB PET', gacha:false },
+
+    { no:91, name:'イージー', image:'co/co91.png', rarity:'SSR', category:'MOB EVENT', gacha:false },
+    { no:92, name:'ハード', image:'co/co92.png', rarity:'SSR', category:'MOB EVENT', gacha:false },
+    { no:93, name:'ベリーハード', image:'co/co93.png', rarity:'SSR', category:'MOB EVENT', gacha:false },
+    { no:94, name:'インフェルノ', image:'co/co94.png', rarity:'SSR', category:'MOB EVENT', gacha:false },
+    { no:95, name:'レジェンド', image:'co/co95.png', rarity:'SSR', category:'MOB EVENT', gacha:false },
+    { no:96, name:'リリス四姉妹', image:'co/co96.png', rarity:'SSR', category:'MOB EVENT', gacha:false },
+    { no:97, name:'アカノメラ', image:'co/co97.png', rarity:'SSR', category:'MOB EVENT', gacha:false },
+    { no:98, name:'ムラノクラ', image:'co/co98.png', rarity:'SSR', category:'MOB EVENT', gacha:false },
+    { no:99, name:'ぷにもち', image:'co/co99.png', rarity:'SSR', category:'MOB EVENT', gacha:false },
+
+    { no:100, name:'モブンコク', image:'co/co100.png', rarity:'UR', category:'MOB EVENT', gacha:false },
+    { no:101, name:'モブグリム', image:'co/co101.png', rarity:'UR', category:'MOB EVENT', gacha:false },
+    { no:102, name:'モブスウ', image:'co/co102.png', rarity:'UR', category:'MOB EVENT', gacha:false },
+    { no:103, name:'モブチャイ', image:'co/co103.png', rarity:'UR', category:'MOB EVENT', gacha:false },
+    { no:104, name:'モブムウ', image:'co/co104.png', rarity:'UR', category:'MOB EVENT', gacha:false },
+    { no:105, name:'モブライ', image:'co/co105.png', rarity:'UR', category:'MOB EVENT', gacha:false },
+    { no:106, name:'リリス四姉妹 カラー', image:'co/co106.png', rarity:'UR', category:'MOB EVENT', gacha:false },
+    { no:107, name:'あのヒーロー カラー', image:'co/co107.png', rarity:'UR', category:'MOB EVENT', gacha:false }
   ];
 
   let isAnimating = false;
@@ -115,9 +142,7 @@
   function $(id){ return document.getElementById(id); }
 
   function getSave(){
-    if (window.MobShotStorage && window.MobShotStorage.load) {
-      return window.MobShotStorage.load();
-    }
+    if (window.MobShotStorage && window.MobShotStorage.load) return window.MobShotStorage.load();
 
     try {
       return JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
@@ -152,10 +177,7 @@
   }
 
   function defaultState(){
-    return {
-      stones:{},
-      skills:{}
-    };
+    return { stones:{}, skills:{} };
   }
 
   function loadState(){
@@ -181,23 +203,29 @@
     } catch(e) {}
   }
 
-  function rarityMax(rarity){
-    return RARITY[rarity] ? RARITY[rarity].max : 99;
-  }
-
-  function rarityCoin(rarity){
-    return RARITY[rarity] ? RARITY[rarity].coin : 500;
-  }
-
-  function rarityImage(rarity){
-    return RARITY[rarity] ? RARITY[rarity].image : RARITY.R.image;
-  }
+  function rarityMax(rarity){ return RARITY[rarity] ? RARITY[rarity].max : 99; }
+  function rarityCoin(rarity){ return RARITY[rarity] ? RARITY[rarity].coin : 500; }
+  function rarityImage(rarity){ return RARITY[rarity] ? RARITY[rarity].image : RARITY.R.image; }
 
   function rarityClass(rarity){
     if (rarity === 'UR') return 'rarity-frame-ur';
     if (rarity === 'SSR') return 'rarity-frame-ssr';
     if (rarity === 'SR') return 'rarity-frame-sr';
     return 'rarity-frame-r';
+  }
+
+  function stoneEffectLabel(stone){
+    if (stone.category === 'MOB SHOT ENEMY') return '獲得スコア増加';
+    if (stone.category === 'MOB SHOT MID BOSS') return '獲得コイン増加';
+    if (stone.category === 'MOB SHOT BOSS') return 'ライフ増加';
+    if (stone.category === 'MOB ARTIST') return 'コイン＆スコア増加';
+    if (stone.category === 'MOB SHOT BOSS SP') return 'パワー増加';
+    if (stone.category === 'MOB PET') return '射程増加';
+    if (stone.category === 'MOB EVENT') {
+      if (stone.rarity === 'UR') return 'パワー＆射程増加';
+      return 'ライフ増加';
+    }
+    return '';
   }
 
   function allStones(){
@@ -209,13 +237,8 @@
     }));
   }
 
-  function stoneEffectLabel(stone){
-    if (stone.category === 'MOB SHOT ENEMY') return '獲得スコア増加';
-    if (stone.category === 'MOB SHOT MID BOSS') return '獲得コイン増加';
-    if (stone.category === 'MOB SHOT BOSS') return 'ライフ増加';
-    if (stone.category === 'MOB ARTIST') return 'コイン＆スコア増加';
-    if (stone.category === 'MOB SHOT BOSS SP') return 'パワー増加';
-    return '';
+  function gachaStonePool(){
+    return allStones().filter(stone => stone.gacha !== false);
   }
 
   function rollRarity(){
@@ -231,13 +254,16 @@
   }
 
   function rollStone(){
-    const rarity = rollRarity();
-    const pool = allStones().filter(stone => stone.rarity === rarity);
-    const stone = pool[Math.floor(Math.random() * pool.length)] || allStones()[0];
+    let rarity = rollRarity();
+    let pool = gachaStonePool().filter(stone => stone.rarity === rarity);
 
-    return Object.assign({}, stone, {
-      type:'stone'
-    });
+    if (!pool.length) {
+      pool = gachaStonePool();
+    }
+
+    const stone = pool[Math.floor(Math.random() * pool.length)] || gachaStonePool()[0];
+
+    return Object.assign({}, stone, { type:'stone' });
   }
 
   function getSkillPool(){
@@ -269,21 +295,13 @@
   }
 
   function syncSkillState(result){
-    if (!window.MobShotSkills || !window.MobShotSkills.loadState || !window.MobShotSkills.saveState) {
-      return;
-    }
+    if (!window.MobShotSkills || !window.MobShotSkills.loadState || !window.MobShotSkills.saveState) return;
 
     const skillState = window.MobShotSkills.loadState();
     const key = String(result.id);
 
     if (!skillState.skills) skillState.skills = {};
-    if (!skillState.skills[key]) {
-      skillState.skills[key] = {
-        owned:false,
-        level:1,
-        plus:0
-      };
-    }
+    if (!skillState.skills[key]) skillState.skills[key] = { owned:false, level:1, plus:0 };
 
     const item = skillState.skills[key];
 
@@ -291,13 +309,8 @@
     item.level = Math.max(1, Number(item.level || 1));
     item.plus = Number(result.plusAfter || item.plus || 0);
 
-    if (!Array.isArray(skillState.equipped)) {
-      skillState.equipped = [];
-    }
-
-    if (!skillState.equipped.length) {
-      skillState.equipped.push(key);
-    }
+    if (!Array.isArray(skillState.equipped)) skillState.equipped = [];
+    if (!skillState.equipped.length) skillState.equipped.push(key);
 
     window.MobShotSkills.saveState(skillState);
   }
@@ -375,6 +388,20 @@
     return result;
   }
 
+  function addStoneByNo(no, count){
+    const stone = allStones().find(s => Number(s.no) === Number(no));
+    const results = [];
+    const amount = Math.max(1, Number(count || 1));
+
+    if (!stone) return results;
+
+    for (let i = 0; i < amount; i++) {
+      results.push(addResult(Object.assign({}, stone, { type:'stone', fromEvent:true })));
+    }
+
+    return results;
+  }
+
   function spendDiamond(cost){
     const save = getSave();
     const have = Number(save.diamond || 0);
@@ -448,14 +475,6 @@
       .gacha-cost-diamond{display:inline-flex;align-items:center;justify-content:center;gap:5px}
       .gacha-cost-diamond:before{content:'◆';color:#7be7ff;text-shadow:0 0 8px #7be7ff}
 
-      .gacha-preview{position:absolute;inset:0;z-index:140;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.76)}
-      .gacha-preview.hidden{display:none}
-      .gacha-preview-card{position:relative;width:min(92vw,420px);border-radius:26px;padding:28px 16px 16px;background:linear-gradient(180deg,rgba(33,27,70,.98),rgba(5,8,22,.98));border:3px solid rgba(255,255,255,.38);text-align:center;box-shadow:0 18px 48px rgba(0,0,0,.7);overflow:visible}
-      .gacha-preview-card img.preview-main{width:78%;max-height:280px;object-fit:contain;margin:8px auto;position:relative;z-index:2}
-      .gacha-preview-card img.preview-rarity{position:absolute;left:12px;top:-28px;width:140px;height:76px;object-fit:contain;z-index:8;filter:drop-shadow(0 4px 0 rgba(0,0,0,.55));animation:gachaRarityFloat 1.7s ease-in-out infinite}
-      .gacha-preview-title{font-size:20px;font-weight:1000;color:#fff;text-shadow:0 3px 0 #000;position:relative;z-index:3}
-      .gacha-preview-desc{font-size:13px;font-weight:900;color:#dfe8ff;line-height:1.45;margin:8px 0 12px;position:relative;z-index:3}
-
       @media (max-width:430px){
         .gacha-results.ten{grid-template-columns:repeat(5,1fr);gap:6px}
         .gacha-result{min-height:116px;padding:18px 4px 6px;border-radius:15px}
@@ -497,73 +516,7 @@
       if (e.target === modal && !isAnimating) close();
     });
 
-    ensurePreview();
-
     return modal;
-  }
-
-  function ensurePreview(){
-    let preview = $('gachaPreview');
-    if (preview) return preview;
-
-    preview = document.createElement('div');
-    preview.id = 'gachaPreview';
-    preview.className = 'gacha-preview hidden';
-    preview.innerHTML = `
-      <div id="gachaPreviewCard" class="gacha-preview-card">
-        <div id="gachaPreviewRarity"></div>
-        <img id="gachaPreviewImg" class="preview-main" alt="">
-        <div id="gachaPreviewTitle" class="gacha-preview-title"></div>
-        <div id="gachaPreviewDesc" class="gacha-preview-desc"></div>
-        <button id="gachaPreviewClose" class="gacha-btn gray" type="button">閉じる</button>
-      </div>
-    `;
-
-    ($('app') || document.body).appendChild(preview);
-
-    $('gachaPreviewClose').addEventListener('click', closePreview);
-    preview.addEventListener('click', function(e){
-      if (e.target === preview) closePreview();
-    });
-
-    return preview;
-  }
-
-  function openPreview(item){
-    ensurePreview();
-
-    const card = $('gachaPreviewCard');
-    const rarityBox = $('gachaPreviewRarity');
-    const img = $('gachaPreviewImg');
-    const title = $('gachaPreviewTitle');
-    const desc = $('gachaPreviewDesc');
-
-    card.className = 'gacha-preview-card';
-
-    if (item.type === 'stone') {
-      card.classList.add(rarityClass(item.rarity));
-      rarityBox.innerHTML = `<img class="preview-rarity" src="${rarityImage(item.rarity)}" alt="${item.rarity}">`;
-    } else {
-      rarityBox.innerHTML = `<span class="gacha-skill-tag">SKILL</span>`;
-    }
-
-    img.src = item.image || '';
-    title.textContent = item.type === 'stone'
-      ? `No.${String(item.no).padStart(2, '0')} ${item.name}`
-      : item.name;
-
-    if (item.type === 'stone') {
-      desc.textContent = `${item.category} / ${item.effect} / +${item.plusAfter || 0}/${item.maxPlus}`;
-    } else {
-      desc.textContent = `${item.desc || 'スキルを入手・強化しました。'} / +${item.plusAfter || 0}/${item.maxPlus}`;
-    }
-
-    $('gachaPreview').classList.remove('hidden');
-  }
-
-  function closePreview(){
-    const preview = $('gachaPreview');
-    if (preview) preview.classList.add('hidden');
   }
 
   function setCloseVisible(show){
@@ -715,11 +668,6 @@
       }
 
       card.innerHTML = resultCardHtml(result);
-
-      card.addEventListener('click', function(){
-        openPreview(result);
-      });
-
       list.appendChild(card);
     });
 
@@ -798,9 +746,11 @@
     loadState,
     saveState,
     allStones,
+    gachaStonePool,
     rollStone,
     rollSkill,
     addResult,
+    addStoneByNo,
     rarityMax,
     rarityCoin,
     rarityImage,
