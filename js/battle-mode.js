@@ -46,13 +46,11 @@
 
   function img(src){
     if (!src) return null;
-
     if (!images.has(src)) {
       const image = new Image();
       image.src = src;
       images.set(src, image);
     }
-
     return images.get(src);
   }
 
@@ -74,7 +72,6 @@
       rapid:1,
       wide:1,
       shootCd:0,
-      score:0,
       alive:true,
       input:false
     };
@@ -129,8 +126,8 @@
     }
 
     return [
-      { name:'銀の宝箱', image:'gimi/takagin.png', hp:10, score:80, coinMin:10, coinMax:25 },
-      { name:'金の宝箱', image:'gimi/takagol.png', hp:18, score:160, coinMin:25, coinMax:60 }
+      { name:'銀の宝箱', image:'gimi/takagin.png', hp:10 },
+      { name:'金の宝箱', image:'gimi/takagol.png', hp:18 }
     ];
   }
 
@@ -146,8 +143,8 @@
     }
 
     return [
-      { name:'木箱', image:'gimi/gimihako.png', hp:5, score:10, coinMin:1, coinMax:2 },
-      { name:'丸岩', image:'gimi/gimiiwa.png', hp:12, score:20, coinMin:2, coinMax:4 }
+      { name:'木箱', image:'gimi/gimihako.png', hp:5 },
+      { name:'丸岩', image:'gimi/gimiiwa.png', hp:12 }
     ];
   }
 
@@ -429,23 +426,33 @@
   }
 
   function avatarName(a){
-    return a.displayName || a.avatarName || a.title || a.label || a.name || 'アバター';
+    return a.name || a.displayName || a.avatarName || a.title || a.label || 'アバター';
   }
 
   function avatarBackImage(a){
-    return a.backImage || a.stageImage || a.stageBackImage || a.playImage || a.gameImage || '';
+    return a.backImage || '';
   }
 
   function loadChoices(){
     const list = [];
 
-    if (window.MobShotEquip && window.MobShotEquip.getOwnedAvatars) {
-      window.MobShotEquip.getOwnedAvatars().forEach(a => {
+    if (
+      window.MobShotShop &&
+      Array.isArray(window.MobShotShop.AVATAR_MASTER) &&
+      window.MobShotShop.loadState
+    ) {
+      const shopState = window.MobShotShop.loadState();
+      const owned = shopState && shopState.avatars ? shopState.avatars : {};
+
+      window.MobShotShop.AVATAR_MASTER.forEach(a => {
+        if (!owned[a.key]) return;
+
         const backImage = avatarBackImage(a);
         if (!backImage) return;
 
         list.push({
           type:'avatar',
+          key:a.key,
           name:avatarName(a),
           image:backImage
         });
@@ -455,7 +462,8 @@
     if (!list.length) {
       list.push({
         type:'avatar',
-        name:'PINK',
+        key:'pink',
+        name:'ピンクモデル',
         image:'play/playpink.png'
       });
     }
@@ -607,10 +615,8 @@
 
   function loop(){
     if (!running) return;
-
     update();
     draw();
-
     raf = requestAnimationFrame(loop);
   }
 
@@ -618,7 +624,6 @@
     state.frame++;
 
     if (state.messageTimer > 0) state.messageTimer--;
-
     if (state.screen !== 'battle') return;
 
     updatePlayers();
@@ -654,7 +659,6 @@
       p.targetX = p.x + (targetBullet.x < p.x ? 95 : -95);
     } else {
       const targetEntity = state.entities.find(e => e.y > H * 0.43 && e.y < H * 0.57);
-
       if (targetEntity) p.targetX = targetEntity.x;
       else p.targetX += Math.sin(state.frame * 0.025) * 10;
     }
@@ -685,7 +689,6 @@
 
   function updateSpawns(){
     state.spawnCd--;
-
     if (state.spawnCd > 0) return;
 
     state.spawnCd = intRand(90, 150);
@@ -835,7 +838,6 @@
 
     setTimeout(function(){
       if (!running) return;
-
       resetRound();
       state.screen = 'battle';
       showBattleMessage(`ROUND ${state.round}`);
@@ -990,8 +992,8 @@
 
   function drawSideText(text, x, y, upsideDown, size){
     ctx.save();
-
     ctx.translate(x, y);
+
     if (upsideDown) ctx.rotate(Math.PI);
 
     ctx.font = `1000 ${size || 26}px system-ui`;
