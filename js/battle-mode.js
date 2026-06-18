@@ -236,22 +236,6 @@
       #battleBanner{
         display:none!important;
       }
-
-      @media (max-height:720px){
-        .battle-title{
-          font-size:28px!important;
-        }
-
-        .battle-btn{
-          font-size:16px!important;
-          padding:12px 10px!important;
-        }
-
-        .battle-choice img{
-          width:54px!important;
-          height:54px!important;
-        }
-      }
     `;
     document.head.appendChild(style);
   }
@@ -387,20 +371,14 @@
 
     if (window.MobShotEquip && window.MobShotEquip.getOwnedAvatars) {
       window.MobShotEquip.getOwnedAvatars().forEach(a => {
+        const backImage = a.backImage || a.stageImage || a.playImage || '';
+
+        if (!backImage) return;
+
         list.push({
           type:'avatar',
           name:a.name || 'AVATAR',
-          image:a.backImage || a.image || 'play/playpink.png'
-        });
-      });
-    }
-
-    if (window.MobShotPets && window.MobShotPets.getOwnedPets) {
-      window.MobShotPets.getOwnedPets().forEach(p => {
-        list.push({
-          type:'pet',
-          name:p.name || 'PET',
-          image:p.image || 'pet/pet hero.png'
+          image:backImage
         });
       });
     }
@@ -408,8 +386,7 @@
     if (!list.length) {
       list.push(
         { type:'avatar', name:'PINK', image:'play/playpink.png' },
-        { type:'avatar', name:'GREEN', image:'play/green.png' },
-        { type:'pet', name:'HERO PET', image:'pet/pet hero.png' }
+        { type:'avatar', name:'GREEN', image:'play/green.png' }
       );
     }
 
@@ -425,7 +402,7 @@
         <div class="battle-menu">
           <div class="battle-card">
             <h1 class="battle-title">BATTLE MODE</h1>
-            <p class="battle-help">3本先取の対戦モードです。上半分が1P、下半分が2Pです。</p>
+            <p class="battle-help">3本先取の対戦モードです。所持アバターの後ろ姿だけ使用できます。</p>
             <div class="battle-actions">
               <button id="mobBattlePvpBtn" class="battle-btn blue" type="button">PvP</button>
               <button id="mobBattleCpuBtn" class="battle-btn" type="button">CPU</button>
@@ -450,7 +427,7 @@
         <div class="battle-menu">
           <div class="battle-card">
             <h1 class="battle-title">${sideText}</h1>
-            <p class="battle-help">所持アバター・所持ペットから選択。同キャラ対戦可能です。</p>
+            <p class="battle-help">所持アバターのステージ出撃用・後ろ姿から選択します。</p>
             <div class="battle-select-grid">
               ${state.choices.map((c,i) => `
                 <button class="battle-choice" data-i="${i}" type="button">
@@ -898,21 +875,23 @@
     const p1 = state.players[0];
     const p2 = state.players[1];
 
-    drawPlayerHud(p1, 14, 16);
-    drawPlayerHud(p2, 14, H - 58);
+    drawPlayerHud(p1, 14, 16, true);
+    drawPlayerHud(p2, 14, H - 58, false);
 
-    ctx.font = '900 18px system-ui';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#ffe66b';
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 5;
-
-    const txt = `${state.p1Wins} - ${state.p2Wins}`;
-    ctx.strokeText(txt, W / 2, H / 2 - 14);
-    ctx.fillText(txt, W / 2, H / 2 - 14);
+    drawSideText(`${state.p1Wins} - ${state.p2Wins}`, W / 2, H * 0.44, true, 18);
+    drawSideText(`${state.p1Wins} - ${state.p2Wins}`, W / 2, H * 0.56, false, 18);
   }
 
-  function drawPlayerHud(p, x, y){
+  function drawPlayerHud(p, x, y, upsideDown){
+    ctx.save();
+
+    if (upsideDown) {
+      ctx.translate(W, H);
+      ctx.rotate(Math.PI);
+      x = 14;
+      y = H - 58;
+    }
+
     const w = W - 28;
     const rate = clamp(p.hp / p.maxHp, 0, 1);
 
@@ -932,6 +911,25 @@
     ctx.textAlign = 'right';
     ctx.fillStyle = '#9deeff';
     ctx.fillText(`P${p.power} R${p.rapid} W${p.wide}`, x + w - 10, y + 29);
+
+    ctx.restore();
+  }
+
+  function drawSideText(text, x, y, upsideDown, size){
+    ctx.save();
+
+    ctx.translate(x, y);
+    if (upsideDown) ctx.rotate(Math.PI);
+
+    ctx.font = `1000 ${size || 26}px system-ui`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffe66b';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 6;
+    ctx.strokeText(text, 0, 0);
+    ctx.fillText(text, 0, 0);
+
+    ctx.restore();
   }
 
   function drawPlayers(){
@@ -1014,13 +1012,10 @@
 
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.font = '1000 34px system-ui';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#ffe66b';
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 8;
-    ctx.strokeText(state.message, W / 2, H / 2 + 48);
-    ctx.fillText(state.message, W / 2, H / 2 + 48);
+
+    drawSideText(state.message, W / 2, H * 0.34, true, 30);
+    drawSideText(state.message, W / 2, H * 0.66, false, 30);
+
     ctx.restore();
   }
 
@@ -1051,10 +1046,7 @@
       if (e) {
         e.preventDefault();
         e.stopPropagation();
-
-        if (e.stopImmediatePropagation) {
-          e.stopImmediatePropagation();
-        }
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
       }
 
       open();
@@ -1074,10 +1066,7 @@
     }
   }
 
-  window.MobShotBattle = {
-    open,
-    close
-  };
+  window.MobShotBattle = { open, close };
 
   document.addEventListener('DOMContentLoaded', bindMainButton);
   window.addEventListener('load', bindMainButton);
