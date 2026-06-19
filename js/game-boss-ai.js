@@ -59,6 +59,17 @@
     return 0.68;
   }
 
+  function moveRange(tools, isBoss){
+    const center = tools.W * 0.5;
+    const width = isBoss ? tools.W * 0.25 : tools.W * 0.24;
+
+    return {
+      center,
+      left:center - width,
+      right:center + width
+    };
+  }
+
   function initEnemyBase(e, config, isBoss){
     if (e.__bossAiInit) return;
 
@@ -95,8 +106,10 @@
 
     e.baseY = Number(e.baseY || e.targetY || 0);
     e.movePhase = Math.random() * Math.PI * 2;
+
     e.moveTargetX = e.x;
     e.moveTargetY = e.y;
+    e.moveRetargetCd = 0;
 
     const baseSpeed = Number(config.moveSpeed || 1.2) * speedMulByType(config.type);
     e.baseVx = Math.max(0.45, baseSpeed);
@@ -117,6 +130,8 @@
   }
 
   function updateCommonTimers(e){
+    e.aiTimer = Number(e.aiTimer || 0) + 1;
+
     if (e.hitPlayerCd > 0) e.hitPlayerCd--;
 
     if (e.barrierTimer > 0) {
@@ -132,92 +147,61 @@
 
     if (e.specialTimer > 0) e.specialTimer--;
     if (e.bigFireballCd > 0) e.bigFireballCd--;
+    if (e.moveRetargetCd > 0) e.moveRetargetCd--;
   }
 
-  function moveRange(tools, isBoss){
-    const center = tools.W * 0.5;
-    const width = isBoss ? tools.W * 0.26 : tools.W * 0.25;
+  function retargetInterval(type, isBoss){
+    if (type === 'neon' || type === 'blueNeo' || type === 'purpleNeo' || type === 'smith') {
+      return isBoss ? 110 : 85;
+    }
 
-    return {
-      left: center - width,
-      right: center + width,
-      softLeft: center - width * 0.82,
-      softRight: center + width * 0.82,
-      center
-    };
+    if (type === 'guardian' || type === 'mail') {
+      return isBoss ? 150 : 115;
+    }
+
+    if (type === 'dragon' || type === 'maoh' || type === 'enma') {
+      return isBoss ? 135 : 105;
+    }
+
+    return isBoss ? 120 : 95;
   }
 
-  function setMoveTarget(e, tools, config, isBoss){
-    const type = config.type;
+  function targetSpread(type, tools, isBoss){
+    if (type === 'guardian' || type === 'mail') return tools.W * (isBoss ? 0.14 : 0.13);
+    if (type === 'dragon' || type === 'maoh' || type === 'enma') return tools.W * (isBoss ? 0.20 : 0.17);
+    if (type === 'neon' || type === 'blueNeo' || type === 'purpleNeo' || type === 'smith') return tools.W * (isBoss ? 0.21 : 0.18);
+    return tools.W * (isBoss ? 0.20 : 0.17);
+  }
+
+  function pickMoveTarget(e, tools, config, isBoss){
     const r = moveRange(tools, isBoss);
+    const type = config.type;
     const baseY = e.baseY || (isBoss ? tools.H * 0.24 : tools.H * 0.26);
 
     const minY = isBoss ? tools.H * 0.12 : tools.H * 0.16;
     const maxY = isBoss ? tools.H * 0.32 : tools.H * 0.36;
 
-    if (type === 'guardian' || type === 'mail') {
-      e.moveTargetX = clamp(
-        r.center + Math.sin(e.aiTimer * 0.008 + e.movePhase) * tools.W * 0.14,
-        r.softLeft,
-        r.softRight
-      );
-      e.moveTargetY = clamp(baseY + Math.sin(e.aiTimer * 0.011) * 6, minY, maxY);
-      return;
+    const spread = targetSpread(type, tools, isBoss);
+    const margin = tools.W * 0.035;
+
+    let tx = r.center + tools.rand(-spread, spread);
+
+    if (e.x < r.left + margin) {
+      tx = r.center + tools.rand(0, spread * 0.7);
     }
 
-    if (type === 'neon' || type === 'blueNeo' || type === 'purpleNeo' || type === 'smith') {
-      if (e.aiTimer % 135 === 1) {
-        e.moveTargetX = tools.rand(r.softLeft, r.softRight);
-      }
-
-      e.moveTargetY = clamp(baseY + Math.sin(e.aiTimer * 0.014 + e.movePhase) * 12, minY, maxY);
-      return;
+    if (e.x > r.right - margin) {
+      tx = r.center - tools.rand(0, spread * 0.7);
     }
 
-    if (type === 'dragon' || type === 'maoh' || type === 'enma') {
-      e.moveTargetX = clamp(
-        r.center + Math.sin(e.aiTimer * 0.012 + e.movePhase) * tools.W * 0.20,
-        r.softLeft,
-        r.softRight
-      );
-      e.moveTargetY = clamp(baseY + Math.sin(e.aiTimer * 0.009) * 8, minY, maxY);
-      return;
-    }
+    let yAmp = isBoss ? 10 : 12;
 
-    e.moveTargetX = clamp(
-      r.center + Math.sin(e.aiTimer * 0.015 + e.movePhase) * tools.W * 0.21,
-      r.softLeft,
-      r.softRight
-    );
-    e.moveTargetY = clamp(baseY + Math.sin(e.aiTimer * 0.012 + e.movePhase) * 10, minY, maxY);
-  }
+    if (type === 'guardian' || type === 'mail') yAmp = 5;
+    if (type === 'neon' || type === 'blueNeo' || type === 'purpleNeo' || type === 'smith') yAmp = 12;
 
-  function fixEdge(e, tools, isBoss){
-    const r = moveRange(tools, isBoss);
-    const speed = Math.max(0.45, Math.abs(Number(e.baseVx || e.vx || 1)));
-
-    if (e.x <= r.left) {
-      e.x = r.left + 2;
-      e.vx = speed;
-      e.specialVx = speed;
-      e.moveTargetX = r.center;
-    }
-
-    if (e.x >= r.right) {
-      e.x = r.right - 2;
-      e.vx = -speed;
-      e.specialVx = -speed;
-      e.moveTargetX = r.center;
-    }
-
-    const edgeZone = tools.W * 0.08;
-    const nearLeft = e.x < r.left + edgeZone;
-    const nearRight = e.x > r.right - edgeZone;
-
-    if (nearLeft || nearRight) {
-      const pull = (r.center - e.x) * 0.014;
-      e.x += pull;
-    }
+    e.moveTargetX = clamp(tx, r.left + margin, r.right - margin);
+    e.moveTargetY = clamp(baseY + tools.rand(-yAmp, yAmp), minY, maxY);
+    e.moveRetargetCd = retargetInterval(type, isBoss);
   }
 
   function moveBase(e, tools, config, isBoss){
@@ -231,49 +215,65 @@
         e.specialVx = speed * (Math.random() < 0.5 ? -1 : 1);
       }
 
-      e.x += e.specialVx * 0.62;
+      e.x += e.specialVx * 0.58;
 
       if (e.x <= r.left) {
-        e.x = r.left + 4;
+        e.x = r.left + 8;
         e.specialVx = Math.abs(e.specialVx);
-        e.vx = Math.abs(e.vx || speed);
       }
 
       if (e.x >= r.right) {
-        e.x = r.right - 4;
+        e.x = r.right - 8;
         e.specialVx = -Math.abs(e.specialVx);
-        e.vx = -Math.abs(e.vx || speed);
       }
 
-      e.x += (r.center - e.x) * 0.006;
+      e.y += ((e.baseY || e.y) - e.y) * 0.018;
 
       if (e.specialTimer <= 0) {
         e.specialMove = '';
-        e.vx = e.specialVx || e.vx || speed;
-        e.moveTargetX = r.center;
+        e.specialVx = 0;
+        e.moveRetargetCd = 0;
       }
     } else {
-      setMoveTarget(e, tools, config, isBoss);
+      const dx = Number(e.moveTargetX || e.x) - e.x;
+      const dy = Number(e.moveTargetY || e.y) - e.y;
+
+      if (
+        e.moveRetargetCd <= 0 ||
+        Math.abs(dx) < 4 ||
+        e.x <= r.left + 4 ||
+        e.x >= r.right - 4
+      ) {
+        pickMoveTarget(e, tools, config, isBoss);
+      }
 
       const followX =
         e.barrierTimer > 0 && (config.type === 'guardian' || config.type === 'mail')
           ? 0.018
-          : 0.032;
+          : 0.026;
 
       const followY =
         e.barrierTimer > 0 && (config.type === 'guardian' || config.type === 'mail')
-          ? 0.018
-          : 0.024;
+          ? 0.016
+          : 0.020;
 
       e.x += (e.moveTargetX - e.x) * followX;
       e.y += (e.moveTargetY - e.y) * followY;
 
-      e.x += (r.center - e.x) * 0.004;
+      const centerPull = isBoss ? 0.0025 : 0.002;
+      e.x += (r.center - e.x) * centerPull;
     }
 
-    fixEdge(e, tools, isBoss);
+    if (e.x < r.left) {
+      e.x = r.left + 6;
+      e.moveRetargetCd = 0;
+    }
 
-    e.x = clamp(e.x, r.left, r.right);
+    if (e.x > r.right) {
+      e.x = r.right - 6;
+      e.moveRetargetCd = 0;
+    }
+
     e.y = clamp(e.y, minY, maxY);
   }
 
@@ -286,6 +286,7 @@
       e.y = e.baseY;
       e.diveReturn = false;
       e.targetY = e.baseY;
+      e.moveRetargetCd = 0;
     }
 
     return true;
