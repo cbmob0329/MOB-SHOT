@@ -3,6 +3,16 @@
 (function(){
   const DEFAULT_FIREBALL_IMAGE = 'atk/hinotama.png';
 
+  function canonicalBossName(name){
+    const raw = String(name || '').trim();
+
+    if (raw === '番人') return 'モブガーディアン';
+    if (raw === '番人Ⅱ') return 'モブガーディアンⅡ';
+    if (raw === '番人II') return 'モブガーディアンⅡ';
+
+    return raw;
+  }
+
   const BOSS_ATTACKS = {
     'ホークモブ': {
       image: 'atk/hawkatk.png',
@@ -50,17 +60,6 @@
       color: '#b78cff'
     },
 
-    '番人': {
-      image: DEFAULT_FIREBALL_IMAGE,
-      fallbackImage: DEFAULT_FIREBALL_IMAGE,
-      flipY: true,
-      small: 25,
-      normal: 35,
-      big: 50,
-      huge: 66,
-      super: 80,
-      color: '#ff7a35'
-    },
     'モブガーディアン': {
       image: DEFAULT_FIREBALL_IMAGE,
       fallbackImage: DEFAULT_FIREBALL_IMAGE,
@@ -70,17 +69,6 @@
       big: 50,
       huge: 66,
       super: 80,
-      color: '#ff7a35'
-    },
-    '番人Ⅱ': {
-      image: DEFAULT_FIREBALL_IMAGE,
-      fallbackImage: DEFAULT_FIREBALL_IMAGE,
-      flipY: true,
-      small: 27,
-      normal: 38,
-      big: 54,
-      huge: 70,
-      super: 86,
       color: '#ff7a35'
     },
     'モブガーディアンⅡ': {
@@ -381,18 +369,6 @@
       type: 'mira'
     },
 
-    '番人': {
-      shootCd: 145,
-      attackCd: 225,
-      moveSpeed: 1.1,
-      type: 'guardian'
-    },
-    '番人Ⅱ': {
-      shootCd: 135,
-      attackCd: 210,
-      moveSpeed: 1.2,
-      type: 'guardian'
-    },
     'モブガーディアン': {
       shootCd: 145,
       attackCd: 225,
@@ -493,6 +469,8 @@
   };
 
   function getAttackSpec(name){
+    name = canonicalBossName(name);
+
     return BOSS_ATTACKS[name] || {
       image: DEFAULT_FIREBALL_IMAGE,
       fallbackImage: DEFAULT_FIREBALL_IMAGE,
@@ -507,6 +485,8 @@
   }
 
   function getMidBossConfig(name){
+    name = canonicalBossName(name);
+
     return MID_BOSS_CONFIG[name] || {
       shootCd: 115,
       attackCd: 170,
@@ -516,6 +496,8 @@
   }
 
   function getBossConfig(name){
+    name = canonicalBossName(name);
+
     return BOSS_CONFIG[name] || {
       shootCd: 135,
       attackCd: 215,
@@ -525,6 +507,8 @@
   }
 
   function isStrongBossName(name){
+    name = canonicalBossName(name);
+
     return (
       String(name || '').indexOf('Ⅱ') >= 0 ||
       name === 'モブ魔王' ||
@@ -543,6 +527,7 @@
     BOSS_ATTACKS,
     MID_BOSS_CONFIG,
     BOSS_CONFIG,
+    canonicalBossName,
     getAttackSpec,
     getMidBossConfig,
     getBossConfig,
