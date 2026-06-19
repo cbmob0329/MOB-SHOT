@@ -51,9 +51,9 @@
       clearCoin:300,
       firstCoin:3000,
       firstDiamond:5,
-      chestMul:1,
-      bossHpMul:1,
-      bossCoinMul:1,
+      chestMul:0.8,
+      bossHpMul:1.0,
+      bossCoinMul:1.0,
       areaKey:'grass',
       areaName:'草原',
       background:'sta/backsougen.png',
@@ -63,65 +63,65 @@
     hard:{
       key:'hard',
       name:'ハード',
-      color:'#60d9ff',
+      color:'#6be6ff',
       clearCoin:800,
       firstCoin:8000,
       firstDiamond:8,
-      chestMul:1.8,
-      bossHpMul:2.2,
+      chestMul:1.4,
+      bossHpMul:1.35,
       bossCoinMul:1.8,
       areaKey:'desert',
       areaName:'砂漠',
       background:'sta/backsabaku.png',
-      bosses:['ミラモブ','モブガーディアン'],
+      bosses:['ミラモブⅡ','ネオンモブ'],
       enemySpawn:true
     },
     veryHard:{
       key:'veryHard',
       name:'ベリーハード',
       color:'#ffcf5b',
-      clearCoin:1800,
-      firstCoin:18000,
-      firstDiamond:12,
-      chestMul:3,
-      bossHpMul:4,
-      bossCoinMul:3,
-      areaKey:'neon',
-      areaName:'ネオン街',
-      background:'sta/backneon.png',
-      bosses:['モブガーディアン','ネオンモブ'],
+      clearCoin:1500,
+      firstCoin:15000,
+      firstDiamond:10,
+      chestMul:2.2,
+      bossHpMul:1.8,
+      bossCoinMul:3.2,
+      areaKey:'magma',
+      areaName:'マグマ',
+      background:'sta/backmagma.png',
+      bosses:['ドラゴンモブ','ドラゴンモブⅡ'],
       enemySpawn:true
     },
     inferno:{
       key:'inferno',
       name:'インフェルノ',
-      color:'#ff6b3d',
-      clearCoin:4000,
-      firstCoin:40000,
+      color:'#ff5b5b',
+      clearCoin:3000,
+      firstCoin:30000,
       firstDiamond:20,
-      chestMul:6,
-      bossHpMul:7.5,
-      bossCoinMul:6,
-      areaKey:'magma',
-      areaName:'マグマ',
-      background:'sta/backmagma.png',
-      bosses:['ドラゴンモブ','モブリリス'],
+      chestMul:3.5,
+      bossHpMul:2.35,
+      bossCoinMul:6.0,
+      areaKey:'castle',
+      areaName:'魔王城',
+      background:'sta/backmao.png',
+      bosses:['モブリリス','ドラゴンモブⅡ'],
       enemySpawn:true
     },
     legend:{
       key:'legend',
       name:'レジェンド',
       color:'#d86bff',
-      clearCoin:10000,
-      firstCoin:100000,
-      firstDiamond:35,
-      chestMul:12,
-      bossHpMul:14,
-      bossCoinMul:12,
+      clearCoin:7000,
+      firstCoin:80000,
+      firstDiamond:50,
+      chestMul:5.5,
+      bossHpMul:3.2,
+      bossCoinMul:10.0,
       areaKey:'castle',
       areaName:'魔王城',
       background:'sta/backmao.png',
-      bosses:['モブ魔王','ウルモブリリス'],
+      bosses:['モブリリス','モブ魔王'],
       enemySpawn:true
     }
   };
@@ -136,18 +136,19 @@
 
   const DOUBLE_STAGE_FALLBACK = [
     { id:1, areaKey:'grass', areaName:'草原', title:'草原', background:'sta/backsougen.png', bossA:'ホークモブ', bossB:'ミラモブ' },
-    { id:2, areaKey:'desert', areaName:'砂漠', title:'砂漠', background:'sta/backsabaku.png', bossA:'ミラモブ', bossB:'モブガーディアン' },
-    { id:3, areaKey:'town', areaName:'田舎町', title:'田舎町', background:'sta/backtown.png', bossA:'モブガーディアン', bossB:'ネオンモブ' },
-    { id:4, areaKey:'neon', areaName:'ネオン街', title:'ネオン街', background:'sta/backneon.png', bossA:'ネオンモブ', bossB:'ドラゴンモブ' },
-    { id:5, areaKey:'magma', areaName:'マグマ', title:'マグマ', background:'sta/backmagma.png', bossA:'ドラゴンモブ', bossB:'モブリリス' },
-    { id:6, areaKey:'castle', areaName:'魔王城', title:'魔王城', background:'sta/backmao.png', bossA:'モブリリス', bossB:'モブ魔王', final:true, firstCoin:50000, firstDiamond:20 }
+    { id:2, areaKey:'desert', areaName:'砂漠', title:'砂漠', background:'sta/backsabaku.png', bossA:'モブガーディアン', bossB:'ネオンモブ' },
+    { id:3, areaKey:'neon', areaName:'ネオン街', title:'ネオン街', background:'sta/backneon.png', bossA:'ドラゴンモブ', bossB:'ドラゴンモブⅡ' },
+    { id:4, areaKey:'castle', areaName:'魔王城', title:'魔王城', background:'sta/backmao.png', bossA:'モブリリス', bossB:'モブ魔王' },
+    { id:5, areaKey:'prison', areaName:'監獄', title:'監獄', background:'sta/stkan.png', bossA:'モブメイル', bossB:'モブスミス' },
+    { id:6, areaKey:'seaRail', areaName:'海の線路', title:'海の線路', background:'sta/umisenro.png', bossA:'モブネプ', bossB:'ホークモブⅡ' },
+    { id:7, areaKey:'last', areaName:'魔王の間', title:'魔王の間', background:'sta/makailast.png', bossA:'閻魔モブ', bossB:'ウルモブリリス', final:true, firstCoin:50000, firstDiamond:100 }
   ];
 
   const BOSS_FALLBACK = {
     'ホークモブ':{ name:'ホークモブ', image:'boss/hawks.png', hp:600, score:1000, coin:200 },
     'ホークモブⅡ':{ name:'ホークモブⅡ', image:'boss/hawks2.png', hp:900, score:1400, coin:280 },
     'ミラモブ':{ name:'ミラモブ', image:'boss/miraboss.png', hp:800, score:1300, coin:260 },
-    'ミラモブⅡ':{ name:'ミラモブⅡ', image:'boss/miraboss2.png', hp:1200, score:1700, coin:340 },
+    'ミラモブⅡ':{ name:'ミラモブⅡ', image:'boss/bossmira2.png', hp:1200, score:1700, coin:340 },
     'モブガーディアン':{ name:'モブガーディアン', image:'boss/bossban.png', hp:1100, score:1600, coin:320 },
     'モブガーディアンⅡ':{ name:'モブガーディアンⅡ', image:'boss/bossban2.png', hp:1600, score:2100, coin:420 },
     'ネオンモブ':{ name:'ネオンモブ', image:'boss/bossneon.png', hp:1500, score:2200, coin:440 },
@@ -158,10 +159,10 @@
     'モブ魔王':{ name:'モブ魔王', image:'boss/bossmaoh.png', hp:3800, score:6000, coin:1200 },
     'モブメイル':{ name:'モブメイル', image:'boss/bossmeiru.png', hp:3200, score:5200, coin:1000 },
     'モブスミス':{ name:'モブスミス', image:'boss/bosssmith.png', hp:3400, score:5400, coin:1080 },
-    'モブネプ':{ name:'モブネプ', image:'boss/bossnep.png', hp:3600, score:5600, coin:1120 },
-    'ブルネオモブ':{ name:'ブルネオモブ', image:'boss/bossblueneo.png', hp:3600, score:5800, coin:1160 },
-    'パルネオモブ':{ name:'パルネオモブ', image:'boss/bosspalneo.png', hp:3700, score:5900, coin:1180 },
-    '閻魔モブ':{ name:'閻魔モブ', image:'boss/bossenma.png', hp:4400, score:7200, coin:1440 },
+    'モブネプ':{ name:'モブネプ', image:'boss/bossmobnep.png', hp:3600, score:5600, coin:1120 },
+    'ブルネオモブ':{ name:'ブルネオモブ', image:'boss/bossneonblue.png', hp:3600, score:5800, coin:1160 },
+    'パルネオモブ':{ name:'パルネオモブ', image:'boss/bossneonpur.png', hp:3700, score:5900, coin:1180 },
+    '閻魔モブ':{ name:'閻魔モブ', image:'boss/bossenmob.png', hp:4400, score:7200, coin:1440 },
     'ウルモブリリス':{ name:'ウルモブリリス', image:'boss/bossulriri.png', hp:5200, score:9000, coin:1800 }
   };
 
@@ -314,27 +315,14 @@
     let stage = clone(DOUBLE_STAGE_FALLBACK.find(s => Number(s.id) === id) || DOUBLE_STAGE_FALLBACK[0]);
 
     if (fromEvents) {
-      const fromDiffKey = normalizeDifficultyKey(
-        fromEvents.difficulty &&
-        (
-          fromEvents.difficulty.key ||
-          fromEvents.difficulty.difficulty ||
-          fromEvents.difficulty.name
-        )
-      );
-
-      if (fromEvents.difficulty && (!fromDiffKey || fromDiffKey === diffKey)) {
+      if (fromEvents.difficulty) {
         diff = mergeDiff(diff, fromEvents.difficulty);
         diff.key = diffKey;
       }
 
       if (fromEvents.stage) {
-        const fromStageId = Number(fromEvents.stage.id || fromEvents.stage.stageId || id);
-
-        if (!fromStageId || fromStageId === id) {
-          stage = Object.assign(stage, fromEvents.stage);
-          stage.id = id || stage.id;
-        }
+        stage = Object.assign(stage, fromEvents.stage);
+        stage.id = id || stage.id;
       }
     }
 
