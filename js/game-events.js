@@ -32,6 +32,9 @@
       chestMul:1,
       bossHpMul:1,
       bossCoinMul:1,
+      areaKey:'grass',
+      areaName:'草原',
+      background:'sta/backsougen.png',
       bosses:['ホークモブ','ミラモブ'],
       enemySpawn:true
     },
@@ -45,6 +48,9 @@
       chestMul:1.8,
       bossHpMul:2.2,
       bossCoinMul:1.8,
+      areaKey:'desert',
+      areaName:'砂漠',
+      background:'sta/backsabaku.png',
       bosses:['ミラモブ','番人'],
       enemySpawn:true
     },
@@ -58,6 +64,9 @@
       chestMul:3,
       bossHpMul:4,
       bossCoinMul:3,
+      areaKey:'neon',
+      areaName:'ネオン街',
+      background:'sta/backneon.png',
       bosses:['番人','ネオンモブ'],
       enemySpawn:true
     },
@@ -71,6 +80,9 @@
       chestMul:6,
       bossHpMul:7.5,
       bossCoinMul:6,
+      areaKey:'magma',
+      areaName:'マグマ',
+      background:'sta/backmagma.png',
       bosses:['ドラゴンモブ','モブリリス'],
       enemySpawn:true
     },
@@ -84,48 +96,176 @@
       chestMul:12,
       bossHpMul:14,
       bossCoinMul:12,
+      areaKey:'castle',
+      areaName:'魔王城',
+      background:'sta/backmao.png',
       bosses:['モブ魔王','ウルモブリリス'],
       enemySpawn:true
     }
   };
 
   const DOUBLE_DIFFICULTY_FALLBACK = {
-    easy:{ key:'easy', name:'イージー', color:'#9dff73', hpMul:0.9, scoreMul:1, firstCoin:2000, firstDiamond:3 },
-    hard:{ key:'hard', name:'ハード', color:'#60d9ff', hpMul:1.1, scoreMul:1.1, firstCoin:3500, firstDiamond:4 },
-    veryHard:{ key:'veryHard', name:'ベリーハード', color:'#ffcf5b', hpMul:1.35, scoreMul:1.25, firstCoin:5000, firstDiamond:5 },
-    inferno:{ key:'inferno', name:'インフェルノ', color:'#ff6b3d', hpMul:1.8, scoreMul:1.5, firstCoin:10000, firstDiamond:8 },
-    legend:{ key:'legend', name:'レジェンド', color:'#d86bff', hpMul:2.4, scoreMul:2, firstCoin:20000, firstDiamond:12 }
+    easy:{
+      key:'easy',
+      name:'イージー',
+      color:'#9dff73',
+      hpMul:0.9,
+      scoreMul:1,
+      firstCoin:2000,
+      firstDiamond:3
+    },
+    hard:{
+      key:'hard',
+      name:'ハード',
+      color:'#60d9ff',
+      hpMul:1.1,
+      scoreMul:1.1,
+      firstCoin:3500,
+      firstDiamond:4
+    },
+    veryHard:{
+      key:'veryHard',
+      name:'ベリーハード',
+      color:'#ffcf5b',
+      hpMul:1.35,
+      scoreMul:1.25,
+      firstCoin:5000,
+      firstDiamond:5
+    },
+    inferno:{
+      key:'inferno',
+      name:'インフェルノ',
+      color:'#ff6b3d',
+      hpMul:1.8,
+      scoreMul:1.5,
+      firstCoin:10000,
+      firstDiamond:8
+    },
+    legend:{
+      key:'legend',
+      name:'レジェンド',
+      color:'#d86bff',
+      hpMul:2.4,
+      scoreMul:2,
+      firstCoin:20000,
+      firstDiamond:12
+    }
   };
 
   const DOUBLE_STAGE_FALLBACK = [
-    { id:1, areaKey:'grass', areaName:'草原', title:'草原', bossA:'ホークモブ', bossB:'ミラモブ' },
-    { id:2, areaKey:'desert', areaName:'砂漠', title:'砂漠', bossA:'ミラモブ', bossB:'番人' },
-    { id:3, areaKey:'town', areaName:'田舎町', title:'田舎町', bossA:'番人', bossB:'ネオンモブ' },
-    { id:4, areaKey:'neon', areaName:'ネオン街', title:'ネオン街', bossA:'ネオンモブ', bossB:'ドラゴンモブ' },
-    { id:5, areaKey:'magma', areaName:'マグマ', title:'マグマ', bossA:'ドラゴンモブ', bossB:'モブリリス' },
-    { id:6, areaKey:'castle', areaName:'魔王城', title:'魔王城', bossA:'モブリリス', bossB:'モブ魔王', final:true, firstCoin:50000, firstDiamond:20 }
+    {
+      id:1,
+      areaKey:'grass',
+      areaName:'草原',
+      title:'草原',
+      background:'sta/backsougen.png',
+      bossA:'ホークモブ',
+      bossB:'ミラモブ'
+    },
+    {
+      id:2,
+      areaKey:'desert',
+      areaName:'砂漠',
+      title:'砂漠',
+      background:'sta/backsabaku.png',
+      bossA:'ミラモブ',
+      bossB:'番人'
+    },
+    {
+      id:3,
+      areaKey:'town',
+      areaName:'田舎町',
+      title:'田舎町',
+      background:'sta/backtown.png',
+      bossA:'番人',
+      bossB:'ネオンモブ'
+    },
+    {
+      id:4,
+      areaKey:'neon',
+      areaName:'ネオン街',
+      title:'ネオン街',
+      background:'sta/backneon.png',
+      bossA:'ネオンモブ',
+      bossB:'ドラゴンモブ'
+    },
+    {
+      id:5,
+      areaKey:'magma',
+      areaName:'マグマ',
+      title:'マグマ',
+      background:'sta/backmagma.png',
+      bossA:'ドラゴンモブ',
+      bossB:'モブリリス'
+    },
+    {
+      id:6,
+      areaKey:'castle',
+      areaName:'魔王城',
+      title:'魔王城',
+      background:'sta/backmao.png',
+      bossA:'モブリリス',
+      bossB:'モブ魔王',
+      final:true,
+      firstCoin:50000,
+      firstDiamond:20
+    }
   ];
+
+  const BOSS_FALLBACK = {
+    'ホークモブ':{ name:'ホークモブ', image:'boss/hawks.png', hp:600, score:1000, coin:200 },
+    'ホークモブⅡ':{ name:'ホークモブⅡ', image:'boss/hawks2.png', hp:900, score:1400, coin:280 },
+    'ミラモブ':{ name:'ミラモブ', image:'boss/miraboss.png', hp:800, score:1300, coin:260 },
+    'ミラモブⅡ':{ name:'ミラモブⅡ', image:'boss/miraboss2.png', hp:1200, score:1700, coin:340 },
+    '番人':{ name:'番人', image:'boss/bossban.png', hp:1100, score:1600, coin:320 },
+    '番人Ⅱ':{ name:'番人Ⅱ', image:'boss/bossban2.png', hp:1600, score:2100, coin:420 },
+    'モブガーディアン':{ name:'モブガーディアン', image:'boss/bossban.png', hp:1100, score:1600, coin:320 },
+    'モブガーディアンⅡ':{ name:'モブガーディアンⅡ', image:'boss/bossban2.png', hp:1600, score:2100, coin:420 },
+    'ネオンモブ':{ name:'ネオンモブ', image:'boss/bossneon.png', hp:1500, score:2200, coin:440 },
+    'ネオンモブⅡ':{ name:'ネオンモブⅡ', image:'boss/bossneon2.png', hp:2100, score:2800, coin:560 },
+    'ドラゴンモブ':{ name:'ドラゴンモブ', image:'boss/bossdragoon.png', hp:2100, score:3000, coin:600 },
+    'ドラゴンモブⅡ':{ name:'ドラゴンモブⅡ', image:'boss/bossdragoon2.png', hp:2900, score:3900, coin:780 },
+    'モブリリス':{ name:'モブリリス', image:'boss/bossriris.png', hp:2800, score:4200, coin:840 },
+    'モブ魔王':{ name:'モブ魔王', image:'boss/bossmaoh.png', hp:3800, score:6000, coin:1200 },
+    'モブメイル':{ name:'モブメイル', image:'boss/bossmeiru.png', hp:3200, score:5200, coin:1000 },
+    'モブスミス':{ name:'モブスミス', image:'boss/bosssmith.png', hp:3400, score:5400, coin:1080 },
+    'モブネプ':{ name:'モブネプ', image:'boss/bossnep.png', hp:3600, score:5600, coin:1120 },
+    'ブルネオモブ':{ name:'ブルネオモブ', image:'boss/bossblueneo.png', hp:3600, score:5800, coin:1160 },
+    'パルネオモブ':{ name:'パルネオモブ', image:'boss/bosspalneo.png', hp:3700, score:5900, coin:1180 },
+    '閻魔モブ':{ name:'閻魔モブ', image:'boss/bossenma.png', hp:4400, score:7200, coin:1440 },
+    'ウルモブリリス':{ name:'ウルモブリリス', image:'boss/bossulriri.png', hp:5200, score:9000, coin:1800 }
+  };
+
+  const MID_BOSS_FALLBACK = {
+    'モブプテラ':{ name:'モブプテラ', image:'en/enpte.png', hp:80, score:300, coin:30 },
+    'モブデュアル':{ name:'モブデュアル', image:'en/endual.png', hp:120, score:420, coin:42 },
+    'モブピー':{ name:'モブピー', image:'en/enpi.png', hp:95, score:360, coin:36 },
+    'モブギドラ':{ name:'モブギドラ', image:'en/neongidra.png', hp:220, score:800, coin:80 },
+    'マグモブレム':{ name:'マグモブレム', image:'en/enmaggolem.png', hp:300, score:1050, coin:110 },
+    'グラディモブ':{ name:'グラディモブ', image:'en/engra.png', hp:260, score:900, coin:90 },
+    'モブニコ':{ name:'モブニコ', image:'en/ennico.png', hp:180, score:620, coin:62 },
+    'モブラス':{ name:'モブラス', image:'en/enras.png', hp:230, score:760, coin:76 },
+    'ガトリモブ':{ name:'ガトリモブ', image:'en/engatori.png', hp:210, score:720, coin:72 },
+    'ジェイモブ':{ name:'ジェイモブ', image:'en/enjay.png', hp:220, score:740, coin:74 },
+    'モブサメ':{ name:'モブサメ', image:'en/ensame.png', hp:250, score:820, coin:82 },
+    'モブシャチ':{ name:'モブシャチ', image:'en/enshachi.png', hp:280, score:880, coin:88 },
+    'モブコード':{ name:'モブコード', image:'en/encode.png', hp:220, score:760, coin:76 },
+    'モブケーブル':{ name:'モブケーブル', image:'en/encable.png', hp:240, score:800, coin:80 },
+    'モブマグシャー':{ name:'モブマグシャー', image:'en/enmagsha.png', hp:290, score:980, coin:98 },
+    'モブガラド':{ name:'モブガラド', image:'en/engarado.png', hp:280, score:940, coin:94 },
+    'モブメルト':{ name:'モブメルト', image:'en/enmelt.png', hp:300, score:1000, coin:100 }
+  };
 
   const SCORE_ATTACK_BOSSES = [
-    { name:'ホークモブ', image:'boss/hawks.png', hp:600, score:1000, coin:200 },
-    { name:'ミラモブ', image:'boss/miraboss.png', hp:800, score:1300, coin:260 },
-    { name:'番人', image:'boss/bossban.png', hp:1100, score:1600, coin:320 },
-    { name:'ネオンモブ', image:'boss/bossneon.png', hp:1500, score:2200, coin:440 },
-    { name:'ドラゴンモブ', image:'boss/bossdragoon.png', hp:2100, score:3000, coin:600 },
-    { name:'モブリリス', image:'boss/bossriris.png', hp:2800, score:4200, coin:840 },
-    { name:'モブ魔王', image:'boss/bossmaoh.png', hp:3800, score:6000, coin:1200 },
-    { name:'ウルモブリリス', image:'boss/bossulriri.png', hp:5200, score:9000, coin:1800 }
+    BOSS_FALLBACK['ホークモブ'],
+    BOSS_FALLBACK['ミラモブ'],
+    BOSS_FALLBACK['番人'],
+    BOSS_FALLBACK['ネオンモブ'],
+    BOSS_FALLBACK['ドラゴンモブ'],
+    BOSS_FALLBACK['モブリリス'],
+    BOSS_FALLBACK['モブ魔王'],
+    BOSS_FALLBACK['ウルモブリリス']
   ];
-
-  const QUEST_FALLBACK = {
-    ptera:{ name:'モブプテラ', image:'en/enpte.png', hp:80, score:300, coin:30 },
-    mira:{ name:'ミラモブ', image:'boss/miraboss.png', hp:300, score:1300, coin:160 },
-    ban:{ name:'番人', image:'boss/bossban.png', hp:390, score:1600, coin:200 },
-    ghidora:{ name:'モブギドラ', image:'en/neongidra.png', hp:220, score:800, coin:80 },
-    dragon:{ name:'ドラゴンモブ', image:'boss/bossdragoon.png', hp:660, score:2600, coin:340 },
-    magmaMid:{ name:'マグモブレム', image:'en/enmaggolem.png', hp:300, score:1050, coin:110 },
-    lilith:{ name:'モブリリス', image:'boss/bossriris.png', hp:820, score:3200, coin:420 }
-  };
 
   function clone(obj){
     return JSON.parse(JSON.stringify(obj));
@@ -196,14 +336,26 @@
       fromEvents = window.MobShotEvents.getCurrentGoldDifficulty();
     }
 
-    if (fromEvents && normalizeDifficultyKey(fromEvents.key) === key) {
-      return mergeDiff(GOLD_DIFFICULTY_FALLBACK[key] || GOLD_DIFFICULTY_FALLBACK.easy, fromEvents);
+    if (fromEvents) {
+      const eventKey = normalizeDifficultyKey(fromEvents.key || fromEvents.difficulty || key);
+
+      if (eventKey === key) {
+        return mergeDiff(
+          GOLD_DIFFICULTY_FALLBACK[key] || GOLD_DIFFICULTY_FALLBACK.easy,
+          fromEvents
+        );
+      }
     }
 
     if (eventData && eventData.goldDifficulty) {
       const d = eventData.goldDifficulty;
-      if (normalizeDifficultyKey(d.key) === key) {
-        return mergeDiff(GOLD_DIFFICULTY_FALLBACK[key] || GOLD_DIFFICULTY_FALLBACK.easy, d);
+      const dKey = normalizeDifficultyKey(d.key || d.difficulty || key);
+
+      if (dKey === key) {
+        return mergeDiff(
+          GOLD_DIFFICULTY_FALLBACK[key] || GOLD_DIFFICULTY_FALLBACK.easy,
+          d
+        );
       }
     }
 
@@ -221,6 +373,7 @@
     const id = Number(
       stageId ||
       (eventData && eventData.stageId) ||
+      (eventData && eventData.doubleStageId) ||
       (eventData && eventData.stage && eventData.stage.id) ||
       1
     );
@@ -235,21 +388,38 @@
     let stage = clone(DOUBLE_STAGE_FALLBACK.find(s => Number(s.id) === id) || DOUBLE_STAGE_FALLBACK[0]);
 
     if (fromEvents) {
-      if (fromEvents.difficulty && normalizeDifficultyKey(fromEvents.difficulty.key) === diffKey) {
+      const fromDiffKey = normalizeDifficultyKey(
+        fromEvents.difficulty &&
+        (
+          fromEvents.difficulty.key ||
+          fromEvents.difficulty.difficulty ||
+          fromEvents.difficulty.name
+        )
+      );
+
+      if (fromEvents.difficulty && (!fromDiffKey || fromDiffKey === diffKey)) {
         diff = mergeDiff(diff, fromEvents.difficulty);
+        diff.key = diffKey;
       }
 
-      if (fromEvents.stage && Number(fromEvents.stage.id) === id) {
-        stage = Object.assign(stage, fromEvents.stage);
+      if (fromEvents.stage) {
+        const fromStageId = Number(fromEvents.stage.id || fromEvents.stage.stageId || id);
+
+        if (!fromStageId || fromStageId === id) {
+          stage = Object.assign(stage, fromEvents.stage);
+          stage.id = id || stage.id;
+        }
       }
     }
 
     if (eventData && eventData.difficultyData) {
       diff = mergeDiff(diff, eventData.difficultyData);
+      diff.key = diffKey;
     }
 
     if (eventData && eventData.stage) {
       stage = Object.assign(stage, eventData.stage);
+      stage.id = id || stage.id;
     }
 
     if (eventData && eventData.bossA) stage.bossA = eventData.bossA;
@@ -257,6 +427,13 @@
     if (eventData && eventData.areaKey) stage.areaKey = eventData.areaKey;
     if (eventData && eventData.areaName) stage.areaName = eventData.areaName;
     if (eventData && eventData.title) stage.title = eventData.title;
+    if (eventData && eventData.background) stage.background = eventData.background;
+
+    if (!stage.bossA || !stage.bossB) {
+      const fallbackStage = DOUBLE_STAGE_FALLBACK.find(s => Number(s.id) === Number(stage.id)) || DOUBLE_STAGE_FALLBACK[0];
+      stage.bossA = stage.bossA || fallbackStage.bossA;
+      stage.bossB = stage.bossB || fallbackStage.bossB;
+    }
 
     return { difficulty:diff, stage };
   }
@@ -373,12 +550,35 @@
   }
 
   function areaChestList(areaKey, api){
+    const area = stageAreaData(areaKey);
+
+    if (area && Array.isArray(area.chests)) return area.chests;
     if (api.D && Array.isArray(api.D.chests)) return api.D.chests;
 
     return [
       { name:'銀の宝箱', image:'gimi/takagin.png', hp:10, score:80, coinMin:10, coinMax:25 },
       { name:'金の宝箱', image:'gimi/takagol.png', hp:18, score:160, coinMin:25, coinMax:60 }
     ];
+  }
+
+  function fallbackBossByName(name){
+    if (BOSS_FALLBACK[name]) return clone(BOSS_FALLBACK[name]);
+
+    const key = Object.keys(BOSS_FALLBACK).find(k => sameName(k, name));
+    if (key) return clone(BOSS_FALLBACK[key]);
+
+    if (MID_BOSS_FALLBACK[name]) return clone(MID_BOSS_FALLBACK[name]);
+
+    const midKey = Object.keys(MID_BOSS_FALLBACK).find(k => sameName(k, name));
+    if (midKey) return clone(MID_BOSS_FALLBACK[midKey]);
+
+    return {
+      name:name || 'ホークモブ',
+      image:'boss/hawks.png',
+      hp:1000,
+      score:1000,
+      coin:300
+    };
   }
 
   function findBossDef(api, areaKey, name, fallback){
@@ -424,11 +624,15 @@
 
     const found = candidates.find(item => item && sameName(item.name, name));
 
-    return clone(
-      found ||
-      fallback ||
-      { name:name || 'BOSS', image:'boss/hawks.png', hp:1000, score:1000, coin:300 }
-    );
+    if (found) return clone(found);
+
+    if (fallback) {
+      const fixed = Object.assign(fallbackBossByName(name), fallback);
+      fixed.name = name || fixed.name;
+      return fixed;
+    }
+
+    return fallbackBossByName(name);
   }
 
   function getMidBossDef(api, areaKey, name, fallback){
@@ -450,7 +654,7 @@
     const found = list.find(item => item && sameName(item.name, name));
     if (found) return clone(found);
 
-    return findBossDef(api, areaKey, name, fallback);
+    return findBossDef(api, areaKey, name, fallback || fallbackBossByName(name));
   }
 
   function setStageVisual(api, title, background, areaKey, areaName){
@@ -486,8 +690,8 @@
 
     return {
       kind,
-      name:def.name || 'BOSS',
-      image:def.image || 'boss/hawks.png',
+      name:def.name || 'ホークモブ',
+      image:def.image || fallbackBossByName(def.name).image || 'boss/hawks.png',
       x,
       y:opt.y != null ? opt.y : -240,
       baseY:opt.baseY != null ? opt.baseY : H * 0.21,
@@ -500,8 +704,8 @@
       score:Math.ceil(Number(def.score || 1000) * scoreMul),
       coin:Math.ceil(Number(def.coin || 100) * coinMul),
       dead:false,
-      shootCd:opt.shootCd != null ? opt.shootCd : 86,
-      attackCd:opt.attackCd != null ? opt.attackCd : 140,
+      shootCd:opt.shootCd != null ? opt.shootCd : 92,
+      attackCd:opt.attackCd != null ? opt.attackCd : 160,
       attackStep:0,
       contactDmg:opt.contactDmg != null ? opt.contactDmg : 20,
       hitPlayerCd:0,
@@ -527,7 +731,7 @@
       y:-78,
       vx:rand(-0.65, 0.65),
       vy:1.65 + rand(0, 0.35),
-      r:31,
+      r:def.name === 'モブロック' ? 36 : 31,
       hp,
       maxHp:hp,
       score:Math.ceil(Number(def.score || 10) * Math.max(1, hpMul * 0.35)),
@@ -626,11 +830,10 @@
 
     while (names.length < 2) names.push(names[0] || 'ホークモブ');
 
-    const bosses = [
-      findBossDef(api, '', names[0], { name:names[0], image:'boss/hawks.png', hp:600, score:1000, coin:200 }),
-      findBossDef(api, '', names[1], { name:names[1], image:'boss/miraboss.png', hp:800, score:1300, coin:260 })
-    ];
+    const bossA = findBossDef(api, diff.areaKey, names[0], fallbackBossByName(names[0]));
+    const bossB = findBossDef(api, diff.areaKey, names[1], fallbackBossByName(names[1]));
 
+    const bosses = [bossA, bossB];
     const positions = [W * 0.34, W * 0.66];
 
     bosses.forEach((def, index) => {
@@ -640,8 +843,8 @@
         scoreMul:Number(diff.bossCoinMul || 1),
         coinMul:Number(diff.bossCoinMul || 1),
         vx:index === 0 ? 1.25 : -1.25,
-        shootCd:90,
-        attackCd:155,
+        shootCd:92,
+        attackCd:165,
         contactDmg:22,
         r:106
       }));
@@ -652,8 +855,8 @@
 
   function updateGold(api){
     const state = api.state;
-    const D = api.D;
     const diff = getGoldDifficulty();
+    const areaKey = diff.areaKey || 'grass';
     const enemyPower = eventEnemyPowerMul(diff.key);
 
     localFrame++;
@@ -662,18 +865,13 @@
     if (localFrame >= 40) spawnGoldBosses(api);
 
     if (localFrame >= nextEnemyAt) {
-      if (diff.enemySpawn !== false && D.enemies && D.enemies.zako) {
-        const def = pick(D.enemies.zako);
-        if (def) {
-          state.entities.push(
-            makeEnemyEntity(
-              def,
-              api,
-              Number(diff.bossHpMul || 1) * 0.35 * enemyPower,
-              Number(diff.bossCoinMul || 1)
-            )
-          );
-        }
+      if (diff.enemySpawn !== false) {
+        spawnAreaEnemy(
+          api,
+          areaKey,
+          Number(diff.bossHpMul || 1) * 0.35 * enemyPower,
+          Number(diff.bossCoinMul || 1)
+        );
       }
 
       nextEnemyAt = localFrame + intRand(
@@ -683,36 +881,24 @@
     }
 
     if (localFrame >= nextGimmickAt) {
-      if (D.gimmicks && D.gimmicks.length) {
-        const def = pick(D.gimmicks);
-        if (def) {
-          state.entities.push(
-            makeGimmickEntity(
-              def,
-              api,
-              Number(diff.bossHpMul || 1) * 0.45 * enemyPower,
-              Number(diff.chestMul || 1)
-            )
-          );
-        }
-      }
+      spawnAreaGimmick(
+        api,
+        areaKey,
+        Number(diff.bossHpMul || 1) * 0.45 * enemyPower,
+        Number(diff.chestMul || 1)
+      );
 
       nextGimmickAt = localFrame + intRand(170, 250);
     }
 
     if (localFrame >= nextChestAt) {
-      if (D.chests && D.chests.length && Math.random() < 0.55) {
-        const def = pick(D.chests);
-        if (def) {
-          state.entities.push(
-            makeChestEntity(
-              def,
-              api,
-              Math.max(1, enemyPower * 0.45),
-              Number(diff.chestMul || 1) * 3
-            )
-          );
-        }
+      if (Math.random() < 0.55) {
+        spawnAreaChest(
+          api,
+          areaKey,
+          Math.max(1, enemyPower * 0.45),
+          Number(diff.chestMul || 1) * 3
+        );
       }
 
       nextChestAt = localFrame + intRand(190, 290);
@@ -734,8 +920,8 @@
     const W = api.W;
     const state = api.state;
 
-    const bossA = findBossDef(api, stage.areaKey, stage.bossA);
-    const bossB = findBossDef(api, stage.areaKey, stage.bossB, bossA);
+    const bossA = findBossDef(api, stage.areaKey, stage.bossA, fallbackBossByName(stage.bossA));
+    const bossB = findBossDef(api, stage.areaKey, stage.bossB, fallbackBossByName(stage.bossB));
 
     state.entities.push(makeBossEntity(bossA, api, {
       x:W * 0.34,
@@ -743,8 +929,8 @@
       scoreMul:Number(diff.scoreMul || 1),
       coinMul:Number(diff.scoreMul || 1),
       vx:1.35,
-      shootCd:85,
-      attackCd:145,
+      shootCd:92,
+      attackCd:160,
       contactDmg:24
     }));
 
@@ -754,8 +940,8 @@
       scoreMul:Number(diff.scoreMul || 1),
       coinMul:Number(diff.scoreMul || 1),
       vx:-1.35,
-      shootCd:85,
-      attackCd:145,
+      shootCd:92,
+      attackCd:160,
       contactDmg:24
     }));
 
@@ -949,7 +1135,7 @@
 
   function updatePteraRush(api){
     const stage = currentQuestStage();
-    const ptera = getMidBossDef(api, 'grass', 'モブプテラ', QUEST_FALLBACK.ptera);
+    const ptera = getMidBossDef(api, 'grass', 'モブプテラ', MID_BOSS_FALLBACK['モブプテラ']);
     const waves = [2, 3, 5];
 
     updateQuestFieldSpawns(api, stage.areaKey);
@@ -993,7 +1179,7 @@
     });
 
     if (!questBossSpawned && localFrame > 45) {
-      const mira = findBossDef(api, 'desert', 'ミラモブ', QUEST_FALLBACK.mira);
+      const mira = findBossDef(api, 'desert', 'ミラモブ', BOSS_FALLBACK['ミラモブ']);
 
       spawnQuestBossGroup(api, [mira], {
         kind:'boss',
@@ -1028,7 +1214,7 @@
     updateQuestFieldSpawns(api, stage.areaKey);
 
     if (!questWaveSpawned && localFrame > 55) {
-      const ban = findBossDef(api, 'town', '番人', QUEST_FALLBACK.ban);
+      const ban = findBossDef(api, 'town', '番人', BOSS_FALLBACK['番人']);
 
       spawnQuestBossGroup(api, [ban, ban], {
         kind:'boss',
@@ -1053,7 +1239,7 @@
 
   function updateNineHeads(api){
     const stage = currentQuestStage();
-    const ghidora = getMidBossDef(api, 'neon', 'モブギドラ', QUEST_FALLBACK.ghidora);
+    const ghidora = getMidBossDef(api, 'neon', 'モブギドラ', MID_BOSS_FALLBACK['モブギドラ']);
 
     updateQuestFieldSpawns(api, stage.areaKey);
 
@@ -1121,8 +1307,8 @@
     }
 
     if (!questWaveSpawned && questPhase === 1 && localFrame > 55) {
-      const dragon = findBossDef(api, 'magma', 'ドラゴンモブ', QUEST_FALLBACK.dragon);
-      const magrem = getMidBossDef(api, 'magma', 'マグモブレム', QUEST_FALLBACK.magmaMid);
+      const dragon = findBossDef(api, 'magma', 'ドラゴンモブ', BOSS_FALLBACK['ドラゴンモブ']);
+      const magrem = getMidBossDef(api, 'magma', 'マグモブレム', MID_BOSS_FALLBACK['マグモブレム']);
 
       spawnQuestBossGroup(api, [dragon, magrem, magrem], {
         kind:'midBoss',
@@ -1159,7 +1345,7 @@
     updateQuestFieldSpawns(api, stage.areaKey);
 
     if (!questWaveSpawned && localFrame > 55) {
-      const lilith = findBossDef(api, 'castle', 'モブリリス', QUEST_FALLBACK.lilith);
+      const lilith = findBossDef(api, 'castle', 'モブリリス', BOSS_FALLBACK['モブリリス']);
 
       spawnQuestBossGroup(api, [lilith, lilith, lilith, lilith], {
         kind:'boss',
@@ -1411,19 +1597,7 @@
     pop.classList.remove('hidden');
   }
 
-  function startCurrentEvent(api){
-    eventData = getEvent();
-
-    if (!eventData || !eventData.key) {
-      active = false;
-      return false;
-    }
-
-    active = true;
-    eventType = eventData.key;
-    difficultyKey = normalizeDifficultyKey(eventData.difficulty || eventData.difficultyKey || '');
-    stageId = Number(eventData.stageId || (eventData.stage && eventData.stage.id) || 0);
-
+  function resetLocalState(){
     localFrame = 0;
     nextEnemyAt = 120;
     nextChestAt = 170;
@@ -1437,6 +1611,26 @@
     questKills = 0;
     questBossSpawned = false;
     questWaveSpawned = false;
+  }
+
+  function startCurrentEvent(api){
+    eventData = getEvent();
+
+    if (!eventData || !eventData.key) {
+      active = false;
+      eventData = null;
+      eventType = '';
+      difficultyKey = '';
+      stageId = 0;
+      return false;
+    }
+
+    active = true;
+    eventType = eventData.key;
+    difficultyKey = normalizeDifficultyKey(eventData.difficulty || eventData.difficultyKey || '');
+    stageId = Number(eventData.stageId || eventData.doubleStageId || (eventData.stage && eventData.stage.id) || 0);
+
+    resetLocalState();
 
     api.state.entities.length = 0;
     api.state.bullets.length = 0;
@@ -1447,7 +1641,13 @@
       const diff = getGoldDifficulty();
 
       api.setEventMode({ active:true, key:'gold' });
-      setStageVisual(api, `GOLD ${diff.name}`, 'sta/backmao.png', 'castle', 'ゴールドステージ');
+      setStageVisual(
+        api,
+        `GOLD ${diff.name}`,
+        diff.background || 'sta/backmao.png',
+        diff.areaKey || 'grass',
+        diff.areaName || 'ゴールドステージ'
+      );
       api.showBanner(`GOLD STAGE ${diff.name}`);
       return true;
     }
@@ -1456,7 +1656,13 @@
       const info = getDoubleInfo();
 
       api.setEventMode({ active:true, key:'doubleBoss' });
-      setStageVisual(api, `DOUBLE ${info.difficulty.name}`, null, info.stage.areaKey, info.stage.areaName);
+      setStageVisual(
+        api,
+        `DOUBLE ${info.difficulty.name}`,
+        info.stage.background || null,
+        info.stage.areaKey,
+        info.stage.areaName
+      );
       api.showBanner(`ダブルボス ${info.stage.title}`);
       return true;
     }
@@ -1485,6 +1691,10 @@
     }
 
     active = false;
+    eventData = null;
+    eventType = '';
+    difficultyKey = '';
+    stageId = 0;
     return false;
   }
 
