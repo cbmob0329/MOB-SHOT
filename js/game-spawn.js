@@ -214,6 +214,11 @@
     return profile;
   }
 
+  function safeNumber(v, fallback){
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
   function spawnEnemy(tools){
     const state = tools.state;
     const D = tools.D;
@@ -222,12 +227,15 @@
     const rand = tools.rand;
     const pick = tools.pick;
 
+    if (!D || !D.enemies || !Array.isArray(D.enemies.zako)) return;
+
     const def = pick(D.enemies.zako);
     if (!def) return;
 
     const profile = enemyProfile(def.name);
-    const scale = 1 + flow.area * 0.08;
-    const hp = Math.ceil(def.hp * scale * profile.hpMul);
+    const areaNo = flow && flow.area ? Number(flow.area || 1) : 1;
+    const scale = 1 + areaNo * 0.08;
+    const hp = Math.ceil(safeNumber(def.hp, 5) * scale * profile.hpMul);
 
     state.entities.push({
       kind: 'enemy',
@@ -236,18 +244,18 @@
       x: rand(W * 0.18, W * 0.82),
       y: -78,
       vx: rand(-0.85, 0.85) * profile.vxMul,
-      vy: (2.15 + flow.area * 0.08) * profile.vyMul,
+      vy: (2.15 + areaNo * 0.08) * profile.vyMul,
       r: (def.name === 'モブロック' ? 34 : 31) + profile.rAdd,
       hp,
       maxHp: hp,
-      score: def.score,
-      coinMin: def.coinMin,
-      coinMax: def.coinMax,
+      score: safeNumber(def.score, 10),
+      coinMin: safeNumber(def.coinMin, 1),
+      coinMax: safeNumber(def.coinMax, 2),
       dead: false,
       bob: rand(0, Math.PI * 2),
 
       aiType: profile.aiType,
-      canShoot: profile.canShoot,
+      canShoot: profile.canShoot || !!def.canShoot,
       baseShootCd: profile.baseShootCd,
       shootCd: profile.baseShootCd + Math.floor(rand(0, 70)),
       burstShot: profile.burstShot,
@@ -264,10 +272,14 @@
     const rand = tools.rand;
     const pick = tools.pick;
 
+    if (!D || !Array.isArray(D.gimmicks)) return;
+
     const def = pick(D.gimmicks);
     if (!def) return;
 
-    const scale = 1 + flow.area * 0.1;
+    const areaNo = flow && flow.area ? Number(flow.area || 1) : 1;
+    const scale = 1 + areaNo * 0.1;
+    const hp = Math.ceil(safeNumber(def.hp, 10) * scale);
 
     state.entities.push({
       kind: 'gimmick',
@@ -279,11 +291,11 @@
       vy: 2.05,
       w: 82,
       h: 82,
-      hp: Math.ceil(def.hp * scale),
-      maxHp: Math.ceil(def.hp * scale),
-      score: def.score,
-      coinMin: def.coinMin,
-      coinMax: def.coinMax,
+      hp,
+      maxHp: hp,
+      score: safeNumber(def.score, 10),
+      coinMin: safeNumber(def.coinMin, 1),
+      coinMax: safeNumber(def.coinMax, 2),
       dead: false,
       bob: 0
     });
@@ -295,6 +307,8 @@
     const W = tools.W;
     const rand = tools.rand;
     const pick = tools.pick;
+
+    if (!D || !Array.isArray(D.chests)) return;
 
     const def = pick(D.chests);
     if (!def) return;
@@ -309,11 +323,11 @@
       vy: 2.0,
       w: 64,
       h: 58,
-      hp: def.hp,
-      maxHp: def.hp,
-      score: def.score,
-      coinMin: def.coinMin,
-      coinMax: def.coinMax,
+      hp: safeNumber(def.hp, 10),
+      maxHp: safeNumber(def.hp, 10),
+      score: safeNumber(def.score, 80),
+      coinMin: safeNumber(def.coinMin, 10),
+      coinMax: safeNumber(def.coinMax, 25),
       dead: false,
       bob: 0
     });
@@ -326,6 +340,8 @@
     const W = tools.W;
     const frame = tools.frame();
     const weightedPick = tools.weightedPick;
+
+    if (!D || !Array.isArray(D.gates)) return;
 
     let pool;
 
@@ -394,130 +410,130 @@
       vy: 2.25,
       r: 64,
       contactDmg: 13,
-      shootCd: 95,
-      attackCd: 125,
+      shootCd: 110,
+      attackCd: 155,
       hpMul: 1
     };
 
     if (name === 'モブプテラ') {
       profile.vx = 1.35;
       profile.r = 64;
-      profile.shootCd = 100;
-      profile.attackCd = 135;
+      profile.shootCd = 112;
+      profile.attackCd = 165;
     }
 
     if (name === 'モブデュアル') {
-      profile.vx = 1.65;
+      profile.vx = 1.55;
       profile.r = 66;
-      profile.shootCd = 90;
-      profile.attackCd = 125;
+      profile.shootCd = 104;
+      profile.attackCd = 158;
     }
 
     if (name === 'モブピー') {
-      profile.vx = 1.85;
+      profile.vx = 1.65;
       profile.r = 58;
-      profile.shootCd = 80;
-      profile.attackCd = 120;
+      profile.shootCd = 96;
+      profile.attackCd = 150;
     }
 
     if (name === 'モブギドラ') {
       profile.vx = 1.25;
       profile.r = 72;
-      profile.shootCd = 95;
-      profile.attackCd = 130;
+      profile.shootCd = 112;
+      profile.attackCd = 165;
       profile.hpMul = 1.1;
     }
 
     if (name === 'マグモブレム') {
       profile.vx = 0.95;
       profile.r = 76;
-      profile.shootCd = 125;
-      profile.attackCd = 150;
+      profile.shootCd = 135;
+      profile.attackCd = 180;
       profile.hpMul = 1.25;
       profile.contactDmg = 16;
     }
 
     if (name === 'グラディモブ') {
-      profile.vx = 1.55;
+      profile.vx = 1.45;
       profile.r = 70;
-      profile.shootCd = 105;
-      profile.attackCd = 125;
+      profile.shootCd = 118;
+      profile.attackCd = 160;
       profile.contactDmg = 17;
     }
 
     if (name === 'モブニコ') {
-      profile.vx = 1.4;
+      profile.vx = 1.35;
       profile.r = 64;
     }
 
     if (name === 'モブラス') {
-      profile.vx = 1.2;
+      profile.vx = 1.15;
       profile.r = 70;
       profile.hpMul = 1.15;
     }
 
     if (name === 'ガトリモブ') {
-      profile.vx = 1.8;
+      profile.vx = 1.6;
       profile.r = 64;
-      profile.shootCd = 78;
+      profile.shootCd = 96;
     }
 
     if (name === 'ジェイモブ') {
-      profile.vx = 1.65;
+      profile.vx = 1.5;
       profile.r = 62;
-      profile.attackCd = 115;
+      profile.attackCd = 150;
     }
 
     if (name === 'モブサメ') {
-      profile.vx = 1.8;
+      profile.vx = 1.55;
       profile.r = 72;
       profile.contactDmg = 18;
     }
 
     if (name === 'モブシャチ') {
-      profile.vx = 1.45;
+      profile.vx = 1.35;
       profile.r = 78;
       profile.hpMul = 1.2;
       profile.contactDmg = 19;
     }
 
     if (name === 'モブコード') {
-      profile.vx = 1.55;
+      profile.vx = 1.5;
       profile.r = 66;
-      profile.shootCd = 85;
+      profile.shootCd = 102;
     }
 
     if (name === 'モブケーブル') {
-      profile.vx = 1.35;
+      profile.vx = 1.28;
       profile.r = 70;
-      profile.attackCd = 120;
+      profile.attackCd = 155;
     }
 
     if (name === 'モブマグシャー') {
-      profile.vx = 1.2;
+      profile.vx = 1.12;
       profile.r = 76;
       profile.hpMul = 1.2;
       profile.contactDmg = 18;
     }
 
     if (name === 'モブガラド') {
-      profile.vx = 1.4;
+      profile.vx = 1.28;
       profile.r = 74;
       profile.hpMul = 1.18;
     }
 
     if (name === 'モブメルト') {
-      profile.vx = 1.25;
+      profile.vx = 1.18;
       profile.r = 74;
       profile.hpMul = 1.22;
       profile.contactDmg = 18;
     }
 
     if (name === 'モブリリス') {
-      profile.vx = 1.55;
+      profile.vx = 1.45;
       profile.r = 78;
-      profile.shootCd = 82;
-      profile.attackCd = 115;
+      profile.shootCd = 100;
+      profile.attackCd = 150;
       profile.hpMul = 1.25;
       profile.contactDmg = 18;
     }
@@ -533,11 +549,14 @@
     const H = tools.H;
     const pick = tools.pick;
 
+    if (!D || !D.enemies || !Array.isArray(D.enemies.midBoss)) return;
+
     const def = pick(D.enemies.midBoss);
     if (!def) return;
 
     const profile = midBossProfile(def.name);
-    const hp = Math.ceil(def.hp * (flow.midBoss === 2 ? 1.35 : 1) * profile.hpMul);
+    const flowMidBoss = flow && flow.midBoss ? Number(flow.midBoss || 1) : 1;
+    const hp = Math.ceil(safeNumber(def.hp, 80) * (flowMidBoss === 2 ? 1.35 : 1) * profile.hpMul);
 
     state.entities.push({
       kind: 'midBoss',
@@ -552,8 +571,8 @@
       r: profile.r,
       hp,
       maxHp: hp,
-      score: def.score,
-      coin: def.coin,
+      score: safeNumber(def.score, 300),
+      coin: safeNumber(def.coin, 30),
       dead: false,
       shootCd: profile.shootCd,
       attackCd: profile.attackCd,
@@ -572,107 +591,107 @@
       vx: 1.35,
       vy: 1.55,
       r: 106,
-      shootCd: 80,
-      attackCd: 145,
+      shootCd: 92,
+      attackCd: 160,
       contactDmg: 18,
       hpMul: 1
     };
 
-    if (name.indexOf('Ⅱ') >= 0) {
-      profile.vx = 1.5;
+    if (String(name || '').indexOf('Ⅱ') >= 0) {
+      profile.vx = 1.42;
       profile.r = 112;
-      profile.shootCd = 78;
-      profile.attackCd = 138;
+      profile.shootCd = 88;
+      profile.attackCd = 152;
       profile.contactDmg = 22;
       profile.hpMul = 1.1;
     }
 
     if (name === 'ミラモブ' || name === 'ミラモブⅡ') {
-      profile.vx = 1.8;
+      profile.vx = 1.62;
       profile.r = 104;
-      profile.shootCd = 75;
+      profile.shootCd = 88;
     }
 
     if (name === '番人' || name === '番人Ⅱ') {
-      profile.vx = 1.15;
+      profile.vx = 1.1;
       profile.r = 112;
       profile.hpMul = name === '番人Ⅱ' ? 1.2 : 1.1;
     }
 
     if (name === 'ネオンモブ' || name === 'ネオンモブⅡ') {
-      profile.vx = 1.95;
+      profile.vx = 1.7;
       profile.r = 104;
-      profile.shootCd = 72;
+      profile.shootCd = 86;
     }
 
     if (name === 'ドラゴンモブ' || name === 'ドラゴンモブⅡ') {
-      profile.vx = 1.25;
+      profile.vx = 1.2;
       profile.r = 124;
       profile.hpMul = name === 'ドラゴンモブⅡ' ? 1.25 : 1.15;
       profile.contactDmg = 24;
     }
 
     if (name === 'モブリリス') {
-      profile.vx = 1.8;
+      profile.vx = 1.58;
       profile.r = 112;
-      profile.shootCd = 70;
-      profile.attackCd = 125;
+      profile.shootCd = 86;
+      profile.attackCd = 145;
       profile.contactDmg = 22;
       profile.hpMul = 1.12;
     }
 
     if (name === 'モブ魔王') {
-      profile.vx = 1.55;
+      profile.vx = 1.42;
       profile.r = 132;
-      profile.shootCd = 68;
-      profile.attackCd = 120;
+      profile.shootCd = 88;
+      profile.attackCd = 145;
       profile.contactDmg = 28;
       profile.hpMul = 1.35;
     }
 
     if (name === 'モブメイル') {
-      profile.vx = 1.45;
+      profile.vx = 1.25;
       profile.r = 118;
-      profile.shootCd = 72;
-      profile.attackCd = 125;
+      profile.shootCd = 90;
+      profile.attackCd = 150;
       profile.hpMul = 1.18;
     }
 
     if (name === 'モブスミス') {
-      profile.vx = 2.0;
+      profile.vx = 1.75;
       profile.r = 108;
-      profile.shootCd = 66;
-      profile.attackCd = 118;
+      profile.shootCd = 84;
+      profile.attackCd = 140;
     }
 
     if (name === 'モブネプ') {
-      profile.vx = 1.7;
+      profile.vx = 1.48;
       profile.r = 116;
-      profile.shootCd = 68;
-      profile.attackCd = 118;
+      profile.shootCd = 86;
+      profile.attackCd = 142;
     }
 
     if (name === 'ブルネオモブ' || name === 'パルネオモブ') {
-      profile.vx = 2.05;
+      profile.vx = 1.78;
       profile.r = 104;
-      profile.shootCd = 66;
-      profile.attackCd = 120;
+      profile.shootCd = 84;
+      profile.attackCd = 142;
     }
 
     if (name === '閻魔モブ') {
-      profile.vx = 1.5;
+      profile.vx = 1.35;
       profile.r = 128;
-      profile.shootCd = 68;
-      profile.attackCd = 118;
+      profile.shootCd = 90;
+      profile.attackCd = 150;
       profile.hpMul = 1.3;
       profile.contactDmg = 30;
     }
 
     if (name === 'ウルモブリリス') {
-      profile.vx = 1.9;
+      profile.vx = 1.62;
       profile.r = 126;
-      profile.shootCd = 60;
-      profile.attackCd = 108;
+      profile.shootCd = 86;
+      profile.attackCd = 140;
       profile.hpMul = 1.35;
       profile.contactDmg = 30;
     }
@@ -686,11 +705,11 @@
     const W = tools.W;
     const H = tools.H;
 
-    const def = D.enemies.boss;
-    if (!def) return;
+    if (!D || !D.enemies || !D.enemies.boss) return;
 
+    const def = D.enemies.boss;
     const profile = bossProfile(def.name);
-    const hp = Math.ceil(def.hp * profile.hpMul);
+    const hp = Math.ceil(safeNumber(def.hp, 1000) * profile.hpMul);
 
     state.entities.push({
       kind: 'boss',
@@ -705,8 +724,8 @@
       r: profile.r,
       hp,
       maxHp: hp,
-      score: def.score,
-      coin: def.coin,
+      score: safeNumber(def.score, 1000),
+      coin: safeNumber(def.coin, 100),
       dead: false,
       shootCd: profile.shootCd,
       attackCd: profile.attackCd,
@@ -723,6 +742,9 @@
     spawnChest,
     spawnGatePair,
     spawnMidBoss,
-    spawnBoss
+    spawnBoss,
+    enemyProfile,
+    midBossProfile,
+    bossProfile
   };
 })();
