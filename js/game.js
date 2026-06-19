@@ -22,6 +22,8 @@
   const SCROLL_SPEED = 1.15;
   const FIELD_ENTITY_SPEED = 0.72;
   const ADMIN_SAVE_KEY = 'mobshot_admin_mode_v1';
+  const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
+  const EVENT_START_VALID_MS = 12000;
 
   const ADMIN_MAX_COIN = 999999999;
   const ADMIN_MAX_DIAMOND = 999999999;
@@ -161,18 +163,57 @@
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
   }
 
-  function refreshAdminButtons(){
-    const admin = isAdminMode();
+  function readEventRequest(){
+    try {
+      const raw = localStorage.getItem(EVENT_SAVE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch(e) {
+      return null;
+    }
+  }
 
-    ['gameBackBtn', 'backBtn'].forEach(id => {
-      const btn = document.getElementById(id);
-      if (btn) btn.style.display = admin ? '' : 'none';
-    });
+  function clearEventRequest(){
+    try {
+      localStorage.removeItem(EVENT_SAVE_KEY);
+    } catch(e) {}
+
+    if (window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
+      try {
+        window.MobShotEvents.clearCurrentEvent();
+      } catch(e) {}
+    }
+  }
+
+  function isFreshEventRequest(){
+    const ev = readEventRequest();
+
+    if (!ev || !ev.key) return false;
+
+    const startedAt = Number(ev.startedAt || 0);
+
+    if (!startedAt) return false;
+
+    return Date.now() - startedAt <= EVENT_START_VALID_MS;
+  }
+
+  function refreshAdminButtons(){
+    const giveUpBtn = document.getElementById('gameBackBtn');
+
+    if (giveUpBtn) {
+      giveUpBtn.style.display = '';
+      giveUpBtn.textContent = '諦める';
+      giveUpBtn.classList.add('give-up-btn');
+    }
+
+    const legacyBack = document.getElementById('backBtn');
+    if (legacyBack) {
+      legacyBack.style.display = isAdminMode() ? '' : 'none';
+    }
 
     const testBtn = document.getElementById('testClearBtn');
 
     if (testBtn) {
-      if (admin) {
+      if (isAdminMode()) {
         testBtn.style.display = '';
       } else {
         testBtn.remove();
@@ -211,11 +252,61 @@
     const style = document.createElement('style');
     style.id = 'mobShotGameHudStyle';
     style.textContent = `
+      #gameScreen{
+        position:relative !important;
+      }
+
+      #gameCanvas{
+        position:absolute !important;
+        inset:0 !important;
+        z-index:1 !important;
+      }
+
+      .game-hud{
+        z-index:40 !important;
+        pointer-events:none !important;
+      }
+
+      #phaseBanner{
+        z-index:80 !important;
+        pointer-events:none !important;
+      }
+
+      #skillHud{
+        z-index:90 !important;
+        pointer-events:auto !important;
+      }
+
+      #resultPanel{
+        z-index:240 !important;
+      }
+
+      #gameBackBtn.give-up-btn,
+      .give-up-btn{
+        position:absolute !important;
+        left:max(8px, env(safe-area-inset-left)) !important;
+        top:max(58px, calc(env(safe-area-inset-top) + 52px)) !important;
+        bottom:auto !important;
+        z-index:180 !important;
+        display:block !important;
+        pointer-events:auto !important;
+        touch-action:manipulation !important;
+        border:0 !important;
+        border-radius:999px !important;
+        padding:8px 12px !important;
+        font-size:12px !important;
+        font-weight:1000 !important;
+        color:#fff !important;
+        background:linear-gradient(#ff6b6b,#c72626) !important;
+        box-shadow:0 4px 0 #6b1111,0 8px 18px rgba(0,0,0,.35) !important;
+      }
+
       .game-hud .hud-item span{
         font-size:18px !important;
         font-weight:1000 !important;
         letter-spacing:.02em;
       }
+
       #hudStageImg{
         width:34px !important;
         height:34px !important;
@@ -499,7 +590,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260619_admin_max';
+      image.src = src + '?v=20260619_game_fix_event_giveup';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -665,6 +756,12 @@
     restoreBaseData();
     applyAdminMaxSave();
 
+    const hasFreshEvent = isFreshEventRequest();
+
+    if (!hasFreshEvent) {
+      clearEventRequest();
+    }
+
     const shopBonus = getShopBonus();
     const equipBonus = getEquipBonus();
     const collectionBonus = getCollectionBonus();
@@ -748,16 +845,16 @@
     }
 
     if (
+      hasFreshEvent &&
       window.MobShotGameEvents &&
       window.MobShotGameEvents.startCurrentEvent &&
       window.MobShotGameEvents.startCurrentEvent(getCoreApi())
     ) {
+      clearEventRequest();
       return;
     }
 
-    if (window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
-      window.MobShotEvents.clearCurrentEvent();
-    }
+    clearEventRequest();
 
     const info = getCurrentStageInfo();
     setHudDifficultyIcon(info.difficulty);
@@ -1026,7 +1123,13 @@
         }
       }
 
-      if (e.barrierTimer > 0) e.barrierTimer--;
+      if (
+        e.barrierTimer > 0 &&
+        e.kind !== 'boss' &&
+        e.kind !== 'midBoss'
+      ) {
+        e.barrierTimer--;
+      }
     }
   }
 
@@ -1206,6 +1309,8 @@
     }
 
     restoreBaseData();
+    resetEventMode();
+    clearEventRequest();
 
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
 
@@ -1254,6 +1359,21 @@
     }
   }
 
+  function giveUpRun(){
+    if (runCommitted) {
+      goMainFromResult();
+      return;
+    }
+
+    if (!running) {
+      goMainFromResult();
+      return;
+    }
+
+    addText('GIVE UP', state.player.x, state.player.y - 90, '#ff5b5b');
+    finishRun(false);
+  }
+
   function testClearNow(){
     if (!running || runCommitted) return;
 
@@ -1286,7 +1406,7 @@
     btn.style.position = 'absolute';
     btn.style.left = '96px';
     btn.style.bottom = 'calc(78px + env(safe-area-inset-bottom))';
-    btn.style.zIndex = '27';
+    btn.style.zIndex = '190';
     btn.style.border = '2px solid rgba(255,255,255,.45)';
     btn.style.borderRadius = '999px';
     btn.style.background = 'linear-gradient(#9dff73,#26b63e)';
@@ -1295,6 +1415,7 @@
     btn.style.fontSize = '14px';
     btn.style.fontWeight = '1000';
     btn.style.boxShadow = '0 4px 0 rgba(0,0,0,.28)';
+    btn.style.pointerEvents = 'auto';
 
     btn.addEventListener('click', function(e){
       e.preventDefault();
@@ -1354,13 +1475,10 @@
 
     resetEventMode();
     restoreBaseData();
+    clearEventRequest();
 
     if (isAdminMode()) {
       applyAdminMaxSave();
-    }
-
-    if (window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
-      window.MobShotEvents.clearCurrentEvent();
     }
 
     if (resultPanel) resultPanel.classList.add('hidden');
@@ -1395,7 +1513,12 @@
         e.preventDefault();
         e.stopPropagation();
 
-        if ((id === 'gameBackBtn' || id === 'backBtn') && !isAdminMode()) return;
+        if (id === 'gameBackBtn') {
+          giveUpRun();
+          return;
+        }
+
+        if (id === 'backBtn' && !isAdminMode()) return;
 
         if (id === 'resultRetryBtn') {
           if (resultPanel) resultPanel.classList.add('hidden');
@@ -1404,13 +1527,18 @@
         }
 
         goMainFromResult();
-      });
+      }, { passive:false });
 
       btn.addEventListener('pointerup', function(e){
         e.preventDefault();
         e.stopPropagation();
 
-        if ((id === 'gameBackBtn' || id === 'backBtn') && !isAdminMode()) return;
+        if (id === 'gameBackBtn') {
+          giveUpRun();
+          return;
+        }
+
+        if (id === 'backBtn' && !isAdminMode()) return;
 
         if (id === 'resultRetryBtn') {
           if (resultPanel) resultPanel.classList.add('hidden');
@@ -1558,6 +1686,9 @@
       applyAdminMaxSave,
       refreshAdminButtons,
 
+      clearEventRequest,
+      isFreshEventRequest,
+
       getCollectionBonus(){
         return Object.assign({}, state.collectionBonus || {});
       },
@@ -1597,14 +1728,14 @@
 
     state.player.targetX = e.clientX;
     state.player.targetY = getPlayerBaseY();
-  });
+  }, { passive:false });
 
   canvas.addEventListener('pointermove', e => {
     if (isSkillInput(e)) return;
 
     state.player.targetX = e.clientX;
     state.player.targetY = getPlayerBaseY();
-  });
+  }, { passive:false });
 
   window.addEventListener('resize', resize);
 
@@ -1652,6 +1783,8 @@
     showRankUpModal,
     isAdminMode,
     applyAdminMaxSave,
-    refreshAdminButtons
+    refreshAdminButtons,
+    clearEventRequest,
+    giveUpRun
   };
 })();
