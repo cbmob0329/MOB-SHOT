@@ -21,6 +21,28 @@
   let questBossSpawned = false;
   let questWaveSpawned = false;
 
+  function canonicalBossName(name){
+    const raw = String(name || '').trim();
+
+    if (raw === '番人') return 'モブガーディアン';
+    if (raw === '番人Ⅱ') return 'モブガーディアンⅡ';
+    if (raw === '番人II') return 'モブガーディアンⅡ';
+
+    return raw;
+  }
+
+  function normalizeName(name){
+    return canonicalBossName(name)
+      .replace(/\s/g, '')
+      .replace(/　/g, '')
+      .replace(/Ⅱ/g, 'II')
+      .toLowerCase();
+  }
+
+  function sameName(a, b){
+    return normalizeName(a) === normalizeName(b);
+  }
+
   const GOLD_DIFFICULTY_FALLBACK = {
     easy:{
       key:'easy',
@@ -51,7 +73,7 @@
       areaKey:'desert',
       areaName:'砂漠',
       background:'sta/backsabaku.png',
-      bosses:['ミラモブ','番人'],
+      bosses:['ミラモブ','モブガーディアン'],
       enemySpawn:true
     },
     veryHard:{
@@ -67,7 +89,7 @@
       areaKey:'neon',
       areaName:'ネオン街',
       background:'sta/backneon.png',
-      bosses:['番人','ネオンモブ'],
+      bosses:['モブガーディアン','ネオンモブ'],
       enemySpawn:true
     },
     inferno:{
@@ -105,111 +127,20 @@
   };
 
   const DOUBLE_DIFFICULTY_FALLBACK = {
-    easy:{
-      key:'easy',
-      name:'イージー',
-      color:'#9dff73',
-      hpMul:0.9,
-      scoreMul:1,
-      firstCoin:2000,
-      firstDiamond:3
-    },
-    hard:{
-      key:'hard',
-      name:'ハード',
-      color:'#60d9ff',
-      hpMul:1.1,
-      scoreMul:1.1,
-      firstCoin:3500,
-      firstDiamond:4
-    },
-    veryHard:{
-      key:'veryHard',
-      name:'ベリーハード',
-      color:'#ffcf5b',
-      hpMul:1.35,
-      scoreMul:1.25,
-      firstCoin:5000,
-      firstDiamond:5
-    },
-    inferno:{
-      key:'inferno',
-      name:'インフェルノ',
-      color:'#ff6b3d',
-      hpMul:1.8,
-      scoreMul:1.5,
-      firstCoin:10000,
-      firstDiamond:8
-    },
-    legend:{
-      key:'legend',
-      name:'レジェンド',
-      color:'#d86bff',
-      hpMul:2.4,
-      scoreMul:2,
-      firstCoin:20000,
-      firstDiamond:12
-    }
+    easy:{ key:'easy', name:'イージー', color:'#9dff73', hpMul:0.9, scoreMul:1, firstCoin:2000, firstDiamond:3 },
+    hard:{ key:'hard', name:'ハード', color:'#60d9ff', hpMul:1.1, scoreMul:1.1, firstCoin:3500, firstDiamond:4 },
+    veryHard:{ key:'veryHard', name:'ベリーハード', color:'#ffcf5b', hpMul:1.35, scoreMul:1.25, firstCoin:5000, firstDiamond:5 },
+    inferno:{ key:'inferno', name:'インフェルノ', color:'#ff6b3d', hpMul:1.8, scoreMul:1.5, firstCoin:10000, firstDiamond:8 },
+    legend:{ key:'legend', name:'レジェンド', color:'#d86bff', hpMul:2.4, scoreMul:2, firstCoin:20000, firstDiamond:12 }
   };
 
   const DOUBLE_STAGE_FALLBACK = [
-    {
-      id:1,
-      areaKey:'grass',
-      areaName:'草原',
-      title:'草原',
-      background:'sta/backsougen.png',
-      bossA:'ホークモブ',
-      bossB:'ミラモブ'
-    },
-    {
-      id:2,
-      areaKey:'desert',
-      areaName:'砂漠',
-      title:'砂漠',
-      background:'sta/backsabaku.png',
-      bossA:'ミラモブ',
-      bossB:'番人'
-    },
-    {
-      id:3,
-      areaKey:'town',
-      areaName:'田舎町',
-      title:'田舎町',
-      background:'sta/backtown.png',
-      bossA:'番人',
-      bossB:'ネオンモブ'
-    },
-    {
-      id:4,
-      areaKey:'neon',
-      areaName:'ネオン街',
-      title:'ネオン街',
-      background:'sta/backneon.png',
-      bossA:'ネオンモブ',
-      bossB:'ドラゴンモブ'
-    },
-    {
-      id:5,
-      areaKey:'magma',
-      areaName:'マグマ',
-      title:'マグマ',
-      background:'sta/backmagma.png',
-      bossA:'ドラゴンモブ',
-      bossB:'モブリリス'
-    },
-    {
-      id:6,
-      areaKey:'castle',
-      areaName:'魔王城',
-      title:'魔王城',
-      background:'sta/backmao.png',
-      bossA:'モブリリス',
-      bossB:'モブ魔王',
-      final:true,
-      firstCoin:50000,
-      firstDiamond:20
-    }
+    { id:1, areaKey:'grass', areaName:'草原', title:'草原', background:'sta/backsougen.png', bossA:'ホークモブ', bossB:'ミラモブ' },
+    { id:2, areaKey:'desert', areaName:'砂漠', title:'砂漠', background:'sta/backsabaku.png', bossA:'ミラモブ', bossB:'モブガーディアン' },
+    { id:3, areaKey:'town', areaName:'田舎町', title:'田舎町', background:'sta/backtown.png', bossA:'モブガーディアン', bossB:'ネオンモブ' },
+    { id:4, areaKey:'neon', areaName:'ネオン街', title:'ネオン街', background:'sta/backneon.png', bossA:'ネオンモブ', bossB:'ドラゴンモブ' },
+    { id:5, areaKey:'magma', areaName:'マグマ', title:'マグマ', background:'sta/backmagma.png', bossA:'ドラゴンモブ', bossB:'モブリリス' },
+    { id:6, areaKey:'castle', areaName:'魔王城', title:'魔王城', background:'sta/backmao.png', bossA:'モブリリス', bossB:'モブ魔王', final:true, firstCoin:50000, firstDiamond:20 }
   ];
 
   const BOSS_FALLBACK = {
@@ -217,8 +148,6 @@
     'ホークモブⅡ':{ name:'ホークモブⅡ', image:'boss/hawks2.png', hp:900, score:1400, coin:280 },
     'ミラモブ':{ name:'ミラモブ', image:'boss/miraboss.png', hp:800, score:1300, coin:260 },
     'ミラモブⅡ':{ name:'ミラモブⅡ', image:'boss/miraboss2.png', hp:1200, score:1700, coin:340 },
-    '番人':{ name:'番人', image:'boss/bossban.png', hp:1100, score:1600, coin:320 },
-    '番人Ⅱ':{ name:'番人Ⅱ', image:'boss/bossban2.png', hp:1600, score:2100, coin:420 },
     'モブガーディアン':{ name:'モブガーディアン', image:'boss/bossban.png', hp:1100, score:1600, coin:320 },
     'モブガーディアンⅡ':{ name:'モブガーディアンⅡ', image:'boss/bossban2.png', hp:1600, score:2100, coin:420 },
     'ネオンモブ':{ name:'ネオンモブ', image:'boss/bossneon.png', hp:1500, score:2200, coin:440 },
@@ -259,7 +188,7 @@
   const SCORE_ATTACK_BOSSES = [
     BOSS_FALLBACK['ホークモブ'],
     BOSS_FALLBACK['ミラモブ'],
-    BOSS_FALLBACK['番人'],
+    BOSS_FALLBACK['モブガーディアン'],
     BOSS_FALLBACK['ネオンモブ'],
     BOSS_FALLBACK['ドラゴンモブ'],
     BOSS_FALLBACK['モブリリス'],
@@ -281,18 +210,6 @@
 
   function pick(arr){
     return arr && arr.length ? arr[Math.floor(Math.random() * arr.length)] : null;
-  }
-
-  function normalizeName(name){
-    return String(name || '')
-      .replace(/\s/g, '')
-      .replace(/　/g, '')
-      .replace(/Ⅱ/g, 'II')
-      .toLowerCase();
-  }
-
-  function sameName(a, b){
-    return normalizeName(a) === normalizeName(b);
   }
 
   function normalizeDifficultyKey(key){
@@ -320,7 +237,16 @@
   }
 
   function mergeDiff(base, extra){
-    return Object.assign({}, base || {}, extra || {});
+    const merged = Object.assign({}, base || {}, extra || {});
+
+    if (Array.isArray(merged.bosses)) {
+      merged.bosses = merged.bosses.map(canonicalBossName);
+    }
+
+    if (merged.bossA) merged.bossA = canonicalBossName(merged.bossA);
+    if (merged.bossB) merged.bossB = canonicalBossName(merged.bossB);
+
+    return merged;
   }
 
   function getGoldDifficulty(){
@@ -428,6 +354,9 @@
     if (eventData && eventData.areaName) stage.areaName = eventData.areaName;
     if (eventData && eventData.title) stage.title = eventData.title;
     if (eventData && eventData.background) stage.background = eventData.background;
+
+    stage.bossA = canonicalBossName(stage.bossA);
+    stage.bossB = canonicalBossName(stage.bossB);
 
     if (!stage.bossA || !stage.bossB) {
       const fallbackStage = DOUBLE_STAGE_FALLBACK.find(s => Number(s.id) === Number(stage.id)) || DOUBLE_STAGE_FALLBACK[0];
@@ -562,6 +491,8 @@
   }
 
   function fallbackBossByName(name){
+    name = canonicalBossName(name);
+
     if (BOSS_FALLBACK[name]) return clone(BOSS_FALLBACK[name]);
 
     const key = Object.keys(BOSS_FALLBACK).find(k => sameName(k, name));
@@ -581,7 +512,22 @@
     };
   }
 
+  function fixBossDef(def){
+    def = clone(def || {});
+    def.name = canonicalBossName(def.name);
+
+    const fallback = fallbackBossByName(def.name);
+
+    def.image = def.image || fallback.image;
+    def.hp = Number(def.hp || fallback.hp || 1000);
+    def.score = Number(def.score || fallback.score || 1000);
+    def.coin = Number(def.coin || fallback.coin || 100);
+
+    return def;
+  }
+
   function findBossDef(api, areaKey, name, fallback){
+    name = canonicalBossName(name);
     const area = stageAreaData(areaKey);
     const candidates = [];
 
@@ -624,18 +570,19 @@
 
     const found = candidates.find(item => item && sameName(item.name, name));
 
-    if (found) return clone(found);
+    if (found) return fixBossDef(found);
 
     if (fallback) {
       const fixed = Object.assign(fallbackBossByName(name), fallback);
-      fixed.name = name || fixed.name;
-      return fixed;
+      fixed.name = canonicalBossName(name || fixed.name);
+      return fixBossDef(fixed);
     }
 
     return fallbackBossByName(name);
   }
 
   function getMidBossDef(api, areaKey, name, fallback){
+    name = canonicalBossName(name);
     const area = stageAreaData(areaKey);
     const list = [];
 
@@ -652,7 +599,7 @@
     }
 
     const found = list.find(item => item && sameName(item.name, name));
-    if (found) return clone(found);
+    if (found) return fixBossDef(found);
 
     return findBossDef(api, areaKey, name, fallback || fallbackBossByName(name));
   }
@@ -676,6 +623,7 @@
 
   function makeBossEntity(def, api, opt){
     opt = opt || {};
+    def = fixBossDef(def);
 
     const W = api.W;
     const H = api.H;
@@ -825,7 +773,7 @@
     const W = api.W;
     const diff = getGoldDifficulty();
     const names = Array.isArray(diff.bosses) && diff.bosses.length
-      ? diff.bosses.slice(0, 2)
+      ? diff.bosses.slice(0, 2).map(canonicalBossName)
       : ['ホークモブ', 'ミラモブ'];
 
     while (names.length < 2) names.push(names[0] || 'ホークモブ');
@@ -920,8 +868,11 @@
     const W = api.W;
     const state = api.state;
 
-    const bossA = findBossDef(api, stage.areaKey, stage.bossA, fallbackBossByName(stage.bossA));
-    const bossB = findBossDef(api, stage.areaKey, stage.bossB, fallbackBossByName(stage.bossB));
+    const bossAName = canonicalBossName(stage.bossA);
+    const bossBName = canonicalBossName(stage.bossB);
+
+    const bossA = findBossDef(api, stage.areaKey, bossAName, fallbackBossByName(bossAName));
+    const bossB = findBossDef(api, stage.areaKey, bossBName, fallbackBossByName(bossBName));
 
     state.entities.push(makeBossEntity(bossA, api, {
       x:W * 0.34,
@@ -1084,6 +1035,8 @@
     const spanB = W * (1 - margin);
 
     defs.forEach((def, index) => {
+      def = fixBossDef(def);
+
       const t = count === 1 ? 0.5 : index / (count - 1);
       const x = spanA + (spanB - spanA) * t;
       const side = index % 2 === 0 ? 1 : -1;
@@ -1214,9 +1167,14 @@
     updateQuestFieldSpawns(api, stage.areaKey);
 
     if (!questWaveSpawned && localFrame > 55) {
-      const ban = findBossDef(api, 'town', '番人', BOSS_FALLBACK['番人']);
+      const guardian = findBossDef(
+        api,
+        'town',
+        'モブガーディアン',
+        BOSS_FALLBACK['モブガーディアン']
+      );
 
-      spawnQuestBossGroup(api, [ban, ban], {
+      spawnQuestBossGroup(api, [guardian, guardian], {
         kind:'boss',
         hpMul:0.92,
         scoreMul:0.75,
@@ -1228,7 +1186,7 @@
         attackCd:170
       });
 
-      api.showBanner('番人試験');
+      api.showBanner('ガーディアン試験');
       questWaveSpawned = true;
     }
 
@@ -1713,6 +1671,8 @@
     if (!active || !entity) return;
 
     if (entity.kind === 'boss' || entity.kind === 'midBoss') {
+      entity.name = canonicalBossName(entity.name);
+
       if (window.MobShotEvents && window.MobShotEvents.recordEventBossKill) {
         window.MobShotEvents.recordEventBossKill(entity.name);
       }
@@ -1900,6 +1860,7 @@
     updateHud,
     draw,
     onEntityKilled,
-    beforeFinish
+    beforeFinish,
+    canonicalBossName
   };
 })();
