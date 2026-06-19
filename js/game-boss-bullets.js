@@ -17,6 +17,7 @@
         normal: 28,
         big: 40,
         huge: 56,
+        super: 76,
         color: '#ff7a35'
       }, spec);
     }
@@ -28,6 +29,7 @@
       normal: 28,
       big: 40,
       huge: 56,
+      super: 76,
       color: '#ff7a35'
     };
   }
@@ -46,11 +48,6 @@
 
   function clamp(v, a, b){
     return Math.max(a, Math.min(b, v));
-  }
-
-  function playerAngle(e, tools, sx, sy){
-    const p = tools.state.player;
-    return Math.atan2(p.y - sy, p.x - sx);
   }
 
   function isCoopMode(tools){
@@ -85,7 +82,7 @@
   }
 
   function lifeOf(opt){
-    return Number(opt.life || 430);
+    return Number(opt.life || 460);
   }
 
   function makeBulletBase(e, tools, opt){
@@ -95,7 +92,7 @@
     const sizeType = opt.sizeType || 'normal';
     const r = Number(opt.r || sizeOf(spec, sizeType));
     const hp = Number(opt.hp || 0);
-    const speed = Number(opt.speed || 2.05);
+    const speed = Number(opt.speed || 1.8);
     const angle = Number(opt.angle || Math.PI / 2);
     const sx = opt.x != null ? opt.x : e.x;
     const sy = opt.y != null ? opt.y : e.y + 58;
@@ -113,7 +110,7 @@
       hitR: Math.ceil(r * Number(opt.hitRate || 0.82)),
 
       dmg: Number(opt.dmg || Math.max(5, Math.ceil(r * 0.34))),
-      hp: hp,
+      hp,
       maxHp: hp,
       breakable: isBreakable,
 
@@ -126,14 +123,14 @@
       life: lifeOf(opt),
 
       homing: !!opt.homing,
-      homingPower: Number(opt.homingPower || 0.006),
+      homingPower: Number(opt.homingPower || 0.004),
       homingSpeed: Number(opt.homingSpeed || speed),
-      homingDelay: Number(opt.homingDelay || 12),
+      homingDelay: Number(opt.homingDelay || 18),
       homingTimer: 0,
 
       wave: !!opt.wave,
       waveAmp: Number(opt.waveAmp || 0),
-      waveSpeed: Number(opt.waveSpeed || 0.045),
+      waveSpeed: Number(opt.waveSpeed || 0.04),
       waveBaseX: sx,
 
       slowBig: !!opt.slowBig,
@@ -151,38 +148,34 @@
   }
 
   function pushBreakableFireball(e, tools, opt){
-    opt = Object.assign({
+    return pushEnemyBullet(e, tools, Object.assign({
       image: DEFAULT_FIREBALL_IMAGE,
       flipY: true,
       sizeType: 'big',
-      speed: 1.55,
-      hp: 18,
+      speed: 1.45,
+      hp: 16,
       color: '#ff7a35',
       breakable: true,
       hitRate: 0.78
-    }, opt || {});
-
-    return pushEnemyBullet(e, tools, opt);
+    }, opt || {}));
   }
 
   function pushBigFireball(e, tools, opt){
-    opt = Object.assign({
+    return pushEnemyBullet(e, tools, Object.assign({
       image: DEFAULT_FIREBALL_IMAGE,
       flipY: true,
       sizeType: 'huge',
-      speed: 1.18,
-      hp: 36,
+      speed: 1.05,
+      hp: 38,
       dmg: 18,
       color: '#ff5b35',
       breakable: true,
       slowBig: true,
       bossSpecial: true,
-      hitRate: 0.74,
+      hitRate: 0.72,
       visualRate: 1.12,
-      life: 520
-    }, opt || {});
-
-    return pushEnemyBullet(e, tools, opt);
+      life: 560
+    }, opt || {}));
   }
 
   function fireAimed(e, tools, opt){
@@ -192,16 +185,12 @@
     const sy = opt.y != null ? opt.y : e.y + Number(opt.offsetY || 58);
     const angle = targetAngle(e, tools, sx, sy);
 
-    return pushEnemyBullet(
-      e,
-      tools,
-      Object.assign({}, opt, { x:sx, y:sy, angle })
-    );
+    return pushEnemyBullet(e, tools, Object.assign({}, opt, { x:sx, y:sy, angle }));
   }
 
   function fireSlowAimed(e, tools, opt){
     return fireAimed(e, tools, Object.assign({
-      speed: 1.75,
+      speed: 1.55,
       sizeType: 'normal',
       hp: 8,
       image: DEFAULT_FIREBALL_IMAGE,
@@ -211,11 +200,7 @@
   }
 
   function fireAngle(e, tools, angle, opt){
-    return pushEnemyBullet(
-      e,
-      tools,
-      Object.assign({}, opt || {}, { angle })
-    );
+    return pushEnemyBullet(e, tools, Object.assign({}, opt || {}, { angle }));
   }
 
   function fireSpread(e, tools, count, spread, opt){
@@ -225,26 +210,21 @@
     const sy = opt.y != null ? opt.y : e.y + Number(opt.offsetY || 58);
     const base = opt.downBase ? Math.PI / 2 : targetAngle(e, tools, sx, sy);
     const safeCenter = !!opt.safeCenter;
-    const bullets = [];
+    const result = [];
 
     for (let i = 0; i < count; i++) {
       if (safeCenter && i === Math.floor(count / 2)) continue;
 
       const angle = base + (i - (count - 1) / 2) * spread;
-
-      bullets.push(pushEnemyBullet(
-        e,
-        tools,
-        Object.assign({}, opt, { x:sx, y:sy, angle })
-      ));
+      result.push(pushEnemyBullet(e, tools, Object.assign({}, opt, { x:sx, y:sy, angle })));
     }
 
-    return bullets;
+    return result;
   }
 
   function fireSlowSpread(e, tools, count, spread, opt){
     return fireSpread(e, tools, count, spread, Object.assign({
-      speed: 1.85,
+      speed: 1.65,
       sizeType: 'normal',
       hp: 8,
       image: DEFAULT_FIREBALL_IMAGE,
@@ -258,26 +238,21 @@
 
     const spread = Number(opt.spread || 0.22);
     const base = Math.PI / 2;
-    const bullets = [];
+    const result = [];
 
     for (let i = 0; i < count; i++) {
       if (opt.safeCenter && i === Math.floor(count / 2)) continue;
 
       const angle = base + (i - (count - 1) / 2) * spread;
-
-      bullets.push(pushEnemyBullet(
-        e,
-        tools,
-        Object.assign({}, opt, { angle })
-      ));
+      result.push(pushEnemyBullet(e, tools, Object.assign({}, opt, { angle })));
     }
 
-    return bullets;
+    return result;
   }
 
   function fireSafeFanDown(e, tools, count, opt){
     return fireFanDown(e, tools, count, Object.assign({
-      speed: 1.9,
+      speed: 1.65,
       sizeType: 'normal',
       hp: 6,
       safeCenter: true,
@@ -290,70 +265,58 @@
   function fireLineDown(e, tools, count, opt){
     opt = opt || {};
 
-    const W = tools.W;
-    const left = opt.left != null ? opt.left : W * 0.18;
-    const right = opt.right != null ? opt.right : W * 0.82;
+    const left = opt.left != null ? opt.left : tools.W * 0.18;
+    const right = opt.right != null ? opt.right : tools.W * 0.82;
     const y = opt.y != null ? opt.y : e.y + 62;
-    const bullets = [];
+    const result = [];
 
     for (let i = 0; i < count; i++) {
       if (opt.safeCenter && i === Math.floor(count / 2)) continue;
 
-      const x = count <= 1
-        ? e.x
-        : left + (right - left) * (i / (count - 1));
-
-      bullets.push(pushEnemyBullet(
-        e,
-        tools,
-        Object.assign({}, opt, { x, y, angle:Math.PI / 2 })
-      ));
+      const x = count <= 1 ? e.x : left + (right - left) * (i / (count - 1));
+      result.push(pushEnemyBullet(e, tools, Object.assign({}, opt, { x, y, angle:Math.PI / 2 })));
     }
 
-    return bullets;
+    return result;
   }
 
   function fireWeakHoming(e, tools, count, opt){
     opt = opt || {};
 
-    const bullets = [];
+    const result = [];
 
     for (let i = 0; i < count; i++) {
       const sx = e.x + (i - (count - 1) / 2) * 28;
       const sy = e.y + 58;
-      const angle = targetAngle(e, tools, sx, sy) + tools.rand(-0.13, 0.13);
+      const angle = targetAngle(e, tools, sx, sy) + tools.rand(-0.12, 0.12);
 
-      bullets.push(pushEnemyBullet(
-        e,
-        tools,
-        Object.assign({}, opt, {
-          x: sx,
-          y: sy,
-          angle,
-          speed: opt.speed || 1.75,
-          homing: true,
-          homingPower: opt.homingPower || 0.0045,
-          homingSpeed: opt.homingSpeed || 1.85,
-          homingDelay: opt.homingDelay || 18,
-          life: opt.life || 250
-        })
-      ));
+      result.push(pushEnemyBullet(e, tools, Object.assign({}, opt, {
+        x: sx,
+        y: sy,
+        angle,
+        speed: opt.speed || 1.45,
+        homing: true,
+        homingPower: opt.homingPower || 0.0032,
+        homingSpeed: opt.homingSpeed || 1.55,
+        homingDelay: opt.homingDelay || 20,
+        life: opt.life || 280
+      })));
     }
 
-    return bullets;
+    return result;
   }
 
   function fireBreakableHoming(e, tools, count, opt){
     return fireWeakHoming(e, tools, count, Object.assign({
       sizeType: 'normal',
-      speed: 1.65,
+      speed: 1.45,
       hp: 10,
       breakable: true,
       image: DEFAULT_FIREBALL_IMAGE,
       flipY: true,
       color: '#ff9b4a',
-      homingPower: 0.0038,
-      life: 280
+      homingPower: 0.0032,
+      life: 300
     }, opt || {}));
   }
 
@@ -361,63 +324,43 @@
     opt = opt || {};
 
     const baseY = e.y + 58;
-    const W = tools.W;
-    const bullets = [];
+    const result = [];
 
     for (let i = 0; i < count; i++) {
-      const x = W * 0.18 + (W * 0.64) * (i / Math.max(1, count - 1));
-      const offsetAngle = Math.sin(i * 0.9) * Number(opt.angleWave || 0.18);
+      const x = tools.W * 0.18 + (tools.W * 0.64) * (i / Math.max(1, count - 1));
+      const offsetAngle = Math.sin(i * 0.9) * Number(opt.angleWave || 0.16);
 
-      bullets.push(pushEnemyBullet(
-        e,
-        tools,
-        Object.assign({}, opt, {
-          x,
-          y: baseY,
-          angle: Math.PI / 2 + offsetAngle,
-          sizeType: opt.sizeType || 'normal',
-          speed: opt.speed || 1.95,
-          wave: opt.wave !== false,
-          waveAmp: opt.waveAmp || 18,
-          waveSpeed: opt.waveSpeed || 0.045
-        })
-      ));
+      result.push(pushEnemyBullet(e, tools, Object.assign({}, opt, {
+        x,
+        y: baseY,
+        angle: Math.PI / 2 + offsetAngle,
+        sizeType: opt.sizeType || 'normal',
+        speed: opt.speed || 1.65,
+        wave: opt.wave !== false,
+        waveAmp: opt.waveAmp || 18,
+        waveSpeed: opt.waveSpeed || 0.038
+      })));
     }
 
-    return bullets;
+    return result;
   }
 
   function fireCross(e, tools, opt){
     opt = opt || {};
 
-    const angles = [
-      Math.PI / 2,
-      Math.PI * 0.40,
-      Math.PI * 0.60
-    ];
-
-    const bullets = [];
-
-    angles.forEach(angle => {
-      bullets.push(pushEnemyBullet(
-        e,
-        tools,
-        Object.assign({}, opt, { angle })
-      ));
-    });
-
-    return bullets;
+    const angles = [Math.PI / 2, Math.PI * 0.40, Math.PI * 0.60];
+    return angles.map(angle => pushEnemyBullet(e, tools, Object.assign({}, opt, { angle })));
   }
 
   function fireBigSwayFireball(e, tools, opt){
-    opt = Object.assign({
+    return pushEnemyBullet(e, tools, Object.assign({
       x: e.x,
       y: e.y + 66,
       angle: Math.PI / 2,
-      speed: 0.95,
+      speed: 0.82,
       sizeType: 'super',
-      r: 72,
-      hp: 42,
+      r: 74,
+      hp: 44,
       dmg: 22,
       image: DEFAULT_FIREBALL_IMAGE,
       flipY: true,
@@ -426,143 +369,69 @@
       bossSpecial: true,
       slowBig: true,
       wave: true,
-      waveAmp: 42,
-      waveSpeed: 0.028,
-      hitRate: 0.70,
+      waveAmp: 44,
+      waveSpeed: 0.026,
+      hitRate: 0.68,
       visualRate: 1.14,
-      life: 620
-    }, opt || {});
+      life: 660
+    }, opt || {}));
+  }
 
-    return pushEnemyBullet(e, tools, opt);
+  function ensurePending(e){
+    if (!Array.isArray(e.pendingShots)) e.pendingShots = [];
   }
 
   function fireDelayedAimed(e, delay, opt){
-    if (!Array.isArray(e.pendingShots)) e.pendingShots = [];
-
-    e.pendingShots.push(
-      Object.assign({}, opt || {}, {
-        delay,
-        kind: 'aim'
-      })
-    );
+    ensurePending(e);
+    e.pendingShots.push(Object.assign({}, opt || {}, { delay, kind:'aim' }));
   }
 
   function fireDelayedAngle(e, delay, angle, opt){
-    if (!Array.isArray(e.pendingShots)) e.pendingShots = [];
-
-    e.pendingShots.push(
-      Object.assign({}, opt || {}, {
-        delay,
-        kind: 'angle',
-        angle
-      })
-    );
+    ensurePending(e);
+    e.pendingShots.push(Object.assign({}, opt || {}, { delay, kind:'angle', angle }));
   }
 
   function fireDelayedLine(e, delay, count, opt){
-    if (!Array.isArray(e.pendingShots)) e.pendingShots = [];
-
-    e.pendingShots.push(
-      Object.assign({}, opt || {}, {
-        delay,
-        kind: 'line',
-        count
-      })
-    );
+    ensurePending(e);
+    e.pendingShots.push(Object.assign({}, opt || {}, { delay, kind:'line', count }));
   }
 
   function fireDelayedHoming(e, delay, count, opt){
-    if (!Array.isArray(e.pendingShots)) e.pendingShots = [];
-
-    e.pendingShots.push(
-      Object.assign({}, opt || {}, {
-        delay,
-        kind: 'homing',
-        count
-      })
-    );
+    ensurePending(e);
+    e.pendingShots.push(Object.assign({}, opt || {}, { delay, kind:'homing', count }));
   }
 
   function fireDelayedFan(e, delay, count, opt){
-    if (!Array.isArray(e.pendingShots)) e.pendingShots = [];
-
-    e.pendingShots.push(
-      Object.assign({}, opt || {}, {
-        delay,
-        kind: 'fan',
-        count
-      })
-    );
+    ensurePending(e);
+    e.pendingShots.push(Object.assign({}, opt || {}, { delay, kind:'fan', count }));
   }
 
   function fireDelayedSpread(e, delay, count, spread, opt){
-    if (!Array.isArray(e.pendingShots)) e.pendingShots = [];
-
-    e.pendingShots.push(
-      Object.assign({}, opt || {}, {
-        delay,
-        kind: 'spread',
-        count,
-        spread
-      })
-    );
+    ensurePending(e);
+    e.pendingShots.push(Object.assign({}, opt || {}, { delay, kind:'spread', count, spread }));
   }
 
   function fireDelayedBigSway(e, delay, opt){
-    if (!Array.isArray(e.pendingShots)) e.pendingShots = [];
-
-    e.pendingShots.push(
-      Object.assign({}, opt || {}, {
-        delay,
-        kind: 'bigSway'
-      })
-    );
+    ensurePending(e);
+    e.pendingShots.push(Object.assign({}, opt || {}, { delay, kind:'bigSway' }));
   }
 
   function processPendingShots(e, tools){
     if (!e.pendingShots || !e.pendingShots.length) return;
 
-    for (const shot of e.pendingShots) {
-      shot.delay--;
-    }
+    e.pendingShots.forEach(shot => shot.delay--);
 
     const ready = e.pendingShots.filter(shot => shot.delay <= 0);
     e.pendingShots = e.pendingShots.filter(shot => shot.delay > 0);
 
     ready.forEach(shot => {
-      if (shot.kind === 'aim') {
-        fireAimed(e, tools, shot);
-      }
-
-      if (shot.kind === 'angle') {
-        fireAngle(e, tools, shot.angle, shot);
-      }
-
-      if (shot.kind === 'line') {
-        fireLineDown(e, tools, shot.count || 3, shot);
-      }
-
-      if (shot.kind === 'homing') {
-        fireWeakHoming(e, tools, shot.count || 1, shot);
-      }
-
-      if (shot.kind === 'fan') {
-        fireFanDown(e, tools, shot.count || 5, shot);
-      }
-
-      if (shot.kind === 'spread') {
-        fireSpread(
-          e,
-          tools,
-          shot.count || 3,
-          shot.spread || 0.20,
-          shot
-        );
-      }
-
-      if (shot.kind === 'bigSway') {
-        fireBigSwayFireball(e, tools, shot);
-      }
+      if (shot.kind === 'aim') fireAimed(e, tools, shot);
+      if (shot.kind === 'angle') fireAngle(e, tools, shot.angle, shot);
+      if (shot.kind === 'line') fireLineDown(e, tools, shot.count || 3, shot);
+      if (shot.kind === 'homing') fireWeakHoming(e, tools, shot.count || 1, shot);
+      if (shot.kind === 'fan') fireFanDown(e, tools, shot.count || 5, shot);
+      if (shot.kind === 'spread') fireSpread(e, tools, shot.count || 3, shot.spread || 0.20, shot);
+      if (shot.kind === 'bigSway') fireBigSwayFireball(e, tools, shot);
     });
   }
 
@@ -574,18 +443,14 @@
     }
 
     for (let i = 0; i < count; i++) {
-      fireDelayedAimed(
-        e,
-        48 + i * Number(opt.gap || 28),
-        Object.assign({}, opt, {
-          image: opt.image || DEFAULT_FIREBALL_IMAGE,
-          flipY: opt.flipY != null ? opt.flipY : true,
-          sizeType: opt.sizeType || 'big',
-          hp: opt.hp != null ? opt.hp : 16,
-          speed: opt.speed || 1.75,
-          breakable: opt.breakable !== false
-        })
-      );
+      fireDelayedAimed(e, 50 + i * Number(opt.gap || 30), Object.assign({}, opt, {
+        image: opt.image || DEFAULT_FIREBALL_IMAGE,
+        flipY: opt.flipY != null ? opt.flipY : true,
+        sizeType: opt.sizeType || 'big',
+        hp: opt.hp != null ? opt.hp : 16,
+        speed: opt.speed || 1.55,
+        breakable: opt.breakable !== false
+      }));
     }
   }
 
@@ -596,19 +461,14 @@
       tools.addText(text, e.x, e.y - 88, opt.textColor || '#ffe66b');
     }
 
-    fireDelayedLine(
-      e,
-      Number(opt.delay || 50),
-      count,
-      Object.assign({}, opt, {
-        image: opt.image || DEFAULT_FIREBALL_IMAGE,
-        flipY: opt.flipY != null ? opt.flipY : true,
-        sizeType: opt.sizeType || 'big',
-        hp: opt.hp != null ? opt.hp : 14,
-        speed: opt.speed || 1.9,
-        breakable: opt.breakable !== false
-      })
-    );
+    fireDelayedLine(e, Number(opt.delay || 54), count, Object.assign({}, opt, {
+      image: opt.image || DEFAULT_FIREBALL_IMAGE,
+      flipY: opt.flipY != null ? opt.flipY : true,
+      sizeType: opt.sizeType || 'big',
+      hp: opt.hp != null ? opt.hp : 14,
+      speed: opt.speed || 1.7,
+      breakable: opt.breakable !== false
+    }));
   }
 
   function chargeHoming(e, tools, text, count, opt){
@@ -619,20 +479,15 @@
     }
 
     for (let i = 0; i < count; i++) {
-      fireDelayedHoming(
-        e,
-        40 + i * Number(opt.gap || 24),
-        1,
-        Object.assign({}, opt, {
-          image: opt.image || DEFAULT_FIREBALL_IMAGE,
-          flipY: opt.flipY != null ? opt.flipY : true,
-          sizeType: opt.sizeType || 'normal',
-          hp: opt.hp != null ? opt.hp : 8,
-          speed: opt.speed || 1.65,
-          homingPower: opt.homingPower || 0.004,
-          breakable: opt.breakable !== false
-        })
-      );
+      fireDelayedHoming(e, 42 + i * Number(opt.gap || 26), 1, Object.assign({}, opt, {
+        image: opt.image || DEFAULT_FIREBALL_IMAGE,
+        flipY: opt.flipY != null ? opt.flipY : true,
+        sizeType: opt.sizeType || 'normal',
+        hp: opt.hp != null ? opt.hp : 8,
+        speed: opt.speed || 1.45,
+        homingPower: opt.homingPower || 0.0032,
+        breakable: opt.breakable !== false
+      }));
     }
   }
 
@@ -643,16 +498,12 @@
       tools.addText(text || 'ビッグ火の玉！', e.x, e.y - 92, opt.textColor || '#ffcf5b');
     }
 
-    fireDelayedBigSway(
-      e,
-      Number(opt.delay || 70),
-      Object.assign({}, opt, {
-        x: opt.x != null ? opt.x : e.x,
-        y: opt.y != null ? opt.y : e.y + 70,
-        image: DEFAULT_FIREBALL_IMAGE,
-        flipY: true
-      })
-    );
+    fireDelayedBigSway(e, Number(opt.delay || 76), Object.assign({}, opt, {
+      x: opt.x != null ? opt.x : e.x,
+      y: opt.y != null ? opt.y : e.y + 70,
+      image: DEFAULT_FIREBALL_IMAGE,
+      flipY: true
+    }));
   }
 
   function updateEnemyBullet(b, tools){
@@ -680,7 +531,7 @@
 
         const turn = clamp(diff, -b.homingPower, b.homingPower);
         const next = current + turn;
-        const speed = Number(b.homingSpeed || Math.hypot(b.vx, b.vy) || 1.7);
+        const speed = Number(b.homingSpeed || Math.hypot(b.vx, b.vy) || 1.5);
 
         b.vx = Math.cos(next) * speed;
         b.vy = Math.sin(next) * speed;
