@@ -16,8 +16,10 @@
   const resultText = document.getElementById('resultText');
   const resultScore = document.getElementById('resultScore');
   const resultCoin = document.getElementById('resultCoin');
+  const resultNextBtn = document.getElementById('resultNextBtn');
   const resultRetryBtn = document.getElementById('resultRetryBtn');
   const resultHomeBtn = document.getElementById('resultHomeBtn');
+  const gameGiveUpBtn = document.getElementById('gameGiveUpBtn');
 
   const SCROLL_SPEED = 1.15;
   const FIELD_ENTITY_SPEED = 0.72;
@@ -53,6 +55,8 @@
   let runCommitted = false;
   let aiErrorCount = 0;
   let pendingRankUp = null;
+  let lastRunClear = false;
+  let lastRunEvent = false;
 
   const images = new Map();
 
@@ -373,7 +377,10 @@
     gameScreen.appendChild(modal);
 
     const ok = document.getElementById('mobRankUpOk');
-    if (ok) {
+
+    if (ok && !ok.__mobRankOkBound) {
+      ok.__mobRankOkBound = true;
+
       ok.addEventListener('click', function(e){
         e.preventDefault();
         e.stopPropagation();
@@ -452,7 +459,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260618_admin_mode';
+      image.src = src + '?v=20260619_result_next_giveup';
       image.onerror = function(){
         console.warn('画像が読み込めません:', src);
       };
@@ -611,6 +618,8 @@
     runCommitted = false;
     aiErrorCount = 0;
     pendingRankUp = null;
+    lastRunClear = false;
+    lastRunEvent = false;
 
     injectHudStyle();
     ensureRankUpModal();
@@ -690,13 +699,24 @@
     updateSkillHudImages();
 
     if (resultPanel) resultPanel.classList.add('hidden');
+
+    if (resultNextBtn) {
+      resultNextBtn.classList.add('hidden');
+      resultNextBtn.style.display = 'none';
+    }
+
     if (resultRetryBtn) {
       resultRetryBtn.style.display = '';
       resultRetryBtn.textContent = 'もう一度';
     }
+
     if (resultHomeBtn) {
       resultHomeBtn.style.display = '';
       resultHomeBtn.textContent = 'メインへ戻る';
+    }
+
+    if (gameGiveUpBtn) {
+      gameGiveUpBtn.style.display = '';
     }
 
     if (
@@ -1139,6 +1159,9 @@
     runCommitted = true;
     running = false;
 
+    lastRunClear = !!clear;
+    lastRunEvent = !!(finishData && finishData.event);
+
     let clearInfo = null;
 
     if (clear && (!finishData || !finishData.event)) {
@@ -1156,6 +1179,10 @@
     restoreBaseData();
 
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
+
+    if (gameGiveUpBtn) {
+      gameGiveUpBtn.style.display = 'none';
+    }
 
     if (resultTitle) {
       resultTitle.textContent = clear ? 'CLEAR!' : 'GAME OVER';
@@ -1175,16 +1202,43 @@
     if (resultCoin) resultCoin.textContent = state.coin.toLocaleString();
 
     if (finishData && finishData.event) {
-      if (resultRetryBtn) resultRetryBtn.style.display = 'none';
+      if (resultNextBtn) {
+        resultNextBtn.classList.add('hidden');
+        resultNextBtn.style.display = 'none';
+      }
+
+      if (resultRetryBtn) {
+        resultRetryBtn.style.display = 'none';
+      }
+
+      if (resultHomeBtn) {
+        resultHomeBtn.style.display = '';
+        resultHomeBtn.textContent = 'メインへ戻る';
+      }
+    } else if (clear) {
+      if (resultNextBtn) {
+        resultNextBtn.classList.remove('hidden');
+        resultNextBtn.style.display = '';
+        resultNextBtn.textContent = '次へ進む';
+      }
+
+      if (resultRetryBtn) {
+        resultRetryBtn.style.display = 'none';
+      }
 
       if (resultHomeBtn) {
         resultHomeBtn.style.display = '';
         resultHomeBtn.textContent = 'メインへ戻る';
       }
     } else {
+      if (resultNextBtn) {
+        resultNextBtn.classList.add('hidden');
+        resultNextBtn.style.display = 'none';
+      }
+
       if (resultRetryBtn) {
         resultRetryBtn.style.display = '';
-        resultRetryBtn.textContent = clear ? 'NEXT STAGE' : 'もう一度';
+        resultRetryBtn.textContent = 'もう一度';
       }
 
       if (resultHomeBtn) {
@@ -1200,6 +1254,19 @@
         showRankUpModal(pendingRankUp);
       }, 500);
     }
+  }
+
+  function giveUpRun(){
+    if (!running || runCommitted) return;
+
+    if (state.eventMode && state.eventMode.active) {
+      finishRun(false);
+      return;
+    }
+
+    addText('GIVE UP', state.player.x, state.player.y - 90, '#ff5b5b');
+    state.hp = 0;
+    finishRun(false);
   }
 
   function testClearNow(){
@@ -1328,12 +1395,32 @@
     if (main) main.classList.add('active');
   }
 
-  function bindResultButtons(){
-    ['resultHomeBtn', 'gameBackBtn', 'backBtn', 'resultRetryBtn'].forEach(id => {
-      const btn = document.getElementById(id);
-      if (!btn || btn.__mobShotBound) return;
+  function restartCurrentStage(){
+    if (resultPanel) resultPanel.classList.add('hidden');
 
-      btn.__mobShotBound = true;
+    const rankModal = document.getElementById('mobRankUpModal');
+    if (rankModal) rankModal.classList.add('hidden');
+
+    start();
+  }
+
+  function startNextStage(){
+    if (resultPanel) resultPanel.classList.add('hidden');
+
+    const rankModal = document.getElementById('mobRankUpModal');
+    if (rankModal) rankModal.classList.add('hidden');
+
+    start();
+  }
+
+  function bindResultButtons(){
+    const homeButtons = ['resultHomeBtn', 'gameBackBtn', 'backBtn'];
+
+    homeButtons.forEach(id => {
+      const btn = document.getElementById(id);
+      if (!btn || btn.__mobShotHomeBound) return;
+
+      btn.__mobShotHomeBound = true;
 
       btn.addEventListener('click', function(e){
         e.preventDefault();
@@ -1353,6 +1440,54 @@
         goMainFromResult();
       }, { passive:false });
     });
+
+    if (resultNextBtn && !resultNextBtn.__mobShotNextBound) {
+      resultNextBtn.__mobShotNextBound = true;
+
+      resultNextBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        startNextStage();
+      });
+
+      resultNextBtn.addEventListener('pointerup', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        startNextStage();
+      }, { passive:false });
+    }
+
+    if (resultRetryBtn && !resultRetryBtn.__mobShotRetryBound) {
+      resultRetryBtn.__mobShotRetryBound = true;
+
+      resultRetryBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        restartCurrentStage();
+      });
+
+      resultRetryBtn.addEventListener('pointerup', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        restartCurrentStage();
+      }, { passive:false });
+    }
+
+    if (gameGiveUpBtn && !gameGiveUpBtn.__mobShotGiveUpBound) {
+      gameGiveUpBtn.__mobShotGiveUpBound = true;
+
+      gameGiveUpBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        giveUpRun();
+      }, { passive:false });
+
+      gameGiveUpBtn.addEventListener('pointerup', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        giveUpRun();
+      }, { passive:false });
+    }
   }
 
   function updateHud(){
@@ -1579,6 +1714,7 @@
     testClearNow,
     showRankUpModal,
     isAdminMode,
-    refreshAdminButtons
+    refreshAdminButtons,
+    giveUpRun
   };
 })();
