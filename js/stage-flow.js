@@ -1,6 +1,18 @@
 'use strict';
 
 (function(){
+  function fixBossName(name){
+    if (name === '番人') return 'モブガーディアン';
+    if (name === '番人Ⅱ') return 'モブガーディアンⅡ';
+    return name;
+  }
+
+  function fixDef(def){
+    const copy = clone(def);
+    copy.name = fixBossName(copy.name);
+    return copy;
+  }
+
   const AREA_DATA = {
     grass: {
       name: '草原',
@@ -50,8 +62,8 @@
       midBoss: [
         { name:'モブピー', image:'en/enmobpi.png', hp:160, score:600, coin:60 }
       ],
-      boss: { name:'番人', image:'boss/bossban.png', hp:390, score:1600, coin:200 },
-      strongBoss: { name:'番人Ⅱ', image:'boss/bossban2.png', hp:720, score:3600, coin:460 },
+      boss: { name:'モブガーディアン', image:'boss/bossban.png', hp:390, score:1600, coin:200 },
+      strongBoss: { name:'モブガーディアンⅡ', image:'boss/bossban2.png', hp:720, score:3600, coin:460 },
       gimmicks: [
         { name:'自転車', image:'gimi/gimichari.png', hp:18, score:35, coinMin:3, coinMax:6 },
         { name:'タイヤ', image:'gimi/gimitaiya.png', hp:20, score:38, coinMin:3, coinMax:7 },
@@ -278,21 +290,8 @@
     legend: 4
   };
 
-  const DIFFICULTY_BASE_SCALE = [
-    1.00,
-    2.35,
-    4.10,
-    6.30,
-    8.80
-  ];
-
-  const DIFFICULTY_MAX_SCALE = [
-    2.20,
-    4.00,
-    6.20,
-    8.80,
-    12.00
-  ];
+  const DIFFICULTY_BASE_SCALE = [1.00, 2.35, 4.10, 6.30, 8.80];
+  const DIFFICULTY_MAX_SCALE = [2.20, 4.00, 6.20, 8.80, 12.00];
 
   function clone(obj){
     return JSON.parse(JSON.stringify(obj));
@@ -321,9 +320,7 @@
   function difficultyIndex(info){
     const diff = info && info.difficulty;
 
-    if (DIFFICULTY_ORDER[diff] != null) {
-      return DIFFICULTY_ORDER[diff];
-    }
+    if (DIFFICULTY_ORDER[diff] != null) return DIFFICULTY_ORDER[diff];
 
     const chapter = Number(info && info.chapter || 1);
 
@@ -369,13 +366,8 @@
 
     let scale = base + ((max - base) * progress);
 
-    if (info.isStrongBoss) {
-      scale += 0.18;
-    }
-
-    if (info.isLegend) {
-      scale += 0.35;
-    }
+    if (info.isStrongBoss) scale += 0.18;
+    if (info.isLegend) scale += 0.35;
 
     return Math.max(1, scale);
   }
@@ -384,6 +376,7 @@
     return list.map(item => {
       const copy = clone(item);
 
+      copy.name = fixBossName(copy.name);
       copy.hp = Math.ceil(Number(copy.hp || 1) * scale);
       copy.score = Math.ceil(Number(copy.score || 0) * scale);
       copy.coinMin = Math.ceil(Number(copy.coinMin || 1) * scale);
@@ -401,21 +394,16 @@
     const mids = area.midBoss || [];
 
     if (!mids.length) return [];
-
     if (!info.isLegend) return [mids[0]];
-
     if (mids.length === 1) return [mids[0]];
 
-    return [
-      mids[0],
-      mids[1]
-    ];
+    return [mids[0], mids[1]];
   }
 
   function buildBoss(area, info, scale){
     const strong = !!info.isStrongBoss || !!info.isLegend;
     const src = strong ? (area.strongBoss || area.boss) : area.boss;
-    const copy = clone(src || area.boss);
+    const copy = fixDef(src || area.boss);
 
     copy.hp = Math.ceil(Number(copy.hp || 1) * scale * (strong ? 1.15 : 1));
     copy.score = Math.ceil(Number(copy.score || 0) * scale * (strong ? 1.15 : 1));
