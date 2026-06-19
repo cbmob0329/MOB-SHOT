@@ -13,6 +13,12 @@
     return window.MobShotBossSkills;
   }
 
+  function fixBossName(name){
+    if (name === '番人') return 'モブガーディアン';
+    if (name === '番人Ⅱ') return 'モブガーディアンⅡ';
+    return name;
+  }
+
   function fallbackConfig(isBoss){
     return {
       type: isBoss ? 'hawk' : 'ptera',
@@ -23,16 +29,26 @@
   }
 
   function getBossConfig(e){
+    const fixedName = fixBossName(e.name);
+
+    if (e.name !== fixedName) e.name = fixedName;
+
     if (data() && data().getBossConfig) {
-      return data().getBossConfig(e.name) || fallbackConfig(true);
+      return data().getBossConfig(fixedName) || fallbackConfig(true);
     }
+
     return fallbackConfig(true);
   }
 
   function getMidBossConfig(e){
+    const fixedName = fixBossName(e.name);
+
+    if (e.name !== fixedName) e.name = fixedName;
+
     if (data() && data().getMidBossConfig) {
-      return data().getMidBossConfig(e.name) || fallbackConfig(false);
+      return data().getMidBossConfig(fixedName) || fallbackConfig(false);
     }
+
     return fallbackConfig(false);
   }
 
@@ -73,6 +89,7 @@
   function initEnemyBase(e, config, isBoss){
     if (e.__bossAiInit) return;
 
+    e.name = fixBossName(e.name);
     e.__bossAiInit = true;
     e.aiTimer = 0;
 
@@ -236,7 +253,6 @@
       }
     } else {
       const dx = Number(e.moveTargetX || e.x) - e.x;
-      const dy = Number(e.moveTargetY || e.y) - e.y;
 
       if (
         e.moveRetargetCd <= 0 ||
@@ -260,8 +276,7 @@
       e.x += (e.moveTargetX - e.x) * followX;
       e.y += (e.moveTargetY - e.y) * followY;
 
-      const centerPull = isBoss ? 0.0025 : 0.002;
-      e.x += (r.center - e.x) * centerPull;
+      e.x += (r.center - e.x) * (isBoss ? 0.0025 : 0.002);
     }
 
     if (e.x < r.left) {
@@ -635,6 +650,8 @@
   }
 
   function updateMidBoss(e, tools){
+    e.name = fixBossName(e.name);
+
     const config = getMidBossConfig(e);
 
     initEnemyBase(e, config, false);
@@ -670,6 +687,8 @@
   }
 
   function updateBoss(e, tools){
+    e.name = fixBossName(e.name);
+
     const config = getBossConfig(e);
 
     initEnemyBase(e, config, true);
@@ -720,4 +739,6 @@
     updateMidBoss,
     updateBoss
   };
+
+  window.MobShotBoss = window.MobShotBossAI;
 })();
