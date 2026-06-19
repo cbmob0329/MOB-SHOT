@@ -5,6 +5,10 @@
     return window.MobShotBossBullets;
   }
 
+  function b(){
+    return bullets();
+  }
+
   function getAreaZakoList(tools){
     const D = tools.D;
 
@@ -31,33 +35,21 @@
     }
   }
 
-  function b(){
-    return bullets();
-  }
-
-  function safeCall(fn){
-    try {
-      if (typeof fn === 'function') fn();
-    } catch(e) {
-      console.error('boss skill safeCall error:', e);
-    }
-  }
-
   function makeBarrier(e, tools, sec, hp){
-    e.barrierTimer = Math.max(e.barrierTimer || 0, sec * 60);
-    e.barrierHp = Math.max(e.barrierHp || 0, hp);
+    e.barrierTimer = Math.max(Number(e.barrierTimer || 0), sec * 60);
+    e.barrierHp = Math.max(Number(e.barrierHp || 0), Number(hp || 1));
 
     addText(tools, 'バリア！', e.x, e.y - 92, '#9deeff');
-    burst(tools, e.x, e.y, '#9deeff', 28);
+    burst(tools, e.x, e.y, '#9deeff', 30);
   }
 
   function healBoss(e, tools, rate){
-    const amount = Math.ceil(e.maxHp * rate);
+    const amount = Math.ceil(Number(e.maxHp || 1) * Number(rate || 0.05));
 
-    e.hp = Math.min(e.maxHp, e.hp + amount);
+    e.hp = Math.min(Number(e.maxHp || e.hp || 1), Number(e.hp || 0) + amount);
 
     addText(tools, '回復！', e.x, e.y - 92, '#9dff73');
-    burst(tools, e.x, e.y, '#9dff73', 28);
+    burst(tools, e.x, e.y, '#9dff73', 30);
   }
 
   function summonStageEnemies(e, tools, count, hpRate){
@@ -67,7 +59,7 @@
 
     for (let i = 0; i < count; i++) {
       const def = list[(Number(e.summonCount || 0) + i) % list.length];
-      const hp = Math.ceil(Number(def.hp || 5) * hpRate);
+      const hp = Math.ceil(Number(def.hp || 5) * Number(hpRate || 0.7));
 
       tools.state.entities.push({
         kind: 'enemy',
@@ -76,7 +68,7 @@
         x: tools.rand(tools.W * 0.22, tools.W * 0.78),
         y: -80 - i * 64,
         vx: tools.rand(-0.35, 0.35),
-        vy: 1.18,
+        vy: 1.12,
         r: def.name === 'モブロック' ? 34 : 31,
         hp,
         maxHp: hp,
@@ -84,7 +76,8 @@
         coinMin: Number(def.coinMin || 1),
         coinMax: Number(def.coinMax || 3),
         dead: false,
-        bob: tools.rand(0, Math.PI * 2)
+        bob: tools.rand(0, Math.PI * 2),
+        aiType: i % 2 === 0 ? 'sway' : 'hop'
       });
     }
 
@@ -106,6 +99,7 @@
     e.cloneUsed = true;
 
     addText(tools, '分身！', e.x, e.y - 92, '#b78cff');
+    burst(tools, e.x, e.y, '#b78cff', 24);
 
     for (let i = 0; i < count; i++) {
       const offset = (i - (count - 1) / 2) * 76;
@@ -119,8 +113,8 @@
         vx: tools.rand(-0.28, 0.28),
         vy: 0.72,
         r: 32,
-        hp: Math.ceil(e.maxHp * 0.022),
-        maxHp: Math.ceil(e.maxHp * 0.022),
+        hp: Math.ceil(Number(e.maxHp || 100) * 0.022),
+        maxHp: Math.ceil(Number(e.maxHp || 100) * 0.022),
         score: 80,
         coinMin: 3,
         coinMax: 6,
@@ -177,6 +171,31 @@
     });
 
     addText(tools, 'リリス四姉妹！', e.x, e.y - 108, '#ff8cff');
+    burst(tools, e.x, e.y, '#ff8cff', 36);
+  }
+
+  function startDive(e, tools, speed){
+    const dx = tools.state.player.x - e.x;
+    const dy = tools.state.player.y - e.y;
+    const len = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+
+    e.diveMode = true;
+    e.diveVx = dx / len * Number(speed || 3.2);
+    e.diveVy = dy / len * Number(speed || 3.2);
+  }
+
+  function updateDive(e, tools){
+    e.x += e.diveVx || 0;
+    e.y += e.diveVy || 0;
+
+    if (e.y > tools.H + 90) {
+      e.diveMode = false;
+      e.diveReturn = true;
+      e.x = tools.clamp(e.x, tools.W * 0.2, tools.W * 0.8);
+      e.y = -120;
+      e.targetY = e.baseY || tools.H * 0.25;
+      e.vx = tools.rand(0.8, 1.25) * (Math.random() < 0.5 ? -1 : 1);
+    }
   }
 
   function runHawk(e, tools, step){
@@ -269,8 +288,8 @@
     if (!b()) return;
 
     if (step % 4 === 1) {
-      makeBarrier(e, tools, 4, Math.ceil(e.maxHp * 0.035));
-      e.vx *= 0.4;
+      makeBarrier(e, tools, 4, Math.ceil(Number(e.maxHp || 100) * 0.035));
+      e.vx = Number(e.vx || 1) * 0.4;
       return;
     }
 
@@ -278,7 +297,7 @@
       b().chargeAimed(e, tools, '盾弾！', 2, {
         sizeType: 'huge',
         speed: 1.28,
-        hp: Math.ceil(e.maxHp * 0.022),
+        hp: Math.ceil(Number(e.maxHp || 100) * 0.022),
         gap: 40,
         color: '#ff7a35'
       });
@@ -361,7 +380,7 @@
     if (step % 6 === 1) {
       b().chargeBigFireball(e, tools, 'ビッグ火の玉！', {
         delay: 78,
-        hp: Math.ceil(e.maxHp * 0.025),
+        hp: Math.ceil(Number(e.maxHp || 100) * 0.025),
         speed: 0.92,
         waveAmp: 42,
         color: '#ff5b35'
@@ -399,13 +418,11 @@
       hp: 10,
       color: '#ff5b35'
     });
-  }
-
-  function runLilith(e, tools, step){
+  }  function runLilith(e, tools, step){
     if (!b()) return;
 
     if (step % 8 === 1) {
-      makeBarrier(e, tools, 3, Math.ceil(e.maxHp * 0.025));
+      makeBarrier(e, tools, 3, Math.ceil(Number(e.maxHp || 100) * 0.025));
       return;
     }
 
@@ -472,14 +489,14 @@
     if (!b()) return;
 
     if (step % 7 === 1) {
-      makeBarrier(e, tools, 4, Math.ceil(e.maxHp * 0.035));
+      makeBarrier(e, tools, 4, Math.ceil(Number(e.maxHp || 100) * 0.035));
       return;
     }
 
     if (step % 7 === 2) {
       b().chargeBigFireball(e, tools, '魔王ビッグ火球！', {
         delay: 82,
-        hp: Math.ceil(e.maxHp * 0.027),
+        hp: Math.ceil(Number(e.maxHp || 100) * 0.027),
         speed: 0.9,
         waveAmp: 46,
         color: '#ff4aff'
@@ -535,7 +552,7 @@
       b().chargeAimed(e, tools, '鉄球！', 2, {
         sizeType: 'huge',
         speed: 1.25,
-        hp: Math.ceil(e.maxHp * 0.020),
+        hp: Math.ceil(Number(e.maxHp || 100) * 0.020),
         gap: 42,
         color: '#bfc7d5'
       });
@@ -543,7 +560,7 @@
     }
 
     if (step % 5 === 2) {
-      makeBarrier(e, tools, 4, Math.ceil(e.maxHp * 0.032));
+      makeBarrier(e, tools, 4, Math.ceil(Number(e.maxHp || 100) * 0.032));
       return;
     }
 
@@ -690,6 +707,7 @@
         tools.W * 0.2,
         tools.W * 0.8
       );
+
       b().fireSlowSpread(e, tools, 3, 0.20, {
         hp: 7,
         color: '#4bb8ff'
@@ -732,7 +750,7 @@
     if (step % 5 === 3) {
       b().chargeBigFireball(e, tools, 'パルス火球！', {
         delay: 80,
-        hp: Math.ceil(e.maxHp * 0.022),
+        hp: Math.ceil(Number(e.maxHp || 100) * 0.022),
         speed: 0.92,
         waveAmp: 38,
         color: '#b78cff'
@@ -776,7 +794,7 @@
     if (step % 6 === 3) {
       b().chargeBigFireball(e, tools, '閻魔火球！', {
         delay: 84,
-        hp: Math.ceil(e.maxHp * 0.026),
+        hp: Math.ceil(Number(e.maxHp || 100) * 0.026),
         speed: 0.88,
         waveAmp: 46,
         color: '#ff3b3b'
@@ -801,7 +819,7 @@
     }
 
     if (step % 9 === 1) {
-      makeBarrier(e, tools, 5, Math.ceil(e.maxHp * 0.035));
+      makeBarrier(e, tools, 5, Math.ceil(Number(e.maxHp || 100) * 0.035));
       return;
     }
 
@@ -813,7 +831,7 @@
     if (step % 9 === 3) {
       b().chargeBigFireball(e, tools, 'ウルリリ火球！', {
         delay: 84,
-        hp: Math.ceil(e.maxHp * 0.024),
+        hp: Math.ceil(Number(e.maxHp || 100) * 0.024),
         speed: 0.9,
         waveAmp: 44,
         color: '#ff8cff'
@@ -995,30 +1013,6 @@
       speed: 1.8,
       hp: 5
     });
-  }
-
-  function startDive(e, tools, speed){
-    const dx = tools.state.player.x - e.x;
-    const dy = tools.state.player.y - e.y;
-    const len = Math.max(1, Math.sqrt(dx * dx + dy * dy));
-
-    e.diveMode = true;
-    e.diveVx = dx / len * speed;
-    e.diveVy = dy / len * speed;
-  }
-
-  function updateDive(e, tools){
-    e.x += e.diveVx || 0;
-    e.y += e.diveVy || 0;
-
-    if (e.y > tools.H + 90) {
-      e.diveMode = false;
-      e.diveReturn = true;
-      e.x = tools.clamp(e.x, tools.W * 0.2, tools.W * 0.8);
-      e.y = -120;
-      e.targetY = e.baseY || tools.H * 0.25;
-      e.vx = tools.rand(0.8, 1.25) * (Math.random() < 0.5 ? -1 : 1);
-    }
   }
 
   window.MobShotBossSkills = {
