@@ -1,11 +1,22 @@
 'use strict';
 
 (function(){
+  function canonicalBossName(name){
+    const raw = String(name || '').trim();
+
+    if (raw === '番人') return 'モブガーディアン';
+    if (raw === '番人Ⅱ') return 'モブガーディアンⅡ';
+    if (raw === '番人II') return 'モブガーディアンⅡ';
+
+    return raw;
+  }
+
   const BOSS_IMAGE_BY_NAME = {
     'ホークモブ': 'boss/hawks.png',
     'ミラモブ': 'boss/miraboss.png',
     'モブガーディアン': 'boss/bossban.png',
-    '番人': 'boss/bossban.png',
+    'モブガーディアンⅡ': 'boss/bossban2.png',
+    'モブガーディアンII': 'boss/bossban2.png',
     'ネオンモブ': 'boss/bossneon.png',
     'ドラゴンモブ': 'boss/bossdragoon.png',
     'ドラゴンモブⅡ': 'boss/bossdragoon2.png',
@@ -15,8 +26,6 @@
     'ホークモブII': 'boss/hawks2.png',
     'ミラモブⅡ': 'boss/bossmira2.png',
     'ミラモブII': 'boss/bossmira2.png',
-    '番人Ⅱ': 'boss/bossban2.png',
-    '番人II': 'boss/bossban2.png',
     'ネオンモブⅡ': 'boss/bossneon2.png',
     'ネオンモブII': 'boss/bossneon2.png',
     'モブ魔王': 'boss/bossmaoh.png',
@@ -37,9 +46,8 @@
     'ミラモブⅡ': 'mira',
     'ミラモブII': 'mira',
     'モブガーディアン': 'guardian',
-    '番人': 'guardian',
-    '番人Ⅱ': 'guardian',
-    '番人II': 'guardian',
+    'モブガーディアンⅡ': 'guardian',
+    'モブガーディアンII': 'guardian',
     'ネオンモブ': 'neon',
     'ネオンモブⅡ': 'neon',
     'ネオンモブII': 'neon',
@@ -88,7 +96,7 @@
   };
 
   function normalizeName(name){
-    return String(name || '')
+    return canonicalBossName(name)
       .replace(/\s/g, '')
       .replace(/　/g, '')
       .replace(/Ⅱ/g, 'II')
@@ -104,11 +112,9 @@
   }
 
   function bossImageFromName(name){
-    const raw = String(name || '').replace(/\s/g, '').replace(/　/g, '');
+    const raw = canonicalBossName(name).replace(/\s/g, '').replace(/　/g, '');
 
-    if (BOSS_IMAGE_BY_NAME[raw]) {
-      return BOSS_IMAGE_BY_NAME[raw];
-    }
+    if (BOSS_IMAGE_BY_NAME[raw]) return BOSS_IMAGE_BY_NAME[raw];
 
     const normalized = normalizeName(raw);
 
@@ -122,11 +128,9 @@
   }
 
   function typeFromName(name){
-    const raw = String(name || '').replace(/\s/g, '').replace(/　/g, '');
+    const raw = canonicalBossName(name).replace(/\s/g, '').replace(/　/g, '');
 
-    if (BOSS_TYPE_BY_NAME[raw]) {
-      return BOSS_TYPE_BY_NAME[raw];
-    }
+    if (BOSS_TYPE_BY_NAME[raw]) return BOSS_TYPE_BY_NAME[raw];
 
     const normalized = normalizeName(raw);
 
@@ -137,7 +141,7 @@
     }
 
     if (normalized.includes('ミラ')) return 'mira';
-    if (normalized.includes('ガーディアン') || normalized.includes('番人')) return 'guardian';
+    if (normalized.includes('ガーディアン')) return 'guardian';
     if (normalized.includes('ネオン')) return 'neon';
     if (normalized.includes('ドラゴン')) return 'dragon';
     if (normalized.includes('ウル') && normalized.includes('リリス')) return 'ultraLilith';
@@ -162,56 +166,65 @@
     return areaData[areaKey] || null;
   }
 
+  function cloneCore(core, obj){
+    if (core && core.clone) return core.clone(obj);
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  function fixBossDef(def, fallbackName){
+    def = def || {};
+
+    const fixedName = canonicalBossName(def.name || fallbackName || 'ホークモブ');
+    const type = def.type || typeFromName(fixedName);
+    const image = def.image || bossImageFromName(fixedName);
+
+    return Object.assign({}, def, {
+      name: fixedName,
+      image,
+      type,
+      hp: Number(def.hp || 520),
+      score: Number(def.score || 1000),
+      coin: Number(def.coin || 100),
+      shootCd: Number(def.shootCd || 130),
+      attackCd: Number(def.attackCd || 220),
+      moveSpeed: Number(def.moveSpeed || 1.25),
+      contactDmg: Number(def.contactDmg || 18)
+    });
+  }
+
   function allBossCandidates(core){
     const list = [];
     const areaData = window.MOBSHOT_STAGE_DATA || {};
 
     Object.keys(areaData).forEach(key => {
       const area = areaData[key];
+      if (!area) return;
 
-      [
-        'boss',
-        'boss2',
-        'bossA',
-        'bossB',
-        'strongBoss',
-        'legendBoss'
-      ].forEach(prop => {
-        if (area && area[prop]) {
-          list.push(core.clone(area[prop]));
-        }
+      ['boss', 'boss2', 'bossA', 'bossB', 'strongBoss', 'legendBoss'].forEach(prop => {
+        if (area[prop]) list.push(fixBossDef(cloneCore(core, area[prop])));
       });
 
-      [
-        'bosses',
-        'extraBosses',
-        'bossList',
-        'doubleBosses'
-      ].forEach(prop => {
-        if (area && Array.isArray(area[prop])) {
+      ['bosses', 'extraBosses', 'bossList', 'doubleBosses'].forEach(prop => {
+        if (Array.isArray(area[prop])) {
           area[prop].forEach(boss => {
-            if (boss) {
-              list.push(core.clone(boss));
-            }
+            if (boss) list.push(fixBossDef(cloneCore(core, boss)));
           });
         }
       });
     });
 
     if (core.D && core.D.enemies) {
-      if (core.D.enemies.boss) {
-        list.push(core.clone(core.D.enemies.boss));
-      }
+      if (core.D.enemies.boss) list.push(fixBossDef(cloneCore(core, core.D.enemies.boss)));
 
       if (Array.isArray(core.D.enemies.bosses)) {
         core.D.enemies.bosses.forEach(boss => {
-          list.push(core.clone(boss));
+          if (boss) list.push(fixBossDef(cloneCore(core, boss)));
         });
       }
 
       if (Array.isArray(core.D.enemies.midBoss)) {
         core.D.enemies.midBoss.forEach(boss => {
-          list.push(core.clone(boss));
+          if (boss) list.push(fixBossDef(cloneCore(core, boss)));
         });
       }
     }
@@ -220,68 +233,42 @@
   }
 
   function getBossDefByName(core, area, bossName){
-    const name = String(bossName || '');
+    const name = canonicalBossName(bossName || '');
 
     if (area) {
       const areaCandidates = [];
 
-      [
-        'boss',
-        'boss2',
-        'bossA',
-        'bossB',
-        'strongBoss',
-        'legendBoss'
-      ].forEach(prop => {
-        if (area[prop]) {
-          areaCandidates.push(core.clone(area[prop]));
-        }
+      ['boss', 'boss2', 'bossA', 'bossB', 'strongBoss', 'legendBoss'].forEach(prop => {
+        if (area[prop]) areaCandidates.push(fixBossDef(cloneCore(core, area[prop])));
       });
 
-      [
-        'bosses',
-        'extraBosses',
-        'bossList',
-        'doubleBosses'
-      ].forEach(prop => {
+      ['bosses', 'extraBosses', 'bossList', 'doubleBosses'].forEach(prop => {
         if (Array.isArray(area[prop])) {
           area[prop].forEach(boss => {
-            if (boss) {
-              areaCandidates.push(core.clone(boss));
-            }
+            if (boss) areaCandidates.push(fixBossDef(cloneCore(core, boss)));
           });
         }
       });
 
       const exact = areaCandidates.find(boss => bossNameMatch(boss.name, name));
-
-      if (exact) {
-        exact.image = exact.image || bossImageFromName(name);
-        exact.type = exact.type || typeFromName(name);
-        exact.name = exact.name || name;
-        return exact;
-      }
+      if (exact) return fixBossDef(exact, name);
     }
 
     const all = allBossCandidates(core);
     const found = all.find(boss => bossNameMatch(boss.name, name));
 
-    if (found) {
-      found.image = found.image || bossImageFromName(name);
-      found.type = found.type || typeFromName(name);
-      found.name = found.name || name;
-      return found;
-    }
+    if (found) return fixBossDef(found, name);
 
     return getFallbackBossDef(name);
   }
 
   function getFallbackBossDef(name){
+    name = canonicalBossName(name);
     const type = typeFromName(name);
     const image = bossImageFromName(name);
 
     return {
-      name: name || 'BOSS',
+      name: name || 'ホークモブ',
       image,
       hp:
         type === 'ultraLilith' ? 1400 :
@@ -366,6 +353,12 @@
   }
 
   function spawnDoubleBosses(core, stage, diff){
+    stage = stage || {};
+    diff = diff || {};
+
+    stage.bossA = canonicalBossName(stage.bossA);
+    stage.bossB = canonicalBossName(stage.bossB);
+
     const area = getStageAreaData(stage.areaKey);
     const bossA = getBossDefByName(core, area, stage.bossA);
     const bossB = getBossDefByName(core, area, stage.bossB);
@@ -374,11 +367,12 @@
     spawnDoubleBossEntity(core, bossB, diff, stage, 1);
 
     core.state.eventMode.doubleSpawned = true;
-
     core.showBanner('2体同時出現！');
   }
 
   function spawnDoubleBossEntity(core, def, diff, stage, side){
+    def = fixBossDef(def);
+
     const balance = getDifficultyBalance(diff);
     const hpMul = Number(diff.hpMul || 1.35) * Number(balance.hpMulExtra || 1);
     const scoreMul = Number(diff.scoreMul || 1.25);
@@ -391,27 +385,21 @@
       ? Math.max(Number(balance.minFinalHp || 0), Number(balance.minHp || 0))
       : Number(balance.minHp || 0);
 
-    const hp = Math.max(
-      Math.ceil(baseHp * hpMul),
-      minHp
-    );
-
-    const baseShootCd = Number(def.shootCd || 130);
-    const baseAttackCd = Number(def.attackCd || 220);
+    const hp = Math.max(Math.ceil(baseHp * hpMul), minHp);
 
     const shootCd = Math.max(
       Number(balance.minShootCd || 30),
-      Math.floor(baseShootCd * Number(balance.cdMul || 1))
+      Math.floor(Number(def.shootCd || 130) * Number(balance.cdMul || 1))
     );
 
     const attackCd = Math.max(
       Number(balance.minAttackCd || 60),
-      Math.floor(baseAttackCd * Number(balance.cdMul || 1))
+      Math.floor(Number(def.attackCd || 220) * Number(balance.cdMul || 1))
     );
 
     const e = {
       kind: 'boss',
-      name: def.name,
+      name: canonicalBossName(def.name),
       image: def.image || bossImageFromName(def.name),
       x,
       y: -190 - side * 60,
@@ -513,6 +501,7 @@
       return;
     }
 
+    e.name = canonicalBossName(e.name);
     e.__doubleCounted = true;
     core.state.eventMode.doubleKilled = Number(core.state.eventMode.doubleKilled || 0) + 1;
 
@@ -533,6 +522,7 @@
     BOSS_TYPE_BY_NAME,
     DIFFICULTY_BALANCE,
 
+    canonicalBossName,
     normalizeName,
     bossNameMatch,
     bossImageFromName,
