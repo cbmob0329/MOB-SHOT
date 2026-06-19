@@ -10,6 +10,16 @@
   </style>
 </head>
 <body>
+  <div id="loadingScreen" class="loading-screen">
+    <div class="loading-card">
+      <div class="loading-title">Now Loding..</div>
+      <div class="loading-percent"><span id="loadingPercent">0</span>%</div>
+      <div class="loading-bar">
+        <div id="loadingBarFill" class="loading-bar-fill"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="app">
     <section id="mainScreen" class="screen active">
       <div class="main-bg"></div>
@@ -260,6 +270,7 @@
 
   <script src="js/events.js"></script>
   <script src="js/battle-mode.js"></script>
+  <script src="js/preload.js"></script>
   <script src="js/main.js"></script>
   <script src="js/test-stage.js"></script>
 </body>
