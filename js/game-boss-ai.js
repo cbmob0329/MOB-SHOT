@@ -65,15 +65,15 @@
     e.__bossAiInit = true;
     e.aiTimer = 0;
 
-    const slowMul = 1.0;
+    const slowMul = isBoss ? 1.25 : 1.15;
 
     e.shootCd = Math.max(
-      isBoss ? 85 : 70,
+      isBoss ? 95 : 85,
       Math.floor(Number(e.shootCd || config.shootCd || 150) * slowMul)
     );
 
     e.attackCd = Math.max(
-      isBoss ? 130 : 110,
+      isBoss ? 165 : 135,
       Math.floor(Number(e.attackCd || config.attackCd || 230) * slowMul)
     );
 
@@ -100,9 +100,9 @@
 
     const baseSpeed = Number(config.moveSpeed || 1.2) * speedMulByType(config.type);
     e.baseVx = Math.max(0.45, baseSpeed);
-    e.vx = e.vx || e.baseVx * (Math.random() < 0.5 ? -1 : 1);
+    e.vx = e.baseVx * (Math.random() < 0.5 ? -1 : 1);
 
-    e.bigFireballCd = Math.floor(480 + Math.random() * 160);
+    e.bigFireballCd = Math.floor(420 + Math.random() * 160);
     e.lastBigFireballFrame = -9999;
   }
 
@@ -134,66 +134,146 @@
     if (e.bigFireballCd > 0) e.bigFireballCd--;
   }
 
+  function moveRange(tools, isBoss){
+    const center = tools.W * 0.5;
+    const width = isBoss ? tools.W * 0.26 : tools.W * 0.25;
+
+    return {
+      left: center - width,
+      right: center + width,
+      softLeft: center - width * 0.82,
+      softRight: center + width * 0.82,
+      center
+    };
+  }
+
   function setMoveTarget(e, tools, config, isBoss){
     const type = config.type;
-    const left = isBoss ? tools.W * 0.16 : tools.W * 0.18;
-    const right = isBoss ? tools.W * 0.84 : tools.W * 0.82;
-    const minY = isBoss ? tools.H * 0.12 : tools.H * 0.15;
-    const maxY = isBoss ? tools.H * 0.32 : tools.H * 0.38;
-    const center = tools.W * 0.5;
+    const r = moveRange(tools, isBoss);
+    const baseY = e.baseY || (isBoss ? tools.H * 0.24 : tools.H * 0.26);
+
+    const minY = isBoss ? tools.H * 0.12 : tools.H * 0.16;
+    const maxY = isBoss ? tools.H * 0.32 : tools.H * 0.36;
 
     if (type === 'guardian' || type === 'mail') {
-      e.moveTargetX = clamp(center + Math.sin(e.aiTimer * 0.008 + e.movePhase) * tools.W * 0.18, left, right);
-      e.moveTargetY = clamp((e.baseY || tools.H * 0.24) + Math.sin(e.aiTimer * 0.011) * 6, minY, maxY);
+      e.moveTargetX = clamp(
+        r.center + Math.sin(e.aiTimer * 0.008 + e.movePhase) * tools.W * 0.14,
+        r.softLeft,
+        r.softRight
+      );
+      e.moveTargetY = clamp(baseY + Math.sin(e.aiTimer * 0.011) * 6, minY, maxY);
       return;
     }
 
     if (type === 'neon' || type === 'blueNeo' || type === 'purpleNeo' || type === 'smith') {
-      if (e.aiTimer % 150 === 1) e.moveTargetX = clamp(tools.rand(left, right), left, right);
-      e.moveTargetY = clamp((e.baseY || tools.H * 0.24) + Math.sin(e.aiTimer * 0.014 + e.movePhase) * 14, minY, maxY);
+      if (e.aiTimer % 135 === 1) {
+        e.moveTargetX = tools.rand(r.softLeft, r.softRight);
+      }
+
+      e.moveTargetY = clamp(baseY + Math.sin(e.aiTimer * 0.014 + e.movePhase) * 12, minY, maxY);
       return;
     }
 
     if (type === 'dragon' || type === 'maoh' || type === 'enma') {
-      e.moveTargetX = clamp(center + Math.sin(e.aiTimer * 0.012 + e.movePhase) * tools.W * 0.27, left, right);
-      e.moveTargetY = clamp((e.baseY || tools.H * 0.24) + Math.sin(e.aiTimer * 0.009) * 10, minY, maxY);
+      e.moveTargetX = clamp(
+        r.center + Math.sin(e.aiTimer * 0.012 + e.movePhase) * tools.W * 0.20,
+        r.softLeft,
+        r.softRight
+      );
+      e.moveTargetY = clamp(baseY + Math.sin(e.aiTimer * 0.009) * 8, minY, maxY);
       return;
     }
 
-    e.moveTargetX = clamp(center + Math.sin(e.aiTimer * 0.015 + e.movePhase) * tools.W * 0.28, left, right);
-    e.moveTargetY = clamp((e.baseY || tools.H * 0.24) + Math.sin(e.aiTimer * 0.012 + e.movePhase) * 12, minY, maxY);
+    e.moveTargetX = clamp(
+      r.center + Math.sin(e.aiTimer * 0.015 + e.movePhase) * tools.W * 0.21,
+      r.softLeft,
+      r.softRight
+    );
+    e.moveTargetY = clamp(baseY + Math.sin(e.aiTimer * 0.012 + e.movePhase) * 10, minY, maxY);
+  }
+
+  function fixEdge(e, tools, isBoss){
+    const r = moveRange(tools, isBoss);
+    const speed = Math.max(0.45, Math.abs(Number(e.baseVx || e.vx || 1)));
+
+    if (e.x <= r.left) {
+      e.x = r.left + 2;
+      e.vx = speed;
+      e.specialVx = speed;
+      e.moveTargetX = r.center;
+    }
+
+    if (e.x >= r.right) {
+      e.x = r.right - 2;
+      e.vx = -speed;
+      e.specialVx = -speed;
+      e.moveTargetX = r.center;
+    }
+
+    const edgeZone = tools.W * 0.08;
+    const nearLeft = e.x < r.left + edgeZone;
+    const nearRight = e.x > r.right - edgeZone;
+
+    if (nearLeft || nearRight) {
+      const pull = (r.center - e.x) * 0.014;
+      e.x += pull;
+    }
   }
 
   function moveBase(e, tools, config, isBoss){
-    const left = isBoss ? tools.W * 0.16 : tools.W * 0.18;
-    const right = isBoss ? tools.W * 0.84 : tools.W * 0.82;
-    const minY = isBoss ? tools.H * 0.12 : tools.H * 0.15;
-    const maxY = isBoss ? tools.H * 0.32 : tools.H * 0.38;
-
+    const r = moveRange(tools, isBoss);
+    const minY = isBoss ? tools.H * 0.12 : tools.H * 0.16;
+    const maxY = isBoss ? tools.H * 0.32 : tools.H * 0.36;
     const speed = Math.max(0.35, Number(e.baseVx || config.moveSpeed || 1));
 
     if (e.specialMove === 'sideRapid') {
-      e.x += Number(e.specialVx || e.vx || speed) * 0.72;
-
-      if (e.x < left || e.x > right) {
-        e.specialVx = -Number(e.specialVx || speed);
+      if (!e.specialVx) {
+        e.specialVx = speed * (Math.random() < 0.5 ? -1 : 1);
       }
+
+      e.x += e.specialVx * 0.62;
+
+      if (e.x <= r.left) {
+        e.x = r.left + 4;
+        e.specialVx = Math.abs(e.specialVx);
+        e.vx = Math.abs(e.vx || speed);
+      }
+
+      if (e.x >= r.right) {
+        e.x = r.right - 4;
+        e.specialVx = -Math.abs(e.specialVx);
+        e.vx = -Math.abs(e.vx || speed);
+      }
+
+      e.x += (r.center - e.x) * 0.006;
 
       if (e.specialTimer <= 0) {
         e.specialMove = '';
-        e.vx = e.baseVx || speed;
+        e.vx = e.specialVx || e.vx || speed;
+        e.moveTargetX = r.center;
       }
     } else {
       setMoveTarget(e, tools, config, isBoss);
 
-      const moveRateX = isBoss ? 0.032 : 0.044;
-      const moveRateY = isBoss ? 0.026 : 0.038;
+      const followX =
+        e.barrierTimer > 0 && (config.type === 'guardian' || config.type === 'mail')
+          ? 0.018
+          : 0.032;
 
-      e.x += (e.moveTargetX - e.x) * moveRateX;
-      e.y += (e.moveTargetY - e.y) * moveRateY;
+      const followY =
+        e.barrierTimer > 0 && (config.type === 'guardian' || config.type === 'mail')
+          ? 0.018
+          : 0.024;
+
+      e.x += (e.moveTargetX - e.x) * followX;
+      e.y += (e.moveTargetY - e.y) * followY;
+
+      e.x += (r.center - e.x) * 0.004;
     }
 
-    e.x = clamp(e.x, left, right);
+    fixEdge(e, tools, isBoss);
+
+    e.x = clamp(e.x, r.left, r.right);
     e.y = clamp(e.y, minY, maxY);
   }
 
@@ -227,21 +307,70 @@
     });
   }
 
+  function directBullet(e, tools, angle, opt){
+    opt = opt || {};
+
+    const speed = Number(opt.speed || 1.8);
+    const r = Number(opt.r || 28);
+    const hp = Number(opt.hp || 0);
+
+    tools.state.entities.push({
+      kind: 'enemyBullet',
+      x: e.x,
+      y: e.y + (opt.yOffset || 56),
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      r,
+      visualR: Math.ceil(r * 1.08),
+      hitR: Math.ceil(r * 0.82),
+      dmg: Number(opt.dmg || Math.max(5, Math.ceil(r * 0.34))),
+      hp,
+      maxHp: hp,
+      breakable: hp > 0,
+      dead: false,
+      bob: 0,
+      color: opt.color || '#ff7a35',
+      image: opt.image || 'atk/hinotama.png',
+      flipY: opt.flipY !== false,
+      life: 430,
+      fromBoss: true,
+      glow: true
+    });
+  }
+
+  function directSpread(e, tools, count, spread, opt){
+    opt = opt || {};
+
+    const target = tools.state.player;
+    const dx = target.x - e.x;
+    const dy = target.y - e.y;
+    const base = Math.atan2(dy, dx);
+    const safeCenter = !!opt.safeCenter;
+
+    for (let i = 0; i < count; i++) {
+      if (safeCenter && i === Math.floor(count / 2)) continue;
+      directBullet(e, tools, base + (i - (count - 1) / 2) * spread, opt);
+    }
+  }
+
   function safeFireSpread(e, tools, count, spread, opt){
     opt = opt || {};
     const before = tools.state.entities.length;
 
     try {
       if (bullets()) {
-        if (bullets().fireSlowSpread) bullets().fireSlowSpread(e, tools, count, spread, opt);
-        else if (bullets().fireSpread) bullets().fireSpread(e, tools, count, spread, opt);
+        if (bullets().fireSlowSpread) {
+          bullets().fireSlowSpread(e, tools, count, spread, opt);
+        } else if (bullets().fireSpread) {
+          bullets().fireSpread(e, tools, count, spread, opt);
+        }
       }
     } catch (err) {
       console.error('boss fireSpread error:', e.name, err);
     }
 
-    if (tools.state.entities.length <= before && bullets() && bullets().fireSpread) {
-      bullets().fireSpread(e, tools, count, spread, opt);
+    if (tools.state.entities.length <= before) {
+      directSpread(e, tools, count, spread, opt);
     }
   }
 
@@ -257,7 +386,7 @@
   function tryBigFireball(e, tools, text, opt){
     if (!canUseBigFireball(e, tools)) return false;
 
-    e.bigFireballCd = isDoubleOrCoop(tools) ? 680 : 560;
+    e.bigFireballCd = isDoubleOrCoop(tools) ? 620 : 500;
     e.lastBigFireballFrame = tools.frame ? tools.frame() : 0;
 
     bullets().chargeBigFireball(e, tools, text || 'ビッグ火の玉！', opt || {});
@@ -273,12 +402,25 @@
     }
 
     if (type === 'magma' || type === 'heavy') {
-      safeFireSpread(e, tools, 2, 0.18, { sizeType:'normal', speed:1.55, hp:9, image:'atk/hinotama.png', flipY:true, color:'#ff7a35' });
+      safeFireSpread(e, tools, 2, 0.18, {
+        sizeType:'normal',
+        speed:1.55,
+        hp:10,
+        image:'atk/hinotama.png',
+        flipY:true,
+        color:'#ff7a35'
+      });
       return;
     }
 
     if (type === 'thunder' || type === 'neon') {
-      safeFireSpread(e, tools, 3, 0.17, { sizeType:'small', speed:1.75, hp:5, color:'#6be6ff', safeCenter:true });
+      safeFireSpread(e, tools, 3, 0.17, {
+        sizeType:'small',
+        speed:1.75,
+        hp:5,
+        color:'#6be6ff',
+        safeCenter:true
+      });
       return;
     }
 
@@ -288,7 +430,12 @@
     }
 
     if (type === 'lilith') {
-      safeFireSpread(e, tools, 3, 0.18, { sizeType:'small', speed:1.75, hp:5, color:'#ff8cff' });
+      safeFireSpread(e, tools, 3, 0.18, {
+        sizeType:'small',
+        speed:1.75,
+        hp:5,
+        color:'#ff8cff'
+      });
       return;
     }
 
@@ -301,7 +448,6 @@
     if (
       (type === 'dragon' || type === 'maoh' || type === 'enma' || type === 'purpleNeo' || type === 'ultraLilith') &&
       tryBigFireball(e, tools, 'ビッグ火の玉！', {
-        hp: Math.ceil(e.maxHp * 0.020),
         color:
           type === 'enma' ? '#ff3b3b' :
           type === 'purpleNeo' ? '#b78cff' :
@@ -313,66 +459,133 @@
     }
 
     if (type === 'hawk') {
-      safeFireSpread(e, tools, 3, 0.22, { sizeType:'normal', speed:1.75, hp:6, color:'#ffe66b' });
+      safeFireSpread(e, tools, 3, 0.22, {
+        sizeType:'normal',
+        speed:1.75,
+        hp:6,
+        color:'#ffe66b'
+      });
       return;
     }
 
     if (type === 'mira') {
-      safeFireSpread(e, tools, 3, 0.18, { sizeType:'normal', speed:1.65, hp:7, color:'#b78cff' });
+      safeFireSpread(e, tools, 3, 0.18, {
+        sizeType:'normal',
+        speed:1.65,
+        hp:7,
+        color:'#b78cff'
+      });
       return;
     }
 
     if (type === 'guardian') {
-      safeFireSpread(e, tools, 2, 0.26, { sizeType:'big', speed:1.45, hp:10, color:'#ff7a35' });
+      safeFireSpread(e, tools, 2, 0.26, {
+        sizeType:'big',
+        speed:1.45,
+        hp:13,
+        color:'#ff7a35'
+      });
       return;
     }
 
     if (type === 'neon') {
-      safeFireSpread(e, tools, 3, 0.17, { sizeType:'normal', speed:1.85, hp:6, color:'#6be6ff' });
+      safeFireSpread(e, tools, 3, 0.17, {
+        sizeType:'normal',
+        speed:1.85,
+        hp:6,
+        color:'#6be6ff'
+      });
       return;
     }
 
     if (type === 'dragon') {
-      safeFireSpread(e, tools, 3, 0.20, { sizeType:'big', speed:1.55, hp:10, image:'atk/hinotama.png', flipY:true, color:'#ff5b35' });
+      safeFireSpread(e, tools, 3, 0.20, {
+        sizeType:'big',
+        speed:1.55,
+        hp:11,
+        image:'atk/hinotama.png',
+        flipY:true,
+        color:'#ff5b35'
+      });
       return;
     }
 
     if (type === 'lilith' || type === 'ultraLilith') {
-      safeFireSpread(e, tools, 3, 0.18, { sizeType:'normal', speed:1.7, hp:7, color:'#ff8cff' });
+      safeFireSpread(e, tools, 3, 0.18, {
+        sizeType:'normal',
+        speed:1.7,
+        hp:7,
+        color:'#ff8cff'
+      });
       return;
     }
 
     if (type === 'maoh') {
-      safeFireSpread(e, tools, 3, 0.18, { sizeType:'normal', speed:1.65, hp:8, safeCenter:true, color:'#ff4aff' });
+      safeFireSpread(e, tools, 3, 0.18, {
+        sizeType:'normal',
+        speed:1.65,
+        hp:8,
+        safeCenter:true,
+        color:'#ff4aff'
+      });
       return;
     }
 
     if (type === 'mail') {
-      safeFireSpread(e, tools, 2, 0.26, { sizeType:'big', speed:1.45, hp:10, color:'#bfc7d5' });
+      safeFireSpread(e, tools, 2, 0.26, {
+        sizeType:'big',
+        speed:1.45,
+        hp:13,
+        color:'#bfc7d5'
+      });
       return;
     }
 
     if (type === 'smith') {
-      safeFireSpread(e, tools, 3, 0.17, { sizeType:'normal', speed:1.75, hp:6, color:'#7bffea' });
+      safeFireSpread(e, tools, 3, 0.17, {
+        sizeType:'normal',
+        speed:1.75,
+        hp:6,
+        color:'#7bffea'
+      });
       return;
     }
 
     if (type === 'nep') {
-      safeFireSpread(e, tools, 3, 0.20, { sizeType:'normal', speed:1.65, hp:7, color:'#6be6ff' });
+      safeFireSpread(e, tools, 3, 0.20, {
+        sizeType:'normal',
+        speed:1.65,
+        hp:7,
+        color:'#6be6ff'
+      });
       return;
     }
 
     if (type === 'blueNeo' || type === 'purpleNeo') {
-      safeFireSpread(e, tools, 3, 0.17, { sizeType:'normal', speed:1.85, hp:6, color:type === 'blueNeo' ? '#4bb8ff' : '#b78cff' });
+      safeFireSpread(e, tools, 3, 0.17, {
+        sizeType:'normal',
+        speed:1.85,
+        hp:6,
+        color:type === 'blueNeo' ? '#4bb8ff' : '#b78cff'
+      });
       return;
     }
 
     if (type === 'enma') {
-      safeFireSpread(e, tools, 3, 0.22, { sizeType:'big', speed:1.5, hp:10, color:'#ff3b3b' });
+      safeFireSpread(e, tools, 3, 0.22, {
+        sizeType:'big',
+        speed:1.5,
+        hp:12,
+        color:'#ff3b3b'
+      });
       return;
     }
 
-    safeFireSpread(e, tools, 3, 0.20, { sizeType:'normal', speed:1.65, hp:7 });
+    safeFireSpread(e, tools, 3, 0.20, {
+      sizeType:'normal',
+      speed:1.65,
+      hp:7
+    });
   }
 
   function safeRunSkill(e, tools, config, isBoss){
@@ -398,11 +611,11 @@
 
   function nextShootCd(config, tools, isBoss){
     const base = Number(config.shootCd || (isBoss ? 155 : 140));
-    const jitter = isBoss ? 18 : 12;
+    const jitter = isBoss ? 45 : 35;
 
     return Math.floor(
       Math.max(
-        isBoss ? 85 : 70,
+        isBoss ? 105 : 85,
         (base + Math.random() * jitter) * attackRateMul(tools)
       )
     );
@@ -410,11 +623,11 @@
 
   function nextAttackCd(config, tools, isBoss){
     const base = Number(config.attackCd || (isBoss ? 245 : 205));
-    const jitter = isBoss ? 25 : 18;
+    const jitter = isBoss ? 70 : 50;
 
     return Math.floor(
       Math.max(
-        isBoss ? 130 : 110,
+        isBoss ? 185 : 140,
         (base + Math.random() * jitter) * attackRateMul(tools)
       )
     );
