@@ -1,8 +1,7 @@
 'use strict';
 
 (function(){
-  const PRELOAD_ASSETS = [
-    // main
+  const CRITICAL_ASSETS = [
     'mt/mainback.png',
     'mt/menutitle.png',
     'mt/menusta.png',
@@ -13,18 +12,17 @@
     'mt/menugacha.png',
     'mt/menumission.png',
     'mt/menucolle.png',
-
-    // player default
     'play/playpink2.png',
     'play/playpink.png',
-
-    // hud
     'mt/stagestage.png',
     'mt/stagescore.png',
     'mt/stagecoin.png',
     'mt/stagelife.png',
+    'mt/atk.png',
+    'atk/hinotama.png'
+  ];
 
-    // stage backgrounds
+  const BACKGROUND_ASSETS = [
     'sta/backsougen.png',
     'sta/backsabaku.png',
     'sta/backumi.png',
@@ -36,17 +34,12 @@
     'sta/umisenro.png',
     'sta/neonlord.png',
     'sta/makai.png',
-    'sta/makailast.png',
+    'sta/makailast.png'
+  ];
 
-    // bullets
-    'mt/atk.png',
-    'atk/hinotama.png',
-
-    // chests
+  const EXTRA_ASSETS = [
     'gimi/takagin.png',
     'gimi/takagol.png',
-
-    // gimmicks
     'gimi/gimihako.png',
     'gimi/gimikan.png',
     'gimi/gimiiwa.png',
@@ -66,7 +59,6 @@
     'gimi/gimimaotama.png',
     'gimi/gimimao.png',
 
-    // enemies
     'en/sra.png',
     'en/eniwa.png',
     'en/entozok.png',
@@ -80,7 +72,6 @@
     'en/enmaogob.png',
     'en/enasa.png',
 
-    // mid bosses
     'en/enpte.png',
     'en/sabadual.png',
     'en/enmobpi.png',
@@ -88,7 +79,6 @@
     'en/enmaggolem.png',
     'en/mobgra.png',
 
-    // bosses
     'boss/hawks.png',
     'boss/hawks2.png',
     'boss/miraboss.png',
@@ -103,12 +93,14 @@
     'boss/bossmaoh.png'
   ];
 
+  const imageCache = new Map();
+
   function $(id){
     return document.getElementById(id);
   }
 
   function unique(list){
-    return Array.from(new Set(list.filter(Boolean)));
+    return Array.from(new Set((list || []).filter(Boolean)));
   }
 
   function setProgress(done, total){
@@ -122,34 +114,91 @@
 
   function preloadImage(src){
     return new Promise(resolve => {
+      if (!src) {
+        resolve(false);
+        return;
+      }
+
+      if (imageCache.has(src)) {
+        resolve(true);
+        return;
+      }
+
       const image = new Image();
 
-      image.onload = function(){ resolve(true); };
-      image.onerror = function(){ resolve(false); };
+      image.onload = function(){
+        imageCache.set(src, image);
+        resolve(true);
+      };
+
+      image.onerror = function(){
+        resolve(false);
+      };
 
       image.src = src;
     });
   }
 
-  async function start(){
-    const loading = $('loadingScreen');
-    const assets = unique(PRELOAD_ASSETS);
+  async function preloadBatch(list, onProgress){
+    const assets = unique(list);
     let done = 0;
 
-    setProgress(0, assets.length);
+    await Promise.all(
+      assets.map(src =>
+        preloadImage(src).then(function(){
+          done++;
+          if (typeof onProgress === 'function') onProgress(done, assets.length);
+        })
+      )
+    );
+  }
 
-    for (const src of assets) {
-      await preloadImage(src);
-      done++;
-      setProgress(done, assets.length);
+  function preloadInBackground(list){
+    const assets = unique(list);
+    let index = 0;
+
+    function step(){
+      const chunk = assets.slice(index, index + 4);
+      index += 4;
+
+      if (!chunk.length) {
+        window.dispatchEvent(new CustomEvent('mobshot:backgroundPreloadComplete'));
+        return;
+      }
+
+      Promise.all(chunk.map(preloadImage)).finally(function(){
+        setTimeout(step, 16);
+      });
     }
 
-    setProgress(assets.length, assets.length);
+    setTimeout(step, 80);
+  }
+
+  async function preloadForStage(assetList){
+    await preloadBatch(assetList || []);
+  }
+
+  function hideLoading(){
+    const loading = $('loadingScreen');
+    if (loading) loading.classList.add('hidden');
+    window.dispatchEvent(new CustomEvent('mobshot:preloadComplete'));
+  }
+
+  async function start(){
+    const critical = unique(CRITICAL_ASSETS);
+
+    setProgress(0, critical.length);
+
+    await preloadBatch(critical, function(done, total){
+      setProgress(done, total);
+    });
+
+    setProgress(critical.length, critical.length);
 
     setTimeout(function(){
-      if (loading) loading.classList.add('hidden');
-      window.dispatchEvent(new CustomEvent('mobshot:preloadComplete'));
-    }, 350);
+      hideLoading();
+      preloadInBackground(BACKGROUND_ASSETS.concat(EXTRA_ASSETS));
+    }, 120);
   }
 
   if (document.readyState === 'loading') {
@@ -157,4 +206,12 @@
   } else {
     start();
   }
+
+  window.MobShotPreloader = {
+    preloadImage,
+    preloadBatch,
+    preloadForStage,
+    preloadInBackground,
+    imageCache
+  };
 })();
