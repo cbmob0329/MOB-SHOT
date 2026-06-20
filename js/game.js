@@ -25,7 +25,7 @@
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
   const EVENT_START_VALID_MS = 12000;
 
-  const IMAGE_VER = '20260620_run_asset_preload_v1';
+  const IMAGE_VER = '20260620_run_asset_preload_v2';
   const RUN_PRELOAD_TIMEOUT = 1800;
 
   const ADMIN_MAX_COIN = 999999999;
@@ -102,6 +102,9 @@
   let aiErrorCount = 0;
   let pendingRankUp = null;
   let startToken = 0;
+  let currentRunEventRequest = null;
+  let lastEventRetryRequest = null;
+  let resultRetryMode = 'normal';
 
   const images = new Map();
 
@@ -211,6 +214,19 @@
       return raw ? JSON.parse(raw) : null;
     } catch(e) {
       return null;
+    }
+  }
+
+  function writeEventRequest(data){
+    if (!data || !data.key) return false;
+
+    try {
+      const copy = clone(data);
+      copy.startedAt = Date.now();
+      localStorage.setItem(EVENT_SAVE_KEY, JSON.stringify(copy));
+      return true;
+    } catch(e) {
+      return false;
     }
   }
 
@@ -916,6 +932,8 @@
     runCommitted = false;
     aiErrorCount = 0;
     pendingRankUp = null;
+    resultRetryMode = 'normal';
+    currentRunEventRequest = null;
 
     injectHudStyle();
     ensureRankUpModal();
@@ -925,7 +943,9 @@
 
     const hasFreshEvent = isFreshEventRequest();
 
-    if (!hasFreshEvent) {
+    if (hasFreshEvent) {
+      currentRunEventRequest = clone(readEventRequest());
+    } else {
       clearEventRequest();
     }
 
@@ -1491,6 +1511,10 @@
       window.MobShotMain.refreshMainHud();
     }
 
+    if (finishData && finishData.event && currentRunEventRequest) {
+      lastEventRetryRequest = clone(currentRunEventRequest);
+    }
+
     restoreBaseData();
     resetEventMode();
     clearEventRequest();
@@ -1515,13 +1539,20 @@
     if (resultCoin) resultCoin.textContent = state.coin.toLocaleString();
 
     if (finishData && finishData.event) {
-      if (resultRetryBtn) resultRetryBtn.style.display = 'none';
+      resultRetryMode = 'event';
+
+      if (resultRetryBtn) {
+        resultRetryBtn.style.display = '';
+        resultRetryBtn.textContent = 'もう一度';
+      }
 
       if (resultHomeBtn) {
         resultHomeBtn.style.display = '';
         resultHomeBtn.textContent = 'メインへ戻る';
       }
     } else {
+      resultRetryMode = 'normal';
+
       if (resultRetryBtn) {
         resultRetryBtn.style.display = '';
         resultRetryBtn.textContent = clear ? 'NEXT STAGE' : 'もう一度';
@@ -1660,6 +1691,9 @@
     resetEventMode();
     restoreBaseData();
     clearEventRequest();
+    resultRetryMode = 'normal';
+    currentRunEventRequest = null;
+    lastEventRetryRequest = null;
 
     if (isAdminMode()) {
       applyAdminMaxSave();
@@ -1705,6 +1739,10 @@
         if (id === 'backBtn' && !isAdminMode()) return;
 
         if (id === 'resultRetryBtn') {
+          if (resultRetryMode === 'event' && lastEventRetryRequest) {
+            writeEventRequest(lastEventRetryRequest);
+          }
+
           if (resultPanel) resultPanel.classList.add('hidden');
           start();
           return;
@@ -1725,6 +1763,10 @@
         if (id === 'backBtn' && !isAdminMode()) return;
 
         if (id === 'resultRetryBtn') {
+          if (resultRetryMode === 'event' && lastEventRetryRequest) {
+            writeEventRequest(lastEventRetryRequest);
+          }
+
           if (resultPanel) resultPanel.classList.add('hidden');
           start();
           return;
@@ -1871,6 +1913,8 @@
       applyAdminMaxSave,
       refreshAdminButtons,
 
+      readEventRequest,
+      writeEventRequest,
       clearEventRequest,
       isFreshEventRequest,
 
@@ -1969,6 +2013,8 @@
     isAdminMode,
     applyAdminMaxSave,
     refreshAdminButtons,
+    readEventRequest,
+    writeEventRequest,
     clearEventRequest,
     giveUpRun
   };
