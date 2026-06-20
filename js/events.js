@@ -18,19 +18,19 @@
   ];
 
   const DOUBLE_DIFFICULTIES = [
-    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', firstCoin:5000, firstDiamond:5, hpMul:1.35, scoreMul:1.25 },
-    { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', color:'#ff5b5b', firstCoin:10000, firstDiamond:10, hpMul:1.95, scoreMul:1.55 },
-    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', firstCoin:30000, firstDiamond:50, hpMul:2.75, scoreMul:2.1 }
+    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', firstCoin:5000, firstDiamond:5, hpMul:1.35, scoreMul:1.25, bossMinHp:2200 },
+    { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', color:'#ff5b5b', firstCoin:10000, firstDiamond:10, hpMul:1.95, scoreMul:1.55, bossMinHp:4300 },
+    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', firstCoin:30000, firstDiamond:50, hpMul:2.75, scoreMul:2.1, bossMinHp:7800 }
   ];
 
   const DOUBLE_STAGES = [
-    { id:1, areaKey:'grass', areaName:'草原', title:'草原', bossA:'ホークモブ', bossB:'ミラモブ', allowed:['veryHard','inferno','legend'], final:false },
-    { id:2, areaKey:'desert', areaName:'砂漠', title:'砂漠', bossA:'モブガーディアン', bossB:'ネオンモブ', allowed:['veryHard','inferno','legend'], final:false },
-    { id:3, areaKey:'neon', areaName:'ネオン街', title:'ネオン街', bossA:'ドラゴンモブ', bossB:'ドラゴンモブⅡ', allowed:['veryHard','inferno','legend'], final:false },
-    { id:4, areaKey:'castle', areaName:'魔王城', title:'魔王城', bossA:'モブリリス', bossB:'モブ魔王', allowed:['veryHard','inferno','legend'], final:false },
-    { id:5, areaKey:'prison', areaName:'監獄', title:'監獄', bossA:'モブメイル', bossB:'モブスミス', allowed:['veryHard','inferno','legend'], final:false },
-    { id:6, areaKey:'seaRail', areaName:'海の線路', title:'海の線路', bossA:'モブネプ', bossB:'ホークモブⅡ', allowed:['veryHard','inferno','legend'], final:false },
-    { id:7, areaKey:'last', areaName:'魔王の間', title:'魔王の間', bossA:'閻魔モブ', bossB:'ウルモブリリス', allowed:['legend'], final:true, firstCoin:50000, firstDiamond:100 }
+    { id:1, areaKey:'grass', areaName:'草原', title:'草原', background:'sta/backsougen.png', bossA:'ホークモブ', bossB:'ミラモブ', allowed:['veryHard','inferno','legend'], final:false },
+    { id:2, areaKey:'desert', areaName:'砂漠', title:'砂漠', background:'sta/backsabaku.png', bossA:'モブガーディアン', bossB:'ネオンモブ', allowed:['veryHard','inferno','legend'], final:false },
+    { id:3, areaKey:'neon', areaName:'ネオン街', title:'ネオン街', background:'sta/backneon.png', bossA:'ドラゴンモブ', bossB:'ドラゴンモブⅡ', allowed:['veryHard','inferno','legend'], final:false },
+    { id:4, areaKey:'castle', areaName:'魔王城', title:'魔王城', background:'sta/backmao.png', bossA:'モブリリス', bossB:'モブ魔王', allowed:['veryHard','inferno','legend'], final:false },
+    { id:5, areaKey:'prison', areaName:'監獄', title:'監獄', background:'sta/stkan.png', bossA:'モブメイル', bossB:'モブスミス', allowed:['veryHard','inferno','legend'], final:false },
+    { id:6, areaKey:'seaRail', areaName:'海の線路', title:'海の線路', background:'sta/umisenro.png', bossA:'モブネプ', bossB:'ホークモブⅡ', allowed:['veryHard','inferno','legend'], final:false },
+    { id:7, areaKey:'last', areaName:'魔王の間', title:'魔王の間', background:'sta/makailast.png', bossA:'閻魔モブ', bossB:'ウルモブリリス', allowed:['legend'], final:true, firstCoin:50000, firstDiamond:100 }
   ];
 
   const QUEST_DIFFICULTIES = [
@@ -58,6 +58,29 @@
 
   function qs(id){
     return document.getElementById(id);
+  }
+
+  function clone(obj){
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  function normalizeDifficultyKey(key){
+    const raw = String(key || '').trim();
+
+    if (raw === 'イージー') return 'easy';
+    if (raw === 'ハード') return 'hard';
+    if (raw === 'ベリーハード') return 'veryHard';
+    if (raw === 'インフェルノ') return 'inferno';
+    if (raw === 'レジェンド') return 'legend';
+
+    if (raw === 'easy') return 'easy';
+    if (raw === 'hard') return 'hard';
+    if (raw === 'veryHard') return 'veryHard';
+    if (raw === 'veryhard') return 'veryHard';
+    if (raw === 'inferno') return 'inferno';
+    if (raw === 'legend') return 'legend';
+
+    return raw || 'easy';
   }
 
   function injectEventStyle(){
@@ -660,10 +683,12 @@
   }
 
   function getDifficulty(key){
+    key = normalizeDifficultyKey(key);
     return GOLD_DIFFICULTIES.find(d => d.key === key) || GOLD_DIFFICULTIES[0];
   }
 
   function getDoubleDifficulty(key){
+    key = normalizeDifficultyKey(key || 'veryHard');
     return DOUBLE_DIFFICULTIES.find(d => d.key === key) || DOUBLE_DIFFICULTIES[0];
   }
 
@@ -672,6 +697,7 @@
   }
 
   function getQuestDifficulty(key){
+    key = normalizeDifficultyKey(key);
     return QUEST_DIFFICULTIES.find(d => d.key === key) || QUEST_DIFFICULTIES[0];
   }
 
@@ -694,12 +720,12 @@
   }
 
   function hasGoldCleared(difficultyKey){
-    return !!loadGoldClear()[difficultyKey];
+    return !!loadGoldClear()[normalizeDifficultyKey(difficultyKey)];
   }
 
   function markGoldCleared(difficultyKey){
     const data = loadGoldClear();
-    data[difficultyKey] = true;
+    data[normalizeDifficultyKey(difficultyKey)] = true;
     saveGoldClear(data);
   }
 
@@ -718,7 +744,7 @@
   }
 
   function doubleClearKey(difficultyKey, stageId){
-    return `${difficultyKey}_${stageId}`;
+    return `${normalizeDifficultyKey(difficultyKey)}_${Number(stageId || 0)}`;
   }
 
   function hasDoubleCleared(difficultyKey, stageId){
@@ -732,6 +758,8 @@
   }
 
   function isDoubleDifficultyUnlocked(difficultyKey){
+    difficultyKey = normalizeDifficultyKey(difficultyKey);
+
     if (!isDoubleBossUnlocked()) return false;
 
     if (difficultyKey === 'veryHard') return true;
@@ -748,7 +776,7 @@
   }
 
   function questClearKey(difficultyKey, questId){
-    return `${difficultyKey}_${questId}`;
+    return `${normalizeDifficultyKey(difficultyKey)}_${Number(questId || 0)}`;
   }
 
   function hasQuestCleared(difficultyKey, questId){
@@ -797,6 +825,8 @@
   }
 
   function recordDoubleBossClear(difficultyKey, stageId, coinAmount){
+    difficultyKey = normalizeDifficultyKey(difficultyKey);
+
     const stats = loadStats();
     const stageKey = doubleClearKey(difficultyKey, stageId);
 
@@ -810,6 +840,8 @@
   }
 
   function recordEventQuestClear(difficultyKey, questId, coinAmount){
+    difficultyKey = normalizeDifficultyKey(difficultyKey);
+
     const stats = loadStats();
     const stageKey = questClearKey(difficultyKey, questId);
 
@@ -1091,7 +1123,7 @@
             title:'ダブルボス',
             sub:`${diff.name} / ${stage.title}に出撃しますか？`,
             reward:rewardTextDouble(diff, stage),
-            extra:'ボス2体が同時に出現します。',
+            extra:'ボス2体が同時に出現します。\n障害物と雑魚は出ません。\n20秒ごとにゲートが流れてきます。',
             onYes:function(){
               startEvent('doubleBoss', diff.key, stage.id);
             }
@@ -1179,7 +1211,65 @@
     parent.appendChild(wrap);
   }
 
-  function startEvent(key, difficultyKey, stageId){
+  function makeEventData(key, diffKey, selectedStageId){
+    diffKey = normalizeDifficultyKey(diffKey || '');
+
+    const data = {
+      key,
+      difficulty:diffKey,
+      difficultyKey:diffKey,
+      stageId:Number(selectedStageId || 0),
+      startedAt:Date.now()
+    };
+
+    if (key === 'gold') {
+      const diff = getDifficulty(diffKey || 'easy');
+
+      data.goldDifficulty = clone(diff);
+      data.difficultyData = clone(diff);
+    }
+
+    if (key === 'doubleBoss') {
+      const diff = getDoubleDifficulty(diffKey || 'veryHard');
+      const stage = getDoubleStage(selectedStageId || 1);
+
+      data.doubleStageId = Number(stage.id);
+      data.doubleBossStageId = Number(stage.id);
+      data.selectedStageId = Number(stage.id);
+      data.stageId = Number(stage.id);
+
+      data.difficultyData = clone(diff);
+      data.difficultyData.key = diff.key;
+
+      data.stage = clone(stage);
+      data.doubleStage = clone(stage);
+
+      data.areaKey = stage.areaKey;
+      data.areaName = stage.areaName;
+      data.title = stage.title;
+      data.background = stage.background || null;
+      data.bossA = stage.bossA;
+      data.bossB = stage.bossB;
+    }
+
+    if (key === 'eventQuest') {
+      const diff = getQuestDifficulty(diffKey || 'easy');
+      const quest = getQuestStage(selectedStageId || 1);
+
+      data.difficultyData = clone(diff);
+      data.questDifficulty = clone(diff);
+      data.questStageId = Number(quest.id);
+      data.stageId = Number(quest.id);
+      data.stage = clone(quest);
+      data.questStage = clone(quest);
+    }
+
+    return data;
+  }
+
+  function startEvent(key, difficultyKey, selectedStageId){
+    difficultyKey = normalizeDifficultyKey(difficultyKey || '');
+
     if (key === 'doubleBoss' && !isDoubleBossUnlocked()) {
       showMessage('LOCK', '通常ステージのハードを全てクリアすると解放されます。');
       return;
@@ -1198,9 +1288,24 @@
       }
     }
 
+    if (key === 'doubleBoss') {
+      const diff = getDoubleDifficulty(difficultyKey || 'veryHard');
+      const stage = getDoubleStage(selectedStageId || 1);
+
+      if (!stage.allowed.includes(diff.key)) {
+        showMessage('LOCK', 'このステージは選択した難易度では挑戦できません。');
+        return;
+      }
+
+      if (!isDoubleDifficultyUnlocked(diff.key)) {
+        showMessage('LOCK', '前の難易度をクリアすると解放されます。');
+        return;
+      }
+    }
+
     if (key === 'eventQuest') {
       const diff = getQuestDifficulty(difficultyKey || 'easy');
-      const quest = getQuestStage(stageId || 1);
+      const quest = getQuestStage(selectedStageId || 1);
 
       if (!canPlayQuest(quest, diff)) {
         showMessage('LOCK', 'このクエストはまだ解放されていません。');
@@ -1214,12 +1319,7 @@
       }
     }
 
-    const eventData = {
-      key,
-      difficulty:difficultyKey || '',
-      stageId:Number(stageId || 0),
-      startedAt:Date.now()
-    };
+    const eventData = makeEventData(key, difficultyKey, selectedStageId);
 
     try {
       localStorage.setItem(EVENT_SAVE_KEY, JSON.stringify(eventData));
@@ -1271,20 +1371,55 @@
   function getCurrentGoldDifficulty(){
     const ev = getCurrentEvent();
     if (!ev || ev.key !== 'gold') return getDifficulty('easy');
-    return getDifficulty(ev.difficulty || 'easy');
+    return getDifficulty(ev.difficulty || ev.difficultyKey || 'easy');
   }
 
   function getCurrentDoubleBoss(){
     const ev = getCurrentEvent();
-    const difficulty = getDoubleDifficulty(ev && ev.difficulty ? ev.difficulty : 'veryHard');
-    const stage = getDoubleStage(ev && ev.stageId ? ev.stageId : 1);
+
+    if (!ev || ev.key !== 'doubleBoss') {
+      return {
+        difficulty:getDoubleDifficulty('veryHard'),
+        stage:getDoubleStage(1)
+      };
+    }
+
+    const diffKey = normalizeDifficultyKey(ev.difficulty || ev.difficultyKey || 'veryHard');
+    const difficulty = getDoubleDifficulty(diffKey);
+
+    const id = Number(
+      ev.stageId ||
+      ev.doubleStageId ||
+      ev.doubleBossStageId ||
+      ev.selectedStageId ||
+      (ev.stage && ev.stage.id) ||
+      (ev.doubleStage && ev.doubleStage.id) ||
+      1
+    );
+
+    let stage = getDoubleStage(id);
+
+    if (ev.stage && ev.stage.bossA && ev.stage.bossB) {
+      stage = Object.assign({}, stage, ev.stage);
+    }
+
+    if (ev.doubleStage && ev.doubleStage.bossA && ev.doubleStage.bossB) {
+      stage = Object.assign({}, stage, ev.doubleStage);
+    }
+
+    if (ev.bossA) stage.bossA = ev.bossA;
+    if (ev.bossB) stage.bossB = ev.bossB;
+    if (ev.areaKey) stage.areaKey = ev.areaKey;
+    if (ev.areaName) stage.areaName = ev.areaName;
+    if (ev.title) stage.title = ev.title;
+    if (ev.background) stage.background = ev.background;
 
     return { difficulty, stage };
   }
 
   function getCurrentQuest(){
     const ev = getCurrentEvent();
-    const difficulty = getQuestDifficulty(ev && ev.difficulty ? ev.difficulty : 'easy');
+    const difficulty = getQuestDifficulty(ev && (ev.difficulty || ev.difficultyKey) ? (ev.difficulty || ev.difficultyKey) : 'easy');
     const stage = getQuestStage(ev && ev.stageId ? ev.stageId : 1);
 
     return { difficulty, stage };
@@ -1411,6 +1546,9 @@
     recordScoreAttackClear,
     recordDoubleBossClear,
     recordEventQuestClear,
-    recordEventBossKill
+    recordEventBossKill,
+
+    makeEventData,
+    normalizeDifficultyKey
   };
 })();
