@@ -25,6 +25,9 @@
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
   const EVENT_START_VALID_MS = 12000;
 
+  const IMAGE_VER = '20260620_run_asset_preload_v1';
+  const RUN_PRELOAD_TIMEOUT = 1800;
+
   const ADMIN_MAX_COIN = 999999999;
   const ADMIN_MAX_DIAMOND = 999999999;
   const ADMIN_MAX_RANK = 999;
@@ -43,6 +46,44 @@
     legend: 'mt/game5.png'
   };
 
+  const RUN_BOSS_IMAGES = [
+    'boss/hawks.png',
+    'boss/hawks2.png',
+    'boss/miraboss.png',
+    'boss/bossmira2.png',
+    'boss/bossban.png',
+    'boss/bossban2.png',
+    'boss/bossneon.png',
+    'boss/bossneon2.png',
+    'boss/bossdragoon.png',
+    'boss/bossdragoon2.png',
+    'boss/bossriris.png',
+    'boss/bossmaoh.png',
+    'boss/bossmeiru.png',
+    'boss/bosssmith.png',
+    'boss/bossmobnep.png',
+    'boss/bossneonblue.png',
+    'boss/bossneonpur.png',
+    'boss/bossenmob.png',
+    'boss/bossulriri.png'
+  ];
+
+  const RUN_ATTACK_IMAGES = [
+    'mt/atk.png',
+    'atk/hinotama.png',
+    'atk/hawkatk.png',
+    'atk/miraatk.png',
+    'atk/kaminari.png',
+    'atk/dragon.png',
+    'atk/atkriri.png',
+    'atk/atkmaoh.png',
+    'atk/atkmeiru.png',
+    'atk/matrix.png',
+    'atk/atknep.png',
+    'atk/neonring.png',
+    'atk/enma.png'
+  ];
+
   const ORIGINAL_DATA = JSON.parse(JSON.stringify({
     stage: D.stage,
     enemies: D.enemies,
@@ -60,6 +101,7 @@
   let runCommitted = false;
   let aiErrorCount = 0;
   let pendingRankUp = null;
+  let startToken = 0;
 
   const images = new Map();
 
@@ -252,34 +294,12 @@
     const style = document.createElement('style');
     style.id = 'mobShotGameHudStyle';
     style.textContent = `
-      #gameScreen{
-        position:relative !important;
-      }
-
-      #gameCanvas{
-        position:absolute !important;
-        inset:0 !important;
-        z-index:1 !important;
-      }
-
-      .game-hud{
-        z-index:40 !important;
-        pointer-events:none !important;
-      }
-
-      #phaseBanner{
-        z-index:80 !important;
-        pointer-events:none !important;
-      }
-
-      #skillHud{
-        z-index:90 !important;
-        pointer-events:auto !important;
-      }
-
-      #resultPanel{
-        z-index:240 !important;
-      }
+      #gameScreen{position:relative !important;}
+      #gameCanvas{position:absolute !important;inset:0 !important;z-index:1 !important;}
+      .game-hud{z-index:40 !important;pointer-events:none !important;}
+      #phaseBanner{z-index:80 !important;pointer-events:none !important;}
+      #skillHud{z-index:90 !important;pointer-events:auto !important;}
+      #resultPanel{z-index:240 !important;}
 
       #gameBackBtn.give-up-btn,
       .give-up-btn{
@@ -325,9 +345,7 @@
         background:rgba(0,0,0,.78);
       }
 
-      .mob-rankup-modal.hidden{
-        display:none;
-      }
+      .mob-rankup-modal.hidden{display:none;}
 
       .mob-rankup-card{
         position:relative;
@@ -337,10 +355,7 @@
         text-align:center;
         background:linear-gradient(180deg,rgba(55,35,100,.98),rgba(8,10,28,.98));
         border:4px solid rgba(255,230,107,.85);
-        box-shadow:
-          0 18px 55px rgba(0,0,0,.75),
-          0 0 32px rgba(255,210,60,.38),
-          inset 0 0 0 2px rgba(255,255,255,.12);
+        box-shadow:0 18px 55px rgba(0,0,0,.75),0 0 32px rgba(255,210,60,.38),inset 0 0 0 2px rgba(255,255,255,.12);
         overflow:hidden;
       }
 
@@ -356,16 +371,8 @@
         pointer-events:none;
       }
 
-      .mob-rankup-card::before{
-        left:-70px;
-        top:-80px;
-      }
-
-      .mob-rankup-card::after{
-        right:-70px;
-        bottom:-80px;
-        animation-delay:-.9s;
-      }
+      .mob-rankup-card::before{left:-70px;top:-80px;}
+      .mob-rankup-card::after{right:-70px;bottom:-80px;animation-delay:-.9s;}
 
       .mob-rankup-title{
         position:relative;
@@ -375,9 +382,7 @@
         line-height:1;
         letter-spacing:.04em;
         color:#ffe66b;
-        text-shadow:
-          0 5px 0 #000,
-          0 0 18px rgba(255,230,107,.65);
+        text-shadow:0 5px 0 #000,0 0 18px rgba(255,230,107,.65);
         animation:mobRankPop .42s ease-out both;
       }
 
@@ -585,19 +590,181 @@
     D.chests = clone(ORIGINAL_DATA.chests);
   }
 
+  function imageUrl(src){
+    return src ? `${src}?v=${IMAGE_VER}` : '';
+  }
+
+  function isImageReady(image){
+    return !!(image && image.complete && image.naturalWidth > 0);
+  }
+
   function getImage(src){
     if (!src) return null;
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260619_game_fix_event_giveup';
+      image.decoding = 'async';
+      image.loading = 'eager';
+
+      image.onload = function(){
+        image.__mobReady = true;
+      };
+
       image.onerror = function(){
+        image.__mobError = true;
         console.warn('画像が読み込めません:', src);
       };
+
+      image.src = imageUrl(src);
       images.set(src, image);
     }
 
     return images.get(src);
+  }
+
+  function preloadImage(src){
+    return new Promise(resolve => {
+      if (!src) {
+        resolve(false);
+        return;
+      }
+
+      const image = getImage(src);
+
+      if (isImageReady(image) || image.__mobError) {
+        resolve(true);
+        return;
+      }
+
+      const done = function(ok){
+        image.onload = null;
+        image.onerror = null;
+        if (ok) image.__mobReady = true;
+        else image.__mobError = true;
+        resolve(ok);
+      };
+
+      image.onload = function(){ done(true); };
+      image.onerror = function(){ done(false); };
+
+      if (!image.src) image.src = imageUrl(src);
+    });
+  }
+
+  function uniqueAssets(list){
+    return Array.from(new Set(
+      (list || [])
+        .filter(Boolean)
+        .map(src => String(src).trim())
+        .filter(Boolean)
+    ));
+  }
+
+  function pushEntityAssets(list, item){
+    if (!item) return;
+
+    if (item.image) list.push(item.image);
+    if (item.backImage) list.push(item.backImage);
+    if (item.frontImage) list.push(item.frontImage);
+    if (item.bulletImage) list.push(item.bulletImage);
+  }
+
+  function collectAreaAssets(list, area){
+    if (!area) return;
+
+    if (area.background) list.push(area.background);
+
+    ['zako', 'midBoss', 'gimmicks', 'chests'].forEach(key => {
+      if (Array.isArray(area[key])) {
+        area[key].forEach(item => pushEntityAssets(list, item));
+      }
+    });
+
+    ['boss', 'strongBoss', 'legendBoss'].forEach(key => {
+      pushEntityAssets(list, area[key]);
+    });
+  }
+
+  function collectCurrentRunAssets(){
+    const list = [];
+
+    list.push(state.playerImage);
+    list.push(state.bulletImage);
+
+    if (D && D.stage) {
+      list.push(D.stage.background);
+    }
+
+    if (D && D.enemies) {
+      if (Array.isArray(D.enemies.zako)) {
+        D.enemies.zako.forEach(item => pushEntityAssets(list, item));
+      }
+
+      if (Array.isArray(D.enemies.midBoss)) {
+        D.enemies.midBoss.forEach(item => pushEntityAssets(list, item));
+      }
+
+      pushEntityAssets(list, D.enemies.boss);
+    }
+
+    if (D && Array.isArray(D.gimmicks)) {
+      D.gimmicks.forEach(item => pushEntityAssets(list, item));
+    }
+
+    if (D && Array.isArray(D.chests)) {
+      D.chests.forEach(item => pushEntityAssets(list, item));
+    }
+
+    if (window.MOBSHOT_STAGE_DATA) {
+      const info = getCurrentStageInfo();
+      collectAreaAssets(list, window.MOBSHOT_STAGE_DATA[info.areaKey]);
+
+      if (state.eventMode && state.eventMode.active) {
+        Object.keys(window.MOBSHOT_STAGE_DATA).forEach(key => {
+          collectAreaAssets(list, window.MOBSHOT_STAGE_DATA[key]);
+        });
+      }
+    }
+
+    RUN_BOSS_IMAGES.forEach(src => list.push(src));
+    RUN_ATTACK_IMAGES.forEach(src => list.push(src));
+
+    if (window.MobShotBossData && window.MobShotBossData.BOSS_ATTACKS) {
+      Object.keys(window.MobShotBossData.BOSS_ATTACKS).forEach(key => {
+        const spec = window.MobShotBossData.BOSS_ATTACKS[key];
+        if (spec) {
+          if (spec.image) list.push(spec.image);
+          if (spec.fallbackImage) list.push(spec.fallbackImage);
+        }
+      });
+    }
+
+    if (window.MobShotSkills && window.MobShotSkills.getEquippedSkills) {
+      const equipped = window.MobShotSkills.getEquippedSkills() || [];
+      equipped.forEach(skill => pushEntityAssets(list, skill));
+    }
+
+    return uniqueAssets(list);
+  }
+
+  async function preloadCurrentRunAssets(){
+    const assets = collectCurrentRunAssets();
+
+    if (!assets.length) return;
+
+    const pending = assets
+      .filter(src => {
+        const image = images.get(src);
+        return !isImageReady(image) && !(image && image.__mobError);
+      })
+      .map(src => preloadImage(src));
+
+    if (!pending.length) return;
+
+    await Promise.race([
+      Promise.allSettled(pending),
+      new Promise(resolve => setTimeout(resolve, RUN_PRELOAD_TIMEOUT))
+    ]);
   }
 
   function getPlayerBaseY(){
@@ -862,13 +1029,27 @@
     handleFlowEvent(flow.start());
   }
 
-  function start(){
+  async function start(){
+    const token = ++startToken;
+
     resize();
     refreshAdminButtons();
     createTestClearButton();
     stopLoopOnly();
-    running = true;
+
+    running = false;
     resetRun();
+    showBanner('画像読み込み中...');
+
+    try {
+      await preloadCurrentRunAssets();
+    } catch(err) {
+      console.warn('run preload error:', err);
+    }
+
+    if (token !== startToken) return;
+
+    running = true;
     loop();
   }
 
@@ -879,6 +1060,7 @@
 
   function stop(){
     running = false;
+    startToken++;
     stopLoopOnly();
   }
 
@@ -1289,6 +1471,7 @@
 
     runCommitted = true;
     running = false;
+    startToken++;
 
     let clearInfo = null;
 
@@ -1471,6 +1654,7 @@
 
   function goMainFromResult(){
     running = false;
+    startToken++;
     stopLoopOnly();
 
     resetEventMode();
@@ -1662,6 +1846,7 @@
       clone,
       restoreBaseData,
       getImage,
+      preloadCurrentRunAssets,
       getPlayerBaseY,
       getCurrentStageInfo,
 
