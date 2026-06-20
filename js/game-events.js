@@ -1,6 +1,9 @@
 'use strict';
 
 (function(){
+  const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
+  const EVENT_START_VALID_MS = 12000;
+
   let active = false;
   let eventData = null;
   let eventType = '';
@@ -11,9 +14,11 @@
   let nextEnemyAt = 0;
   let nextChestAt = 0;
   let nextGimmickAt = 0;
+  let nextGateAt = 0;
   let spawnedBoss = false;
   let scoreAttackIndex = 0;
   let finishBonusApplied = false;
+  let retryEventData = null;
 
   let questInfo = null;
   let questPhase = 0;
@@ -146,8 +151,16 @@
     { id:4, areaKey:'castle', areaName:'魔王城', title:'魔王城', background:'sta/backmao.png', bossA:'モブリリス', bossB:'モブ魔王' },
     { id:5, areaKey:'prison', areaName:'監獄', title:'監獄', background:'sta/stkan.png', bossA:'モブメイル', bossB:'モブスミス' },
     { id:6, areaKey:'seaRail', areaName:'海の線路', title:'海の線路', background:'sta/umisenro.png', bossA:'モブネプ', bossB:'ホークモブⅡ' },
-    { id:7, areaKey:'last', areaName:'魔王の間', title:'魔王の間', background:'sta/makailast.png', bossA:'閻魔モブ', bossB:'ウルモブリリス', final:true, firstCoin:50000, firstDiamond:100 }
+    { id:7, areaKey:'last', areaName:'魔王の間', title:'魔王の間', background:'sta/makailast.png', bossA:'閻魔モブ', bossB:'ウルモブリリス', final:true, firstCoin:50000, firstDiamond:100, legendOnly:true }
   ];
+
+  const DOUBLE_DEFAULT_STAGE_BY_DIFFICULTY = {
+    easy:1,
+    hard:2,
+    veryHard:3,
+    inferno:4,
+    legend:7
+  };
 
   const BOSS_FALLBACK = {
     'ホークモブ':{ name:'ホークモブ', image:'boss/hawks.png', hp:600, score:1000, coin:200 },
@@ -173,22 +186,22 @@
 
   const MID_BOSS_FALLBACK = {
     'モブプテラ':{ name:'モブプテラ', image:'en/enpte.png', hp:80, score:300, coin:30 },
-    'モブデュアル':{ name:'モブデュアル', image:'en/endual.png', hp:120, score:420, coin:42 },
-    'モブピー':{ name:'モブピー', image:'en/enpi.png', hp:95, score:360, coin:36 },
+    'モブデュアル':{ name:'モブデュアル', image:'en/sabadual.png', hp:120, score:420, coin:42 },
+    'モブピー':{ name:'モブピー', image:'en/enmobpi.png', hp:95, score:360, coin:36 },
     'モブギドラ':{ name:'モブギドラ', image:'en/neongidra.png', hp:220, score:800, coin:80 },
     'マグモブレム':{ name:'マグモブレム', image:'en/enmaggolem.png', hp:300, score:1050, coin:110 },
-    'グラディモブ':{ name:'グラディモブ', image:'en/engra.png', hp:260, score:900, coin:90 },
-    'モブニコ':{ name:'モブニコ', image:'en/ennico.png', hp:180, score:620, coin:62 },
-    'モブラス':{ name:'モブラス', image:'en/enras.png', hp:230, score:760, coin:76 },
-    'ガトリモブ':{ name:'ガトリモブ', image:'en/engatori.png', hp:210, score:720, coin:72 },
-    'ジェイモブ':{ name:'ジェイモブ', image:'en/enjay.png', hp:220, score:740, coin:74 },
-    'モブサメ':{ name:'モブサメ', image:'en/ensame.png', hp:250, score:820, coin:82 },
-    'モブシャチ':{ name:'モブシャチ', image:'en/enshachi.png', hp:280, score:880, coin:88 },
-    'モブコード':{ name:'モブコード', image:'en/encode.png', hp:220, score:760, coin:76 },
-    'モブケーブル':{ name:'モブケーブル', image:'en/encable.png', hp:240, score:800, coin:80 },
-    'モブマグシャー':{ name:'モブマグシャー', image:'en/enmagsha.png', hp:290, score:980, coin:98 },
-    'モブガラド':{ name:'モブガラド', image:'en/engarado.png', hp:280, score:940, coin:94 },
-    'モブメルト':{ name:'モブメルト', image:'en/enmelt.png', hp:300, score:1000, coin:100 }
+    'グラディモブ':{ name:'グラディモブ', image:'en/mobgra.png', hp:260, score:900, coin:90 },
+    'モブニコ':{ name:'モブニコ', image:'en/mobnico.png', hp:180, score:620, coin:62 },
+    'モブラス':{ name:'モブラス', image:'en/mobras.png', hp:230, score:760, coin:76 },
+    'ガトリモブ':{ name:'ガトリモブ', image:'en/gatorimob.png', hp:210, score:720, coin:72 },
+    'ジェイモブ':{ name:'ジェイモブ', image:'en/jmob.png', hp:220, score:740, coin:74 },
+    'モブサメ':{ name:'モブサメ', image:'en/mobsame.png', hp:250, score:820, coin:82 },
+    'モブシャチ':{ name:'モブシャチ', image:'en/shatimob.png', hp:280, score:880, coin:88 },
+    'モブコード':{ name:'モブコード', image:'en/mobcode.png', hp:220, score:760, coin:76 },
+    'モブケーブル':{ name:'モブケーブル', image:'en/mobcable.png', hp:240, score:800, coin:80 },
+    'モブマグシャー':{ name:'モブマグシャー', image:'en/mobmagsya.png', hp:290, score:980, coin:98 },
+    'モブガラド':{ name:'モブガラド', image:'en/mobgarado.png', hp:280, score:940, coin:94 },
+    'モブメルト':{ name:'モブメルト', image:'en/mobmerut.png', hp:300, score:1000, coin:100 }
   };
 
   const SCORE_ATTACK_BOSSES = [
@@ -237,9 +250,47 @@
     return raw || 'easy';
   }
 
+  function readEventRequest(){
+    try {
+      const raw = localStorage.getItem(EVENT_SAVE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch(e) {
+      return null;
+    }
+  }
+
+  function writeEventRequest(data){
+    if (!data || !data.key) return;
+
+    try {
+      const save = clone(data);
+      save.startedAt = Date.now();
+      localStorage.setItem(EVENT_SAVE_KEY, JSON.stringify(save));
+    } catch(e) {}
+  }
+
+  function isFreshEventRequest(data){
+    if (!data || !data.key) return false;
+
+    const startedAt = Number(data.startedAt || 0);
+    if (!startedAt) return true;
+
+    return Date.now() - startedAt <= EVENT_START_VALID_MS;
+  }
+
   function getEvent(){
-    if (!window.MobShotEvents || !window.MobShotEvents.getCurrentEvent) return null;
-    return window.MobShotEvents.getCurrentEvent();
+    let ev = null;
+
+    if (window.MobShotEvents && window.MobShotEvents.getCurrentEvent) {
+      ev = window.MobShotEvents.getCurrentEvent();
+    }
+
+    if (ev && ev.key) return ev;
+
+    ev = readEventRequest();
+    if (isFreshEventRequest(ev)) return ev;
+
+    return null;
   }
 
   function mergeDiff(base, extra){
@@ -294,6 +345,95 @@
     return diff;
   }
 
+  function normalizeDoubleStageId(value, diffKey){
+    const n = Number(value || 0);
+    if (n >= 1) return n;
+
+    return Number(DOUBLE_DEFAULT_STAGE_BY_DIFFICULTY[diffKey] || 1);
+  }
+
+  function findDoubleStageFromEvent(data, diffKey){
+    data = data || {};
+
+    const directId = normalizeDoubleStageId(
+      data.stageId ||
+      data.doubleStageId ||
+      data.doubleBossStageId ||
+      data.selectedStageId ||
+      data.areaId ||
+      data.id ||
+      (data.stage && data.stage.id) ||
+      (data.doubleStage && data.doubleStage.id),
+      ''
+    );
+
+    if (directId >= 1) {
+      return clone(DOUBLE_STAGE_FALLBACK.find(s => Number(s.id) === directId) || DOUBLE_STAGE_FALLBACK[directId - 1] || DOUBLE_STAGE_FALLBACK[0]);
+    }
+
+    const bossA = canonicalBossName(
+      data.bossA ||
+      data.boss1 ||
+      data.firstBoss ||
+      data.leftBoss ||
+      (data.stage && (data.stage.bossA || data.stage.boss1 || data.stage.firstBoss)) ||
+      (data.doubleStage && (data.doubleStage.bossA || data.doubleStage.boss1 || data.doubleStage.firstBoss))
+    );
+
+    const bossB = canonicalBossName(
+      data.bossB ||
+      data.boss2 ||
+      data.secondBoss ||
+      data.rightBoss ||
+      (data.stage && (data.stage.bossB || data.stage.boss2 || data.stage.secondBoss)) ||
+      (data.doubleStage && (data.doubleStage.bossB || data.doubleStage.boss2 || data.doubleStage.secondBoss))
+    );
+
+    if (bossA && bossB) {
+      const found = DOUBLE_STAGE_FALLBACK.find(s => sameName(s.bossA, bossA) && sameName(s.bossB, bossB));
+      const base = found ? clone(found) : clone(DOUBLE_STAGE_FALLBACK[0]);
+
+      base.bossA = bossA;
+      base.bossB = bossB;
+
+      if (data.areaKey) base.areaKey = data.areaKey;
+      if (data.areaName) base.areaName = data.areaName;
+      if (data.title) base.title = data.title;
+      if (data.background) base.background = data.background;
+
+      if (data.stage) {
+        if (data.stage.areaKey) base.areaKey = data.stage.areaKey;
+        if (data.stage.areaName) base.areaName = data.stage.areaName;
+        if (data.stage.title) base.title = data.stage.title;
+        if (data.stage.background) base.background = data.stage.background;
+      }
+
+      if (data.doubleStage) {
+        if (data.doubleStage.areaKey) base.areaKey = data.doubleStage.areaKey;
+        if (data.doubleStage.areaName) base.areaName = data.doubleStage.areaName;
+        if (data.doubleStage.title) base.title = data.doubleStage.title;
+        if (data.doubleStage.background) base.background = data.doubleStage.background;
+      }
+
+      return base;
+    }
+
+    const areaKey = data.areaKey || (data.stage && data.stage.areaKey) || (data.doubleStage && data.doubleStage.areaKey);
+    const areaName = data.areaName || data.title || (data.stage && (data.stage.areaName || data.stage.title)) || (data.doubleStage && (data.doubleStage.areaName || data.doubleStage.title));
+
+    if (areaKey || areaName) {
+      const found = DOUBLE_STAGE_FALLBACK.find(s =>
+        String(s.areaKey) === String(areaKey) ||
+        String(s.areaName) === String(areaName) ||
+        String(s.title) === String(areaName)
+      );
+
+      if (found) return clone(found);
+    }
+
+    return clone(DOUBLE_STAGE_FALLBACK.find(s => Number(s.id) === normalizeDoubleStageId(0, diffKey)) || DOUBLE_STAGE_FALLBACK[0]);
+  }
+
   function getDoubleInfo(){
     const diffKey = normalizeDifficultyKey(
       difficultyKey ||
@@ -302,16 +442,8 @@
       'veryHard'
     );
 
-    const id = Number(
-      stageId ||
-      (eventData && eventData.stageId) ||
-      (eventData && eventData.doubleStageId) ||
-      (eventData && eventData.stage && eventData.stage.id) ||
-      1
-    );
-
     let diff = clone(DOUBLE_DIFFICULTY_FALLBACK[diffKey] || DOUBLE_DIFFICULTY_FALLBACK.veryHard);
-    let stage = clone(DOUBLE_STAGE_FALLBACK.find(s => Number(s.id) === id) || DOUBLE_STAGE_FALLBACK[0]);
+    let stage = findDoubleStageFromEvent(eventData, diffKey);
 
     if (window.MobShotEvents && window.MobShotEvents.getCurrentDoubleBoss) {
       const fromEvents = window.MobShotEvents.getCurrentDoubleBoss();
@@ -322,8 +454,34 @@
       }
 
       if (fromEvents && fromEvents.stage) {
-        stage = Object.assign(stage, fromEvents.stage);
-        stage.id = id || stage.id;
+        const stageFromEvents = findDoubleStageFromEvent({
+          stage:fromEvents.stage,
+          stageId:fromEvents.stage.id,
+          bossA:fromEvents.stage.bossA,
+          bossB:fromEvents.stage.bossB,
+          areaKey:fromEvents.stage.areaKey,
+          areaName:fromEvents.stage.areaName,
+          title:fromEvents.stage.title,
+          background:fromEvents.stage.background
+        }, diffKey);
+
+        if (
+          Number(stageFromEvents.id || 0) !== 1 ||
+          Number(stage.id || 0) === 1 ||
+          !eventData ||
+          !(
+            eventData.stageId ||
+            eventData.doubleStageId ||
+            eventData.doubleBossStageId ||
+            eventData.selectedStageId ||
+            eventData.bossA ||
+            eventData.bossB ||
+            eventData.stage ||
+            eventData.doubleStage
+          )
+        ) {
+          stage = Object.assign(stage, stageFromEvents);
+        }
       }
     }
 
@@ -332,17 +490,28 @@
       diff.key = diffKey;
     }
 
-    if (eventData && eventData.stage) {
-      stage = Object.assign(stage, eventData.stage);
-      stage.id = id || stage.id;
+    if (eventData) {
+      const explicitStage = findDoubleStageFromEvent(eventData, diffKey);
+
+      if (
+        eventData.stageId ||
+        eventData.doubleStageId ||
+        eventData.doubleBossStageId ||
+        eventData.selectedStageId ||
+        eventData.bossA ||
+        eventData.bossB ||
+        eventData.stage ||
+        eventData.doubleStage ||
+        eventData.areaKey ||
+        eventData.areaName
+      ) {
+        stage = explicitStage;
+      }
     }
 
-    if (eventData && eventData.bossA) stage.bossA = eventData.bossA;
-    if (eventData && eventData.bossB) stage.bossB = eventData.bossB;
-    if (eventData && eventData.areaKey) stage.areaKey = eventData.areaKey;
-    if (eventData && eventData.areaName) stage.areaName = eventData.areaName;
-    if (eventData && eventData.title) stage.title = eventData.title;
-    if (eventData && eventData.background) stage.background = eventData.background;
+    if (diffKey !== 'legend' && stage.legendOnly) {
+      stage = clone(DOUBLE_STAGE_FALLBACK.find(s => Number(s.id) === 6) || DOUBLE_STAGE_FALLBACK[0]);
+    }
 
     stage.bossA = canonicalBossName(stage.bossA);
     stage.bossB = canonicalBossName(stage.bossB);
@@ -352,6 +521,8 @@
       stage.bossA = stage.bossA || fallbackStage.bossA;
       stage.bossB = stage.bossB || fallbackStage.bossB;
     }
+
+    diff.key = diffKey;
 
     return { difficulty:diff, stage };
   }
@@ -740,6 +911,18 @@
     api.state.entities.push(makeChestEntity(def, api, hpMul, coinMul));
   }
 
+  function spawnEventGate(api){
+    if (!window.MobShotSpawn || !window.MobShotSpawn.spawnGatePair) return;
+    if (!api || !api.makeTools) return;
+
+    try {
+      window.MobShotSpawn.spawnGatePair(api.makeTools());
+      if (api.addText) api.addText('GATE', api.W / 2, api.H * 0.34, '#6be6ff');
+    } catch(err) {
+      console.error('event gate spawn error:', err);
+    }
+  }
+
   function spawnGoldBosses(api){
     if (spawnedBoss) return;
 
@@ -881,32 +1064,27 @@
     const state = api.state;
     const info = getDoubleInfo();
     const diff = info.difficulty;
-    const enemyPower = eventEnemyPowerMul(diff.key);
 
     localFrame++;
 
-    if (localFrame === 1) api.showBanner(`ダブルボス ${diff.name}`);
-    if (localFrame >= 60) spawnDoubleBosses(api);
+    if (localFrame === 1) {
+      api.showBanner(`ダブルボス ${info.stage.title}`);
+    }
 
-    if (localFrame >= nextEnemyAt) {
-      if (diff.key !== 'veryHard') {
-        spawnAreaEnemy(
-          api,
-          info.stage.areaKey,
-          Number(diff.hpMul || 1) * 0.4 * enemyPower,
-          Number(diff.scoreMul || 1)
-        );
-      }
+    if (localFrame >= 60) {
+      spawnDoubleBosses(api);
+    }
 
-      nextEnemyAt = localFrame + intRand(
-        diff.key === 'legend' ? 125 : diff.key === 'inferno' ? 150 : 170,
-        diff.key === 'legend' ? 190 : diff.key === 'inferno' ? 230 : 255
-      );
+    if (localFrame >= nextGateAt) {
+      spawnEventGate(api);
+      nextGateAt = localFrame + 1200;
     }
 
     const bossAlive = state.entities.some(e => !e.dead && e.kind === 'boss');
 
-    if (spawnedBoss && !bossAlive && localFrame > 120) api.finishRun(true);
+    if (spawnedBoss && !bossAlive && localFrame > 120) {
+      api.finishRun(true);
+    }
 
     return true;
   }
@@ -1533,6 +1711,7 @@
     nextEnemyAt = 120;
     nextChestAt = 170;
     nextGimmickAt = 150;
+    nextGateAt = 1200;
     spawnedBoss = false;
     scoreAttackIndex = 0;
     finishBonusApplied = false;
@@ -1559,7 +1738,17 @@
     active = true;
     eventType = eventData.key;
     difficultyKey = normalizeDifficultyKey(eventData.difficulty || eventData.difficultyKey || '');
-    stageId = Number(eventData.stageId || eventData.doubleStageId || (eventData.stage && eventData.stage.id) || 0);
+    stageId = Number(
+      eventData.stageId ||
+      eventData.doubleStageId ||
+      eventData.doubleBossStageId ||
+      eventData.selectedStageId ||
+      (eventData.stage && eventData.stage.id) ||
+      (eventData.doubleStage && eventData.doubleStage.id) ||
+      0
+    );
+
+    retryEventData = clone(eventData);
 
     resetLocalState();
 
@@ -1589,7 +1778,7 @@
       api.setEventMode({ active:true, key:'doubleBoss' });
       setStageVisual(
         api,
-        `DOUBLE ${info.difficulty.name}`,
+        `DOUBLE ${info.stage.title}`,
         info.stage.background || null,
         info.stage.areaKey,
         info.stage.areaName
@@ -1664,6 +1853,11 @@
     let text = clear ? 'イベントクリア！' : 'イベント失敗';
     let bonusCoin = 0;
     let bonusDiamond = 0;
+
+    const retryCopy = eventData ? clone(eventData) : retryEventData ? clone(retryEventData) : null;
+    if (retryCopy && retryCopy.key) {
+      retryEventData = retryCopy;
+    }
 
     if (clear && eventType === 'gold') {
       const diff = getGoldDifficulty();
@@ -1827,6 +2021,38 @@
     return;
   }
 
+  function shouldRestoreRetryEvent(btn){
+    if (!btn || btn.id !== 'resultRetryBtn') return false;
+    if (!retryEventData || !retryEventData.key) return false;
+
+    const text = String(btn.textContent || '').trim();
+
+    return text === 'もう一度';
+  }
+
+  function restoreRetryEventForButton(e){
+    const btn = e && e.target && e.target.closest ? e.target.closest('#resultRetryBtn') : null;
+    if (!shouldRestoreRetryEvent(btn)) return;
+
+    writeEventRequest(retryEventData);
+  }
+
+  function bindRetryRestore(){
+    if (document.__mobShotEventRetryRestoreBound) return;
+    document.__mobShotEventRetryRestoreBound = true;
+
+    document.addEventListener('pointerdown', restoreRetryEventForButton, true);
+    document.addEventListener('click', restoreRetryEventForButton, true);
+  }
+
+  bindRetryRestore();
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindRetryRestore);
+  } else {
+    bindRetryRestore();
+  }
+
   window.MobShotGameEvents = {
     startCurrentEvent,
     update,
@@ -1834,6 +2060,7 @@
     draw,
     onEntityKilled,
     beforeFinish,
-    canonicalBossName
+    canonicalBossName,
+    getDoubleInfo
   };
 })();
