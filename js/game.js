@@ -25,7 +25,8 @@
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
   const EVENT_START_VALID_MS = 12000;
 
-  const IMAGE_VER = '20260621_wait_all_images_v1';
+  const IMAGE_VER = '20260621_fast_critical_preload_v1';
+  const CRITICAL_PRELOAD_TIMEOUT = 3600;
 
   const ADMIN_MAX_COIN = 999999999;
   const ADMIN_MAX_DIAMOND = 999999999;
@@ -43,6 +44,33 @@
     veryHard: 'mt/game3.png',
     inferno: 'mt/game4.png',
     legend: 'mt/game5.png'
+  };
+
+  const BOSS_IMAGE_BY_NAME = {
+    'ホークモブ':'boss/hawks.png',
+    'ホークモブⅡ':'boss/hawks2.png',
+    'ホークモブII':'boss/hawks2.png',
+    'ミラモブ':'boss/miraboss.png',
+    'ミラモブⅡ':'boss/bossmira2.png',
+    'ミラモブII':'boss/bossmira2.png',
+    'モブガーディアン':'boss/bossban.png',
+    'モブガーディアンⅡ':'boss/bossban2.png',
+    'モブガーディアンII':'boss/bossban2.png',
+    'ネオンモブ':'boss/bossneon.png',
+    'ネオンモブⅡ':'boss/bossneon2.png',
+    'ネオンモブII':'boss/bossneon2.png',
+    'ドラゴンモブ':'boss/bossdragoon.png',
+    'ドラゴンモブⅡ':'boss/bossdragoon2.png',
+    'ドラゴンモブII':'boss/bossdragoon2.png',
+    'モブリリス':'boss/bossriris.png',
+    'モブ魔王':'boss/bossmaoh.png',
+    'モブメイル':'boss/bossmeiru.png',
+    'モブスミス':'boss/bosssmith.png',
+    'モブネプ':'boss/bossmobnep.png',
+    'ブルネオモブ':'boss/bossneonblue.png',
+    'パルネオモブ':'boss/bossneonpur.png',
+    '閻魔モブ':'boss/bossenmob.png',
+    'ウルモブリリス':'boss/bossulriri.png'
   };
 
   const RUN_BOSS_IMAGES = [
@@ -608,28 +636,31 @@
         return;
       }
 
-      const oldOnLoad = image.onload;
-      const oldOnError = image.onerror;
-
       image.onload = function(){
         image.__mobReady = true;
-        if (typeof oldOnLoad === 'function') {
-          try { oldOnLoad.call(image); } catch(e) {}
-        }
         resolve(true);
       };
 
       image.onerror = function(){
         image.__mobError = true;
         console.warn('画像が読み込めません:', src);
-        if (typeof oldOnError === 'function') {
-          try { oldOnError.call(image); } catch(e) {}
-        }
         resolve(false);
       };
 
       if (!image.src) image.src = imageUrl(src);
     });
+  }
+
+  function preloadImageWithTimeout(src, timeoutMs){
+    return Promise.race([
+      preloadImage(src),
+      new Promise(resolve => {
+        setTimeout(function(){
+          console.warn('画像読み込み待機タイムアウト:', src);
+          resolve(false);
+        }, timeoutMs);
+      })
+    ]);
   }
 
   function uniqueAssets(list){
@@ -728,21 +759,53 @@
     return uniqueAssets(list);
   }
 
+  function collectCriticalRunAssets(){
+    const list = [];
+
+    list.push(state.playerImage);
+    list.push(state.bulletImage);
+
+    if (D && D.stage && D.stage.background) {
+      list.push(D.stage.background);
+    }
+
+    state.entities.forEach(entity => pushEntityAssets(list, entity));
+
+    if (currentRunEventRequest) {
+      if (currentRunEventRequest.background) list.push(currentRunEventRequest.background);
+      if (currentRunEventRequest.stage && currentRunEventRequest.stage.background) list.push(currentRunEventRequest.stage.background);
+      if (currentRunEventRequest.doubleStage && currentRunEventRequest.doubleStage.background) list.push(currentRunEventRequest.doubleStage.background);
+      if (currentRunEventRequest.bossA && BOSS_IMAGE_BY_NAME[currentRunEventRequest.bossA]) list.push(BOSS_IMAGE_BY_NAME[currentRunEventRequest.bossA]);
+      if (currentRunEventRequest.bossB && BOSS_IMAGE_BY_NAME[currentRunEventRequest.bossB]) list.push(BOSS_IMAGE_BY_NAME[currentRunEventRequest.bossB]);
+      if (currentRunEventRequest.stage && currentRunEventRequest.stage.bossA && BOSS_IMAGE_BY_NAME[currentRunEventRequest.stage.bossA]) list.push(BOSS_IMAGE_BY_NAME[currentRunEventRequest.stage.bossA]);
+      if (currentRunEventRequest.stage && currentRunEventRequest.stage.bossB && BOSS_IMAGE_BY_NAME[currentRunEventRequest.stage.bossB]) list.push(BOSS_IMAGE_BY_NAME[currentRunEventRequest.stage.bossB]);
+      if (currentRunEventRequest.doubleStage && currentRunEventRequest.doubleStage.bossA && BOSS_IMAGE_BY_NAME[currentRunEventRequest.doubleStage.bossA]) list.push(BOSS_IMAGE_BY_NAME[currentRunEventRequest.doubleStage.bossA]);
+      if (currentRunEventRequest.doubleStage && currentRunEventRequest.doubleStage.bossB && BOSS_IMAGE_BY_NAME[currentRunEventRequest.doubleStage.bossB]) list.push(BOSS_IMAGE_BY_NAME[currentRunEventRequest.doubleStage.bossB]);
+    }
+
+    if (D && D.enemies && D.enemies.boss) {
+      pushEntityAssets(list, D.enemies.boss);
+    }
+
+    return uniqueAssets(list);
+  }
+
   async function preloadCurrentRunAssets(){
-    const assets = collectCurrentRunAssets();
+    const critical = collectCriticalRunAssets();
+    const allAssets = collectCurrentRunAssets();
 
-    if (!assets.length) return;
+    if (critical.length) {
+      showBanner(`画像読み込み中... ${critical.length}`);
+      await Promise.allSettled(
+        critical.map(src => preloadImageWithTimeout(src, CRITICAL_PRELOAD_TIMEOUT))
+      );
+    }
 
-    const pending = assets
-      .filter(src => {
-        const image = images.get(src);
-        return !isImageReady(image) && !(image && image.__mobError);
-      })
-      .map(src => preloadImage(src));
+    const lazyAssets = allAssets.filter(src => !critical.includes(src));
 
-    if (!pending.length) return;
-
-    await Promise.allSettled(pending);
+    lazyAssets.forEach(src => {
+      preloadImage(src).catch(function(){});
+    });
   }
 
   function getPlayerBaseY(){
