@@ -25,7 +25,7 @@
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
   const EVENT_START_VALID_MS = 12000;
 
-  const IMAGE_VER = '20260621_fast_critical_preload_v1';
+  const IMAGE_VER = '20260621_fast_critical_preload_v2';
   const CRITICAL_PRELOAD_TIMEOUT = 3600;
 
   const ADMIN_MAX_COIN = 999999999;
@@ -461,7 +461,12 @@
 
     document.querySelectorAll('button').forEach(btn => {
       if (!btn) return;
+
       if (btn === resultRetryBtn || btn === resultHomeBtn) return;
+      if (btn.id === 'gameBackBtn') return;
+      if (btn.id === 'backBtn') return;
+      if (btn.id === 'testClearBtn') return;
+      if (btn.classList.contains('give-up-btn')) return;
 
       const id = String(btn.id || '').trim();
       const text = String(btn.textContent || '').replace(/\s/g, '').trim().toUpperCase();
@@ -1848,6 +1853,9 @@
     if (giveUpBtn) {
       giveUpBtn.style.display = '';
       giveUpBtn.textContent = '諦める';
+      giveUpBtn.disabled = false;
+      giveUpBtn.removeAttribute('aria-hidden');
+      giveUpBtn.classList.remove('hidden');
       giveUpBtn.classList.add('give-up-btn');
     }
 
