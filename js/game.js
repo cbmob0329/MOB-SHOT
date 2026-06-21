@@ -25,8 +25,7 @@
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
   const EVENT_START_VALID_MS = 12000;
 
-  const IMAGE_VER = '20260620_run_asset_preload_v3';
-  const RUN_PRELOAD_TIMEOUT = 1800;
+  const IMAGE_VER = '20260621_wait_all_images_v1';
 
   const ADMIN_MAX_COIN = 999999999;
   const ADMIN_MAX_DIAMOND = 999999999;
@@ -154,6 +153,29 @@
     texts: []
   };
 
+  function clone(obj){
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  function rand(a, b){ return a + Math.random() * (b - a); }
+  function intRand(a, b){ return Math.floor(rand(a, b + 1)); }
+  function pick(arr){ return arr && arr.length ? arr[Math.floor(Math.random() * arr.length)] : null; }
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+  function weightedPick(list){
+    if (!list || !list.length) return null;
+
+    const total = list.reduce((sum, item) => sum + (item.weight || 1), 0);
+    let roll = Math.random() * total;
+
+    for (const item of list) {
+      roll -= item.weight || 1;
+      if (roll <= 0) return item;
+    }
+
+    return list[list.length - 1];
+  }
+
   function isAdminMode(){
     if (window.MobShotMain && window.MobShotMain.isAdminMode) {
       return !!window.MobShotMain.isAdminMode();
@@ -174,13 +196,11 @@
     if (window.MobShotStorage && window.MobShotStorage.load && window.MobShotStorage.save) {
       try {
         save = window.MobShotStorage.load() || {};
-
         save.coin = ADMIN_MAX_COIN;
         save.diamond = ADMIN_MAX_DIAMOND;
         save.rank = ADMIN_MAX_RANK;
         save.totalScore = ADMIN_MAX_SCORE;
         save.bestScore = Math.max(Number(save.bestScore || 0), ADMIN_MAX_SCORE);
-
         window.MobShotStorage.save(save);
       } catch(e) {
         console.error('admin max save error:', e);
@@ -188,13 +208,11 @@
     } else {
       try {
         save = JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
-
         save.coin = ADMIN_MAX_COIN;
         save.diamond = ADMIN_MAX_DIAMOND;
         save.rank = ADMIN_MAX_RANK;
         save.totalScore = ADMIN_MAX_SCORE;
         save.bestScore = Math.max(Number(save.bestScore || 0), ADMIN_MAX_SCORE);
-
         localStorage.setItem('mobshot_split_v1', JSON.stringify(save));
       } catch(e) {
         console.error('admin max localStorage error:', e);
@@ -248,60 +266,9 @@
     if (!ev || !ev.key) return false;
 
     const startedAt = Number(ev.startedAt || 0);
-
     if (!startedAt) return false;
 
     return Date.now() - startedAt <= EVENT_START_VALID_MS;
-  }
-
-  function refreshAdminButtons(){
-    const giveUpBtn = document.getElementById('gameBackBtn');
-
-    if (giveUpBtn) {
-      giveUpBtn.style.display = '';
-      giveUpBtn.textContent = '諦める';
-      giveUpBtn.classList.add('give-up-btn');
-    }
-
-    const legacyBack = document.getElementById('backBtn');
-    if (legacyBack) {
-      legacyBack.style.display = isAdminMode() ? '' : 'none';
-    }
-
-    const testBtn = document.getElementById('testClearBtn');
-
-    if (testBtn) {
-      if (isAdminMode()) {
-        testBtn.style.display = '';
-      } else {
-        testBtn.remove();
-      }
-    }
-  }
-
-  function getCollectionBonus(){
-    if (
-      window.MobShotCollection &&
-      window.MobShotCollection.calcCollectionBonus
-    ) {
-      const bonus = window.MobShotCollection.calcCollectionBonus() || {};
-
-      return {
-        score:Math.max(0, Number(bonus.score || 0)),
-        coin:Math.max(0, Number(bonus.coin || 0)),
-        hp:Math.max(0, Number(bonus.hp || 0)),
-        power:Math.max(0, Number(bonus.power || 0)),
-        range:Math.max(0, Number(bonus.range || 0))
-      };
-    }
-
-    return {
-      score:0,
-      coin:0,
-      hp:0,
-      power:0,
-      range:0
-    };
   }
 
   function injectHudStyle(){
@@ -375,21 +342,6 @@
         overflow:hidden;
       }
 
-      .mob-rankup-card::before,
-      .mob-rankup-card::after{
-        content:"";
-        position:absolute;
-        width:180px;
-        height:180px;
-        border-radius:50%;
-        background:radial-gradient(circle,rgba(255,230,107,.75),rgba(255,230,107,0) 68%);
-        animation:mobRankGlow 1.8s ease-in-out infinite;
-        pointer-events:none;
-      }
-
-      .mob-rankup-card::before{left:-70px;top:-80px;}
-      .mob-rankup-card::after{right:-70px;bottom:-80px;animation-delay:-.9s;}
-
       .mob-rankup-title{
         position:relative;
         z-index:2;
@@ -399,7 +351,6 @@
         letter-spacing:.04em;
         color:#ffe66b;
         text-shadow:0 5px 0 #000,0 0 18px rgba(255,230,107,.65);
-        animation:mobRankPop .42s ease-out both;
       }
 
       .mob-rankup-sub{
@@ -466,34 +417,6 @@
         background:linear-gradient(#fff178,#ffb423);
         box-shadow:0 6px 0 rgba(0,0,0,.38);
       }
-
-      .mob-rankup-spark{
-        position:absolute;
-        z-index:1;
-        width:8px;
-        height:8px;
-        border-radius:50%;
-        background:#fff178;
-        box-shadow:0 0 14px rgba(255,230,107,.9);
-        animation:mobRankSpark 1.2s ease-out infinite;
-      }
-
-      @keyframes mobRankGlow{
-        0%,100%{opacity:.55; transform:scale(.92)}
-        50%{opacity:1; transform:scale(1.12)}
-      }
-
-      @keyframes mobRankPop{
-        0%{transform:scale(.65); opacity:0}
-        70%{transform:scale(1.08); opacity:1}
-        100%{transform:scale(1); opacity:1}
-      }
-
-      @keyframes mobRankSpark{
-        0%{transform:translateY(18px) scale(.6); opacity:0}
-        20%{opacity:1}
-        100%{transform:translateY(-80px) scale(1.25); opacity:0}
-      }
     `;
     document.head.appendChild(style);
   }
@@ -510,7 +433,6 @@
 
     document.querySelectorAll('button').forEach(btn => {
       if (!btn) return;
-
       if (btn === resultRetryBtn || btn === resultHomeBtn) return;
 
       const id = String(btn.id || '').trim();
@@ -548,12 +470,6 @@
 
     modal.innerHTML = `
       <div class="mob-rankup-card">
-        <span class="mob-rankup-spark" style="left:12%;bottom:25%;animation-delay:0s"></span>
-        <span class="mob-rankup-spark" style="left:28%;bottom:18%;animation-delay:-.25s"></span>
-        <span class="mob-rankup-spark" style="left:48%;bottom:20%;animation-delay:-.5s"></span>
-        <span class="mob-rankup-spark" style="left:70%;bottom:16%;animation-delay:-.75s"></span>
-        <span class="mob-rankup-spark" style="left:86%;bottom:27%;animation-delay:-1s"></span>
-
         <div class="mob-rankup-title">RANK UP!</div>
         <div id="mobRankUpSub" class="mob-rankup-sub">ランクが上がりました！</div>
         <div class="mob-rankup-rank">
@@ -631,10 +547,6 @@
     img.src = src;
   }
 
-  function clone(obj){
-    return JSON.parse(JSON.stringify(obj));
-  }
-
   function restoreBaseData(){
     if (!D) return;
 
@@ -685,21 +597,36 @@
 
       const image = getImage(src);
 
-      if (isImageReady(image) || image.__mobError) {
+      if (isImageReady(image)) {
+        image.__mobReady = true;
         resolve(true);
         return;
       }
 
-      const done = function(ok){
-        image.onload = null;
-        image.onerror = null;
-        if (ok) image.__mobReady = true;
-        else image.__mobError = true;
-        resolve(ok);
+      if (image.__mobError) {
+        resolve(false);
+        return;
+      }
+
+      const oldOnLoad = image.onload;
+      const oldOnError = image.onerror;
+
+      image.onload = function(){
+        image.__mobReady = true;
+        if (typeof oldOnLoad === 'function') {
+          try { oldOnLoad.call(image); } catch(e) {}
+        }
+        resolve(true);
       };
 
-      image.onload = function(){ done(true); };
-      image.onerror = function(){ done(false); };
+      image.onerror = function(){
+        image.__mobError = true;
+        console.warn('画像が読み込めません:', src);
+        if (typeof oldOnError === 'function') {
+          try { oldOnError.call(image); } catch(e) {}
+        }
+        resolve(false);
+      };
 
       if (!image.src) image.src = imageUrl(src);
     });
@@ -815,10 +742,7 @@
 
     if (!pending.length) return;
 
-    await Promise.race([
-      Promise.allSettled(pending),
-      new Promise(resolve => setTimeout(resolve, RUN_PRELOAD_TIMEOUT))
-    ]);
+    await Promise.allSettled(pending);
   }
 
   function getPlayerBaseY(){
@@ -832,25 +756,6 @@
       e.target.closest &&
       e.target.closest('#skillHud')
     );
-  }
-
-  function rand(a, b){ return a + Math.random() * (b - a); }
-  function intRand(a, b){ return Math.floor(rand(a, b + 1)); }
-  function pick(arr){ return arr && arr.length ? arr[Math.floor(Math.random() * arr.length)] : null; }
-  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
-
-  function weightedPick(list){
-    if (!list || !list.length) return null;
-
-    const total = list.reduce((sum, item) => sum + (item.weight || 1), 0);
-    let roll = Math.random() * total;
-
-    for (const item of list) {
-      roll -= item.weight || 1;
-      if (roll <= 0) return item;
-    }
-
-    return list[list.length - 1];
   }
 
   function getShopBonus(){
@@ -883,6 +788,31 @@
     }
 
     return null;
+  }
+
+  function getCollectionBonus(){
+    if (
+      window.MobShotCollection &&
+      window.MobShotCollection.calcCollectionBonus
+    ) {
+      const bonus = window.MobShotCollection.calcCollectionBonus() || {};
+
+      return {
+        score:Math.max(0, Number(bonus.score || 0)),
+        coin:Math.max(0, Number(bonus.coin || 0)),
+        hp:Math.max(0, Number(bonus.hp || 0)),
+        power:Math.max(0, Number(bonus.power || 0)),
+        range:Math.max(0, Number(bonus.range || 0))
+      };
+    }
+
+    return {
+      score:0,
+      coin:0,
+      hp:0,
+      power:0,
+      range:0
+    };
   }
 
   function getCurrentStageInfo(){
@@ -1061,6 +991,7 @@
     updateSkillHudImages();
 
     if (resultPanel) resultPanel.classList.add('hidden');
+
     if (resultRetryBtn) {
       resultRetryBtn.style.display = '';
       resultRetryBtn.textContent = 'もう一度';
@@ -1068,6 +999,7 @@
       resultRetryBtn.classList.remove('hidden');
       resultRetryBtn.removeAttribute('aria-hidden');
     }
+
     if (resultHomeBtn) {
       resultHomeBtn.style.display = '';
       resultHomeBtn.textContent = 'メインへ戻る';
@@ -1107,6 +1039,7 @@
 
     running = false;
     resetRun();
+
     showBanner('画像読み込み中...');
 
     try {
@@ -1117,6 +1050,7 @@
 
     if (token !== startToken) return;
 
+    showBanner('START!');
     running = true;
     loop();
   }
@@ -1843,6 +1777,31 @@
         goMainFromResult();
       }, { passive:false });
     });
+  }
+
+  function refreshAdminButtons(){
+    const giveUpBtn = document.getElementById('gameBackBtn');
+
+    if (giveUpBtn) {
+      giveUpBtn.style.display = '';
+      giveUpBtn.textContent = '諦める';
+      giveUpBtn.classList.add('give-up-btn');
+    }
+
+    const legacyBack = document.getElementById('backBtn');
+    if (legacyBack) {
+      legacyBack.style.display = isAdminMode() ? '' : 'none';
+    }
+
+    const testBtn = document.getElementById('testClearBtn');
+
+    if (testBtn) {
+      if (isAdminMode()) {
+        testBtn.style.display = '';
+      } else {
+        testBtn.remove();
+      }
+    }
   }
 
   function updateHud(){
