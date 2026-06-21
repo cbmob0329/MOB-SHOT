@@ -25,7 +25,7 @@
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
   const EVENT_START_VALID_MS = 12000;
 
-  const IMAGE_VER = '20260621_giveup_fix_v1';
+  const IMAGE_VER = '20260621_giveup_rebuild_v2';
   const CRITICAL_PRELOAD_TIMEOUT = 3600;
 
   const ADMIN_MAX_COIN = 999999999;
@@ -132,6 +132,7 @@
   let currentRunEventRequest = null;
   let lastEventRetryRequest = null;
   let resultRetryMode = 'normal';
+  let giveUpRequested = false;
 
   const images = new Map();
 
@@ -312,13 +313,14 @@
       #skillHud{z-index:90 !important;pointer-events:auto !important;}
       #resultPanel{z-index:240 !important;}
 
-      #gameBackBtn.give-up-btn,
+      #gameGiveUpBtn,
+      #gameGiveUpBtn.give-up-btn,
       .give-up-btn{
         position:absolute !important;
         left:max(8px, env(safe-area-inset-left)) !important;
         top:max(58px, calc(env(safe-area-inset-top) + 52px)) !important;
         bottom:auto !important;
-        z-index:999 !important;
+        z-index:99999 !important;
         display:block !important;
         pointer-events:auto !important;
         touch-action:manipulation !important;
@@ -332,6 +334,10 @@
         color:#fff !important;
         background:linear-gradient(#ff6b6b,#c72626) !important;
         box-shadow:0 4px 0 #6b1111,0 8px 18px rgba(0,0,0,.35) !important;
+      }
+
+      #gameBackBtn.back-btn{
+        display:none !important;
       }
 
       .game-hud .hud-item span{
@@ -465,8 +471,7 @@
       if (!btn) return;
 
       if (btn === resultRetryBtn || btn === resultHomeBtn) return;
-      if (btn.id === 'gameBackBtn') return;
-      if (btn.id === 'backBtn') return;
+      if (btn.id === 'gameGiveUpBtn') return;
       if (btn.id === 'testClearBtn') return;
       if (btn.classList.contains('give-up-btn')) return;
 
@@ -972,6 +977,7 @@
     pendingRankUp = null;
     resultRetryMode = 'normal';
     currentRunEventRequest = null;
+    giveUpRequested = false;
 
     injectHudStyle();
     ensureRankUpModal();
@@ -1576,11 +1582,13 @@
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
 
     if (resultTitle) {
-      resultTitle.textContent = clear ? 'CLEAR!' : 'GAME OVER';
+      resultTitle.textContent = clear ? 'CLEAR!' : (giveUpRequested ? 'GIVE UP' : 'GAME OVER');
     }
 
     if (resultText) {
-      if (finishData && finishData.text) {
+      if (giveUpRequested) {
+        resultText.textContent = 'ステージを諦めました';
+      } else if (finishData && finishData.text) {
         resultText.textContent = finishData.text;
       } else if (clear && clearInfo) {
         resultText.textContent = `${clearInfo.areaName} ${clearInfo.id} クリア！`;
@@ -1647,6 +1655,8 @@
   }
 
   function giveUpRun(){
+    giveUpRequested = true;
+
     if (runCommitted) {
       goMainFromResult();
       return;
@@ -1675,23 +1685,41 @@
     return false;
   }
 
+  function getGiveUpButton(){
+    return document.getElementById('gameGiveUpBtn') || document.getElementById('gameBackBtn');
+  }
+
   function bindGiveUpButton(){
-    const btn = document.getElementById('gameBackBtn');
+    injectHudStyle();
+
+    let btn = getGiveUpButton();
     if (!btn) return;
 
-    btn.style.pointerEvents = 'auto';
-    btn.disabled = false;
-    btn.removeAttribute('aria-hidden');
-    btn.classList.remove('hidden');
-    btn.classList.add('give-up-btn');
-    btn.textContent = '諦める';
+    if (btn.id !== 'gameGiveUpBtn') {
+      btn.id = 'gameGiveUpBtn';
+    }
 
-    if (btn.__mobGiveUpBound) return;
-    btn.__mobGiveUpBound = true;
+    const parent = btn.parentNode;
+    if (!parent) return;
 
-    btn.addEventListener('pointerdown', forceGiveUpFromButton, { passive:false });
-    btn.addEventListener('click', forceGiveUpFromButton, { passive:false });
-    btn.addEventListener('touchstart', forceGiveUpFromButton, { passive:false });
+    const newBtn = btn.cloneNode(true);
+    newBtn.id = 'gameGiveUpBtn';
+    newBtn.type = 'button';
+    newBtn.textContent = '諦める';
+    newBtn.classList.remove('back-btn');
+    newBtn.classList.add('give-up-btn');
+    newBtn.disabled = false;
+    newBtn.removeAttribute('aria-hidden');
+    newBtn.style.display = '';
+    newBtn.style.pointerEvents = 'auto';
+    newBtn.style.zIndex = '99999';
+
+    parent.replaceChild(newBtn, btn);
+
+    newBtn.addEventListener('pointerdown', forceGiveUpFromButton, { passive:false });
+    newBtn.addEventListener('pointerup', forceGiveUpFromButton, { passive:false });
+    newBtn.addEventListener('touchstart', forceGiveUpFromButton, { passive:false });
+    newBtn.addEventListener('click', forceGiveUpFromButton, { passive:false });
   }
 
   function testClearNow(){
@@ -1800,6 +1828,7 @@
     resultRetryMode = 'normal';
     currentRunEventRequest = null;
     lastEventRetryRequest = null;
+    giveUpRequested = false;
 
     if (isAdminMode()) {
       applyAdminMaxSave();
@@ -1876,12 +1905,14 @@
   }
 
   function refreshAdminButtons(){
-    const giveUpBtn = document.getElementById('gameBackBtn');
+    injectHudStyle();
+
+    const giveUpBtn = document.getElementById('gameGiveUpBtn');
 
     if (giveUpBtn) {
       giveUpBtn.style.display = '';
       giveUpBtn.style.pointerEvents = 'auto';
-      giveUpBtn.style.zIndex = '999';
+      giveUpBtn.style.zIndex = '99999';
       giveUpBtn.textContent = '諦める';
       giveUpBtn.disabled = false;
       giveUpBtn.removeAttribute('aria-hidden');
@@ -1889,7 +1920,10 @@
       giveUpBtn.classList.add('give-up-btn');
     }
 
-    bindGiveUpButton();
+    const legacyGameBack = document.getElementById('gameBackBtn');
+    if (legacyGameBack && legacyGameBack.id !== 'gameGiveUpBtn') {
+      legacyGameBack.style.display = 'none';
+    }
 
     const legacyBack = document.getElementById('backBtn');
     if (legacyBack) {
