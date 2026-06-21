@@ -25,7 +25,7 @@
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
   const EVENT_START_VALID_MS = 12000;
 
-  const IMAGE_VER = '20260621_fast_critical_preload_v2';
+  const IMAGE_VER = '20260621_giveup_fix_v1';
   const CRITICAL_PRELOAD_TIMEOUT = 3600;
 
   const ADMIN_MAX_COIN = 999999999;
@@ -318,10 +318,12 @@
         left:max(8px, env(safe-area-inset-left)) !important;
         top:max(58px, calc(env(safe-area-inset-top) + 52px)) !important;
         bottom:auto !important;
-        z-index:180 !important;
+        z-index:999 !important;
         display:block !important;
         pointer-events:auto !important;
         touch-action:manipulation !important;
+        user-select:none !important;
+        -webkit-user-select:none !important;
         border:0 !important;
         border-radius:999px !important;
         padding:8px 12px !important;
@@ -1101,6 +1103,7 @@
 
     resize();
     refreshAdminButtons();
+    bindGiveUpButton();
     createTestClearButton();
     hideLegacyNextButtons();
     stopLoopOnly();
@@ -1658,6 +1661,39 @@
     finishRun(false);
   }
 
+  function forceGiveUpFromButton(e){
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (e.stopImmediatePropagation) {
+        e.stopImmediatePropagation();
+      }
+    }
+
+    giveUpRun();
+    return false;
+  }
+
+  function bindGiveUpButton(){
+    const btn = document.getElementById('gameBackBtn');
+    if (!btn) return;
+
+    btn.style.pointerEvents = 'auto';
+    btn.disabled = false;
+    btn.removeAttribute('aria-hidden');
+    btn.classList.remove('hidden');
+    btn.classList.add('give-up-btn');
+    btn.textContent = '諦める';
+
+    if (btn.__mobGiveUpBound) return;
+    btn.__mobGiveUpBound = true;
+
+    btn.addEventListener('pointerdown', forceGiveUpFromButton, { passive:false });
+    btn.addEventListener('click', forceGiveUpFromButton, { passive:false });
+    btn.addEventListener('touchstart', forceGiveUpFromButton, { passive:false });
+  }
+
   function testClearNow(){
     if (!running || runCommitted) return;
 
@@ -1791,7 +1827,7 @@
   }
 
   function bindResultButtons(){
-    ['resultHomeBtn', 'gameBackBtn', 'backBtn', 'resultRetryBtn'].forEach(id => {
+    ['resultHomeBtn', 'backBtn', 'resultRetryBtn'].forEach(id => {
       const btn = document.getElementById(id);
       if (!btn || btn.__mobShotBound) return;
 
@@ -1800,11 +1836,6 @@
       btn.addEventListener('click', function(e){
         e.preventDefault();
         e.stopPropagation();
-
-        if (id === 'gameBackBtn') {
-          giveUpRun();
-          return;
-        }
 
         if (id === 'backBtn' && !isAdminMode()) return;
 
@@ -1825,11 +1856,6 @@
         e.preventDefault();
         e.stopPropagation();
 
-        if (id === 'gameBackBtn') {
-          giveUpRun();
-          return;
-        }
-
         if (id === 'backBtn' && !isAdminMode()) return;
 
         if (id === 'resultRetryBtn') {
@@ -1845,6 +1871,8 @@
         goMainFromResult();
       }, { passive:false });
     });
+
+    bindGiveUpButton();
   }
 
   function refreshAdminButtons(){
@@ -1852,12 +1880,16 @@
 
     if (giveUpBtn) {
       giveUpBtn.style.display = '';
+      giveUpBtn.style.pointerEvents = 'auto';
+      giveUpBtn.style.zIndex = '999';
       giveUpBtn.textContent = '諦める';
       giveUpBtn.disabled = false;
       giveUpBtn.removeAttribute('aria-hidden');
       giveUpBtn.classList.remove('hidden');
       giveUpBtn.classList.add('give-up-btn');
     }
+
+    bindGiveUpButton();
 
     const legacyBack = document.getElementById('backBtn');
     if (legacyBack) {
@@ -2073,12 +2105,14 @@
   window.addEventListener('mobshot:adminModeChanged', function(){
     applyAdminMaxSave();
     refreshAdminButtons();
+    bindGiveUpButton();
     createTestClearButton();
     hideLegacyNextButtons();
   });
 
   window.addEventListener('DOMContentLoaded', function(){
     bindResultButtons();
+    bindGiveUpButton();
     applyAdminMaxSave();
     refreshAdminButtons();
     createTestClearButton();
@@ -2088,6 +2122,7 @@
   });
 
   bindResultButtons();
+  bindGiveUpButton();
   applyAdminMaxSave();
   refreshAdminButtons();
   createTestClearButton();
