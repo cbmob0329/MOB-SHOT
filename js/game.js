@@ -25,7 +25,7 @@
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
   const EVENT_START_VALID_MS = 12000;
 
-  const IMAGE_VER = '20260620_run_asset_preload_v2';
+  const IMAGE_VER = '20260620_run_asset_preload_v3';
   const RUN_PRELOAD_TIMEOUT = 1800;
 
   const ADMIN_MAX_COIN = 999999999;
@@ -498,6 +498,44 @@
     document.head.appendChild(style);
   }
 
+  function hideLegacyNextButtons(){
+    const denyIds = {
+      nextBtn:true,
+      resultNextBtn:true,
+      nextStageBtn:true,
+      resultProceedBtn:true,
+      eventNextBtn:true,
+      clearNextBtn:true
+    };
+
+    document.querySelectorAll('button').forEach(btn => {
+      if (!btn) return;
+
+      if (btn === resultRetryBtn || btn === resultHomeBtn) return;
+
+      const id = String(btn.id || '').trim();
+      const text = String(btn.textContent || '').replace(/\s/g, '').trim().toUpperCase();
+
+      const shouldHide =
+        !!denyIds[id] ||
+        text === '次に進む' ||
+        text === '次へ進む' ||
+        text === '次にすすむ' ||
+        text === '次へすすむ' ||
+        text === 'NEXT' ||
+        text === 'NEXTSTAGE' ||
+        text === '進む' ||
+        text === 'すすむ';
+
+      if (shouldHide) {
+        btn.style.display = 'none';
+        btn.disabled = true;
+        btn.setAttribute('aria-hidden', 'true');
+        btn.classList.add('hidden');
+      }
+    });
+  }
+
   function ensureRankUpModal(){
     injectHudStyle();
 
@@ -940,6 +978,7 @@
     refreshAdminButtons();
     restoreBaseData();
     applyAdminMaxSave();
+    hideLegacyNextButtons();
 
     const hasFreshEvent = isFreshEventRequest();
 
@@ -1025,11 +1064,19 @@
     if (resultRetryBtn) {
       resultRetryBtn.style.display = '';
       resultRetryBtn.textContent = 'もう一度';
+      resultRetryBtn.disabled = false;
+      resultRetryBtn.classList.remove('hidden');
+      resultRetryBtn.removeAttribute('aria-hidden');
     }
     if (resultHomeBtn) {
       resultHomeBtn.style.display = '';
       resultHomeBtn.textContent = 'メインへ戻る';
+      resultHomeBtn.disabled = false;
+      resultHomeBtn.classList.remove('hidden');
+      resultHomeBtn.removeAttribute('aria-hidden');
     }
+
+    hideLegacyNextButtons();
 
     if (
       hasFreshEvent &&
@@ -1055,6 +1102,7 @@
     resize();
     refreshAdminButtons();
     createTestClearButton();
+    hideLegacyNextButtons();
     stopLoopOnly();
 
     running = false;
@@ -1415,6 +1463,7 @@
     updateParticles();
     cleanup();
     updateHud();
+    hideLegacyNextButtons();
 
     if (state.hp <= 0) {
       finishRun(false);
@@ -1544,11 +1593,17 @@
       if (resultRetryBtn) {
         resultRetryBtn.style.display = '';
         resultRetryBtn.textContent = 'もう一度';
+        resultRetryBtn.disabled = false;
+        resultRetryBtn.classList.remove('hidden');
+        resultRetryBtn.removeAttribute('aria-hidden');
       }
 
       if (resultHomeBtn) {
         resultHomeBtn.style.display = '';
         resultHomeBtn.textContent = 'メインへ戻る';
+        resultHomeBtn.disabled = false;
+        resultHomeBtn.classList.remove('hidden');
+        resultHomeBtn.removeAttribute('aria-hidden');
       }
     } else {
       resultRetryMode = 'normal';
@@ -1556,19 +1611,32 @@
       if (resultRetryBtn) {
         resultRetryBtn.style.display = '';
         resultRetryBtn.textContent = clear ? 'NEXT STAGE' : 'もう一度';
+        resultRetryBtn.disabled = false;
+        resultRetryBtn.classList.remove('hidden');
+        resultRetryBtn.removeAttribute('aria-hidden');
       }
 
       if (resultHomeBtn) {
         resultHomeBtn.style.display = '';
         resultHomeBtn.textContent = 'メインへ戻る';
+        resultHomeBtn.disabled = false;
+        resultHomeBtn.classList.remove('hidden');
+        resultHomeBtn.removeAttribute('aria-hidden');
       }
     }
 
     if (resultPanel) resultPanel.classList.remove('hidden');
 
+    hideLegacyNextButtons();
+
+    setTimeout(hideLegacyNextButtons, 0);
+    setTimeout(hideLegacyNextButtons, 80);
+    setTimeout(hideLegacyNextButtons, 240);
+
     if (pendingRankUp) {
       setTimeout(function(){
         showRankUpModal(pendingRankUp);
+        hideLegacyNextButtons();
       }, 500);
     }
   }
@@ -1976,6 +2044,7 @@
     applyAdminMaxSave();
     refreshAdminButtons();
     createTestClearButton();
+    hideLegacyNextButtons();
   });
 
   window.addEventListener('DOMContentLoaded', function(){
@@ -1985,6 +2054,7 @@
     createTestClearButton();
     injectHudStyle();
     ensureRankUpModal();
+    hideLegacyNextButtons();
   });
 
   bindResultButtons();
@@ -1993,6 +2063,7 @@
   createTestClearButton();
   injectHudStyle();
   ensureRankUpModal();
+  hideLegacyNextButtons();
 
   window.MobShotGameCore = {
     killEntity,
