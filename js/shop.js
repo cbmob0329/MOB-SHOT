@@ -648,6 +648,97 @@
     return 999999999;
   }
 
+  function calcUpgradeBatch(key, limit){
+    const item = UPGRADE_MASTER.find(v => v.key === key);
+
+    if (!item) {
+      return {
+        count: 0,
+        cost: 0,
+        stopReason: 'notfound'
+      };
+    }
+
+    const state = loadState();
+    const save = getSave();
+    const rankCap = getRankUpgradeCap(key);
+
+    let lv = Number(state.upgrades[key] || 0);
+    let coin = Number(save.coin || 0);
+    let count = 0;
+    let costTotal = 0;
+    let stopReason = '';
+
+    while (count < limit) {
+      if (lv >= item.max) {
+        stopReason = 'max';
+        break;
+      }
+
+      if (lv >= rankCap) {
+        stopReason = 'rank';
+        break;
+      }
+
+      const cost = upgradeCost(key, lv);
+
+      if (coin < cost) {
+        stopReason = 'coin';
+        break;
+      }
+
+      coin -= cost;
+      costTotal += cost;
+      lv += 1;
+      count += 1;
+    }
+
+    return {
+      count,
+      cost: costTotal,
+      stopReason
+    };
+  }
+
+  function upgradeBatch(key, limit){
+    const item = UPGRADE_MASTER.find(v => v.key === key);
+    if (!item) return;
+
+    const batch = calcUpgradeBatch(key, limit);
+
+    if (batch.count <= 0) {
+      const state = loadState();
+      const lv = Number(state.upgrades[key] || 0);
+      const rankCap = getRankUpgradeCap(key);
+
+      if (lv >= item.max) {
+        alert('最大Lvです。');
+        return;
+      }
+
+      if (lv >= rankCap) {
+        alert(`現在のRANKではこれ以上強化できません。\n${rankCapText(key)}`);
+        return;
+      }
+
+      alert('COINが足りません。');
+      return;
+    }
+
+    const state = loadState();
+    const save = getSave();
+
+    save.coin = Number(save.coin || 0) - batch.cost;
+    state.upgrades[key] = Number(state.upgrades[key] || 0) + batch.count;
+
+    saveMainData(save);
+    saveState(state);
+
+    showLevelUp(batch.count);
+    refreshHud();
+    render();
+  }
+
   function buyAvatar(key){
     const item = AVATAR_MASTER.find(v => v.key === key);
     if (!item) return;
@@ -727,49 +818,15 @@
   }
 
   function upgrade(key){
-    const item = UPGRADE_MASTER.find(v => v.key === key);
-    if (!item) return;
-
-    const state = loadState();
-    const lv = Number(state.upgrades[key] || 0);
-    const rankCap = getRankUpgradeCap(key);
-
-    if (lv >= item.max) {
-      alert('最大Lvです。');
-      return;
-    }
-
-    if (lv >= rankCap) {
-      alert(`現在のRANKではこれ以上強化できません。\n${rankCapText(key)}`);
-      return;
-    }
-
-    const cost = upgradeCost(key, lv);
-    const save = getSave();
-    const haveCoin = Number(save.coin || 0);
-
-    if (haveCoin < cost) {
-      alert(`COINが足りません。\n必要COIN: ${cost.toLocaleString()}`);
-      return;
-    }
-
-    save.coin = haveCoin - cost;
-    saveMainData(save);
-
-    state.upgrades[key] = lv + 1;
-    saveState(state);
-
-    showLevelUp();
-    refreshHud();
-    render();
+    upgradeBatch(key, 1);
   }
 
-  function showLevelUp(){
+  function showLevelUp(count){
     const modal = $('shopModal');
     if (!modal) return;
 
     const fx = document.createElement('div');
-    fx.textContent = 'LEVEL UP!';
+    fx.textContent = count && count > 1 ? `LEVEL UP +${count}!` : 'LEVEL UP!';
     fx.style.position = 'absolute';
     fx.style.left = '50%';
     fx.style.top = '50%';
@@ -912,6 +969,8 @@
       const maxed = lv >= item.max;
       const rankLocked = !maxed && lv >= rankCap;
       const cost = maxed || rankLocked ? 0 : upgradeCost(item.key, lv);
+      const batch10 = calcUpgradeBatch(item.key, 10);
+      const batchMax = calcUpgradeBatch(item.key, 999);
 
       const card = document.createElement('div');
       card.className = 'shop-card' + (rankLocked ? ' locked' : '');
@@ -930,20 +989,52 @@
                 ? `RANK制限中 / Lv${rankCap}まで`
                 : `次の強化: ${cost.toLocaleString()} COIN`
           }</div>
+          <div class="shop-card-spec">${
+            maxed || rankLocked
+              ? ''
+              : `10回: ${batch10.count > 0 ? `${batch10.count}Lv / ${batch10.cost.toLocaleString()} COIN` : '不可'}`
+          }</div>
+          <div class="shop-card-spec">${
+            maxed || rankLocked
+              ? ''
+              : `MAX: ${batchMax.count > 0 ? `${batchMax.count}Lv / ${batchMax.cost.toLocaleString()} COIN` : '不可'}`
+          }</div>
         </div>
-        <div class="shop-card-actions">
-          <button type="button" class="shop-card-btn" ${maxed || rankLocked ? 'disabled' : ''}>
-            ${maxed ? 'MAX' : rankLocked ? 'LOCK' : '強化'}
+        <div class="shop-card-actions" style="display:grid;gap:6px;">
+          <button type="button" class="shop-card-btn upgrade-one" ${maxed || rankLocked ? 'disabled' : ''}>
+            ${maxed ? 'MAX' : rankLocked ? 'LOCK' : '1回'}
+          </button>
+          <button type="button" class="shop-card-btn upgrade-ten" ${maxed || rankLocked || batch10.count <= 0 ? 'disabled' : ''}>
+            10回
+          </button>
+          <button type="button" class="shop-card-btn upgrade-max" ${maxed || rankLocked || batchMax.count <= 0 ? 'disabled' : ''}>
+            MAX
           </button>
         </div>
       `;
 
-      const btn = card.querySelector('.shop-card-btn');
+      const btnOne = card.querySelector('.upgrade-one');
+      const btnTen = card.querySelector('.upgrade-ten');
+      const btnMax = card.querySelector('.upgrade-max');
 
-      if (btn && !maxed && !rankLocked) {
-        btn.addEventListener('click', function(){
-          upgrade(item.key);
-        });
+      if (!maxed && !rankLocked) {
+        if (btnOne) {
+          btnOne.addEventListener('click', function(){
+            upgradeBatch(item.key, 1);
+          });
+        }
+
+        if (btnTen && batch10.count > 0) {
+          btnTen.addEventListener('click', function(){
+            upgradeBatch(item.key, 10);
+          });
+        }
+
+        if (btnMax && batchMax.count > 0) {
+          btnMax.addEventListener('click', function(){
+            upgradeBatch(item.key, 999);
+          });
+        }
       }
 
       list.appendChild(card);
@@ -1109,6 +1200,9 @@
     getUpgradeBonus,
     getRankUpgradeCap,
     upgradeCost,
+    upgrade,
+    upgradeBatch,
+    calcUpgradeBatch,
     AVATAR_MASTER,
     RECORD_MASTER,
     UPGRADE_MASTER
