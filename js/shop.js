@@ -568,6 +568,14 @@
   }
 
   function hasInfernoCleared(){
+    try {
+      const progress = Math.floor(Number(localStorage.getItem('mobshot_stage_progress') || 1));
+
+      if (Number.isFinite(progress) && progress >= 72) {
+        return true;
+      }
+    } catch(e) {}
+
     const save = getSave();
 
     if (
@@ -592,7 +600,7 @@
     for (let i = 0; i < numericCandidates.length; i++) {
       const n = Number(numericCandidates[i] || 0);
 
-      if (Number.isFinite(n) && n >= 89) {
+      if (Number.isFinite(n) && n >= 72) {
         return true;
       }
     }
@@ -607,6 +615,36 @@
 
       for (let i = 0; i < directKeys.length; i++) {
         if (normalizeClearValue(localStorage.getItem(directKeys[i]))) {
+          return true;
+        }
+      }
+
+      const saveRaw = localStorage.getItem('mobshot_save');
+
+      if (saveRaw) {
+        const parsedSave = JSON.parse(saveRaw);
+
+        if (
+          normalizeClearValue(parsedSave.infernoCleared) ||
+          normalizeClearValue(parsedSave.infernoClear) ||
+          normalizeClearValue(parsedSave.clearInferno) ||
+          normalizeClearValue(parsedSave.infernoCompleted) ||
+          normalizeClearValue(parsedSave.infernoComplete)
+        ) {
+          return true;
+        }
+
+        const n = Number(
+          parsedSave.maxStage ||
+          parsedSave.clearStage ||
+          parsedSave.clearedStage ||
+          parsedSave.highestStage ||
+          parsedSave.stageProgress ||
+          parsedSave.stage ||
+          0
+        );
+
+        if (Number.isFinite(n) && n >= 72) {
           return true;
         }
       }
@@ -629,7 +667,7 @@
 
         const maxStage = Number(parsed.maxStage || parsed.clearStage || parsed.clearedStage || parsed.highestStage || 0);
 
-        if (Number.isFinite(maxStage) && maxStage >= 89) {
+        if (Number.isFinite(maxStage) && maxStage >= 72) {
           return true;
         }
 
