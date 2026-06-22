@@ -47,6 +47,126 @@
     );
   }
 
+  function getBreakableEnemyBullets(){
+    const st = state();
+    if (!st || !Array.isArray(st.entities)) return [];
+
+    return st.entities.filter(e =>
+      !e.dead &&
+      e.kind === 'enemyBullet' &&
+      e.breakable &&
+      Number(e.hp || 0) > 0
+    );
+  }
+
+  function enemyBulletBreakRadius(e){
+    if (e.hitR != null) {
+      return Math.max(Number(e.hitR), Math.ceil(Number(e.r || 8) * 0.72));
+    }
+
+    return Number(e.r || 8);
+  }
+
+  function skillBulletDamageToEnemyBullet(bullet){
+    const skill = bullet.skill || {};
+    const p = playerPower();
+
+    if (bullet.type === 'rocket') return p * Number((skill.powerRate && skill.powerRate.bullet) || 2.2) + plusDamage(skill);
+    if (bullet.type === 'energyRush') return p * Number((skill.powerRate && skill.powerRate.bullet) || 0.8) + plusDamage(skill);
+    if (bullet.type === 'twinMissile') return p * Number((skill.powerRate && skill.powerRate.bullet) || 1.4) + plusDamage(skill);
+    if (bullet.type === 'darkFire') return Number(bullet.damage || p * 2.2) + plusDamage(skill);
+    if (bullet.type === 'shadowCloneShot') return p * Number(bullet.powerRate || 0.5);
+    if (bullet.type === 'rosePulse') return p * Number((skill.powerRate && skill.powerRate.rose) || 0.9) + plusDamage(skill);
+    if (bullet.type === 'darkThunder') return p * Number((skill.powerRate && skill.powerRate.darkThunder) || 2) + plusDamage(skill);
+    if (bullet.type === 'darkAura') return Number(bullet.damage || basePlayerPower());
+    if (bullet.type === 'neonBomb') return p * Number((skill.powerRate && skill.powerRate.pierce) || 1.4) + plusDamage(skill);
+    if (bullet.type === 'neptuneAttack') return p * Number((skill.powerRate && skill.powerRate.trident) || 1.8) + plusDamage(skill);
+    if (bullet.type === 'miraPoison') return p * Number((skill.powerRate && skill.powerRate.bullet) || 0.65) + plusDamage(skill);
+    if (bullet.type === 'sisterBlue' || bullet.type === 'sisterYellow') return basePlayerPower() * Number(bullet.powerRate || 1);
+    if (bullet.type === 'sisterRed') return (basePlayerPower() + 1) * Number(bullet.powerRate || 1.01);
+
+    return Math.max(1, p);
+  }
+
+  function damageEnemyBullet(enemyBullet, damage, x, y, color){
+    if (!enemyBullet || enemyBullet.dead) return false;
+
+    enemyBullet.hp = Number(enemyBullet.hp || 0) - Number(damage || 1);
+
+    effects().push({
+      type: 'energyHit',
+      x: x != null ? x : enemyBullet.x,
+      y: y != null ? y : enemyBullet.y,
+      timer: 10
+    });
+
+    if (enemyBullet.hp <= 0) {
+      enemyBullet.dead = true;
+
+      effects().push({
+        type: 'smallExplosion',
+        x: enemyBullet.x,
+        y: enemyBullet.y,
+        radius: enemyBullet.bossSpecial ? 72 : 42,
+        timer: enemyBullet.bossSpecial ? 22 : 14,
+        color: color || enemyBullet.color || '#9deeff'
+      });
+
+      effects().push({
+        type: 'skillText',
+        text: enemyBullet.trident ? 'TRIDENT BREAK' : 'BREAK',
+        x: enemyBullet.x,
+        y: enemyBullet.y - 18,
+        timer: 26
+      });
+
+      return true;
+    }
+
+    return false;
+  }
+
+  function checkSkillBulletHitEnemyBullet(bullet){
+    if (!bullet || bullet.dead) return false;
+
+    const list = getBreakableEnemyBullets();
+    if (!list.length) return false;
+
+    for (const e of list) {
+      const hit =
+        Math.hypot(bullet.x - e.x, bullet.y - e.y) <
+        enemyBulletBreakRadius(e) + Number(bullet.r || 8);
+
+      if (!hit) continue;
+
+      const damage = skillBulletDamageToEnemyBullet(bullet);
+      damageEnemyBullet(e, damage, bullet.x, bullet.y, e.color);
+
+      if (
+        bullet.type !== 'neonBomb' &&
+        bullet.type !== 'neptuneAttack' &&
+        bullet.type !== 'darkAura'
+      ) {
+        if (bullet.type === 'rocket') explode(bullet.x, bullet.y, bullet.skill);
+        if (bullet.type === 'twinMissile' || bullet.type === 'sisterRed') smallExplode(bullet.x, bullet.y, bullet.skill);
+
+        bullet.dead = true;
+      }
+
+      return true;
+    }
+
+    return false;
+  }
+
+  function damageEnemyBulletsInRadius(x, y, radius, damage, color){
+    getBreakableEnemyBullets().forEach(e => {
+      if (Math.hypot(e.x - x, e.y - y) <= radius + enemyBulletBreakRadius(e)) {
+        damageEnemyBullet(e, damage, e.x, e.y, color);
+      }
+    });
+  }
+
   function findStrongestTarget(){
     let target = null;
     let bestHp = -1;
@@ -737,6 +857,8 @@
   }
 
   function checkBulletHit(bullet){
+    if (checkSkillBulletHitEnemyBullet(bullet)) return;
+
     for (const e of state().entities) {
       if (e.dead || e.kind === 'gate' || e.kind === 'enemyBullet') continue;
 
@@ -852,27 +974,33 @@
 
   function explode(x, y, skill){
     const radius = Math.min(window.innerWidth, window.innerHeight) * 0.55;
+    const damage = playerPower() * skill.powerRate.explosion + plusDamage(skill);
 
     effects().push({ type:'explosion', x, y, radius, timer:32 });
     effects().push({ type:'boomText', text:'BOOM!!', x, y:y - 20, timer:34 });
 
     getTargets().forEach(e => {
       if (Math.hypot(e.x - x, e.y - y) <= radius) {
-        damageEntity(e, playerPower() * skill.powerRate.explosion + plusDamage(skill));
+        damageEntity(e, damage);
       }
     });
+
+    damageEnemyBulletsInRadius(x, y, radius, damage, '#ffcf5b');
   }
 
   function smallExplode(x, y, skill){
     const radius = Number(skill.explosionRange || 100);
+    const damage = playerPower() * Number((skill.powerRate && skill.powerRate.explosion) || 0.65) + plusDamage(skill);
 
     effects().push({ type:'smallExplosion', x, y, radius, timer:20 });
 
     getTargets().forEach(e => {
       if (Math.hypot(e.x - x, e.y - y) <= radius) {
-        damageEntity(e, playerPower() * Number((skill.powerRate && skill.powerRate.explosion) || 0.65) + plusDamage(skill));
+        damageEntity(e, damage);
       }
     });
+
+    damageEnemyBulletsInRadius(x, y, radius, damage, '#ffcf5b');
   }
 
   function neonBombExplode(bullet){
@@ -880,16 +1008,19 @@
 
     const skill = bullet.skill;
     const radius = Number(skill.explosionRange || 198);
+    const damage = playerPower() * Number((skill.powerRate && skill.powerRate.explosion) || 2.2) + plusDamage(skill);
 
     effects().push({ type:'neonExplosion', x:bullet.x, y:bullet.y, radius, timer:44 });
     effects().push({ type:'boomText', text:'NEON BOOM!!', x:bullet.x, y:bullet.y - 24, timer:44 });
 
     getTargets().forEach(e => {
       if (Math.hypot(e.x - bullet.x, e.y - bullet.y) <= radius + (e.r || 28)) {
-        damageEntity(e, playerPower() * Number((skill.powerRate && skill.powerRate.explosion) || 2.2) + plusDamage(skill));
+        damageEntity(e, damage);
         addNeonBurn(e, skill);
       }
     });
+
+    damageEnemyBulletsInRadius(bullet.x, bullet.y, radius, damage, '#6be6ff');
   }
 
   function createThunder(skill){
@@ -925,9 +1056,13 @@
       timer: 30
     });
 
+    const damage = playerPower() * effect.skill.powerRate.thunder + plusDamage(effect.skill);
+
     if (effect.target && !effect.target.dead) {
-      damageEntity(effect.target, playerPower() * effect.skill.powerRate.thunder + plusDamage(effect.skill));
+      damageEntity(effect.target, damage);
     }
+
+    damageEnemyBulletsInRadius(effect.x, effect.targetY, 86, damage, '#6be6ff');
   }
 
   function fireRoseBullet(skill){
@@ -1067,6 +1202,8 @@
         damageEntity(e, barrier.damage);
       }
     });
+
+    damageEnemyBulletsInRadius(p.x, p.y, radius, barrier.damage, '#9deeff');
   }
 
   function updateBlackHole(){
@@ -1087,6 +1224,8 @@
           effects().push({ type:'blackHoleDamage', x:e.x, y:e.y, timer:18 });
         }
       });
+
+      damageEnemyBulletsInRadius(hole.x, hole.y, hole.range, 1, '#8a4cff');
     }
 
     getTargets().forEach(e => {
@@ -1189,6 +1328,20 @@
 
       hero.x += hero.vx;
       hero.y += hero.vy;
+
+      getBreakableEnemyBullets().forEach(e => {
+        const hit = Math.hypot(hero.x - e.x, hero.y - e.y) <= enemyBulletBreakRadius(e) + 38;
+        if (!hit) return;
+
+        const key = entityHitKey(e);
+        const interval = Math.floor(Number(hero.skill.heroHitInterval || 2.4) * 60);
+
+        if (canIntervalHit(hero.hitMap, key, interval)) {
+          damageEnemyBullet(e, playerPower() * Number((hero.skill.powerRate && hero.skill.powerRate.hero) || 1.65) + plusDamage(hero.skill), e.x, e.y, '#ffcf5b');
+          effects().push({ type:'bookHeroHit', x:e.x, y:e.y, timer:18 });
+          hero.retargetCd = 0;
+        }
+      });
 
       getTargets().forEach(e => {
         const hit = Math.hypot(hero.x - e.x, hero.y - e.y) <= (e.r || 28) + 38;
