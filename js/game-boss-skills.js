@@ -75,6 +75,21 @@
     );
   }
 
+  function normalShotOpt(e, opt){
+    opt = opt || {};
+
+    const breakable = Math.random() < 0.74;
+
+    return Object.assign({
+      hp: breakable ? Number(opt.hp || 6) : 0,
+      breakable,
+      color: opt.color || '#ffffff'
+    }, opt, {
+      hp: breakable ? Number(opt.hp || 6) : 0,
+      breakable
+    });
+  }
+
   function makeBarrier(e, tools, sec, hp){
     e.barrierTimer = Math.max(Number(e.barrierTimer || 0), sec * 60);
     e.barrierHp = Math.max(Number(e.barrierHp || 0), Number(hp || 1));
@@ -148,40 +163,12 @@
     }
 
     e.summonCount = Number(e.summonCount || 0) + count;
+
+    addText(tools, '召喚！', e.x, e.y - 84, '#dfeaff');
   }
 
   function summonWeakEnemy(e, tools, count){
-    const total = Number(count || 1);
-
-    if (!tools || !tools.state || !Array.isArray(tools.state.entities)) return;
-
-    for (let i = 0; i < total; i++) {
-      const hp = Math.max(4, Math.ceil(Number(e.maxHp || 100) * 0.015 * difficultyMul(e)));
-      const side = Math.random() < 0.5 ? -1 : 1;
-
-      tools.state.entities.push({
-        kind: 'enemy',
-        name: '弱めの敵',
-        image: '',
-        x: clamp(tools, e.x + side * rand(tools, 70, 140), tools.W * 0.12, tools.W * 0.88),
-        y: e.y + rand(tools, 40, 100),
-        vx: side * rand(tools, 0.35, 0.85),
-        vy: rand(tools, 0.70, 1.10),
-        r: 24,
-        hp,
-        maxHp: hp,
-        value: hp,
-        score: 12,
-        coinMin: 1,
-        coinMax: 3,
-        dead: false,
-        bob: rand(tools, 0, Math.PI * 2),
-        aiType: i % 2 === 0 ? 'sway' : 'fastSide',
-        isBossMinion: true
-      });
-    }
-
-    addText(tools, '弱敵召喚！', e.x, e.y - 84, '#dfeaff');
+    summonStageEnemies(e, tools, Number(count || 1), 0.65);
   }
 
   function makeClones(e, tools, count, opt){
@@ -331,15 +318,15 @@
     opt = Object.assign({
       sizeType: 'small',
       speed: 1.9,
-      hp: 0,
-      breakable: false,
+      hp: 5,
+      breakable: true,
       color: '#ffffff'
     }, opt || {});
 
     for (let i = 0; i < count; i++) {
       setTimeout(function(){
         if (!e.dead && b() && b().fireSlowSpread) {
-          b().fireSlowSpread(e, tools, opt.spreadCount || 1, opt.spread || 0.16, opt);
+          b().fireSlowSpread(e, tools, opt.spreadCount || 1, opt.spread || 0.16, normalShotOpt(e, opt));
         }
       }, i * Number(opt.delay || 75));
     }
@@ -351,13 +338,12 @@
     if (step % 5 === 1) {
       addText(tools, '羽ばたき弾！', e.x, e.y - 92, '#ffe66b');
 
-      b().fireSafeFanDown(e, tools, 5, {
+      b().fireSafeFanDown(e, tools, 5, normalShotOpt(e, {
         speed: 1.75,
-        hp: 0,
-        breakable: false,
+        hp: 6,
         spread: 0.18,
         color: '#ffe66b'
-      });
+      }));
       return;
     }
 
@@ -374,23 +360,21 @@
     }
 
     if (step % 5 === 4) {
-      b().chargeLine(e, tools, 'ホークライン！', 4, {
+      b().chargeLine(e, tools, 'ホークライン！', 4, normalShotOpt(e, {
         delay: 54,
         sizeType: 'normal',
         speed: 1.8,
-        hp: 0,
-        breakable: false,
+        hp: 7,
         safeCenter: true,
         color: '#ffe66b'
-      });
+      }));
       return;
     }
 
-    b().fireSlowSpread(e, tools, 3, 0.22, {
-      hp: 0,
-      breakable: false,
+    b().fireSlowSpread(e, tools, 3, 0.22, normalShotOpt(e, {
+      hp: 7,
       color: '#ffe66b'
-    });
+    }));
   }
 
   function runMira(e, tools, step){
@@ -415,13 +399,12 @@
     }
 
     if (step % 6 === 2) {
-      b().fireCross(e, tools, {
+      b().fireCross(e, tools, normalShotOpt(e, {
         sizeType: 'normal',
         speed: 1.8,
-        hp: 0,
-        breakable: false,
+        hp: 7,
         color: '#b78cff'
-      });
+      }));
       return;
     }
 
@@ -441,8 +424,7 @@
       fireBarrage(e, tools, 12, {
         sizeType:'small',
         speed:1.65,
-        hp:0,
-        breakable:false,
+        hp:5,
         spreadCount:3,
         spread:0.20,
         delay:50,
@@ -456,11 +438,10 @@
       return;
     }
 
-    b().fireSlowSpread(e, tools, 3, 0.18, {
-      hp: 0,
-      breakable: false,
+    b().fireSlowSpread(e, tools, 3, 0.18, normalShotOpt(e, {
+      hp: 7,
       color: '#b78cff'
-    });
+    }));
   }
 
   function runGuardian(e, tools, step){
@@ -505,12 +486,12 @@
       return;
     }
 
-    b().fireSlowSpread(e, tools, 2, 0.26, {
+    b().fireSlowSpread(e, tools, 2, 0.26, normalShotOpt(e, {
       sizeType: 'big',
       speed: 1.55,
-      hp: Math.ceil(12 * specialHpMul(e)),
+      hp: 8,
       color: '#ff7a35'
-    });
+    }));
   }
 
   function runNeon(e, tools, step){
@@ -526,37 +507,34 @@
         tools.W * 0.8
       );
 
-      b().fireSlowSpread(e, tools, 3, 0.20, {
-        hp: 0,
-        breakable: false,
+      b().fireSlowSpread(e, tools, 3, 0.20, normalShotOpt(e, {
+        hp: 7,
         color: '#6be6ff'
-      });
+      }));
       return;
     }
 
     if (step % 6 === 2) {
-      b().chargeLine(e, tools, 'ネオンライン！', 4, {
+      b().chargeLine(e, tools, 'ネオンライン！', 4, normalShotOpt(e, {
         delay: 56,
         sizeType: 'normal',
         speed: 1.9,
-        hp: 0,
-        breakable: false,
+        hp: 7,
         safeCenter: true,
         color: '#6be6ff'
-      });
+      }));
       return;
     }
 
     if (step % 6 === 3) {
-      b().fireWave(e, tools, 5, {
+      b().fireWave(e, tools, 5, normalShotOpt(e, {
         sizeType: 'normal',
         speed: 1.75,
-        hp: 0,
-        breakable: false,
+        hp: 7,
         waveAmp: 20,
         waveSpeed: 0.04,
         color: '#6be6ff'
-      });
+      }));
       return;
     }
 
@@ -572,12 +550,11 @@
       return;
     }
 
-    b().fireSlowSpread(e, tools, 3, 0.18, {
+    b().fireSlowSpread(e, tools, 3, 0.18, normalShotOpt(e, {
       speed: 1.85,
-      hp: 0,
-      breakable: false,
+      hp: 7,
       color: '#6be6ff'
-    });
+    }));
   }
 
   function runDragon(e, tools, step){
@@ -632,12 +609,12 @@
       return;
     }
 
-    b().fireSlowSpread(e, tools, 3, 0.20, {
+    b().fireSlowSpread(e, tools, 3, 0.20, normalShotOpt(e, {
       sizeType: 'big',
       speed: 1.65,
-      hp: Math.ceil(10 * specialHpMul(e)),
+      hp: 8,
       color: '#ff5b35'
-    });
+    }));
   }
 
   function runLilith(e, tools, step){
@@ -666,14 +643,13 @@
     }
 
     if (step % 8 === 4) {
-      b().fireSafeFanDown(e, tools, 5, {
+      b().fireSafeFanDown(e, tools, 5, normalShotOpt(e, {
         sizeType: 'normal',
         speed: 1.8,
-        hp: 0,
-        breakable: false,
+        hp: 7,
         spread: 0.16,
         color: '#ff8cff'
-      });
+      }));
       return;
     }
 
@@ -692,7 +668,6 @@
 
     if (step % 8 === 6) {
       summonStageEnemies(e, tools, 1, 0.65);
-      addText(tools, '召喚！', e.x, e.y - 92, '#b78cff');
       return;
     }
 
@@ -702,11 +677,10 @@
       return;
     }
 
-    b().fireSlowSpread(e, tools, 3, 0.20, {
-      hp: 0,
-      breakable: false,
+    b().fireSlowSpread(e, tools, 3, 0.20, normalShotOpt(e, {
+      hp: 7,
       color: '#ff8cff'
-    });
+    }));
   }
 
   function runMaoh(e, tools, step){
@@ -730,7 +704,6 @@
 
     if (step % 8 === 3) {
       summonStageEnemies(e, tools, 1, 0.75);
-      addText(tools, '魔王召喚！', e.x, e.y - 92, '#b78cff');
       return;
     }
 
@@ -767,12 +740,11 @@
       return;
     }
 
-    b().fireSlowSpread(e, tools, 3, 0.20, {
-      hp: 0,
-      breakable: false,
+    b().fireSlowSpread(e, tools, 3, 0.20, normalShotOpt(e, {
+      hp: 8,
       safeCenter: true,
       color: '#ff4aff'
-    });
+    }));
   }
 
   function runMail(e, tools, step){
@@ -818,8 +790,7 @@
       fireBarrage(e, tools, 6, {
         sizeType:'small',
         speed:2.1,
-        hp:0,
-        breakable:false,
+        hp:5,
         spreadCount:2,
         spread:0.16,
         delay:45,
@@ -828,12 +799,12 @@
       return;
     }
 
-    b().fireSlowSpread(e, tools, 2, 0.24, {
+    b().fireSlowSpread(e, tools, 2, 0.24, normalShotOpt(e, {
       sizeType: 'big',
       speed: 1.55,
-      hp: Math.ceil(12 * specialHpMul(e)),
+      hp: 8,
       color: '#bfc7d5'
-    });
+    }));
   }
 
   function runSmith(e, tools, step){
@@ -860,14 +831,13 @@
 
       addText(tools, 'マトリックス！', e.x, e.y - 92, '#7bffea');
 
-      b().fireLineDown(e, tools, 4, {
+      b().fireLineDown(e, tools, 4, normalShotOpt(e, {
         sizeType: 'normal',
         speed: 1.8,
-        hp: 0,
-        breakable: false,
+        hp: 7,
         safeCenter: true,
         color: '#7bffea'
-      });
+      }));
       return;
     }
 
@@ -882,11 +852,10 @@
       return;
     }
 
-    b().fireSlowSpread(e, tools, 3, 0.18, {
-      hp: 0,
-      breakable: false,
+    b().fireSlowSpread(e, tools, 3, 0.18, normalShotOpt(e, {
+      hp: 7,
       color: '#7bffea'
-    });
+    }));
   }
 
   function runNep(e, tools, step){
@@ -917,14 +886,13 @@
     }
 
     if (step % 6 === 3) {
-      b().fireSafeFanDown(e, tools, 5, {
+      b().fireSafeFanDown(e, tools, 5, normalShotOpt(e, {
         sizeType: 'normal',
         speed: 1.7,
-        hp: 0,
-        breakable: false,
+        hp: 7,
         spread: 0.17,
         color: '#6be6ff'
-      });
+      }));
       return;
     }
 
@@ -941,11 +909,10 @@
       return;
     }
 
-    b().fireSlowSpread(e, tools, 3, 0.22, {
-      hp: 0,
-      breakable: false,
+    b().fireSlowSpread(e, tools, 3, 0.22, normalShotOpt(e, {
+      hp: 7,
       color: '#6be6ff'
-    });
+    }));
   }
 
   function runBlueNeo(e, tools, step){
@@ -973,20 +940,18 @@
         tools.W * 0.8
       );
 
-      b().fireSlowSpread(e, tools, 3, 0.20, {
-        hp: 0,
-        breakable: false,
+      b().fireSlowSpread(e, tools, 3, 0.20, normalShotOpt(e, {
+        hp: 7,
         color: '#4bb8ff'
-      });
+      }));
       return;
     }
 
-    b().fireSlowSpread(e, tools, 3, 0.20, {
+    b().fireSlowSpread(e, tools, 3, 0.20, normalShotOpt(e, {
       speed: 1.85,
-      hp: 0,
-      breakable: false,
+      hp: 7,
       color: '#4bb8ff'
-    });
+    }));
   }
 
   function runPurpleNeo(e, tools, step){
@@ -1004,14 +969,13 @@
     }
 
     if (step % 5 === 2) {
-      b().fireLineDown(e, tools, 5, {
+      b().fireLineDown(e, tools, 5, normalShotOpt(e, {
         sizeType: 'normal',
         speed: 1.75,
-        hp: 0,
-        breakable: false,
+        hp: 7,
         safeCenter: true,
         color: '#b78cff'
-      });
+      }));
       return;
     }
 
@@ -1026,11 +990,10 @@
       return;
     }
 
-    b().fireSlowSpread(e, tools, 3, 0.20, {
-      hp: 0,
-      breakable: false,
+    b().fireSlowSpread(e, tools, 3, 0.20, normalShotOpt(e, {
+      hp: 7,
       color: '#b78cff'
-    });
+    }));
   }
 
   function runEnma(e, tools, step){
@@ -1084,8 +1047,7 @@
       fireBarrage(e, tools, 10, {
         sizeType:'small',
         speed:1.9,
-        hp:0,
-        breakable:false,
+        hp:5,
         spreadCount:3,
         spread:0.20,
         delay:42,
@@ -1169,7 +1131,6 @@
 
     if (step % 9 === 7) {
       summonStageEnemies(e, tools, 1, 0.72);
-      addText(tools, '最終召喚！', e.x, e.y - 92, '#b78cff');
       return;
     }
 
@@ -1179,12 +1140,11 @@
       return;
     }
 
-    b().fireSlowSpread(e, tools, 3, 0.18, {
-      hp: 0,
-      breakable: false,
+    b().fireSlowSpread(e, tools, 3, 0.18, normalShotOpt(e, {
+      hp: 8,
       safeCenter: true,
       color: '#ff8cff'
-    });
+    }));
   }
 
   function runByType(e, tools, type, step){
@@ -1204,10 +1164,9 @@
     if (type === 'ultraLilith') return runUltraLilith(e, tools, step);
 
     if (b() && b().fireSlowSpread) {
-      b().fireSlowSpread(e, tools, 3, 0.20, {
-        hp: 0,
-        breakable: false
-      });
+      b().fireSlowSpread(e, tools, 3, 0.20, normalShotOpt(e, {
+        hp: 7
+      }));
     }
   }
 
@@ -1221,12 +1180,11 @@
         return;
       }
 
-      b().fireSlowSpread(e, tools, 3, 0.22, {
+      b().fireSlowSpread(e, tools, 3, 0.22, normalShotOpt(e, {
         sizeType: 'small',
         speed: 1.8,
-        hp: step % 2 === 0 ? 0 : 5,
-        breakable: step % 2 !== 0
-      });
+        hp: 5
+      }));
       return;
     }
 
@@ -1236,12 +1194,11 @@
         return;
       }
 
-      b().fireSlowSpread(e, tools, 2, 0.30, {
+      b().fireSlowSpread(e, tools, 2, 0.30, normalShotOpt(e, {
         sizeType: 'small',
         speed: 1.85,
-        hp: step % 2 === 0 ? 0 : 5,
-        breakable: step % 2 !== 0
-      });
+        hp: 5
+      }));
       return;
     }
 
@@ -1286,12 +1243,11 @@
         return;
       }
 
-      b().fireSlowSpread(e, tools, 3, 0.22, {
+      b().fireSlowSpread(e, tools, 3, 0.22, normalShotOpt(e, {
         sizeType: 'small',
         speed: 1.9,
-        hp: step % 2 === 0 ? 0 : 5,
-        breakable: step % 2 !== 0
-      });
+        hp: 5
+      }));
       return;
     }
 
@@ -1310,12 +1266,11 @@
       return;
     }
 
-    b().fireSlowSpread(e, tools, 2, 0.22, {
+    b().fireSlowSpread(e, tools, 2, 0.22, normalShotOpt(e, {
       sizeType: 'small',
       speed: 1.8,
-      hp: step % 2 === 0 ? 0 : 5,
-      breakable: step % 2 !== 0
-    });
+      hp: 5
+    }));
   }
 
   window.MobShotBossSkills = {
