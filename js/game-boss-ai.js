@@ -1,17 +1,9 @@
 'use strict';
 
 (function(){
-  function data(){
-    return window.MobShotBossData;
-  }
-
-  function bullets(){
-    return window.MobShotBossBullets;
-  }
-
-  function skills(){
-    return window.MobShotBossSkills;
-  }
+  function data(){ return window.MobShotBossData; }
+  function bullets(){ return window.MobShotBossBullets; }
+  function skills(){ return window.MobShotBossSkills; }
 
   function fixBossName(name){
     if (name === '番人') return 'モブガーディアン';
@@ -43,22 +35,22 @@
     const key = normalizeDifficultyKey(e.eventDifficulty || e.__doubleDifficulty || '');
 
     if (key === 'hard') {
-      return { cd:0.88, speed:1.08, bullet:1.08, move:1.10 };
+      return { cd:0.88, speed:1.08, bullet:1.14, move:1.10, zako:1.25 };
     }
 
     if (key === 'veryHard') {
-      return { cd:0.76, speed:1.16, bullet:1.18, move:1.18 };
+      return { cd:0.76, speed:1.16, bullet:1.32, move:1.18, zako:1.55 };
     }
 
     if (key === 'inferno') {
-      return { cd:0.64, speed:1.26, bullet:1.35, move:1.26 };
+      return { cd:0.64, speed:1.26, bullet:1.62, move:1.26, zako:2.05 };
     }
 
     if (key === 'legend') {
-      return { cd:0.52, speed:1.38, bullet:1.55, move:1.36 };
+      return { cd:0.52, speed:1.38, bullet:2.05, move:1.36, zako:2.75 };
     }
 
-    return { cd:1, speed:1, bullet:1, move:1 };
+    return { cd:1, speed:1, bullet:1, move:1, zako:1 };
   }
 
   function frequencyRelax(isBoss){
@@ -70,11 +62,11 @@
       type: isBoss ? 'hawk' : 'ptera',
       shootCd: isBoss ? 175 : 165,
       attackCd: isBoss ? 285 : 245,
-      moveSpeed: isBoss ? 1.05 : 1.05,
+      moveSpeed: 1.05,
       patterns: isBoss ? ['threeWayNormal', 'fastFourBurst', 'hugeThreeWay'] : ['unbreakableNormalShot', 'threeWayNormal'],
       spawnWeakEnemies: isBoss,
       spawnStageObstacles: !isBoss,
-      normalAttackBreakable: false,
+      normalAttackBreakable: true,
       specialHpMul: 1.65
     };
   }
@@ -192,18 +184,23 @@
     e.specialVx = 0;
     e.hitPlayerCd = 0;
     e.summonCount = 0;
+
     e.stageSummonCd = Math.floor((250 + Math.random() * 120) * bal.cd * relax);
-    e.stageObstacleCd = Math.floor((180 + Math.random() * 80) * bal.cd);
+    e.stageObstacleCd = Math.floor((210 + Math.random() * 110) * bal.cd);
+
     e.cloneUsed = false;
     e.sistersUsed = false;
     e.healUsed = false;
     e.extraHealUsed = false;
+    e.halfSummonUsed = false;
+
     e.barrierTimer = 0;
     e.barrierHp = 0;
     e.frontBarrierTimer = 0;
     e.frontBarrierHp = 0;
     e.circleBarrierTimer = 0;
     e.circleBarrierHp = 0;
+
     e.ghostTimer = 0;
     e.alpha = 1;
 
@@ -402,7 +399,6 @@
 
       e.x += (e.moveTargetX - e.x) * followX;
       e.y += (e.moveTargetY - e.y) * followY;
-
       e.x += (r.center - e.x) * (isBoss ? 0.0012 : 0.001);
     }
 
@@ -454,6 +450,7 @@
     const spec = getAttackSpec(e);
     const bal = difficultyBalance(e);
     const hpMul = data() && data().getSpecialHpMultiplier ? data().getSpecialHpMultiplier(e.name) : 1.65;
+
     const opt = Object.assign({
       sizeType:sizeType || 'normal',
       image:spec.image || spec.fallbackImage || 'atk/hinotama.png',
@@ -467,15 +464,22 @@
 
     if (opt.breakable === false) {
       opt.hp = 0;
-    } else if (opt.special || opt.sizeType === 'huge' || opt.sizeType === 'super') {
-      opt.hp = Math.ceil(Number(opt.hp || 8) * hpMul);
+    } else {
+      const baseHp = Number(opt.hp || 7);
+      const diffHp = Math.ceil(baseHp * bal.bullet);
+
+      if (opt.special || opt.sizeType === 'huge' || opt.sizeType === 'super') {
+        opt.hp = Math.ceil(diffHp * hpMul);
+      } else {
+        opt.hp = diffHp;
+      }
     }
 
     return opt;
   }
 
   function shouldNormalBreak(e, rate){
-    const r = rate == null ? 0.72 : Number(rate);
+    const r = rate == null ? 0.74 : Number(rate);
     e.__normalBreakRoll = Number(e.__normalBreakRoll || 0) + 1;
 
     if (e.__normalBreakRoll % 4 === 0) return false;
@@ -484,13 +488,18 @@
   }
 
   function normalOpt(e, sizeType, extra){
+    const bal = difficultyBalance(e);
     const breakable = shouldNormalBreak(e, 0.74);
+    const rawHp = Number(extra && extra.hp != null ? extra.hp : 6);
 
     return bulletOpt(e, sizeType || 'normal', Object.assign({
-      hp: breakable ? 6 : 0,
+      hp: breakable ? Math.ceil(rawHp * bal.bullet) : 0,
       breakable,
       special:false
-    }, extra || {}));
+    }, extra || {}, {
+      breakable,
+      hp: breakable ? Math.ceil(rawHp * bal.bullet) : 0
+    }));
   }
 
   function directBullet(e, tools, angle, opt){
@@ -509,7 +518,8 @@
       else r = Number(spec.normal || 32);
     }
 
-    const hp = opt.breakable === false ? 0 : Number(opt.hp || 0);
+    const finalOpt = bulletOpt(e, sizeType, opt);
+    const hp = finalOpt.breakable === false ? 0 : Number(finalOpt.hp || 0);
 
     tools.state.entities.push({
       kind: 'enemyBullet',
@@ -526,10 +536,10 @@
       breakable: hp > 0,
       dead: false,
       bob: 0,
-      color: opt.color || spec.color || '#ff7a35',
-      image: opt.image || spec.image || spec.fallbackImage || 'atk/hinotama.png',
-      fallbackImage: opt.fallbackImage || spec.fallbackImage || 'atk/hinotama.png',
-      flipY: opt.flipY !== false,
+      color: finalOpt.color || spec.color || '#ff7a35',
+      image: finalOpt.image || spec.image || spec.fallbackImage || 'atk/hinotama.png',
+      fallbackImage: finalOpt.fallbackImage || spec.fallbackImage || 'atk/hinotama.png',
+      flipY: finalOpt.flipY !== false,
       life: Number(opt.life || 430),
       fromBoss: true,
       bossSpecial: !!opt.special,
@@ -677,12 +687,7 @@
   function getAreaZakoList(tools){
     const D = tools.D;
 
-    if (
-      D &&
-      D.enemies &&
-      Array.isArray(D.enemies.zako) &&
-      D.enemies.zako.length
-    ) {
+    if (D && D.enemies && Array.isArray(D.enemies.zako) && D.enemies.zako.length) {
       return D.enemies.zako;
     }
 
@@ -693,12 +698,14 @@
     const list = getAreaZakoList(tools);
     if (!list.length) return;
 
+    const bal = difficultyBalance(e);
     const total = Number(count || 1);
-    const rate = Number(hpRate || 0.72);
+    const rate = Number(hpRate || 1.15);
 
     for (let i = 0; i < total; i++) {
       const def = list[(Number(e.summonCount || 0) + i) % list.length];
-      const hp = Math.max(3, Math.ceil(Number(def.hp || 5) * rate * difficultyBalance(e).bullet));
+      const baseHp = Number(def.hp || def.value || 5);
+      const hp = Math.max(8, Math.ceil(baseHp * rate * bal.zako));
 
       tools.state.entities.push({
         kind:'enemy',
@@ -706,9 +713,11 @@
         image:def.image,
         x:tools.rand(tools.W * 0.18, tools.W * 0.82),
         y:-80 - i * 54,
-        vx:tools.rand(-0.35, 0.35),
-        vy:1.05,
-        r:def.name === 'モブロック' ? 34 : 30,
+        vx:tools.rand(-0.45, 0.45),
+        vy:Number(def.vy || 1.15),
+        r:def.r || (def.name === 'モブロック' ? 34 : 30),
+        w:def.w,
+        h:def.h,
         hp,
         maxHp:hp,
         value:hp,
@@ -717,7 +726,7 @@
         coinMax:Number(def.coinMax || 3),
         dead:false,
         bob:tools.rand(0, Math.PI * 2),
-        aiType:i % 2 === 0 ? 'sway' : 'hop',
+        aiType:def.aiType || (i % 2 === 0 ? 'sway' : 'hop'),
         isBossMinion:true
       });
     }
@@ -727,28 +736,47 @@
     if (tools.addText) tools.addText('召喚！', e.x, e.y - 72, '#dfeaff');
   }
 
-  function spawnStageObstacle(e, tools){
-    if (!tools || !tools.state || !Array.isArray(tools.state.entities)) return;
+  function getStageObstacleList(tools){
+    const D = tools.D || {};
+    const list = [];
 
-    const hp = Math.max(8, Math.ceil(Number(e.maxHp || 100) * 0.025));
-    const x = clamp(tools.rand(tools.W * 0.18, tools.W * 0.82), tools.W * 0.12, tools.W * 0.88);
+    if (Array.isArray(D.obstacles)) list.push.apply(list, D.obstacles);
+    if (D.enemies && Array.isArray(D.enemies.obstacles)) list.push.apply(list, D.enemies.obstacles);
+    if (D.enemies && Array.isArray(D.enemies.obstacle)) list.push.apply(list, D.enemies.obstacle);
+    if (D.stage && Array.isArray(D.stage.obstacles)) list.push.apply(list, D.stage.obstacles);
+
+    return list.filter(o => o);
+  }
+
+  function spawnStageObstacle(e, tools){
+    const list = getStageObstacleList(tools);
+    if (!list.length) return;
+
+    const bal = difficultyBalance(e);
+    const def = list[Math.floor(Math.random() * list.length)];
+    const baseHp = Number(def.hp || def.value || 10);
+    const hp = Math.max(8, Math.ceil(baseHp * bal.zako * 0.85));
 
     tools.state.entities.push({
-      kind:'obstacle',
-      name:'ステージ障害物',
-      x,
-      y:-60,
-      w:58,
-      h:58,
-      r:30,
+      kind:def.kind || 'obstacle',
+      name:def.name || '障害物',
+      image:def.image,
+      x:tools.rand(tools.W * 0.18, tools.W * 0.82),
+      y:-70,
+      vx:Number(def.vx || 0),
+      vy:Number(def.vy || 1.4),
+      w:def.w || 58,
+      h:def.h || 58,
+      r:def.r || 30,
       hp,
       maxHp:hp,
       value:hp,
-      score:8,
-      coinMin:1,
-      coinMax:2,
-      vy:1.45,
-      dead:false
+      score:Number(def.score || 8),
+      coinMin:Number(def.coinMin || 1),
+      coinMax:Number(def.coinMax || 2),
+      dead:false,
+      bob:tools.rand(0, Math.PI * 2),
+      aiType:def.aiType || ''
     });
   }
 
@@ -758,14 +786,14 @@
 
     e.stageSummonCd = Math.floor((330 + Math.random() * 150) * difficultyBalance(e).cd * frequencyRelax(true));
 
-    summonStageEnemy(e, tools, Math.random() < 0.45 ? 2 : 1, 0.65);
+    summonStageEnemy(e, tools, Math.random() < 0.45 ? 2 : 1, 1.15);
   }
 
   function maybeSpawnStageObstacles(e, tools, config){
     const allow = config.spawnStageObstacles !== false;
     if (!allow || e.stageObstacleCd > 0) return;
 
-    e.stageObstacleCd = Math.floor((220 + Math.random() * 120) * difficultyBalance(e).cd);
+    e.stageObstacleCd = Math.floor((260 + Math.random() * 150) * difficultyBalance(e).cd);
     spawnStageObstacle(e, tools);
   }
 
@@ -814,15 +842,6 @@
         directRing(e, tools, 6, normalOpt(e, 'normal', { speed:1.52 * bal.speed, hp:7 }));
         return true;
 
-      case 'fourWayDifferentSpeed':
-        for (let i = 0; i < 4; i++) {
-          directBullet(e, tools, Math.PI * 0.5 + (i - 1.5) * 0.45, normalOpt(e, 'normal', {
-            speed:(1.15 + i * 0.22) * bal.speed,
-            hp:7
-          }));
-        }
-        return true;
-
       case 'fastThreeBurst':
         directLine(e, tools, 3, normalOpt(e, 'small', { speed:2.35 * bal.speed, hp:5 }));
         return true;
@@ -837,10 +856,6 @@
 
       case 'fastEightBurst':
         directLine(e, tools, 8, normalOpt(e, 'small', { speed:2.10 * bal.speed, hp:5 }));
-        return true;
-
-      case 'superFastThreeBurst':
-        directLine(e, tools, 3, normalOpt(e, 'small', { speed:2.75 * bal.speed, hp:5 }));
         return true;
 
       case 'slowHugeThreeWay':
@@ -918,16 +933,6 @@
         setGhost(e, tools, 180);
         return true;
 
-      case 'invisibleHugeTriple':
-        setGhost(e, tools, 180);
-        safeFireSpread(e, tools, 3, 0.22, { sizeType:'huge', speed:0.95 * bal.speed, hp:17, special:true });
-        return true;
-
-      case 'invisibleHugeFive':
-        setGhost(e, tools, 180);
-        safeFireSpread(e, tools, 5, 0.18, { sizeType:'huge', speed:0.92 * bal.speed, hp:18, special:true });
-        return true;
-
       case 'frontBreakableBarrier':
         setBarrier(e, tools, 'front');
         return true;
@@ -977,17 +982,24 @@
 
       case 'summonStageZako':
       case 'summonZako':
-        summonStageEnemy(e, tools, 2, 0.65);
+        summonStageEnemy(e, tools, 2, 1.15);
         return true;
 
       case 'activeMovingClones':
       case 'summonLilithClones':
-        if (skills() && skills().summonLilithSisters) {
-          skills().summonLilithSisters(e, tools, { moveBoost:Number(config.cloneMoveBoost || 1.65) });
+        if (skills() && skills().makeClones) {
+          skills().makeClones(e, tools, 3, { moveBoost:Number(config.cloneMoveBoost || 1.8) });
           return true;
         }
         directRing(e, tools, 10, bulletOpt(e, 'small', { speed:1.45 * bal.speed, hp:5 }));
         return true;
+
+      case 'summonLilithOnce':
+        if (!e.sistersUsed && skills() && skills().summonLilithSisters) {
+          skills().summonLilithSisters(e, tools, { moveBoost:1.65 });
+          return true;
+        }
+        return false;
 
       case 'healTenPercent':
         if (!e.extraHealUsed) {
@@ -998,83 +1010,6 @@
         }
         return true;
 
-      case 'lightningRandomTen':
-      case 'wideRandomFast':
-      case 'approachRandomFast':
-      case 'randomSixBurst':
-      case 'randomFiveBurst':
-        directRing(e, tools, key === 'lightningRandomTen' ? 10 : 6, normalOpt(e, 'small', {
-          speed:1.75 * bal.speed,
-          hp:key === 'lightningRandomTen' ? 8 : 5
-        }));
-        return true;
-
-      case 'threeWayDouble':
-        safeFireSpread(e, tools, 3, 0.24, { sizeType:'small', speed:1.8 * bal.speed, hp:5 });
-        setTimeout(function(){
-          if (!e.dead) safeFireSpread(e, tools, 3, 0.24, { sizeType:'small', speed:1.8 * bal.speed, hp:5 });
-        }, 160);
-        return true;
-
-      case 'fakeDashThreeWay':
-        if (tools.addText) tools.addText('フェイク！', e.x, e.y - 72, '#ffffff');
-        safeFireSpread(e, tools, 3, 0.22, { sizeType:'small', speed:1.9 * bal.speed, hp:5 });
-        return true;
-
-      case 'speedMoveShot':
-        startSideRapid(e, tools);
-        directLine(e, tools, 4, normalOpt(e, 'small', { speed:2.15 * bal.speed, hp:5 }));
-        return true;
-
-      case 'twoWayBurst':
-        safeFireSpread(e, tools, 2, 0.30, normalOpt(e, 'small', { speed:1.95 * bal.speed, hp:5 }));
-        return true;
-
-      case 'homingBreakable':
-      case 'homingBreakableDouble':
-      case 'jumpHomingBreakable':
-      case 'farHomingFive':
-        directLine(e, tools, key === 'farHomingFive' ? 5 : key === 'homingBreakableDouble' ? 2 : 1, bulletOpt(e, 'normal', {
-          speed:1.35 * bal.speed,
-          hp:12,
-          special:true
-        }));
-        return true;
-
-      case 'slowHugeBreakable':
-        safeFireSpread(e, tools, 1, 0, { sizeType:'huge', speed:0.8 * bal.speed, hp:16, special:true });
-        return true;
-
-      case 'sideFastContinuous':
-      case 'randomMoveFastContinuous':
-      case 'movingFastFourBurst':
-        startSideRapid(e, tools);
-        directLine(e, tools, key === 'movingFastFourBurst' ? 4 : 6, normalOpt(e, 'small', {
-          speed:2.05 * bal.speed,
-          hp:5
-        }));
-        return true;
-
-      case 'approachFastContinuous':
-        directLine(e, tools, 6, normalOpt(e, 'small', { speed:1.95 * bal.speed, hp:5 }));
-        return true;
-
-      case 'jumpHugeFour':
-        directRing(e, tools, 4, bulletOpt(e, 'huge', { speed:0.9 * bal.speed, hp:16, special:true }));
-        return true;
-
-      case 'jumpHugeSix':
-        directRing(e, tools, 6, bulletOpt(e, 'huge', { speed:0.9 * bal.speed, hp:18, special:true }));
-        return true;
-
-      case 'halfHpSummonMidAndZako':
-        if (!e.halfSummonUsed && e.hp <= e.maxHp * 0.5) {
-          e.halfSummonUsed = true;
-          summonStageEnemy(e, tools, 5, 0.55);
-          return true;
-        }
-        return false;
-
       case 'teleportAttack':
         e.x = clamp(tools.rand(tools.W * 0.20, tools.W * 0.80), tools.W * 0.15, tools.W * 0.85);
         e.y = clamp(tools.rand(tools.H * 0.12, tools.H * 0.34), tools.H * 0.10, tools.H * 0.38);
@@ -1082,37 +1017,10 @@
         if (tools.addText) tools.addText('瞬間移動！', e.x, e.y - 84, '#ff4aff');
         return true;
 
-      case 'summonLilithOnce':
-        if (!e.sistersUsed) {
-          e.sistersUsed = true;
-          if (skills() && skills().summonLilithSisters) {
-            skills().summonLilithSisters(e, tools);
-            return true;
-          }
-        }
-        return false;
-
       case 'dashInvisibleBarrage':
         startFastDash(e, tools, '透明突進！');
         setGhost(e, tools, 180);
         directRing(e, tools, 12, normalOpt(e, 'small', { speed:1.65 * bal.speed, hp:5 }));
-        return true;
-
-      case 'hyperEvadeAttack':
-        startSideRapid(e, tools);
-        directRing(e, tools, 10, normalOpt(e, 'small', { speed:1.65 * bal.speed, hp:5 }));
-        return true;
-
-      case 'sideHugeTriple':
-        startSideRapid(e, tools);
-        safeFireSpread(e, tools, 3, 0.18, { sizeType:'huge', speed:0.95 * bal.speed, hp:18, special:true });
-        return true;
-
-      case 'blueNeoDefault':
-      case 'purpleNeoDefault':
-      case 'enmaDefault':
-      case 'ultraLilithDefault':
-        runBossNormal(e, tools, config);
         return true;
 
       default:
@@ -1122,10 +1030,9 @@
 
   function runPatternFromConfig(e, tools, config, isBoss, mode){
     const patterns = getPatterns(config, isBoss);
-
     if (!patterns.length) return false;
 
-    let key;
+    let key = '';
 
     if (mode === 'shoot') {
       const normalKeys = patterns.filter(p =>
@@ -1177,9 +1084,6 @@
   }
 
   function safeRunSkill(e, tools, config, isBoss){
-    const ran = runPatternFromConfig(e, tools, config, isBoss, 'attack');
-    if (ran) return;
-
     try {
       if (skills()) {
         if (isBoss && skills().runByType) {
@@ -1195,6 +1099,8 @@
     } catch (err) {
       console.error('boss skill error:', e.name, err);
     }
+
+    if (runPatternFromConfig(e, tools, config, isBoss, 'attack')) return;
 
     if (isBoss) runBossNormal(e, tools, config);
     else runMidNormal(e, tools, config);
@@ -1312,7 +1218,9 @@
       e.healUsed = true;
 
       if (skills() && skills().healBoss) skills().healBoss(e, tools, 0.06);
-      if (skills() && skills().summonLilithSisters) skills().summonLilithSisters(e, tools);
+      if (skills() && skills().summonLilithSisters) {
+        skills().summonLilithSisters(e, tools, { moveBoost:1.65 });
+      }
     }
   }
 
