@@ -66,6 +66,26 @@
   };
 
   const DIFFICULTY_BALANCE = {
+    easy: {
+      hpMulExtra: 0.76,
+      minHp: 900,
+      minFinalHp: 0,
+      cdMul: 1.00,
+      minShootCd: 52,
+      minAttackCd: 98,
+      contactMul: 0.85,
+      weakEnemyMul: 0.70
+    },
+    hard: {
+      hpMulExtra: 0.88,
+      minHp: 1200,
+      minFinalHp: 0,
+      cdMul: 0.92,
+      minShootCd: 46,
+      minAttackCd: 90,
+      contactMul: 0.92,
+      weakEnemyMul: 0.82
+    },
     veryHard: {
       hpMulExtra: 1.00,
       minHp: 1600,
@@ -73,7 +93,8 @@
       cdMul: 0.82,
       minShootCd: 42,
       minAttackCd: 82,
-      contactMul: 1.00
+      contactMul: 1.00,
+      weakEnemyMul: 1.00
     },
     inferno: {
       hpMulExtra: 1.10,
@@ -82,7 +103,8 @@
       cdMul: 0.66,
       minShootCd: 34,
       minAttackCd: 66,
-      contactMul: 1.25
+      contactMul: 1.25,
+      weakEnemyMul: 1.25
     },
     legend: {
       hpMulExtra: 1.25,
@@ -91,7 +113,8 @@
       cdMul: 0.52,
       minShootCd: 28,
       minAttackCd: 54,
-      contactMul: 1.55
+      contactMul: 1.55,
+      weakEnemyMul: 1.55
     }
   };
 
@@ -156,8 +179,28 @@
     return 'hawk';
   }
 
+  function normalizeDifficultyKey(diff){
+    const raw = typeof diff === 'string' ? diff : diff && diff.key;
+    const key = String(raw || '').trim();
+
+    if (key === 'イージー') return 'easy';
+    if (key === 'ハード') return 'hard';
+    if (key === 'ベリーハード') return 'veryHard';
+    if (key === 'インフェルノ') return 'inferno';
+    if (key === 'レジェンド') return 'legend';
+
+    if (key === 'easy') return 'easy';
+    if (key === 'hard') return 'hard';
+    if (key === 'veryHard') return 'veryHard';
+    if (key === 'veryhard') return 'veryHard';
+    if (key === 'inferno') return 'inferno';
+    if (key === 'legend') return 'legend';
+
+    return 'veryHard';
+  }
+
   function getDifficultyBalance(diff){
-    const key = typeof diff === 'string' ? diff : diff && diff.key;
+    const key = normalizeDifficultyKey(diff);
     return DIFFICULTY_BALANCE[key] || DIFFICULTY_BALANCE.veryHard;
   }
 
@@ -171,24 +214,38 @@
     return JSON.parse(JSON.stringify(obj));
   }
 
+  function bossDataConfig(name){
+    if (
+      window.MobShotBossData &&
+      window.MobShotBossData.getBossConfig
+    ) {
+      return window.MobShotBossData.getBossConfig(name) || null;
+    }
+
+    return null;
+  }
+
   function fixBossDef(def, fallbackName){
     def = def || {};
 
     const fixedName = canonicalBossName(def.name || fallbackName || 'ホークモブ');
-    const type = def.type || typeFromName(fixedName);
+    const dataConfig = bossDataConfig(fixedName) || {};
+    const type = def.type || dataConfig.type || typeFromName(fixedName);
     const image = def.image || bossImageFromName(fixedName);
 
     return Object.assign({}, def, {
       name: fixedName,
       image,
       type,
-      hp: Number(def.hp || 520),
-      score: Number(def.score || 1000),
-      coin: Number(def.coin || 100),
-      shootCd: Number(def.shootCd || 130),
-      attackCd: Number(def.attackCd || 220),
-      moveSpeed: Number(def.moveSpeed || 1.25),
-      contactDmg: Number(def.contactDmg || 18)
+      hp: Number(def.hp || dataConfig.hp || 520),
+      score: Number(def.score || dataConfig.score || 1000),
+      coin: Number(def.coin || dataConfig.coin || 100),
+      shootCd: Number(def.shootCd || dataConfig.shootCd || 130),
+      attackCd: Number(def.attackCd || dataConfig.attackCd || 220),
+      moveSpeed: Number(def.moveSpeed || dataConfig.moveSpeed || 1.25),
+      contactDmg: Number(def.contactDmg || dataConfig.contactDmg || 18),
+      spawnWeakEnemies: dataConfig.spawnWeakEnemies !== false,
+      specialHpMul: Number(dataConfig.specialHpMul || 1.65)
     });
   }
 
@@ -266,6 +323,7 @@
     name = canonicalBossName(name);
     const type = typeFromName(name);
     const image = bossImageFromName(name);
+    const dataConfig = bossDataConfig(name) || {};
 
     return {
       name: name || 'ホークモブ',
@@ -294,30 +352,55 @@
         type === 'enma' ? 600 :
         type === 'maoh' ? 420 :
         260,
-      type,
-      shootCd:
-        type === 'ultraLilith' || type === 'enma'
-          ? 105
-          : type === 'neon' || type === 'smith'
-            ? 112
-            : 130,
-      attackCd:
-        type === 'ultraLilith' || type === 'enma'
-          ? 170
-          : type === 'maoh' || type === 'lilith'
-            ? 190
-            : 220,
-      moveSpeed:
-        type === 'guardian' || type === 'mail'
-          ? 0.95
-          : 1.25,
+      type: dataConfig.type || type,
+      shootCd: Number(
+        dataConfig.shootCd ||
+        (
+          type === 'ultraLilith' || type === 'enma'
+            ? 105
+            : type === 'neon' || type === 'smith'
+              ? 112
+              : 130
+        )
+      ),
+      attackCd: Number(
+        dataConfig.attackCd ||
+        (
+          type === 'ultraLilith' || type === 'enma'
+            ? 170
+            : type === 'maoh' || type === 'lilith'
+              ? 190
+              : 220
+        )
+      ),
+      moveSpeed: Number(
+        dataConfig.moveSpeed ||
+        (
+          type === 'guardian' || type === 'mail'
+            ? 0.95
+            : 1.25
+        )
+      ),
       contactDmg:
         type === 'ultraLilith' || type === 'enma'
           ? 28
           : type === 'maoh'
             ? 24
-            : 18
+            : 18,
+      spawnWeakEnemies: dataConfig.spawnWeakEnemies !== false,
+      specialHpMul: Number(dataConfig.specialHpMul || 1.65)
     };
+  }
+
+  function skillFlash(core, text, x, y, color, life){
+    core.state.texts.push({
+      text,
+      x,
+      y,
+      color,
+      life: life || 60,
+      big: true
+    });
   }
 
   function doubleBossEntranceEffect(core){
@@ -339,17 +422,6 @@
     }
 
     skillFlash(core, 'DOUBLE BOSS!!', cx, cy - 25, '#ffffff', 84);
-  }
-
-  function skillFlash(core, text, x, y, color, life){
-    core.state.texts.push({
-      text,
-      x,
-      y,
-      color,
-      life: life || 60,
-      big: true
-    });
   }
 
   function spawnDoubleBosses(core, stage, diff){
@@ -422,7 +494,10 @@
       __doubleSide: side,
       __doubleCounted: false,
       __doubleDifficulty: diff ? diff.key : '',
-      __doubleStageId: stage ? stage.id : 0
+      __doubleStageId: stage ? stage.id : 0,
+      eventDifficulty: diff ? diff.key : '',
+      spawnWeakEnemies: def.spawnWeakEnemies !== false,
+      specialHpMul: Number(def.specialHpMul || 1.65)
     };
 
     core.state.entities.push(e);
@@ -444,6 +519,47 @@
       targetY - 86,
       side === 0 ? '#ffe66b' : '#6be6ff'
     );
+  }
+
+  function spawnBossEntity(core, def, opt){
+    opt = opt || {};
+    def = fixBossDef(def);
+
+    const x = opt.x != null ? opt.x : core.W * 0.5;
+    const targetY = opt.targetY != null ? opt.targetY : core.H * 0.22;
+    const hpMul = Number(opt.hpMul || 1);
+    const hp = Math.max(1, Math.ceil(Number(def.hp || 520) * hpMul));
+
+    const e = {
+      kind: 'boss',
+      name: canonicalBossName(def.name),
+      image: def.image || bossImageFromName(def.name),
+      x,
+      y: opt.y != null ? opt.y : -190,
+      vx: Number(opt.vx || def.moveSpeed || 1.25),
+      vy: Number(opt.vy || 1.9),
+      r: Number(opt.r || def.r || 76),
+      hp,
+      maxHp: hp,
+      score: Number(opt.score || def.score || 1000),
+      coin: Number(opt.coin || def.coin || 100),
+      type: def.type || typeFromName(def.name),
+      shootCd: Number(opt.shootCd || def.shootCd || 130),
+      attackCd: Number(opt.attackCd || def.attackCd || 220),
+      targetY,
+      baseY: targetY,
+      contactDmg: Number(opt.contactDmg || def.contactDmg || 18),
+      dead: false,
+      bob: core.rand(0, Math.PI * 2),
+      eventDifficulty: opt.eventDifficulty || '',
+      spawnWeakEnemies: def.spawnWeakEnemies !== false,
+      specialHpMul: Number(def.specialHpMul || 1.65)
+    };
+
+    core.state.entities.push(e);
+    core.addText('BOSS!!', x, targetY - 86, '#ffe66b');
+
+    return e;
   }
 
   function bossDeathEffect(core, e){
@@ -527,6 +643,7 @@
     bossNameMatch,
     bossImageFromName,
     typeFromName,
+    normalizeDifficultyKey,
     getDifficultyBalance,
 
     getStageAreaData,
@@ -535,8 +652,10 @@
     getFallbackBossDef,
 
     doubleBossEntranceEffect,
+    skillFlash,
     spawnDoubleBosses,
     spawnDoubleBossEntity,
+    spawnBossEntity,
     bossDeathEffect,
     doubleBossClearEffect,
     onEntityKilled
