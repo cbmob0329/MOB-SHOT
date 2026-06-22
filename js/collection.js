@@ -174,44 +174,70 @@
       range:0
     };
 
+    function addPercent(target, rarity, plus, table){
+      const row = table[rarity] || table.R || { base:0, step:0 };
+      bonus[target] += row.base + plus * row.step;
+    }
+
     allStones().forEach(stone => {
       const data = state.stones[String(stone.no)];
       if (!data || !data.owned) return;
 
       const plus = Number(data.plus || 0);
       const key = categoryKey(stone);
+      const rarity = stone.rarity || 'R';
 
       if (key === 'enemy') {
-        bonus.score += plus * 0.005;
+        addPercent('score', rarity, plus, {
+          R:   { base:0.002, step:0.001 },
+          SR:  { base:0.006, step:0.002 },
+          SSR: { base:0.012, step:0.004 },
+          UR:  { base:0.025, step:0.008 }
+        });
       }
 
       if (key === 'mid') {
-        bonus.coin += plus * 0.006;
+        addPercent('coin', rarity, plus, {
+          R:   { base:0.006, step:0.002 },
+          SR:  { base:0.012, step:0.006 },
+          SSR: { base:0.025, step:0.010 },
+          UR:  { base:0.050, step:0.020 }
+        });
       }
 
       if (key === 'boss') {
-        bonus.hp += plus * 3;
+        if (rarity === 'SSR') bonus.hp += 50 + plus * 15;
+        else if (rarity === 'UR') bonus.hp += 100 + plus * 30;
+        else bonus.hp += 15 + plus * 8;
       }
 
       if (key === 'artist') {
-        bonus.score += plus * 0.003;
-        bonus.coin += plus * 0.003;
+        const value = rarity === 'UR'
+          ? 0.04 + plus * 0.012
+          : 0.02 + plus * 0.005;
+
+        bonus.score += value;
+        bonus.coin += value;
       }
 
       if (key === 'sp') {
-        bonus.power += plus * 0.03;
+        if (rarity === 'UR') {
+          bonus.power += 2 + plus * 0.3;
+        } else {
+          bonus.power += 0.5 + plus * 0.1;
+        }
       }
 
       if (key === 'pet') {
-        bonus.range += plus * 0.003;
+        bonus.range += 0.01 + plus * 0.003;
       }
 
       if (key === 'event') {
-        if (stone.rarity === 'UR') {
-          bonus.power += plus * 0.08;
-          bonus.range += plus * 0.003;
+        if (rarity === 'UR') {
+          bonus.power += 0.8 + plus * 0.2;
+          bonus.range += 0.01 + plus * 0.003;
         } else {
-          bonus.hp += plus * 10;
+          bonus.hp += 25 + plus * 15;
         }
       }
     });
