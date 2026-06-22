@@ -66,7 +66,12 @@
       type: isBoss ? 'hawk' : 'ptera',
       shootCd: isBoss ? 175 : 165,
       attackCd: isBoss ? 285 : 245,
-      moveSpeed: isBoss ? 1.05 : 1.05
+      moveSpeed: isBoss ? 1.05 : 1.05,
+      patterns: isBoss ? ['threeWayNormal', 'fastFourBurst', 'hugeThreeWay'] : ['unbreakableNormalShot', 'threeWayNormal'],
+      spawnWeakEnemies: isBoss,
+      spawnStageObstacles: !isBoss,
+      normalAttackBreakable: false,
+      specialHpMul: 1.65
     };
   }
 
@@ -110,6 +115,14 @@
     }
 
     return fallbackConfig(false);
+  }
+
+  function getPatterns(config, isBoss){
+    if (config && Array.isArray(config.patterns) && config.patterns.length) {
+      return config.patterns;
+    }
+
+    return isBoss ? fallbackConfig(true).patterns : fallbackConfig(false).patterns;
   }
 
   function clamp(v,a,b){
@@ -174,12 +187,18 @@
     e.specialVx = 0;
     e.hitPlayerCd = 0;
     e.summonCount = 0;
+    e.weakSummonCd = Math.floor((210 + Math.random() * 90) * bal.cd);
+    e.stageObstacleCd = Math.floor((180 + Math.random() * 80) * bal.cd);
     e.cloneUsed = false;
     e.sistersUsed = false;
     e.healUsed = false;
     e.extraHealUsed = false;
     e.barrierTimer = 0;
     e.barrierHp = 0;
+    e.frontBarrierTimer = 0;
+    e.frontBarrierHp = 0;
+    e.circleBarrierTimer = 0;
+    e.circleBarrierHp = 0;
     e.ghostTimer = 0;
     e.alpha = 1;
 
@@ -218,14 +237,26 @@
       if (e.barrierTimer <= 0) e.barrierHp = 0;
     }
 
+    if (e.frontBarrierTimer > 0) {
+      e.frontBarrierTimer--;
+      if (e.frontBarrierTimer <= 0) e.frontBarrierHp = 0;
+    }
+
+    if (e.circleBarrierTimer > 0) {
+      e.circleBarrierTimer--;
+      if (e.circleBarrierTimer <= 0) e.circleBarrierHp = 0;
+    }
+
     if (e.ghostTimer > 0) {
       e.ghostTimer--;
-      e.alpha = 0.46;
+      e.alpha = 0.32;
       if (e.ghostTimer <= 0) e.alpha = 1;
     }
 
     if (e.specialTimer > 0) e.specialTimer--;
     if (e.bigFireballCd > 0) e.bigFireballCd--;
+    if (e.weakSummonCd > 0) e.weakSummonCd--;
+    if (e.stageObstacleCd > 0) e.stageObstacleCd--;
     if (e.moveRetargetCd > 0) e.moveRetargetCd--;
   }
 
@@ -300,6 +331,40 @@
         e.specialVx = 0;
         e.moveRetargetCd = 0;
       }
+    } else if (e.specialMove === 'swayDash') {
+      if (!e.specialBaseX) e.specialBaseX = e.x;
+      if (!e.specialDashVy) e.specialDashVy = 3.2 * difficultyBalance(e).move;
+
+      e.y += e.specialDashVy;
+      e.x = e.specialBaseX + Math.sin(e.aiTimer * 0.34) * tools.W * 0.13;
+
+      if (e.y > tools.H * 0.62 || e.specialTimer <= 0) {
+        e.specialMove = 'dashReturn';
+        e.specialTimer = 80;
+        e.specialBaseX = 0;
+      }
+    } else if (e.specialMove === 'fastDash') {
+      if (!e.specialDashVy) e.specialDashVy = 4.2 * difficultyBalance(e).move;
+
+      e.y += e.specialDashVy;
+
+      if (e.y > tools.H * 0.64 || e.specialTimer <= 0) {
+        e.specialMove = 'dashReturn';
+        e.specialTimer = 80;
+      }
+    } else if (e.specialMove === 'dashReturn') {
+      const tx = tools.W * 0.5;
+      const ty = e.baseY || (isBoss ? tools.H * 0.24 : tools.H * 0.26);
+
+      e.x += (tx - e.x) * 0.05;
+      e.y += (ty - e.y) * 0.065;
+
+      if (Math.abs(e.y - ty) < 4 || e.specialTimer <= 0) {
+        e.y = ty;
+        e.specialMove = '';
+        e.specialDashVy = 0;
+        e.moveRetargetCd = 0;
+      }
     } else {
       const dx = Number(e.moveTargetX || e.x) - e.x;
 
@@ -325,7 +390,7 @@
         followY = 0.038;
       }
 
-      if (e.barrierTimer > 0) {
+      if (e.barrierTimer > 0 || e.frontBarrierTimer > 0 || e.circleBarrierTimer > 0) {
         followX *= 0.6;
         followY *= 0.6;
       }
@@ -346,7 +411,7 @@
       e.moveRetargetCd = 0;
     }
 
-    e.y = clamp(e.y, minY, maxY);
+    e.y = clamp(e.y, minY, maxY + tools.H * 0.28);
   }
 
   function updateDiveReturn(e, tools){
@@ -383,6 +448,7 @@
   function bulletOpt(e, sizeType, extra){
     const spec = getAttackSpec(e);
     const bal = difficultyBalance(e);
+    const hpMul = data() && data().getSpecialHpMultiplier ? data().getSpecialHpMultiplier(e.name) : 1.65;
     const opt = Object.assign({
       sizeType:sizeType || 'normal',
       image:spec.image || spec.fallbackImage || 'atk/hinotama.png',
@@ -390,8 +456,15 @@
       flipY:spec.flipY !== false,
       color:spec.color || '#ff7a35',
       speed:1.65 * bal.speed,
-      hp:7
+      hp:7,
+      breakable:true
     }, extra || {});
+
+    if (opt.breakable === false) {
+      opt.hp = 0;
+    } else if (opt.special || opt.sizeType === 'huge' || opt.sizeType === 'super') {
+      opt.hp = Math.ceil(Number(opt.hp || 8) * hpMul);
+    }
 
     return opt;
   }
@@ -412,11 +485,11 @@
       else r = Number(spec.normal || 32);
     }
 
-    const hp = Number(opt.hp || 0);
+    const hp = opt.breakable === false ? 0 : Number(opt.hp || 0);
 
     tools.state.entities.push({
       kind: 'enemyBullet',
-      x: e.x,
+      x: e.x + Number(opt.xOffset || 0),
       y: e.y + (opt.yOffset || 56),
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
@@ -433,9 +506,14 @@
       image: opt.image || spec.image || spec.fallbackImage || 'atk/hinotama.png',
       fallbackImage: opt.fallbackImage || spec.fallbackImage || 'atk/hinotama.png',
       flipY: opt.flipY !== false,
-      life: 430,
+      life: Number(opt.life || 430),
       fromBoss: true,
-      glow: true
+      bossSpecial: !!opt.special,
+      glow: opt.glow !== false,
+      pierce: !!opt.pierce,
+      trident: !!opt.trident,
+      shield: !!opt.shield,
+      barrier: !!opt.barrier
     });
   }
 
@@ -512,7 +590,7 @@
     e.bigFireballCd = Math.floor((isDoubleOrCoop(tools) ? 520 : 420) * difficultyBalance(e).cd);
     e.lastBigFireballFrame = tools.frame ? tools.frame() : 0;
 
-    const finalOpt = bulletOpt(e, 'super', opt || {});
+    const finalOpt = bulletOpt(e, 'super', Object.assign({ special:true, hp:18 }, opt || {}));
     bullets().chargeBigFireball(e, tools, text || 'ビッグ火の玉！', finalOpt);
     return true;
   }
@@ -525,155 +603,543 @@
     if (tools.addText) tools.addText('高速移動！', e.x, e.y - 80, '#ffffff');
   }
 
+  function startFastDash(e, tools, label){
+    e.specialMove = 'fastDash';
+    e.specialTimer = 90;
+    e.specialDashVy = 0;
+
+    if (tools.addText) tools.addText(label || '高速突進！', e.x, e.y - 80, '#ffef6b');
+  }
+
+  function startSwayDash(e, tools, label){
+    e.specialMove = 'swayDash';
+    e.specialTimer = 120;
+    e.specialBaseX = e.x;
+    e.specialDashVy = 0;
+
+    if (tools.addText) tools.addText(label || 'ジグザグ突進！', e.x, e.y - 80, '#ffcf5b');
+  }
+
+  function setGhost(e, tools, frames){
+    e.ghostTimer = frames || 180;
+    e.alpha = 0.32;
+
+    if (tools.addText) tools.addText('透明化！', e.x, e.y - 84, '#b78cff');
+  }
+
+  function setBarrier(e, tools, type){
+    const hpRate = type === 'circle' ? 0.075 : type === 'front' ? 0.055 : 0.06;
+    const hp = Math.max(10, Math.ceil(Number(e.maxHp || 100) * hpRate * (data() && data().getSpecialHpMultiplier ? data().getSpecialHpMultiplier(e.name) : 1.65)));
+
+    if (type === 'front') {
+      e.frontBarrierTimer = 210;
+      e.frontBarrierHp = hp;
+      if (tools.addText) tools.addText('前面バリア！', e.x, e.y - 86, '#ffcf5b');
+      return;
+    }
+
+    if (type === 'circle') {
+      e.circleBarrierTimer = 240;
+      e.circleBarrierHp = hp;
+      if (tools.addText) tools.addText('円形バリア！', e.x, e.y - 88, '#ff4aff');
+      return;
+    }
+
+    e.barrierTimer = 190;
+    e.barrierHp = hp;
+    if (tools.addText) tools.addText('バリア！', e.x, e.y - 86, '#ff8cff');
+  }
+
+  function summonWeakEnemy(e, tools){
+    if (!tools || !tools.state || !Array.isArray(tools.state.entities)) return;
+    if (e.summonCount >= 8) return;
+
+    const aliveWeak = tools.state.entities.filter(ent =>
+      ent && ent.kind === 'enemy' && !ent.dead && ent.isBossMinion
+    ).length;
+
+    if (aliveWeak >= 4) return;
+
+    const side = Math.random() < 0.5 ? -1 : 1;
+    const hp = Math.max(5, Math.ceil(Number(e.maxHp || 100) * 0.018));
+
+    tools.state.entities.push({
+      kind:'enemy',
+      enemyType:'zako',
+      isBossMinion:true,
+      name:'弱めの敵',
+      x:clamp(e.x + side * tools.rand(72, 130), tools.W * 0.12, tools.W * 0.88),
+      y:e.y + tools.rand(28, 72),
+      targetY:e.y + tools.rand(52, 110),
+      r:22,
+      hp,
+      maxHp:hp,
+      value:hp,
+      score:12,
+      coin:2,
+      vx:side * tools.rand(0.4, 0.9),
+      vy:tools.rand(0.55, 0.95),
+      dead:false,
+      alpha:1
+    });
+
+    e.summonCount++;
+
+    if (tools.addText) tools.addText('弱敵召喚', e.x, e.y - 64, '#dfeaff');
+  }
+
+  function spawnStageObstacle(e, tools){
+    if (!tools || !tools.state || !Array.isArray(tools.state.entities)) return;
+
+    const hp = Math.max(8, Math.ceil(Number(e.maxHp || 100) * 0.025));
+    const x = clamp(tools.rand(tools.W * 0.18, tools.W * 0.82), tools.W * 0.12, tools.W * 0.88);
+
+    tools.state.entities.push({
+      kind:'obstacle',
+      name:'ステージ障害物',
+      x,
+      y:-60,
+      w:58,
+      h:58,
+      r:30,
+      hp,
+      maxHp:hp,
+      value:hp,
+      score:8,
+      coin:2,
+      vy:1.45,
+      dead:false
+    });
+  }
+
+  function maybeSummonWeakEnemies(e, tools, config){
+    const allow = config.spawnWeakEnemies !== false;
+    if (!allow || e.weakSummonCd > 0) return;
+
+    e.weakSummonCd = Math.floor((260 + Math.random() * 120) * difficultyBalance(e).cd);
+    summonWeakEnemy(e, tools);
+    if (Math.random() < 0.45) summonWeakEnemy(e, tools);
+  }
+
+  function maybeSpawnStageObstacles(e, tools, config){
+    const allow = config.spawnStageObstacles !== false;
+    if (!allow || e.stageObstacleCd > 0) return;
+
+    e.stageObstacleCd = Math.floor((220 + Math.random() * 120) * difficultyBalance(e).cd);
+    spawnStageObstacle(e, tools);
+  }
+
+  function runPattern(e, tools, config, key, isBoss){
+    const bal = difficultyBalance(e);
+
+    switch(key){
+      case 'unbreakableNormalShot':
+        safeFireSpread(e, tools, isBoss ? 3 : 2, 0.20, {
+          sizeType:'small',
+          speed:(isBoss ? 1.95 : 1.72) * bal.speed,
+          hp:0,
+          breakable:false
+        });
+        return true;
+
+      case 'fourWayNormal':
+        directRing(e, tools, 4, bulletOpt(e, 'normal', { speed:1.55 * bal.speed, hp:0, breakable:false }));
+        return true;
+
+      case 'fiveWayNormal':
+        directRing(e, tools, 5, bulletOpt(e, 'normal', { speed:1.55 * bal.speed, hp:0, breakable:false }));
+        return true;
+
+      case 'threeWayNormal':
+        safeFireSpread(e, tools, 3, 0.22, { sizeType:'normal', speed:1.7 * bal.speed, hp:0, breakable:false });
+        return true;
+
+      case 'twoWayNormal':
+        safeFireSpread(e, tools, 2, 0.28, { sizeType:'normal', speed:1.75 * bal.speed, hp:0, breakable:false });
+        return true;
+
+      case 'oneWayFastNormal':
+        directLine(e, tools, 1, bulletOpt(e, 'normal', { speed:2.35 * bal.speed, hp:0, breakable:false }));
+        return true;
+
+      case 'randomThreeNormal':
+        directRing(e, tools, 3, bulletOpt(e, 'normal', { speed:1.55 * bal.speed, hp:0, breakable:false }));
+        return true;
+
+      case 'randomFiveNormal':
+        directRing(e, tools, 5, bulletOpt(e, 'normal', { speed:1.55 * bal.speed, hp:0, breakable:false }));
+        return true;
+
+      case 'randomSixNormal':
+        directRing(e, tools, 6, bulletOpt(e, 'normal', { speed:1.52 * bal.speed, hp:0, breakable:false }));
+        return true;
+
+      case 'fourWayDifferentSpeed':
+        for (let i = 0; i < 4; i++) {
+          directBullet(e, tools, Math.PI * 0.5 + (i - 1.5) * 0.45, bulletOpt(e, 'normal', {
+            speed:(1.15 + i * 0.22) * bal.speed,
+            hp:0,
+            breakable:false
+          }));
+        }
+        return true;
+
+      case 'fastThreeBurst':
+        directLine(e, tools, 3, bulletOpt(e, 'small', { speed:2.35 * bal.speed, hp:0, breakable:false }));
+        return true;
+
+      case 'fastFourBurst':
+        directLine(e, tools, 4, bulletOpt(e, 'small', { speed:2.25 * bal.speed, hp:0, breakable:false }));
+        return true;
+
+      case 'fastSixBurst':
+        directLine(e, tools, 6, bulletOpt(e, 'small', { speed:2.18 * bal.speed, hp:0, breakable:false }));
+        return true;
+
+      case 'fastEightBurst':
+        directLine(e, tools, 8, bulletOpt(e, 'small', { speed:2.10 * bal.speed, hp:0, breakable:false }));
+        return true;
+
+      case 'superFastThreeBurst':
+        directLine(e, tools, 3, bulletOpt(e, 'small', { speed:2.75 * bal.speed, hp:0, breakable:false }));
+        return true;
+
+      case 'slowHugeThreeWay':
+        safeFireSpread(e, tools, 3, 0.28, { sizeType:'huge', speed:0.95 * bal.speed, hp:14, special:true });
+        return true;
+
+      case 'slowHugeFiveWay':
+        safeFireSpread(e, tools, 5, 0.22, { sizeType:'huge', speed:0.9 * bal.speed, hp:15, special:true });
+        return true;
+
+      case 'hugeTwoWay':
+        safeFireSpread(e, tools, 2, 0.34, { sizeType:'huge', speed:1.08 * bal.speed, hp:15, special:true });
+        return true;
+
+      case 'hugeThreeWay':
+        safeFireSpread(e, tools, 3, 0.28, { sizeType:'huge', speed:1.08 * bal.speed, hp:16, special:true });
+        return true;
+
+      case 'hugeFourWay':
+        directRing(e, tools, 4, bulletOpt(e, 'huge', { speed:1.0 * bal.speed, hp:16, special:true }));
+        return true;
+
+      case 'hugeFiveWay':
+        safeFireSpread(e, tools, 5, 0.22, { sizeType:'huge', speed:1.02 * bal.speed, hp:17, special:true });
+        return true;
+
+      case 'hugeEightWay':
+        directRing(e, tools, 8, bulletOpt(e, 'huge', { speed:0.96 * bal.speed, hp:18, special:true }));
+        return true;
+
+      case 'chargedHugeTriple':
+        return tryBigFireball(e, tools, '巨大3連射！', { hp:20, speed:1.0 * bal.speed, special:true });
+
+      case 'chargedHugeFive':
+        return tryBigFireball(e, tools, '巨大5連射！', { hp:24, speed:1.0 * bal.speed, special:true });
+
+      case 'chargedSlowThree':
+        safeFireSpread(e, tools, 3, 0.22, { sizeType:'super', speed:0.72 * bal.speed, hp:20, special:true });
+        return true;
+
+      case 'chargedSlowFive':
+        safeFireSpread(e, tools, 5, 0.18, { sizeType:'super', speed:0.68 * bal.speed, hp:22, special:true });
+        return true;
+
+      case 'chargedSlowTen':
+        directRing(e, tools, 10, bulletOpt(e, 'super', { speed:0.58 * bal.speed, hp:24, special:true }));
+        return true;
+
+      case 'fastDash':
+      case 'dash':
+        startFastDash(e, tools, '高速突進！');
+        return true;
+
+      case 'swayDash':
+        startSwayDash(e, tools, '左右揺れ突進！');
+        return true;
+
+      case 'fastDashBarrage':
+        startFastDash(e, tools, '高速突進乱射！');
+        directLine(e, tools, 6, bulletOpt(e, 'small', { speed:2.15 * bal.speed, hp:0, breakable:false }));
+        return true;
+
+      case 'swayBarrage':
+        startSwayDash(e, tools, '左右揺れ乱射！');
+        directRing(e, tools, 12, bulletOpt(e, 'small', { speed:1.55 * bal.speed, hp:0, breakable:false }));
+        return true;
+
+      case 'stationaryBarrage':
+        e.specialMove = '';
+        directRing(e, tools, 16, bulletOpt(e, 'small', { speed:1.45 * bal.speed, hp:0, breakable:false }));
+        if (tools.addText) tools.addText('その場乱射！', e.x, e.y - 80, '#b78cff');
+        return true;
+
+      case 'invisibleThreeSeconds':
+        setGhost(e, tools, 180);
+        return true;
+
+      case 'invisibleHugeTriple':
+        setGhost(e, tools, 180);
+        safeFireSpread(e, tools, 3, 0.22, { sizeType:'huge', speed:0.95 * bal.speed, hp:17, special:true });
+        return true;
+
+      case 'invisibleHugeFive':
+        setGhost(e, tools, 180);
+        safeFireSpread(e, tools, 5, 0.18, { sizeType:'huge', speed:0.92 * bal.speed, hp:18, special:true });
+        return true;
+
+      case 'frontBreakableBarrier':
+        setBarrier(e, tools, 'front');
+        return true;
+
+      case 'circleBreakableBarrier':
+      case 'darkBreakableBarrier':
+        setBarrier(e, tools, 'circle');
+        return true;
+
+      case 'breakableBarrierThreeSeconds':
+        setBarrier(e, tools, 'normal');
+        e.barrierTimer = Math.max(e.barrierTimer, 180);
+        return true;
+
+      case 'giantStrongBall':
+        safeFireSpread(e, tools, 1, 0, {
+          sizeType:'super',
+          speed:0.78 * bal.speed,
+          hp:28,
+          special:true,
+          dmg:34 * bal.bullet
+        });
+        if (tools.addText) tools.addText('巨大玉！', e.x, e.y - 84, '#6be6ff');
+        return true;
+
+      case 'weakFlameBarrage':
+        directLine(e, tools, 10, bulletOpt(e, 'small', {
+          speed:1.75 * bal.speed,
+          hp:4,
+          dmg:6 * bal.bullet,
+          special:false
+        }));
+        if (tools.addText) tools.addText('火炎乱射！', e.x, e.y - 84, '#ff5b35');
+        return true;
+
+      case 'giantSlowTrident':
+        safeFireSpread(e, tools, 1, 0, {
+          sizeType:'super',
+          speed:0.56 * bal.speed,
+          hp:30,
+          special:true,
+          trident:true,
+          dmg:38 * bal.bullet
+        });
+        if (tools.addText) tools.addText('巨大トライデント！', e.x, e.y - 88, '#6be6ff');
+        return true;
+
+      case 'summonStageZako':
+      case 'summonZako':
+        summonWeakEnemy(e, tools);
+        summonWeakEnemy(e, tools);
+        return true;
+
+      case 'activeMovingClones':
+      case 'summonLilithClones':
+        if (skills() && skills().summonLilithSisters) {
+          skills().summonLilithSisters(e, tools, { moveBoost:Number(config.cloneMoveBoost || 1.65) });
+          return true;
+        }
+        directRing(e, tools, 10, bulletOpt(e, 'small', { speed:1.45 * bal.speed, hp:5 }));
+        return true;
+
+      case 'healTenPercent':
+        if (!e.extraHealUsed) {
+          e.extraHealUsed = true;
+          if (skills() && skills().healBoss) skills().healBoss(e, tools, 0.10);
+          else e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.10);
+          if (tools.addText) tools.addText('HP回復！', e.x, e.y - 90, '#9dff73');
+        }
+        return true;
+
+      case 'lightningRandomTen':
+      case 'wideRandomFast':
+      case 'approachRandomFast':
+      case 'randomSixBurst':
+      case 'randomFiveBurst':
+        directRing(e, tools, key === 'lightningRandomTen' ? 10 : 6, bulletOpt(e, 'small', {
+          speed:1.75 * bal.speed,
+          hp:key === 'lightningRandomTen' ? 8 : 0,
+          breakable:key === 'lightningRandomTen'
+        }));
+        return true;
+
+      case 'threeWayDouble':
+        safeFireSpread(e, tools, 3, 0.24, { sizeType:'small', speed:1.8 * bal.speed, hp:5 });
+        setTimeout(function(){
+          if (!e.dead) safeFireSpread(e, tools, 3, 0.24, { sizeType:'small', speed:1.8 * bal.speed, hp:5 });
+        }, 160);
+        return true;
+
+      case 'fakeDashThreeWay':
+        if (tools.addText) tools.addText('フェイク！', e.x, e.y - 72, '#ffffff');
+        safeFireSpread(e, tools, 3, 0.22, { sizeType:'small', speed:1.9 * bal.speed, hp:5 });
+        return true;
+
+      case 'speedMoveShot':
+        startSideRapid(e, tools);
+        directLine(e, tools, 4, bulletOpt(e, 'small', { speed:2.15 * bal.speed, hp:5 }));
+        return true;
+
+      case 'twoWayBurst':
+        safeFireSpread(e, tools, 2, 0.30, { sizeType:'small', speed:1.95 * bal.speed, hp:0, breakable:false });
+        return true;
+
+      case 'homingBreakable':
+      case 'homingBreakableDouble':
+      case 'jumpHomingBreakable':
+      case 'farHomingFive':
+        directLine(e, tools, key === 'farHomingFive' ? 5 : key === 'homingBreakableDouble' ? 2 : 1, bulletOpt(e, 'normal', {
+          speed:1.35 * bal.speed,
+          hp:12,
+          special:true
+        }));
+        return true;
+
+      case 'slowHugeBreakable':
+        safeFireSpread(e, tools, 1, 0, { sizeType:'huge', speed:0.8 * bal.speed, hp:16, special:true });
+        return true;
+
+      case 'sideFastContinuous':
+      case 'randomMoveFastContinuous':
+      case 'movingFastFourBurst':
+        startSideRapid(e, tools);
+        directLine(e, tools, key === 'movingFastFourBurst' ? 4 : 6, bulletOpt(e, 'small', {
+          speed:2.05 * bal.speed,
+          hp:0,
+          breakable:false
+        }));
+        return true;
+
+      case 'approachFastContinuous':
+        directLine(e, tools, 6, bulletOpt(e, 'small', { speed:1.95 * bal.speed, hp:0, breakable:false }));
+        return true;
+
+      case 'jumpHugeFour':
+        directRing(e, tools, 4, bulletOpt(e, 'huge', { speed:0.9 * bal.speed, hp:16, special:true }));
+        return true;
+
+      case 'jumpHugeSix':
+        directRing(e, tools, 6, bulletOpt(e, 'huge', { speed:0.9 * bal.speed, hp:18, special:true }));
+        return true;
+
+      case 'halfHpSummonMidAndZako':
+        if (!e.halfSummonUsed && e.hp <= e.maxHp * 0.5) {
+          e.halfSummonUsed = true;
+          for (let i = 0; i < 5; i++) summonWeakEnemy(e, tools);
+          return true;
+        }
+        return false;
+
+      case 'teleportAttack':
+        e.x = clamp(tools.rand(tools.W * 0.20, tools.W * 0.80), tools.W * 0.15, tools.W * 0.85);
+        e.y = clamp(tools.rand(tools.H * 0.12, tools.H * 0.34), tools.H * 0.10, tools.H * 0.38);
+        directRing(e, tools, 8, bulletOpt(e, 'normal', { speed:1.45 * bal.speed, hp:0, breakable:false }));
+        if (tools.addText) tools.addText('瞬間移動！', e.x, e.y - 84, '#ff4aff');
+        return true;
+
+      case 'summonLilithOnce':
+        if (!e.sistersUsed) {
+          e.sistersUsed = true;
+          if (skills() && skills().summonLilithSisters) {
+            skills().summonLilithSisters(e, tools);
+            return true;
+          }
+        }
+        return false;
+
+      case 'dashInvisibleBarrage':
+        startFastDash(e, tools, '透明突進！');
+        setGhost(e, tools, 180);
+        directRing(e, tools, 12, bulletOpt(e, 'small', { speed:1.65 * bal.speed, hp:0, breakable:false }));
+        return true;
+
+      case 'hyperEvadeAttack':
+        startSideRapid(e, tools);
+        directRing(e, tools, 10, bulletOpt(e, 'small', { speed:1.65 * bal.speed, hp:0, breakable:false }));
+        return true;
+
+      case 'sideHugeTriple':
+        startSideRapid(e, tools);
+        safeFireSpread(e, tools, 3, 0.18, { sizeType:'huge', speed:0.95 * bal.speed, hp:18, special:true });
+        return true;
+
+      case 'blueNeoDefault':
+      case 'purpleNeoDefault':
+      case 'enmaDefault':
+      case 'ultraLilithDefault':
+        runBossNormal(e, tools, config);
+        return true;
+
+      default:
+        return false;
+    }
+  }
+
+  function runPatternFromConfig(e, tools, config, isBoss, mode){
+    const patterns = getPatterns(config, isBoss);
+
+    if (!patterns.length) return false;
+
+    let key;
+
+    if (mode === 'shoot') {
+      const normalKeys = patterns.filter(p =>
+        String(p).indexOf('Normal') >= 0 ||
+        p === 'unbreakableNormalShot' ||
+        p === 'stationaryBarrage'
+      );
+
+      if (normalKeys.length) {
+        key = normalKeys[e.patternStep % normalKeys.length];
+      }
+    }
+
+    if (!key) {
+      key = patterns[e.attackStep % patterns.length];
+    }
+
+    return runPattern(e, tools, config, key, isBoss);
+  }
+
   function runMidNormal(e, tools, config){
-    const type = config.type;
     e.patternStep++;
 
-    if (type === 'rapid') {
-      if (e.patternStep % 3 === 0) directLine(e, tools, 3, bulletOpt(e, 'small', { speed:2.05 * difficultyBalance(e).speed, hp:4 }));
-      else safeFireSpread(e, tools, 2, 0.20, { sizeType:'small', speed:1.9 * difficultyBalance(e).speed, hp:5 });
-      return;
-    }
+    if (runPatternFromConfig(e, tools, config, false, 'shoot')) return;
 
-    if (type === 'magma' || type === 'heavy') {
-      if (e.patternStep % 3 === 0) directRing(e, tools, 8, bulletOpt(e, 'small', { speed:1.3 * difficultyBalance(e).speed, hp:6 }));
-      else safeFireSpread(e, tools, 2, 0.18, { sizeType:'normal', speed:1.55 * difficultyBalance(e).speed, hp:10 });
-      return;
-    }
-
-    if (type === 'thunder' || type === 'neon') {
-      if (e.patternStep % 4 === 0) startSideRapid(e, tools);
-      safeFireSpread(e, tools, 3, 0.17, { sizeType:'small', speed:1.85 * difficultyBalance(e).speed, hp:5, safeCenter:true });
-      return;
-    }
-
-    if (type === 'blade' || type === 'dash') {
-      if (e.patternStep % 3 === 0) startSideRapid(e, tools);
-      safeFireSpread(e, tools, 2, 0.24, { sizeType:'small', speed:2.0 * difficultyBalance(e).speed, hp:5 });
-      return;
-    }
-
-    if (type === 'lilith') {
-      if (e.patternStep % 3 === 0) directRing(e, tools, 7, bulletOpt(e, 'small', { speed:1.35 * difficultyBalance(e).speed, hp:5 }));
-      else safeFireSpread(e, tools, 3, 0.18, { sizeType:'small', speed:1.8 * difficultyBalance(e).speed, hp:5 });
-      return;
-    }
-
-    safeFireSpread(e, tools, 2, 0.22, { sizeType:'small', speed:1.8 * difficultyBalance(e).speed, hp:5 });
+    safeFireSpread(e, tools, 2, 0.22, {
+      sizeType:'small',
+      speed:1.8 * difficultyBalance(e).speed,
+      hp:config.normalAttackBreakable === true ? 5 : 0,
+      breakable:config.normalAttackBreakable === true
+    });
   }
 
   function runBossNormal(e, tools, config){
-    const type = config.type;
     e.patternStep++;
 
-    if (
-      (type === 'dragon' || type === 'maoh' || type === 'enma' || type === 'purpleNeo' || type === 'ultraLilith') &&
-      e.patternStep % 4 === 0 &&
-      tryBigFireball(e, tools, 'ビッグ火の玉！')
-    ) {
-      return;
-    }
-
-    if (type === 'hawk') {
-      if (e.patternStep % 3 === 0) {
-        directLine(e, tools, 4, bulletOpt(e, 'small', { speed:2.05 * difficultyBalance(e).speed, hp:5 }));
-      } else {
-        safeFireSpread(e, tools, 3, 0.22, { sizeType:'normal', speed:1.8 * difficultyBalance(e).speed, hp:6 });
-      }
-      return;
-    }
-
-    if (type === 'mira') {
-      if (e.patternStep % 3 === 0) startSideRapid(e, tools);
-      if (e.patternStep % 2 === 0) directRing(e, tools, 10, bulletOpt(e, 'small', { speed:1.25 * difficultyBalance(e).speed, hp:5 }));
-      else safeFireSpread(e, tools, 4, 0.16, { sizeType:'normal', speed:1.7 * difficultyBalance(e).speed, hp:7 });
-      return;
-    }
-
-    if (type === 'guardian') {
-      if (e.patternStep % 3 === 0) {
-        e.barrierTimer = 120;
-        e.barrierHp = Math.ceil(e.maxHp * 0.04);
-        if (tools.addText) tools.addText('ガード！', e.x, e.y - 84, '#ffcf5b');
-      }
-      safeFireSpread(e, tools, e.patternStep % 2 === 0 ? 3 : 2, 0.26, {
-        sizeType:'big',
-        speed:1.48 * difficultyBalance(e).speed,
-        hp:13
-      });
-      return;
-    }
-
-    if (type === 'neon') {
-      if (e.patternStep % 4 === 0) startSideRapid(e, tools);
-      if (e.patternStep % 2 === 0) directRing(e, tools, 12, bulletOpt(e, 'small', { speed:1.42 * difficultyBalance(e).speed, hp:5 }));
-      else safeFireSpread(e, tools, 4, 0.16, { sizeType:'normal', speed:1.95 * difficultyBalance(e).speed, hp:6 });
-      return;
-    }
-
-    if (type === 'dragon') {
-      if (e.patternStep % 3 === 0) {
-        directRing(e, tools, 9, bulletOpt(e, 'normal', { speed:1.25 * difficultyBalance(e).speed, hp:8 }));
-      } else {
-        safeFireSpread(e, tools, 3, 0.20, { sizeType:'big', speed:1.62 * difficultyBalance(e).speed, hp:11 });
-      }
-      return;
-    }
-
-    if (type === 'lilith' || type === 'ultraLilith') {
-      if (e.patternStep % 4 === 0) directRing(e, tools, type === 'ultraLilith' ? 16 : 12, bulletOpt(e, 'small', { speed:1.36 * difficultyBalance(e).speed, hp:5 }));
-      else safeFireSpread(e, tools, type === 'ultraLilith' ? 5 : 3, 0.16, { sizeType:'normal', speed:1.78 * difficultyBalance(e).speed, hp:7 });
-      return;
-    }
-
-    if (type === 'maoh') {
-      if (e.patternStep % 3 === 0) directRing(e, tools, 14, bulletOpt(e, 'normal', { speed:1.28 * difficultyBalance(e).speed, hp:8 }));
-      else safeFireSpread(e, tools, 5, 0.15, { sizeType:'normal', speed:1.72 * difficultyBalance(e).speed, hp:8, safeCenter:true });
-      return;
-    }
-
-    if (type === 'mail') {
-      if (e.patternStep % 3 === 0) {
-        e.barrierTimer = 150;
-        e.barrierHp = Math.ceil(e.maxHp * 0.05);
-      }
-      safeFireSpread(e, tools, 2, 0.26, { sizeType:'big', speed:1.48 * difficultyBalance(e).speed, hp:13 });
-      return;
-    }
-
-    if (type === 'smith') {
-      if (e.patternStep % 3 === 0) startSideRapid(e, tools);
-      safeFireSpread(e, tools, 4, 0.16, { sizeType:'normal', speed:1.85 * difficultyBalance(e).speed, hp:6 });
-      return;
-    }
-
-    if (type === 'nep') {
-      if (e.patternStep % 3 === 0) directRing(e, tools, 12, bulletOpt(e, 'small', { speed:1.35 * difficultyBalance(e).speed, hp:6 }));
-      else safeFireSpread(e, tools, 4, 0.18, { sizeType:'normal', speed:1.75 * difficultyBalance(e).speed, hp:7 });
-      return;
-    }
-
-    if (type === 'blueNeo' || type === 'purpleNeo') {
-      if (e.patternStep % 4 === 0) startSideRapid(e, tools);
-      if (e.patternStep % 2 === 0) directRing(e, tools, 12, bulletOpt(e, 'small', { speed:1.45 * difficultyBalance(e).speed, hp:5 }));
-      else safeFireSpread(e, tools, 4, 0.16, { sizeType:'normal', speed:1.95 * difficultyBalance(e).speed, hp:6 });
-      return;
-    }
-
-    if (type === 'enma') {
-      if (e.patternStep % 3 === 0) directRing(e, tools, 16, bulletOpt(e, 'normal', { speed:1.32 * difficultyBalance(e).speed, hp:8 }));
-      else safeFireSpread(e, tools, 5, 0.18, { sizeType:'big', speed:1.58 * difficultyBalance(e).speed, hp:12 });
-      return;
-    }
+    if (runPatternFromConfig(e, tools, config, true, 'shoot')) return;
 
     safeFireSpread(e, tools, 3, 0.20, {
       sizeType:'normal',
       speed:1.7 * difficultyBalance(e).speed,
-      hp:7
+      hp:0,
+      breakable:false
     });
   }
 
   function safeRunSkill(e, tools, config, isBoss){
+    const ran = runPatternFromConfig(e, tools, config, isBoss, 'attack');
+    if (ran) return;
+
     try {
       if (skills()) {
         if (isBoss && skills().runByType) {
@@ -741,6 +1207,7 @@
     if (updateDiveReturn(e, tools)) return;
 
     moveBase(e, tools, config, false);
+    maybeSpawnStageObstacles(e, tools, config);
 
     e.shootCd--;
     e.attackCd--;
@@ -778,6 +1245,7 @@
     if (updateDiveReturn(e, tools)) return;
 
     moveBase(e, tools, config, true);
+    maybeSummonWeakEnemies(e, tools, config);
 
     e.shootCd--;
     e.attackCd--;
