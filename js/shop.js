@@ -452,10 +452,10 @@
   ];
 
   const UPGRADE_MASTER = [
-    { key: 'power', name: 'POWER', max: 50, effectText: '攻撃力 +0.5', desc: '弾ダメージを上げる' },
-    { key: 'range', name: 'RANGE', max: 10, effectText: '射程 +0.5', desc: '弾の飛距離を伸ばす' },
-    { key: 'rapid', name: '攻撃速度', max: 30, effectText: '攻撃速度 +0.1', desc: '連射速度を少し上げる' },
-    { key: 'hp', name: 'HP', max: 99, effectText: '最大HP +10', desc: '最大ライフを増やす' }
+    { key: 'power', name: 'POWER', max: 120, effectText: '攻撃力 +0.5', desc: '弾ダメージを上げる' },
+    { key: 'range', name: 'RANGE', max: 15, effectText: '射程 +0.5', desc: '弾の飛距離を伸ばす' },
+    { key: 'rapid', name: '攻撃速度', max: 50, effectText: '攻撃速度 +0.1', desc: '連射速度を少し上げる' },
+    { key: 'hp', name: 'HP', max: 150, effectText: '最大HP +10', desc: '最大ライフを増やす' }
   ];
 
   let currentTab = 'avatar';
@@ -551,6 +551,107 @@
     return Number(save.rank || 1);
   }
 
+  function normalizeClearValue(value){
+    if (value === true) return true;
+    if (value === 1) return true;
+
+    const text = String(value || '').toLowerCase();
+
+    return (
+      text === 'true' ||
+      text === '1' ||
+      text === 'clear' ||
+      text === 'cleared' ||
+      text === 'yes' ||
+      text === 'on'
+    );
+  }
+
+  function hasInfernoCleared(){
+    const save = getSave();
+
+    if (
+      normalizeClearValue(save.infernoCleared) ||
+      normalizeClearValue(save.infernoClear) ||
+      normalizeClearValue(save.clearInferno) ||
+      normalizeClearValue(save.infernoCompleted) ||
+      normalizeClearValue(save.infernoComplete)
+    ) {
+      return true;
+    }
+
+    const numericCandidates = [
+      save.maxStage,
+      save.clearStage,
+      save.clearedStage,
+      save.highestStage,
+      save.stageProgress,
+      save.stage
+    ];
+
+    for (let i = 0; i < numericCandidates.length; i++) {
+      const n = Number(numericCandidates[i] || 0);
+
+      if (Number.isFinite(n) && n >= 89) {
+        return true;
+      }
+    }
+
+    try {
+      const directKeys = [
+        'mobshot_inferno_clear_v1',
+        'mobshot_inferno_cleared_v1',
+        'mobshot_clear_inferno_v1',
+        'mobshot_stage_inferno_clear_v1'
+      ];
+
+      for (let i = 0; i < directKeys.length; i++) {
+        if (normalizeClearValue(localStorage.getItem(directKeys[i]))) {
+          return true;
+        }
+      }
+
+      const stageRaw =
+        localStorage.getItem('mobshot_stage_clear_v1') ||
+        localStorage.getItem('mobshot_stage_state_v1') ||
+        localStorage.getItem('mobshot_progress_v1');
+
+      if (stageRaw) {
+        const parsed = JSON.parse(stageRaw);
+
+        if (
+          normalizeClearValue(parsed.infernoCleared) ||
+          normalizeClearValue(parsed.infernoClear) ||
+          normalizeClearValue(parsed.clearInferno)
+        ) {
+          return true;
+        }
+
+        const maxStage = Number(parsed.maxStage || parsed.clearStage || parsed.clearedStage || parsed.highestStage || 0);
+
+        if (Number.isFinite(maxStage) && maxStage >= 89) {
+          return true;
+        }
+
+        if (Array.isArray(parsed.clearedStages)) {
+          for (let i = 0; i < parsed.clearedStages.length; i++) {
+            const s = String(parsed.clearedStages[i] || '');
+
+            if (
+              s === '8-9' ||
+              s === 'inferno' ||
+              s.indexOf('inferno') >= 0
+            ) {
+              return true;
+            }
+          }
+        }
+      }
+    } catch(e) {}
+
+    return false;
+  }
+
   function canUnlock(item){
     return playerRank() >= Number(item.rank || 1);
   }
@@ -561,10 +662,10 @@
     return `${Number(item.price).toLocaleString()} COIN`;
   }
 
-  function getRankUpgradeCap(key){
-    const rank = playerRank();
-
+  function getNormalUpgradeCap(key){
     if (key === 'hp') return 99;
+
+    const rank = playerRank();
 
     if (rank <= 9) {
       if (key === 'power') return 5;
@@ -597,18 +698,37 @@
     return 99;
   }
 
-  function rankCapText(key){
-    if (key === 'hp') return 'RANK制限なし';
+  function getInfernoUpgradeCap(key){
+    if (key === 'power') return 120;
+    if (key === 'range') return 15;
+    if (key === 'rapid') return 50;
+    if (key === 'hp') return 150;
 
-    const rank = playerRank();
+    return getNormalUpgradeCap(key);
+  }
+
+  function getRankUpgradeCap(key){
+    if (hasInfernoCleared()) {
+      return getInfernoUpgradeCap(key);
+    }
+
+    return getNormalUpgradeCap(key);
+  }
+
+  function rankCapText(key){
     const cap = getRankUpgradeCap(key);
 
-    if (rank <= 9) return `現在RANK${rank}: Lv${cap}まで`;
-    if (rank <= 14) return `現在RANK${rank}: Lv${cap}まで`;
-    if (rank <= 25) return `現在RANK${rank}: Lv${cap}まで`;
-    if (rank <= 35) return `現在RANK${rank}: Lv${cap}まで`;
+    if (hasInfernoCleared()) {
+      return `インフェルノクリア済み: Lv${cap}まで`;
+    }
 
-    return 'RANK36以上: 制限なし';
+    if (key === 'hp') {
+      return `現在: Lv99まで / インフェルノクリア後 Lv150まで`;
+    }
+
+    const rank = playerRank();
+
+    return `現在RANK${rank}: Lv${cap}まで / インフェルノクリア後 Lv${getInfernoUpgradeCap(key)}まで`;
   }
 
   function upgradeCost(key, currentLv){
@@ -619,7 +739,9 @@
       if (nextLv <= 10) return 10000 + (nextLv - 5) * 4500;
       if (nextLv <= 30) return 35000 + (nextLv - 10) * 9000;
       if (nextLv <= 40) return 220000 + (nextLv - 30) * 22000;
-      return 470000 + (nextLv - 40) * 45000;
+      if (nextLv <= 50) return 470000 + (nextLv - 40) * 45000;
+      if (nextLv <= 80) return 950000 + (nextLv - 50) * 70000;
+      return 3100000 + (nextLv - 80) * 120000;
     }
 
     if (key === 'range') {
@@ -627,7 +749,8 @@
       if (nextLv <= 5) return 12000 + (nextLv - 2) * 10000;
       if (nextLv <= 8) return 50000 + (nextLv - 5) * 35000;
       if (nextLv <= 9) return 200000;
-      return 350000;
+      if (nextLv <= 10) return 350000;
+      return 550000 + (nextLv - 10) * 180000;
     }
 
     if (key === 'rapid') {
@@ -635,14 +758,16 @@
       if (nextLv <= 10) return 35000 + (nextLv - 5) * 15000;
       if (nextLv <= 15) return 120000 + (nextLv - 10) * 30000;
       if (nextLv <= 20) return 300000 + (nextLv - 15) * 60000;
-      return 650000 + (nextLv - 20) * 90000;
+      if (nextLv <= 30) return 650000 + (nextLv - 20) * 90000;
+      return 1600000 + (nextLv - 30) * 140000;
     }
 
     if (key === 'hp') {
       if (nextLv <= 10) return 1000 * nextLv;
       if (nextLv <= 30) return 12000 + (nextLv - 10) * 3500;
       if (nextLv <= 60) return 85000 + (nextLv - 30) * 7000;
-      return 300000 + (nextLv - 60) * 12000;
+      if (nextLv <= 99) return 300000 + (nextLv - 60) * 12000;
+      return 800000 + (nextLv - 99) * 25000;
     }
 
     return 999999999;
@@ -717,7 +842,7 @@
       }
 
       if (lv >= rankCap) {
-        alert(`現在のRANKではこれ以上強化できません。\n${rankCapText(key)}`);
+        alert(`現在はこれ以上強化できません。\n${rankCapText(key)}`);
         return;
       }
 
@@ -986,7 +1111,7 @@
             maxed
               ? 'MAX'
               : rankLocked
-                ? `RANK制限中 / Lv${rankCap}まで`
+                ? `制限中 / Lv${rankCap}まで`
                 : `次の強化: ${cost.toLocaleString()} COIN`
           }</div>
           <div class="shop-card-spec">${
@@ -1203,6 +1328,7 @@
     upgrade,
     upgradeBatch,
     calcUpgradeBatch,
+    hasInfernoCleared,
     AVATAR_MASTER,
     RECORD_MASTER,
     UPGRADE_MASTER
