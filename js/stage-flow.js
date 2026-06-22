@@ -4,7 +4,12 @@
   function fixBossName(name){
     if (name === '番人') return 'モブガーディアン';
     if (name === '番人Ⅱ') return 'モブガーディアンⅡ';
+    if (name === '番人II') return 'モブガーディアンⅡ';
     return name;
+  }
+
+  function clone(obj){
+    return JSON.parse(JSON.stringify(obj));
   }
 
   function fixDef(def){
@@ -195,6 +200,9 @@
       name: 'ネオン高速',
       background: 'sta/neonlord.png',
       legend: true,
+      doubleBoss: true,
+      bossA: { name:'ブルネオモブ', image:'boss/bossneonblue.png', hp:3100, score:13000, coin:2000 },
+      bossB: { name:'パルネオモブ', image:'boss/bossneonpur.png', hp:3400, score:15000, coin:2300 },
       zako: [
         { name:'ネオスラモブ', image:'en/neosura.png', hp:96, score:360, coinMin:15, coinMax:30, canShoot:true },
         { name:'モブネオレム', image:'en/neorem.png', hp:105, score:390, coinMin:16, coinMax:32, canShoot:true }
@@ -205,6 +213,10 @@
       ],
       boss: { name:'ブルネオモブ', image:'boss/bossneonblue.png', hp:3100, score:13000, coin:2000 },
       strongBoss: { name:'パルネオモブ', image:'boss/bossneonpur.png', hp:3400, score:15000, coin:2300 },
+      doubleBosses: [
+        { name:'ブルネオモブ', image:'boss/bossneonblue.png', hp:3100, score:13000, coin:2000 },
+        { name:'パルネオモブ', image:'boss/bossneonpur.png', hp:3400, score:15000, coin:2300 }
+      ],
       gimmicks: [
         { name:'ネオンスピーカー', image:'gimi/gimineonspi.png', hp:160, score:320, coinMin:25, coinMax:50 },
         { name:'ネオン街', image:'gimi/gimineon.png', hp:210, score:420, coinMin:32, coinMax:64 },
@@ -292,10 +304,6 @@
 
   const DIFFICULTY_BASE_SCALE = [1.00, 2.35, 4.10, 6.30, 8.80];
   const DIFFICULTY_MAX_SCALE = [2.20, 4.00, 6.20, 8.80, 12.00];
-
-  function clone(obj){
-    return JSON.parse(JSON.stringify(obj));
-  }
 
   function getStageInfo(){
     if (window.MobShotStorage && window.MobShotStorage.getCurrentStage) {
@@ -390,6 +398,17 @@
     });
   }
 
+  function scaleBossDef(def, scale, strong){
+    const copy = fixDef(def);
+
+    copy.hp = Math.ceil(Number(copy.hp || 1) * scale * (strong ? 1.15 : 1));
+    copy.score = Math.ceil(Number(copy.score || 0) * scale * (strong ? 1.15 : 1));
+    copy.coin = Math.ceil(Number(copy.coin || 0) * scale * (strong ? 1.15 : 1));
+    copy.strong = !!strong;
+
+    return copy;
+  }
+
   function pickMidBoss(area, info){
     const mids = area.midBoss || [];
 
@@ -402,13 +421,31 @@
 
   function buildBoss(area, info, scale){
     const strong = !!info.isStrongBoss || !!info.isLegend;
-    const src = strong ? (area.strongBoss || area.boss) : area.boss;
-    const copy = fixDef(src || area.boss);
 
-    copy.hp = Math.ceil(Number(copy.hp || 1) * scale * (strong ? 1.15 : 1));
-    copy.score = Math.ceil(Number(copy.score || 0) * scale * (strong ? 1.15 : 1));
-    copy.coin = Math.ceil(Number(copy.coin || 0) * scale * (strong ? 1.15 : 1));
-    copy.strong = strong;
+    if (area.doubleBoss && Array.isArray(area.doubleBosses) && area.doubleBosses.length >= 2) {
+      const bosses = area.doubleBosses.map(def => scaleBossDef(def, scale, strong));
+
+      bosses.forEach(boss => {
+        boss.isLegendBoss = !!info.isLegend;
+        boss.doubleBoss = true;
+      });
+
+      return {
+        name: bosses.map(b => b.name).join('＆'),
+        image: bosses[0].image,
+        hp: bosses.reduce((sum, b) => sum + Number(b.hp || 0), 0),
+        score: bosses.reduce((sum, b) => sum + Number(b.score || 0), 0),
+        coin: bosses.reduce((sum, b) => sum + Number(b.coin || 0), 0),
+        strong,
+        isLegendBoss: !!info.isLegend,
+        doubleBoss: true,
+        bosses
+      };
+    }
+
+    const src = strong ? (area.strongBoss || area.boss) : area.boss;
+    const copy = scaleBossDef(src || area.boss, scale, strong);
+
     copy.isLegendBoss = !!info.isLegend;
 
     return copy;
@@ -422,6 +459,8 @@
     const info = getStageInfo();
     const area = AREA_DATA[info.areaKey] || AREA_DATA.grass;
     const scale = totalScale(info);
+    const gimmicks = scaleList(area.gimmicks || [], scale);
+    const boss = buildBoss(area, info, scale);
 
     D.stage = Object.assign(D.stage || {}, {
       id: info.id,
@@ -436,15 +475,29 @@
       isStrongBoss: !!info.isStrongBoss,
       isLegend: !!info.isLegend,
       isTest: !!info.isTest,
-      stagePowerScale: scale
+      stagePowerScale: scale,
+      doubleBoss: !!boss.doubleBoss
     });
 
     D.enemies = D.enemies || {};
     D.enemies.zako = scaleList(area.zako || [], scale);
     D.enemies.midBoss = scaleList(pickMidBoss(area, info), scale);
-    D.enemies.boss = buildBoss(area, info, scale);
+    D.enemies.boss = boss;
 
-    D.gimmicks = scaleList(area.gimmicks || [], scale);
+    if (boss.doubleBoss && Array.isArray(boss.bosses)) {
+      D.enemies.bosses = boss.bosses.map(b => clone(b));
+      D.enemies.bossA = clone(boss.bosses[0]);
+      D.enemies.bossB = clone(boss.bosses[1]);
+    } else {
+      D.enemies.bosses = [clone(boss)];
+      delete D.enemies.bossA;
+      delete D.enemies.bossB;
+    }
+
+    D.gimmicks = gimmicks;
+    D.obstacles = gimmicks;
+    D.enemies.obstacles = gimmicks;
+
     D.chests = scaleList(CHESTS, scale);
 
     return info;
