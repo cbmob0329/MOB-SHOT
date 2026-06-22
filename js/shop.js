@@ -551,143 +551,8 @@
     return Number(save.rank || 1);
   }
 
-  function normalizeClearValue(value){
-    if (value === true) return true;
-    if (value === 1) return true;
-
-    const text = String(value || '').toLowerCase();
-
-    return (
-      text === 'true' ||
-      text === '1' ||
-      text === 'clear' ||
-      text === 'cleared' ||
-      text === 'yes' ||
-      text === 'on'
-    );
-  }
-
-  function hasInfernoCleared(){
-    try {
-      const progress = Math.floor(Number(localStorage.getItem('mobshot_stage_progress') || 1));
-
-      if (Number.isFinite(progress) && progress >= 72) {
-        return true;
-      }
-    } catch(e) {}
-
-    const save = getSave();
-
-    if (
-      normalizeClearValue(save.infernoCleared) ||
-      normalizeClearValue(save.infernoClear) ||
-      normalizeClearValue(save.clearInferno) ||
-      normalizeClearValue(save.infernoCompleted) ||
-      normalizeClearValue(save.infernoComplete)
-    ) {
-      return true;
-    }
-
-    const numericCandidates = [
-      save.maxStage,
-      save.clearStage,
-      save.clearedStage,
-      save.highestStage,
-      save.stageProgress,
-      save.stage
-    ];
-
-    for (let i = 0; i < numericCandidates.length; i++) {
-      const n = Number(numericCandidates[i] || 0);
-
-      if (Number.isFinite(n) && n >= 72) {
-        return true;
-      }
-    }
-
-    try {
-      const directKeys = [
-        'mobshot_inferno_clear_v1',
-        'mobshot_inferno_cleared_v1',
-        'mobshot_clear_inferno_v1',
-        'mobshot_stage_inferno_clear_v1'
-      ];
-
-      for (let i = 0; i < directKeys.length; i++) {
-        if (normalizeClearValue(localStorage.getItem(directKeys[i]))) {
-          return true;
-        }
-      }
-
-      const saveRaw = localStorage.getItem('mobshot_save');
-
-      if (saveRaw) {
-        const parsedSave = JSON.parse(saveRaw);
-
-        if (
-          normalizeClearValue(parsedSave.infernoCleared) ||
-          normalizeClearValue(parsedSave.infernoClear) ||
-          normalizeClearValue(parsedSave.clearInferno) ||
-          normalizeClearValue(parsedSave.infernoCompleted) ||
-          normalizeClearValue(parsedSave.infernoComplete)
-        ) {
-          return true;
-        }
-
-        const n = Number(
-          parsedSave.maxStage ||
-          parsedSave.clearStage ||
-          parsedSave.clearedStage ||
-          parsedSave.highestStage ||
-          parsedSave.stageProgress ||
-          parsedSave.stage ||
-          0
-        );
-
-        if (Number.isFinite(n) && n >= 72) {
-          return true;
-        }
-      }
-
-      const stageRaw =
-        localStorage.getItem('mobshot_stage_clear_v1') ||
-        localStorage.getItem('mobshot_stage_state_v1') ||
-        localStorage.getItem('mobshot_progress_v1');
-
-      if (stageRaw) {
-        const parsed = JSON.parse(stageRaw);
-
-        if (
-          normalizeClearValue(parsed.infernoCleared) ||
-          normalizeClearValue(parsed.infernoClear) ||
-          normalizeClearValue(parsed.clearInferno)
-        ) {
-          return true;
-        }
-
-        const maxStage = Number(parsed.maxStage || parsed.clearStage || parsed.clearedStage || parsed.highestStage || 0);
-
-        if (Number.isFinite(maxStage) && maxStage >= 72) {
-          return true;
-        }
-
-        if (Array.isArray(parsed.clearedStages)) {
-          for (let i = 0; i < parsed.clearedStages.length; i++) {
-            const s = String(parsed.clearedStages[i] || '');
-
-            if (
-              s === '8-9' ||
-              s === 'inferno' ||
-              s.indexOf('inferno') >= 0
-            ) {
-              return true;
-            }
-          }
-        }
-      }
-    } catch(e) {}
-
-    return false;
+  function hasLimitBreakUnlocked(){
+    return playerRank() >= 40;
   }
 
   function canUnlock(item){
@@ -736,7 +601,7 @@
     return 99;
   }
 
-  function getInfernoUpgradeCap(key){
+  function getLimitBreakUpgradeCap(key){
     if (key === 'power') return 120;
     if (key === 'range') return 15;
     if (key === 'rapid') return 50;
@@ -746,8 +611,8 @@
   }
 
   function getRankUpgradeCap(key){
-    if (hasInfernoCleared()) {
-      return getInfernoUpgradeCap(key);
+    if (hasLimitBreakUnlocked()) {
+      return getLimitBreakUpgradeCap(key);
     }
 
     return getNormalUpgradeCap(key);
@@ -756,17 +621,17 @@
   function rankCapText(key){
     const cap = getRankUpgradeCap(key);
 
-    if (hasInfernoCleared()) {
-      return `インフェルノクリア済み: Lv${cap}まで`;
+    if (hasLimitBreakUnlocked()) {
+      return `RANK40達成: Lv${cap}まで`;
     }
 
     if (key === 'hp') {
-      return `現在: Lv99まで / インフェルノクリア後 Lv150まで`;
+      return `現在: Lv99まで / RANK40でLv150解放`;
     }
 
     const rank = playerRank();
 
-    return `現在RANK${rank}: Lv${cap}まで / インフェルノクリア後 Lv${getInfernoUpgradeCap(key)}まで`;
+    return `現在RANK${rank}: Lv${cap}まで / RANK40でLv${getLimitBreakUpgradeCap(key)}解放`;
   }
 
   function upgradeCost(key, currentLv){
@@ -1366,7 +1231,7 @@
     upgrade,
     upgradeBatch,
     calcUpgradeBatch,
-    hasInfernoCleared,
+    hasLimitBreakUnlocked,
     AVATAR_MASTER,
     RECORD_MASTER,
     UPGRADE_MASTER
