@@ -231,8 +231,8 @@
 
           if (e.hp <= 0) {
             e.dead = true;
-            burst(e.x, e.y, e.color || '#9deeff', 12);
-            addText('BREAK', e.x, e.y - 12, '#9deeff');
+            burst(e.x, e.y, e.color || '#9deeff', e.bossSpecial ? 24 : 12);
+            addText(e.trident ? 'TRIDENT BREAK' : 'BREAK', e.x, e.y - 12, '#9deeff');
           }
 
           break;
@@ -245,13 +245,22 @@
         b.dead = true;
         burst(b.x, b.y, '#ffffff', 4);
 
-        if (hasBarrier(e)) {
+        if (hasFrontBarrier(e) && b.y > e.y - e.r * 0.55) {
+          damageFrontBarrier(e, b.dmg, tools);
+        } else if (hasCircleBarrier(e)) {
+          damageCircleBarrier(e, b.dmg, tools);
+        } else if (hasBarrier(e)) {
           damageBarrier(e, b.dmg, tools);
         } else {
-          e.hp -= b.dmg;
+          if (isGhostImmune(e)) {
+            addText('MISS', e.x, e.y - 70, '#b78cff');
+            burst(b.x, b.y, '#b78cff', 5);
+          } else {
+            e.hp -= b.dmg;
 
-          if (e.hp <= 0) {
-            killEntity(e);
+            if (e.hp <= 0) {
+              killEntity(e);
+            }
           }
         }
 
@@ -299,13 +308,13 @@
           const dmg = Math.max(1, Math.ceil(Number(e.dmg || e.hp || 1)));
           state.hp -= dmg;
           addText(`-${dmg}`, p.x, p.y - 50, '#ff5b5b');
-          burst(p.x, p.y, '#ff5b5b', 16);
+          burst(p.x, p.y, '#ff5b5b', e.bossSpecial ? 24 : 16);
         }
 
         continue;
       }
 
-      if (e.kind === 'midBoss' && e.diveMode) {
+      if (e.kind === 'midBoss' && isEnemyDashMode(e)) {
         if (
           Math.hypot(p.x - e.x, p.y - e.y) < p.r + e.r &&
           e.hitPlayerCd <= 0
@@ -327,7 +336,7 @@
         continue;
       }
 
-      if (e.kind === 'boss' && e.diveMode) {
+      if (e.kind === 'boss' && isEnemyDashMode(e)) {
         if (
           Math.hypot(p.x - e.x, p.y - e.y) < p.r + e.r &&
           e.hitPlayerCd <= 0
@@ -364,7 +373,7 @@
           continue;
         }
 
-        const dmg = Math.max(1, Math.ceil(Number(e.hp || 1)));
+        const dmg = Math.max(1, Math.ceil(Number(e.hp || e.value || 1)));
         state.hp -= dmg;
         addText(`-${dmg}`, p.x, p.y - 50, '#ff5b5b');
         burst(p.x, p.y, '#ff5b5b', 18);
@@ -452,8 +461,29 @@
     );
   }
 
+  function isGhostImmune(e){
+    return Number(e.ghostTimer || 0) > 0 || Number(e.alpha || 1) < 0.45;
+  }
+
+  function isEnemyDashMode(e){
+    return !!(
+      e.diveMode ||
+      e.specialMove === 'fastDash' ||
+      e.specialMove === 'swayDash' ||
+      e.specialMove === 'dashReturn'
+    );
+  }
+
   function hasBarrier(e){
     return Number(e.barrierTimer || 0) > 0 && Number(e.barrierHp || 0) > 0;
+  }
+
+  function hasFrontBarrier(e){
+    return Number(e.frontBarrierTimer || 0) > 0 && Number(e.frontBarrierHp || 0) > 0;
+  }
+
+  function hasCircleBarrier(e){
+    return Number(e.circleBarrierTimer || 0) > 0 && Number(e.circleBarrierHp || 0) > 0;
   }
 
   function damageBarrier(e, dmg, tools){
@@ -469,6 +499,38 @@
       e.barrierTimer = 0;
       burst(e.x, e.y, '#7be6ff', 34);
       addText('BARRIER BREAK', e.x, e.y - 82, '#9deeff');
+    }
+  }
+
+  function damageFrontBarrier(e, dmg, tools){
+    const burst = tools.burst;
+    const addText = tools.addText;
+
+    e.frontBarrierHp -= Number(dmg || 1);
+
+    burst(e.x, e.y + 14, '#ffcf5b', 8);
+
+    if (e.frontBarrierHp <= 0) {
+      e.frontBarrierHp = 0;
+      e.frontBarrierTimer = 0;
+      burst(e.x, e.y + 18, '#ffcf5b', 40);
+      addText('FRONT BARRIER BREAK', e.x, e.y - 82, '#ffcf5b');
+    }
+  }
+
+  function damageCircleBarrier(e, dmg, tools){
+    const burst = tools.burst;
+    const addText = tools.addText;
+
+    e.circleBarrierHp -= Number(dmg || 1);
+
+    burst(e.x, e.y, '#ff4aff', 8);
+
+    if (e.circleBarrierHp <= 0) {
+      e.circleBarrierHp = 0;
+      e.circleBarrierTimer = 0;
+      burst(e.x, e.y, '#ff4aff', 46);
+      addText('CIRCLE BARRIER BREAK', e.x, e.y - 86, '#ff8cff');
     }
   }
 
