@@ -187,7 +187,7 @@
     e.specialVx = 0;
     e.hitPlayerCd = 0;
     e.summonCount = 0;
-    e.weakSummonCd = Math.floor((210 + Math.random() * 90) * bal.cd);
+    e.stageSummonCd = Math.floor((230 + Math.random() * 110) * bal.cd);
     e.stageObstacleCd = Math.floor((180 + Math.random() * 80) * bal.cd);
     e.cloneUsed = false;
     e.sistersUsed = false;
@@ -255,7 +255,7 @@
 
     if (e.specialTimer > 0) e.specialTimer--;
     if (e.bigFireballCd > 0) e.bigFireballCd--;
-    if (e.weakSummonCd > 0) e.weakSummonCd--;
+    if (e.stageSummonCd > 0) e.stageSummonCd--;
     if (e.stageObstacleCd > 0) e.stageObstacleCd--;
     if (e.moveRetargetCd > 0) e.moveRetargetCd--;
   }
@@ -469,6 +469,25 @@
     return opt;
   }
 
+  function shouldNormalBreak(e, rate){
+    const r = rate == null ? 0.72 : Number(rate);
+    e.__normalBreakRoll = Number(e.__normalBreakRoll || 0) + 1;
+
+    if (e.__normalBreakRoll % 4 === 0) return false;
+
+    return Math.random() < r;
+  }
+
+  function normalOpt(e, sizeType, extra){
+    const breakable = shouldNormalBreak(e, 0.74);
+
+    return bulletOpt(e, sizeType || 'normal', Object.assign({
+      hp: breakable ? 6 : 0,
+      breakable,
+      special:false
+    }, extra || {}));
+  }
+
   function directBullet(e, tools, angle, opt){
     opt = opt || {};
     const spec = getAttackSpec(e);
@@ -650,42 +669,57 @@
     if (tools.addText) tools.addText('バリア！', e.x, e.y - 86, '#ff8cff');
   }
 
-  function summonWeakEnemy(e, tools){
-    if (!tools || !tools.state || !Array.isArray(tools.state.entities)) return;
-    if (e.summonCount >= 8) return;
+  function getAreaZakoList(tools){
+    const D = tools.D;
 
-    const aliveWeak = tools.state.entities.filter(ent =>
-      ent && ent.kind === 'enemy' && !ent.dead && ent.isBossMinion
-    ).length;
+    if (
+      D &&
+      D.enemies &&
+      Array.isArray(D.enemies.zako) &&
+      D.enemies.zako.length
+    ) {
+      return D.enemies.zako;
+    }
 
-    if (aliveWeak >= 4) return;
+    return [];
+  }
 
-    const side = Math.random() < 0.5 ? -1 : 1;
-    const hp = Math.max(5, Math.ceil(Number(e.maxHp || 100) * 0.018));
+  function summonStageEnemy(e, tools, count, hpRate){
+    const list = getAreaZakoList(tools);
+    if (!list.length) return;
 
-    tools.state.entities.push({
-      kind:'enemy',
-      enemyType:'zako',
-      isBossMinion:true,
-      name:'弱めの敵',
-      x:clamp(e.x + side * tools.rand(72, 130), tools.W * 0.12, tools.W * 0.88),
-      y:e.y + tools.rand(28, 72),
-      targetY:e.y + tools.rand(52, 110),
-      r:22,
-      hp,
-      maxHp:hp,
-      value:hp,
-      score:12,
-      coin:2,
-      vx:side * tools.rand(0.4, 0.9),
-      vy:tools.rand(0.55, 0.95),
-      dead:false,
-      alpha:1
-    });
+    const total = Number(count || 1);
+    const rate = Number(hpRate || 0.72);
 
-    e.summonCount++;
+    for (let i = 0; i < total; i++) {
+      const def = list[(Number(e.summonCount || 0) + i) % list.length];
+      const hp = Math.max(3, Math.ceil(Number(def.hp || 5) * rate * difficultyBalance(e).bullet));
 
-    if (tools.addText) tools.addText('弱敵召喚', e.x, e.y - 64, '#dfeaff');
+      tools.state.entities.push({
+        kind:'enemy',
+        name:def.name,
+        image:def.image,
+        x:tools.rand(tools.W * 0.18, tools.W * 0.82),
+        y:-80 - i * 54,
+        vx:tools.rand(-0.35, 0.35),
+        vy:1.05,
+        r:def.name === 'モブロック' ? 34 : 30,
+        hp,
+        maxHp:hp,
+        value:hp,
+        score:Number(def.score || 10),
+        coinMin:Number(def.coinMin || 1),
+        coinMax:Number(def.coinMax || 3),
+        dead:false,
+        bob:tools.rand(0, Math.PI * 2),
+        aiType:i % 2 === 0 ? 'sway' : 'hop',
+        isBossMinion:true
+      });
+    }
+
+    e.summonCount = Number(e.summonCount || 0) + total;
+
+    if (tools.addText) tools.addText('召喚！', e.x, e.y - 72, '#dfeaff');
   }
 
   function spawnStageObstacle(e, tools){
@@ -706,19 +740,20 @@
       maxHp:hp,
       value:hp,
       score:8,
-      coin:2,
+      coinMin:1,
+      coinMax:2,
       vy:1.45,
       dead:false
     });
   }
 
-  function maybeSummonWeakEnemies(e, tools, config){
+  function maybeSummonStageEnemies(e, tools, config){
     const allow = config.spawnWeakEnemies !== false;
-    if (!allow || e.weakSummonCd > 0) return;
+    if (!allow || e.stageSummonCd > 0) return;
 
-    e.weakSummonCd = Math.floor((260 + Math.random() * 120) * difficultyBalance(e).cd);
-    summonWeakEnemy(e, tools);
-    if (Math.random() < 0.45) summonWeakEnemy(e, tools);
+    e.stageSummonCd = Math.floor((300 + Math.random() * 140) * difficultyBalance(e).cd);
+
+    summonStageEnemy(e, tools, Math.random() < 0.45 ? 2 : 1, 0.65);
   }
 
   function maybeSpawnStageObstacles(e, tools, config){
@@ -743,65 +778,64 @@
         return true;
 
       case 'fourWayNormal':
-        directRing(e, tools, 4, bulletOpt(e, 'normal', { speed:1.55 * bal.speed, hp:0, breakable:false }));
+        directRing(e, tools, 4, normalOpt(e, 'normal', { speed:1.55 * bal.speed, hp:7 }));
         return true;
 
       case 'fiveWayNormal':
-        directRing(e, tools, 5, bulletOpt(e, 'normal', { speed:1.55 * bal.speed, hp:0, breakable:false }));
+        directRing(e, tools, 5, normalOpt(e, 'normal', { speed:1.55 * bal.speed, hp:7 }));
         return true;
 
       case 'threeWayNormal':
-        safeFireSpread(e, tools, 3, 0.22, { sizeType:'normal', speed:1.7 * bal.speed, hp:0, breakable:false });
+        safeFireSpread(e, tools, 3, 0.22, normalOpt(e, 'normal', { speed:1.7 * bal.speed, hp:7 }));
         return true;
 
       case 'twoWayNormal':
-        safeFireSpread(e, tools, 2, 0.28, { sizeType:'normal', speed:1.75 * bal.speed, hp:0, breakable:false });
+        safeFireSpread(e, tools, 2, 0.28, normalOpt(e, 'normal', { speed:1.75 * bal.speed, hp:7 }));
         return true;
 
       case 'oneWayFastNormal':
-        directLine(e, tools, 1, bulletOpt(e, 'normal', { speed:2.35 * bal.speed, hp:0, breakable:false }));
+        directLine(e, tools, 1, normalOpt(e, 'normal', { speed:2.35 * bal.speed, hp:7 }));
         return true;
 
       case 'randomThreeNormal':
-        directRing(e, tools, 3, bulletOpt(e, 'normal', { speed:1.55 * bal.speed, hp:0, breakable:false }));
+        directRing(e, tools, 3, normalOpt(e, 'normal', { speed:1.55 * bal.speed, hp:7 }));
         return true;
 
       case 'randomFiveNormal':
-        directRing(e, tools, 5, bulletOpt(e, 'normal', { speed:1.55 * bal.speed, hp:0, breakable:false }));
+        directRing(e, tools, 5, normalOpt(e, 'normal', { speed:1.55 * bal.speed, hp:7 }));
         return true;
 
       case 'randomSixNormal':
-        directRing(e, tools, 6, bulletOpt(e, 'normal', { speed:1.52 * bal.speed, hp:0, breakable:false }));
+        directRing(e, tools, 6, normalOpt(e, 'normal', { speed:1.52 * bal.speed, hp:7 }));
         return true;
 
       case 'fourWayDifferentSpeed':
         for (let i = 0; i < 4; i++) {
-          directBullet(e, tools, Math.PI * 0.5 + (i - 1.5) * 0.45, bulletOpt(e, 'normal', {
+          directBullet(e, tools, Math.PI * 0.5 + (i - 1.5) * 0.45, normalOpt(e, 'normal', {
             speed:(1.15 + i * 0.22) * bal.speed,
-            hp:0,
-            breakable:false
+            hp:7
           }));
         }
         return true;
 
       case 'fastThreeBurst':
-        directLine(e, tools, 3, bulletOpt(e, 'small', { speed:2.35 * bal.speed, hp:0, breakable:false }));
+        directLine(e, tools, 3, normalOpt(e, 'small', { speed:2.35 * bal.speed, hp:5 }));
         return true;
 
       case 'fastFourBurst':
-        directLine(e, tools, 4, bulletOpt(e, 'small', { speed:2.25 * bal.speed, hp:0, breakable:false }));
+        directLine(e, tools, 4, normalOpt(e, 'small', { speed:2.25 * bal.speed, hp:5 }));
         return true;
 
       case 'fastSixBurst':
-        directLine(e, tools, 6, bulletOpt(e, 'small', { speed:2.18 * bal.speed, hp:0, breakable:false }));
+        directLine(e, tools, 6, normalOpt(e, 'small', { speed:2.18 * bal.speed, hp:5 }));
         return true;
 
       case 'fastEightBurst':
-        directLine(e, tools, 8, bulletOpt(e, 'small', { speed:2.10 * bal.speed, hp:0, breakable:false }));
+        directLine(e, tools, 8, normalOpt(e, 'small', { speed:2.10 * bal.speed, hp:5 }));
         return true;
 
       case 'superFastThreeBurst':
-        directLine(e, tools, 3, bulletOpt(e, 'small', { speed:2.75 * bal.speed, hp:0, breakable:false }));
+        directLine(e, tools, 3, normalOpt(e, 'small', { speed:2.75 * bal.speed, hp:5 }));
         return true;
 
       case 'slowHugeThreeWay':
@@ -861,17 +895,17 @@
 
       case 'fastDashBarrage':
         startFastDash(e, tools, '高速突進乱射！');
-        directLine(e, tools, 6, bulletOpt(e, 'small', { speed:2.15 * bal.speed, hp:0, breakable:false }));
+        directLine(e, tools, 6, normalOpt(e, 'small', { speed:2.15 * bal.speed, hp:5 }));
         return true;
 
       case 'swayBarrage':
         startSwayDash(e, tools, '左右揺れ乱射！');
-        directRing(e, tools, 12, bulletOpt(e, 'small', { speed:1.55 * bal.speed, hp:0, breakable:false }));
+        directRing(e, tools, 12, normalOpt(e, 'small', { speed:1.55 * bal.speed, hp:5 }));
         return true;
 
       case 'stationaryBarrage':
         e.specialMove = '';
-        directRing(e, tools, 16, bulletOpt(e, 'small', { speed:1.45 * bal.speed, hp:0, breakable:false }));
+        directRing(e, tools, 16, normalOpt(e, 'small', { speed:1.45 * bal.speed, hp:5 }));
         if (tools.addText) tools.addText('その場乱射！', e.x, e.y - 80, '#b78cff');
         return true;
 
@@ -938,8 +972,7 @@
 
       case 'summonStageZako':
       case 'summonZako':
-        summonWeakEnemy(e, tools);
-        summonWeakEnemy(e, tools);
+        summonStageEnemy(e, tools, 2, 0.65);
         return true;
 
       case 'activeMovingClones':
@@ -965,10 +998,9 @@
       case 'approachRandomFast':
       case 'randomSixBurst':
       case 'randomFiveBurst':
-        directRing(e, tools, key === 'lightningRandomTen' ? 10 : 6, bulletOpt(e, 'small', {
+        directRing(e, tools, key === 'lightningRandomTen' ? 10 : 6, normalOpt(e, 'small', {
           speed:1.75 * bal.speed,
-          hp:key === 'lightningRandomTen' ? 8 : 0,
-          breakable:key === 'lightningRandomTen'
+          hp:key === 'lightningRandomTen' ? 8 : 5
         }));
         return true;
 
@@ -986,11 +1018,11 @@
 
       case 'speedMoveShot':
         startSideRapid(e, tools);
-        directLine(e, tools, 4, bulletOpt(e, 'small', { speed:2.15 * bal.speed, hp:5 }));
+        directLine(e, tools, 4, normalOpt(e, 'small', { speed:2.15 * bal.speed, hp:5 }));
         return true;
 
       case 'twoWayBurst':
-        safeFireSpread(e, tools, 2, 0.30, { sizeType:'small', speed:1.95 * bal.speed, hp:0, breakable:false });
+        safeFireSpread(e, tools, 2, 0.30, normalOpt(e, 'small', { speed:1.95 * bal.speed, hp:5 }));
         return true;
 
       case 'homingBreakable':
@@ -1012,15 +1044,14 @@
       case 'randomMoveFastContinuous':
       case 'movingFastFourBurst':
         startSideRapid(e, tools);
-        directLine(e, tools, key === 'movingFastFourBurst' ? 4 : 6, bulletOpt(e, 'small', {
+        directLine(e, tools, key === 'movingFastFourBurst' ? 4 : 6, normalOpt(e, 'small', {
           speed:2.05 * bal.speed,
-          hp:0,
-          breakable:false
+          hp:5
         }));
         return true;
 
       case 'approachFastContinuous':
-        directLine(e, tools, 6, bulletOpt(e, 'small', { speed:1.95 * bal.speed, hp:0, breakable:false }));
+        directLine(e, tools, 6, normalOpt(e, 'small', { speed:1.95 * bal.speed, hp:5 }));
         return true;
 
       case 'jumpHugeFour':
@@ -1034,7 +1065,7 @@
       case 'halfHpSummonMidAndZako':
         if (!e.halfSummonUsed && e.hp <= e.maxHp * 0.5) {
           e.halfSummonUsed = true;
-          for (let i = 0; i < 5; i++) summonWeakEnemy(e, tools);
+          summonStageEnemy(e, tools, 5, 0.55);
           return true;
         }
         return false;
@@ -1042,7 +1073,7 @@
       case 'teleportAttack':
         e.x = clamp(tools.rand(tools.W * 0.20, tools.W * 0.80), tools.W * 0.15, tools.W * 0.85);
         e.y = clamp(tools.rand(tools.H * 0.12, tools.H * 0.34), tools.H * 0.10, tools.H * 0.38);
-        directRing(e, tools, 8, bulletOpt(e, 'normal', { speed:1.45 * bal.speed, hp:0, breakable:false }));
+        directRing(e, tools, 8, normalOpt(e, 'normal', { speed:1.45 * bal.speed, hp:7 }));
         if (tools.addText) tools.addText('瞬間移動！', e.x, e.y - 84, '#ff4aff');
         return true;
 
@@ -1059,12 +1090,12 @@
       case 'dashInvisibleBarrage':
         startFastDash(e, tools, '透明突進！');
         setGhost(e, tools, 180);
-        directRing(e, tools, 12, bulletOpt(e, 'small', { speed:1.65 * bal.speed, hp:0, breakable:false }));
+        directRing(e, tools, 12, normalOpt(e, 'small', { speed:1.65 * bal.speed, hp:5 }));
         return true;
 
       case 'hyperEvadeAttack':
         startSideRapid(e, tools);
-        directRing(e, tools, 10, bulletOpt(e, 'small', { speed:1.65 * bal.speed, hp:0, breakable:false }));
+        directRing(e, tools, 10, normalOpt(e, 'small', { speed:1.65 * bal.speed, hp:5 }));
         return true;
 
       case 'sideHugeTriple':
@@ -1115,11 +1146,13 @@
 
     if (runPatternFromConfig(e, tools, config, false, 'shoot')) return;
 
+    const breakable = shouldNormalBreak(e, 0.65);
+
     safeFireSpread(e, tools, 2, 0.22, {
       sizeType:'small',
       speed:1.8 * difficultyBalance(e).speed,
-      hp:config.normalAttackBreakable === true ? 5 : 0,
-      breakable:config.normalAttackBreakable === true
+      hp:breakable ? 5 : 0,
+      breakable
     });
   }
 
@@ -1128,11 +1161,13 @@
 
     if (runPatternFromConfig(e, tools, config, true, 'shoot')) return;
 
+    const breakable = shouldNormalBreak(e, 0.75);
+
     safeFireSpread(e, tools, 3, 0.20, {
       sizeType:'normal',
       speed:1.7 * difficultyBalance(e).speed,
-      hp:0,
-      breakable:false
+      hp:breakable ? 7 : 0,
+      breakable
     });
   }
 
@@ -1245,7 +1280,7 @@
     if (updateDiveReturn(e, tools)) return;
 
     moveBase(e, tools, config, true);
-    maybeSummonWeakEnemies(e, tools, config);
+    maybeSummonStageEnemies(e, tools, config);
 
     e.shootCd--;
     e.attackCd--;
