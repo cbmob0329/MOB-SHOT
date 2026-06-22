@@ -61,6 +61,10 @@
     return { cd:1, speed:1, bullet:1, move:1 };
   }
 
+  function frequencyRelax(isBoss){
+    return isBoss ? 1.09 : 1.03;
+  }
+
   function fallbackConfig(isBoss){
     return {
       type: isBoss ? 'hawk' : 'ptera',
@@ -168,15 +172,16 @@
 
     const bal = difficultyBalance(e);
     const slowMul = isBoss ? 1.10 : 1.05;
+    const relax = frequencyRelax(isBoss);
 
     e.shootCd = Math.max(
       isBoss ? 58 : 50,
-      Math.floor(Number(e.shootCd || config.shootCd || 150) * slowMul * bal.cd)
+      Math.floor(Number(e.shootCd || config.shootCd || 150) * slowMul * relax * bal.cd)
     );
 
     e.attackCd = Math.max(
       isBoss ? 95 : 82,
-      Math.floor(Number(e.attackCd || config.attackCd || 230) * slowMul * bal.cd)
+      Math.floor(Number(e.attackCd || config.attackCd || 230) * slowMul * relax * bal.cd)
     );
 
     e.attackStep = Number(e.attackStep || 0);
@@ -187,7 +192,7 @@
     e.specialVx = 0;
     e.hitPlayerCd = 0;
     e.summonCount = 0;
-    e.stageSummonCd = Math.floor((230 + Math.random() * 110) * bal.cd);
+    e.stageSummonCd = Math.floor((250 + Math.random() * 120) * bal.cd * relax);
     e.stageObstacleCd = Math.floor((180 + Math.random() * 80) * bal.cd);
     e.cloneUsed = false;
     e.sistersUsed = false;
@@ -213,7 +218,7 @@
     e.baseVx = Math.max(0.55, baseSpeed);
     e.vx = e.baseVx * (Math.random() < 0.5 ? -1 : 1);
 
-    e.bigFireballCd = Math.floor((330 + Math.random() * 140) * bal.cd);
+    e.bigFireballCd = Math.floor((350 + Math.random() * 150) * bal.cd * relax);
     e.lastBigFireballFrame = -9999;
   }
 
@@ -606,7 +611,7 @@
   function tryBigFireball(e, tools, text, opt){
     if (!canUseBigFireball(e, tools)) return false;
 
-    e.bigFireballCd = Math.floor((isDoubleOrCoop(tools) ? 520 : 420) * difficultyBalance(e).cd);
+    e.bigFireballCd = Math.floor((isDoubleOrCoop(tools) ? 560 : 455) * difficultyBalance(e).cd);
     e.lastBigFireballFrame = tools.frame ? tools.frame() : 0;
 
     const finalOpt = bulletOpt(e, 'super', Object.assign({ special:true, hp:18 }, opt || {}));
@@ -751,7 +756,7 @@
     const allow = config.spawnWeakEnemies !== false;
     if (!allow || e.stageSummonCd > 0) return;
 
-    e.stageSummonCd = Math.floor((300 + Math.random() * 140) * difficultyBalance(e).cd);
+    e.stageSummonCd = Math.floor((330 + Math.random() * 150) * difficultyBalance(e).cd * frequencyRelax(true));
 
     summonStageEnemy(e, tools, Math.random() < 0.45 ? 2 : 1, 0.65);
   }
@@ -1199,11 +1204,12 @@
     const bal = difficultyBalance(e);
     const base = Number(config.shootCd || (isBoss ? 155 : 140));
     const jitter = isBoss ? 34 : 26;
+    const relax = frequencyRelax(isBoss);
 
     return Math.floor(
       Math.max(
         isBoss ? 58 : 50,
-        (base + Math.random() * jitter) * attackRateMul(tools) * bal.cd
+        (base + Math.random() * jitter) * attackRateMul(tools) * relax * bal.cd
       )
     );
   }
@@ -1212,11 +1218,12 @@
     const bal = difficultyBalance(e);
     const base = Number(config.attackCd || (isBoss ? 245 : 205));
     const jitter = isBoss ? 52 : 40;
+    const relax = frequencyRelax(isBoss);
 
     return Math.floor(
       Math.max(
         isBoss ? 95 : 78,
-        (base + Math.random() * jitter) * attackRateMul(tools) * bal.cd
+        (base + Math.random() * jitter) * attackRateMul(tools) * relax * bal.cd
       )
     );
   }
