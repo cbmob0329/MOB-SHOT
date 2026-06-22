@@ -295,6 +295,14 @@
     }
   }
 
+  function refreshHud(){
+    if (window.MobShotMain && window.MobShotMain.refreshMainHud) {
+      window.MobShotMain.refreshMainHud();
+    }
+
+    window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
+  }
+
   function itemImageHtml(item, type){
     if (type === 'avatar') {
       return `<img src="${item.menuImage}" alt="${item.name}" onerror="this.style.display='none';">`;
@@ -321,6 +329,86 @@
     if (!data) return '未所持';
 
     return `Lv${data.level} / +${data.plus} / CT${data.cooldown}秒`;
+  }
+
+  function getSkillUpgradeCost(skillKey){
+    if (!window.MobShotSkills || !window.MobShotSkills.upgradeCost) {
+      return 999999999;
+    }
+
+    return Number(window.MobShotSkills.upgradeCost(skillKey) || 999999999);
+  }
+
+  function calcSkillUpgradeBatch(skillKey, limit){
+    if (!window.MobShotSkills || !window.MobShotSkills.loadState) {
+      return { count:0, cost:0 };
+    }
+
+    const state = window.MobShotSkills.loadState();
+    const item = state.skills[skillKey];
+
+    if (!item || !item.owned) {
+      return { count:0, cost:0 };
+    }
+
+    const save = getSave();
+
+    let lv = Number(item.level || 1);
+    let coin = Number(save.coin || 0);
+    let count = 0;
+    let costTotal = 0;
+
+    while (count < limit && lv < 99) {
+      let cost = 999999999;
+
+      if (window.MobShotSkills.upgradeCost) {
+        cost = Number(window.MobShotSkills.upgradeCost(skillKey, lv) || window.MobShotSkills.upgradeCost(skillKey) || 999999999);
+      }
+
+      if (coin < cost) break;
+
+      coin -= cost;
+      costTotal += cost;
+      lv += 1;
+      count += 1;
+    }
+
+    return {
+      count,
+      cost: costTotal
+    };
+  }
+
+  function upgradeSkillBatch(skillKey, limit){
+    if (!window.MobShotSkills || !window.MobShotSkills.loadState) return;
+
+    const batch = calcSkillUpgradeBatch(skillKey, limit);
+
+    if (batch.count <= 0) {
+      alert('COINが足りないか、最大Lvです。');
+      return;
+    }
+
+    let done = 0;
+
+    while (done < batch.count) {
+      if (!window.MobShotSkills.upgradeSkill) break;
+
+      const before = window.MobShotSkills.loadState();
+      const beforeLv = before.skills && before.skills[skillKey] ? Number(before.skills[skillKey].level || 1) : 1;
+
+      window.MobShotSkills.upgradeSkill(skillKey);
+
+      const after = window.MobShotSkills.loadState();
+      const afterLv = after.skills && after.skills[skillKey] ? Number(after.skills[skillKey].level || 1) : beforeLv;
+
+      if (afterLv <= beforeLv) break;
+
+      done += 1;
+    }
+
+    refreshHud();
+    render();
   }
 
   function renderAvatarList(){
@@ -373,7 +461,7 @@
           saveEquipState(equip);
           updateMainPlayerImage();
           render();
-          window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
+          refreshHud();
         });
       }
 
@@ -437,7 +525,7 @@
           equip.record = item.key;
           saveEquipState(equip);
           render();
-          window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
+          refreshHud();
         });
       }
 
@@ -464,7 +552,11 @@
       const owned = !!item.owned;
       const isEquipped = equipped.includes(skill.key);
       const runtime = window.MobShotSkills.getSkillRuntimeData(skill.key);
-      const cost = owned ? window.MobShotSkills.upgradeCost(skill.key) : 0;
+      const cost = owned ? getSkillUpgradeCost(skill.key) : 0;
+      const batch10 = owned ? calcSkillUpgradeBatch(skill.key, 10) : { count:0, cost:0 };
+      const batchMax = owned ? calcSkillUpgradeBatch(skill.key, 999) : { count:0, cost:0 };
+      const lv = Number(item.level || 1);
+      const maxed = owned && lv >= 99;
 
       const card = document.createElement('div');
 
@@ -484,31 +576,65 @@
           <div class="equip-card-price">${owned ? skillSpecText(skill) : 'ガチャで入手'}</div>
           <div class="equip-card-spec">${runtime ? `装備効果: CT${runtime.cooldown}秒` : '未所持'}</div>
           <div class="equip-card-spec">${isEquipped ? '装備中' : owned ? '所持中' : '未所持'}</div>
+          <div class="equip-card-spec">${
+            owned && !maxed
+              ? `10回: ${batch10.count > 0 ? `${batch10.count}Lv / ${batch10.cost.toLocaleString()} COIN` : '不可'}`
+              : ''
+          }</div>
+          <div class="equip-card-spec">${
+            owned && !maxed
+              ? `MAX: ${batchMax.count > 0 ? `${batchMax.count}Lv / ${batchMax.cost.toLocaleString()} COIN` : '不可'}`
+              : ''
+          }</div>
         </div>
 
-        <div class="equip-card-actions">
+        <div class="equip-card-actions" style="display:grid;gap:6px;">
           <button type="button" class="equip-card-btn ${isEquipped ? 'equipped' : ''}" ${!owned ? 'disabled' : ''}>
             ${isEquipped ? '外す' : owned ? '装備' : 'LOCK'}
           </button>
 
-          <button type="button" class="pet-upgrade-btn" ${!owned || item.level >= 99 ? 'disabled' : ''}>
-            強化<br>${owned && item.level < 99 ? cost.toLocaleString() : 'MAX'}
+          <button type="button" class="pet-upgrade-btn skill-up-one" ${!owned || maxed ? 'disabled' : ''}>
+            1回<br>${owned && !maxed ? cost.toLocaleString() : 'MAX'}
+          </button>
+
+          <button type="button" class="pet-upgrade-btn skill-up-ten" ${!owned || maxed || batch10.count <= 0 ? 'disabled' : ''}>
+            10回<br>${batch10.count > 0 ? batch10.cost.toLocaleString() : '不可'}
+          </button>
+
+          <button type="button" class="pet-upgrade-btn skill-up-max" ${!owned || maxed || batchMax.count <= 0 ? 'disabled' : ''}>
+            MAX<br>${batchMax.count > 0 ? batchMax.cost.toLocaleString() : '不可'}
           </button>
         </div>
       `;
 
       const equipBtn = card.querySelector('.equip-card-btn');
-      const upgradeBtn = card.querySelector('.pet-upgrade-btn');
+      const upgradeOneBtn = card.querySelector('.skill-up-one');
+      const upgradeTenBtn = card.querySelector('.skill-up-ten');
+      const upgradeMaxBtn = card.querySelector('.skill-up-max');
 
       if (equipBtn && owned) {
         equipBtn.addEventListener('click', function(){
           window.MobShotSkills.equipSkill(skill.key);
+          render();
+          refreshHud();
         });
       }
 
-      if (upgradeBtn && owned && item.level < 99) {
-        upgradeBtn.addEventListener('click', function(){
-          window.MobShotSkills.upgradeSkill(skill.key);
+      if (upgradeOneBtn && owned && !maxed) {
+        upgradeOneBtn.addEventListener('click', function(){
+          upgradeSkillBatch(skill.key, 1);
+        });
+      }
+
+      if (upgradeTenBtn && owned && !maxed && batch10.count > 0) {
+        upgradeTenBtn.addEventListener('click', function(){
+          upgradeSkillBatch(skill.key, 10);
+        });
+      }
+
+      if (upgradeMaxBtn && owned && !maxed && batchMax.count > 0) {
+        upgradeMaxBtn.addEventListener('click', function(){
+          upgradeSkillBatch(skill.key, 999);
         });
       }
 
@@ -661,6 +787,8 @@
     getEquipmentBonus,
     updateMainPlayerImage,
     loadEquipState,
-    saveEquipState
+    saveEquipState,
+    calcSkillUpgradeBatch,
+    upgradeSkillBatch
   };
 })();
