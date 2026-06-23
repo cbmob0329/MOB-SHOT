@@ -135,6 +135,48 @@
     }
   };
 
+  const QUEST_DIFFICULTY_FALLBACK = {
+    easy:{
+      key:'easy',
+      name:'イージー',
+      color:'#9dff73',
+      hpMul:0.85,
+      scoreMul:1,
+      coinMul:0.8,
+      enemyHpMul:0.8,
+      cost:5000
+    },
+    veryHard:{
+      key:'veryHard',
+      name:'ベリーハード',
+      color:'#ffcf5b',
+      hpMul:1.6,
+      scoreMul:1.6,
+      coinMul:1.2,
+      enemyHpMul:1.35,
+      cost:30000
+    },
+    legend:{
+      key:'legend',
+      name:'レジェンド',
+      color:'#d86bff',
+      hpMul:2.8,
+      scoreMul:2.5,
+      coinMul:1.8,
+      enemyHpMul:2.2,
+      cost:100000
+    }
+  };
+
+  const QUEST_STAGE_FALLBACK = {
+    1:{ id:1, key:'pterarush', title:'プテラッシュ', areaKey:'grass', areaName:'草原', background:'sta/backsougen.png' },
+    2:{ id:2, key:'thieves', title:'盗賊団', areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png' },
+    3:{ id:3, key:'guardian_test', title:'番人試験', areaKey:'town', areaName:'田舎町', background:null },
+    4:{ id:4, key:'nine_heads', title:'9つの首', areaKey:'neon', areaName:'ネオン街', background:'sta/backneon.png' },
+    5:{ id:5, key:'hot_magma', title:'アチアチマグマ', areaKey:'magma', areaName:'マグマ', background:'sta/backmagma.png' },
+    6:{ id:6, key:'lilith_sisters', title:'リリス四姉妹', areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png' }
+  };
+
   const BOSS_FALLBACK = {
     'ホークモブ':{ name:'ホークモブ', image:'boss/hawks.png', hp:600, score:1000, coin:200 },
     'ホークモブⅡ':{ name:'ホークモブⅡ', image:'boss/hawks2.png', hp:900, score:1400, coin:280 },
@@ -192,17 +234,9 @@
     return JSON.parse(JSON.stringify(obj));
   }
 
-  function rand(a, b){
-    return a + Math.random() * (b - a);
-  }
-
-  function intRand(a, b){
-    return Math.floor(rand(a, b + 1));
-  }
-
-  function pick(arr){
-    return arr && arr.length ? arr[Math.floor(Math.random() * arr.length)] : null;
-  }
+  function rand(a, b){ return a + Math.random() * (b - a); }
+  function intRand(a, b){ return Math.floor(rand(a, b + 1)); }
+  function pick(arr){ return arr && arr.length ? arr[Math.floor(Math.random() * arr.length)] : null; }
 
   function normalizeDifficultyKey(key){
     const raw = String(key || '').trim();
@@ -315,7 +349,52 @@
     return diff;
   }
 
+  function getQuestInfoFromEvent(data){
+    data = data || eventData || {};
+
+    const diffKey = normalizeDifficultyKey(
+      data.difficulty ||
+      data.difficultyKey ||
+      (data.questDifficulty && data.questDifficulty.key) ||
+      (data.difficultyData && data.difficultyData.key) ||
+      'easy'
+    );
+
+    let difficulty = clone(QUEST_DIFFICULTY_FALLBACK[diffKey] || QUEST_DIFFICULTY_FALLBACK.easy);
+
+    if (data.difficultyData) difficulty = Object.assign(difficulty, data.difficultyData);
+    if (data.questDifficulty) difficulty = Object.assign(difficulty, data.questDifficulty);
+
+    difficulty.key = diffKey;
+    difficulty.name = difficulty.name || QUEST_DIFFICULTY_FALLBACK[diffKey].name;
+
+    const qid = Number(
+      data.questStageId ||
+      data.stageId ||
+      (data.questStage && data.questStage.id) ||
+      (data.stage && data.stage.id) ||
+      1
+    );
+
+    let stage = clone(QUEST_STAGE_FALLBACK[qid] || QUEST_STAGE_FALLBACK[1]);
+
+    if (data.stage && data.stage.id) stage = Object.assign(stage, data.stage);
+    if (data.questStage && data.questStage.id) stage = Object.assign(stage, data.questStage);
+
+    stage.id = Number(stage.id || qid || 1);
+    stage.key = stage.key || QUEST_STAGE_FALLBACK[stage.id].key;
+    stage.title = stage.title || QUEST_STAGE_FALLBACK[stage.id].title;
+    stage.areaKey = stage.areaKey || QUEST_STAGE_FALLBACK[stage.id].areaKey;
+    stage.areaName = stage.areaName || QUEST_STAGE_FALLBACK[stage.id].areaName;
+
+    return { difficulty, stage };
+  }
+
   function getQuestInfo(){
+    if (eventData && eventData.key === 'eventQuest') {
+      return getQuestInfoFromEvent(eventData);
+    }
+
     let fromEvents = null;
 
     if (window.MobShotEvents && window.MobShotEvents.getCurrentQuest) {
@@ -324,26 +403,11 @@
 
     if (fromEvents && fromEvents.difficulty && fromEvents.stage) return fromEvents;
 
-    return {
-      difficulty:{
-        key:'easy',
-        name:'イージー',
-        color:'#9dff73',
-        hpMul:0.85,
-        scoreMul:1,
-        coinMul:0.8,
-        enemyHpMul:0.8,
-        cost:5000
-      },
-      stage:{
-        id:1,
-        key:'pterarush',
-        title:'プテラッシュ',
-        areaKey:'grass',
-        areaName:'草原',
-        background:'sta/backsougen.png'
-      }
-    };
+    return getQuestInfoFromEvent({
+      key:'eventQuest',
+      difficulty:'easy',
+      stageId:1
+    });
   }
 
   function getSave(){
@@ -1275,6 +1339,22 @@
     return drops;
   }
 
+  function hideResultButtons(){
+    const retry = document.getElementById('resultRetryBtn');
+    const home = document.getElementById('resultHomeBtn');
+
+    if (retry) retry.style.display = 'none';
+    if (home) home.style.display = 'none';
+  }
+
+  function showResultButtons(){
+    const retry = document.getElementById('resultRetryBtn');
+    const home = document.getElementById('resultHomeBtn');
+
+    if (retry) retry.style.display = '';
+    if (home) home.style.display = '';
+  }
+
   function injectDropStyle(){
     if (document.getElementById('mobEventDropStyle')) return;
 
@@ -1284,12 +1364,12 @@
       .mob-event-drop-pop{
         position:absolute;
         inset:0;
-        z-index:190;
+        z-index:260;
         display:flex;
         align-items:center;
         justify-content:center;
         padding:18px;
-        background:rgba(0,0,0,.68);
+        background:rgba(0,0,0,.74);
       }
       .mob-event-drop-pop.hidden{display:none}
       .mob-event-drop-card{
@@ -1313,6 +1393,8 @@
         grid-template-columns:1fr;
         gap:10px;
         margin-bottom:14px;
+        max-height:52vh;
+        overflow:auto;
       }
       .mob-event-drop-item{
         display:grid;
@@ -1380,19 +1462,31 @@
     const app = document.getElementById('app') || document.body;
     app.appendChild(pop);
 
-    document.getElementById('mobEventDropOk').addEventListener('click', function(){
-      pop.classList.add('hidden');
-    });
+    const ok = document.getElementById('mobEventDropOk');
+    if (ok) {
+      ok.addEventListener('click', function(){
+        pop.classList.add('hidden');
+        showResultButtons();
+      });
+    }
 
     pop.addEventListener('click', function(e){
-      if (e.target === pop) pop.classList.add('hidden');
+      if (e.target === pop) {
+        pop.classList.add('hidden');
+        showResultButtons();
+      }
     });
 
     return pop;
   }
 
   function showDropPop(drops){
-    if (!drops || !drops.length) return;
+    if (!drops || !drops.length) {
+      showResultButtons();
+      return;
+    }
+
+    hideResultButtons();
 
     const pop = ensureDropPop();
     const list = document.getElementById('mobEventDropList');
@@ -1457,7 +1551,13 @@
     active = true;
     eventType = eventData.key;
     difficultyKey = normalizeDifficultyKey(eventData.difficulty || eventData.difficultyKey || '');
-    stageId = Number(eventData.stageId || (eventData.stage && eventData.stage.id) || 0);
+    stageId = Number(
+      eventData.questStageId ||
+      eventData.stageId ||
+      (eventData.questStage && eventData.questStage.id) ||
+      (eventData.stage && eventData.stage.id) ||
+      0
+    );
 
     retryEventData = clone(eventData);
 
@@ -1491,7 +1591,7 @@
     }
 
     if (eventType === 'eventQuest') {
-      questInfo = getQuestInfo();
+      questInfo = getQuestInfoFromEvent(eventData);
 
       api.setEventMode({ active:true, key:'eventQuest' });
       setStageVisual(
@@ -1593,7 +1693,7 @@
     }
 
     if (clear && eventType === 'eventQuest') {
-      const info = getQuestInfo();
+      const info = questInfo || getQuestInfoFromEvent(eventData || retryEventData);
       const diff = info.difficulty;
       const stage = info.stage;
 
@@ -1606,7 +1706,9 @@
       if (drops.length) {
         setTimeout(function(){
           showDropPop(drops);
-        }, 420);
+        }, 0);
+      } else {
+        setTimeout(showResultButtons, 0);
       }
 
       text = `${stage.title} ${diff.name} クリア！`;
@@ -1654,7 +1756,7 @@
     }
 
     if (eventType === 'eventQuest') {
-      const info = questInfo || getQuestInfo();
+      const info = questInfo || getQuestInfoFromEvent(eventData);
 
       if (api.hudStage) {
         if (info.stage.key === 'thieves' || info.stage.key === 'hot_magma') {
