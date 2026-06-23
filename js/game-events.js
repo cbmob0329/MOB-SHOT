@@ -384,29 +384,54 @@
 
   function applyVisualSize(entity, opt){
     opt = opt || {};
-    const mul = Number(opt.visualScale || opt.scale || opt.sizeMul || entity.scale || 1);
-    const r = Number(opt.r || entity.r || 80);
 
-    entity.scale = mul;
-    entity.drawScale = mul;
-    entity.sizeMul = mul;
-    entity.imageScale = mul;
-    entity.spriteScale = mul;
-    entity.visualScale = mul;
-    entity.renderScale = mul;
-    entity.bossScale = mul;
+    const scale = Number(
+      opt.visualScale != null ? opt.visualScale :
+      opt.scale != null ? opt.scale :
+      opt.sizeMul != null ? opt.sizeMul :
+      entity.visualScale != null ? entity.visualScale :
+      entity.scale != null ? entity.scale :
+      1
+    );
+
+    const r = Number(opt.r || entity.r || 80);
+    const drawSize = Number(opt.drawSize || opt.customSize || opt.eventDrawSize || Math.max(24, Math.ceil(r * 2 * scale)));
 
     entity.r = r;
+    entity.hitR = r;
+    entity.radius = r;
+    entity.collisionR = r;
 
-    const box = Math.max(24, Math.ceil(r * 2));
-    entity.w = box;
-    entity.h = box;
-    entity.width = box;
-    entity.height = box;
-    entity.drawW = box;
-    entity.drawH = box;
-    entity.renderW = box;
-    entity.renderH = box;
+    entity.scale = scale;
+    entity.drawScale = scale;
+    entity.sizeMul = scale;
+    entity.imageScale = scale;
+    entity.spriteScale = scale;
+    entity.visualScale = scale;
+    entity.renderScale = scale;
+    entity.bossScale = scale;
+    entity.scaleX = scale;
+    entity.scaleY = scale;
+
+    entity.w = drawSize;
+    entity.h = drawSize;
+    entity.width = drawSize;
+    entity.height = drawSize;
+    entity.drawW = drawSize;
+    entity.drawH = drawSize;
+    entity.renderW = drawSize;
+    entity.renderH = drawSize;
+    entity.imgW = drawSize;
+    entity.imgH = drawSize;
+    entity.imageW = drawSize;
+    entity.imageH = drawSize;
+    entity.spriteW = drawSize;
+    entity.spriteH = drawSize;
+    entity.eventDrawSize = drawSize;
+    entity.drawSize = drawSize;
+    entity.customSize = drawSize;
+    entity.fixedDrawSize = drawSize;
+    entity.forceDrawSize = drawSize;
   }
 
   function makeBossEntity(def, api, opt){
@@ -460,6 +485,7 @@
       questBoss:!!opt.questBoss
     };
 
+    if (opt.flag) entity[opt.flag] = true;
     applyVisualSize(entity, opt);
 
     return entity;
@@ -778,6 +804,9 @@
         scale:opt.scale != null ? opt.scale : opt.sizeMul != null ? opt.sizeMul : 1,
         sizeMul:opt.sizeMul != null ? opt.sizeMul : opt.scale != null ? opt.scale : 1,
         visualScale:opt.visualScale != null ? opt.visualScale : opt.sizeMul != null ? opt.sizeMul : opt.scale != null ? opt.scale : 1,
+        drawSize:opt.drawSize,
+        customSize:opt.customSize,
+        eventDrawSize:opt.eventDrawSize,
         questBoss:true
       });
 
@@ -926,6 +955,9 @@
         r:80,
         sizeMul:1,
         visualScale:1,
+        drawSize:160,
+        customSize:160,
+        eventDrawSize:160,
         contactDmg:20,
         shootCd:100,
         attackCd:150
@@ -947,10 +979,13 @@
         hpMul:2.35,
         scoreMul:1.8,
         coinMul:1.2,
-        r:138,
-        sizeMul:1.65,
-        visualScale:1.65,
-        scale:1.65,
+        r:145,
+        sizeMul:1.85,
+        visualScale:1.85,
+        scale:1.85,
+        drawSize:285,
+        customSize:285,
+        eventDrawSize:285,
         contactDmg:34,
         vx:1.3,
         shootCd:90,
@@ -961,13 +996,14 @@
       api.state.entities.forEach(e => {
         if (e.questBoss && sameName(e.name, 'モブギドラ') && e.eventGiantGhidora) {
           applyVisualSize(e, {
-            r:138,
-            sizeMul:1.65,
-            visualScale:1.65,
-            scale:1.65
+            r:145,
+            sizeMul:1.85,
+            visualScale:1.85,
+            scale:1.85,
+            drawSize:285,
+            customSize:285,
+            eventDrawSize:285
           });
-          e.hp = Math.max(e.hp, Math.ceil(e.maxHp));
-          e.maxHp = e.hp;
         }
       });
 
@@ -981,30 +1017,21 @@
   }
 
   function updateHotMagma(api){
-    const stage = currentQuestStage();
+    const dragon = eventBossDef('ドラゴンモブ');
+    const magrem = getMidBossDef(api, 'magma', 'マグモブレム', MID_BOSS_FALLBACK['マグモブレム']);
 
-    updateQuestFieldSpawns(api, stage.areaKey, {
-      enemyInterval:[80, 120],
-      gimmickInterval:[155, 235]
-    });
+    localFrame++;
 
-    if (questPhase === 0) {
-      if (questKills >= 30 || localFrame > 1500) {
-        questPhase = 1;
-        questWaveSpawned = false;
-        nextEnemyAt = localFrame + 999999;
-        nextGimmickAt = localFrame + 999999;
-        nextChestAt = localFrame + 999999;
-        localFrame = 35;
-        api.showBanner('ドラゴン出現');
-      }
-      return;
+    if (localFrame === 1) {
+      api.showBanner('アチアチマグマ');
     }
 
-    if (!questWaveSpawned && questPhase === 1 && localFrame > 55) {
-      const dragon = eventBossDef('ドラゴンモブ');
-      const magrem = getMidBossDef(api, 'magma', 'マグモブレム', MID_BOSS_FALLBACK['マグモブレム']);
+    updateQuestFieldSpawns(api, currentQuestStage().areaKey, {
+      enemyInterval:[115, 170],
+      gimmickInterval:[165, 245]
+    });
 
+    if (!questWaveSpawned && localFrame > 55) {
       spawnQuestBossGroup(api, [dragon, magrem, magrem], {
         kind:'midBoss',
         hpMul:1.28,
@@ -1013,6 +1040,9 @@
         r:88,
         sizeMul:1,
         visualScale:1,
+        drawSize:176,
+        customSize:176,
+        eventDrawSize:176,
         contactDmg:24,
         shootCd:100,
         attackCd:155
@@ -1021,24 +1051,26 @@
       api.state.entities.forEach(e => {
         if (e.questBoss && sameName(e.name, 'ドラゴンモブ')) {
           e.kind = 'boss';
-          e.r = 112;
           e.hp = Math.ceil(e.hp * 1.25);
           e.maxHp = e.hp;
           applyVisualSize(e, {
             r:112,
             sizeMul:1.08,
             visualScale:1.08,
-            scale:1.08
+            scale:1.08,
+            drawSize:224,
+            customSize:224,
+            eventDrawSize:224
           });
         }
       });
 
-      api.showBanner('アチアチマグマ');
       questWaveSpawned = true;
       questBossSpawned = true;
+      api.showBanner('ドラゴン出現');
     }
 
-    if (questPhase === 1 && questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
+    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 140) {
       api.finishRun(true);
     }
   }
@@ -1057,9 +1089,12 @@
         scoreMul:0.75,
         coinMul:0.65,
         r:34,
-        sizeMul:0.32,
-        visualScale:0.32,
-        scale:0.32,
+        sizeMul:0.30,
+        visualScale:0.30,
+        scale:0.30,
+        drawSize:58,
+        customSize:58,
+        eventDrawSize:58,
         contactDmg:10,
         shootCd:105,
         attackCd:170,
@@ -1072,18 +1107,13 @@
           e.eventLilithSister = true;
           applyVisualSize(e, {
             r:34,
-            sizeMul:0.32,
-            visualScale:0.32,
-            scale:0.32
+            sizeMul:0.30,
+            visualScale:0.30,
+            scale:0.30,
+            drawSize:58,
+            customSize:58,
+            eventDrawSize:58
           });
-          e.w = 54;
-          e.h = 54;
-          e.width = 54;
-          e.height = 54;
-          e.drawW = 54;
-          e.drawH = 54;
-          e.renderW = 54;
-          e.renderH = 54;
         }
       });
 
@@ -1100,9 +1130,11 @@
   function updateEventQuest(api){
     const stage = currentQuestStage();
 
-    localFrame++;
+    if (stage.key !== 'hot_magma') {
+      localFrame++;
+    }
 
-    if (localFrame === 1) {
+    if (localFrame === 1 && stage.key !== 'hot_magma') {
       api.showBanner(`${stage.title} ${currentQuestDiff().name}`);
     }
 
@@ -1180,14 +1212,6 @@
 
     if (retry) retry.style.display = 'none';
     if (next) next.style.display = 'none';
-    if (home) home.style.display = '';
-  }
-
-  function showResultButtons(){
-    const retry = document.getElementById('resultRetryBtn');
-    const home = document.getElementById('resultHomeBtn');
-
-    if (retry) retry.style.display = '';
     if (home) home.style.display = '';
   }
 
