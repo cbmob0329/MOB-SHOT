@@ -7,7 +7,7 @@
   const EVENT_ITEM_KEY = 'mobshot_event_items_v1';
   const EVENT_STATS_KEY = 'mobshot_event_stats_v1';
 
-  const TEST_GOLD_TICKET_START = 10;
+  const TEST_GOLD_TICKET_START = 0;
 
   const GOLD_DIFFICULTIES = [
     { key:'easy', name:'イージー', icon:'mt/game1.png', color:'#9dff73', firstCoin:3000, firstDiamond:5, clearCoin:300, chestMul:0.8, bossHpMul:1.0, bossCoinMul:1.0, bossCount:2, bosses:['ホークモブ','ミラモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ホークモブ + ミラモブ' },
@@ -49,7 +49,7 @@
   ];
 
   const EVENTS = [
-    { key:'gold', name:'GOLD STAGE', image:'mt/event_gold.png', desc:'チケットを使ってコインを稼ぐイベント。' },
+    { key:'gold', name:'GOLD STAGE', image:'mt/event_gold.png', desc:'チケットなしで自由に挑戦できるコイン稼ぎイベント。' },
     { key:'scoreAttack', name:'スコアアタック', image:'mt/event_score.png', desc:'歴代ボスを順番に倒してハイスコアを目指すイベント。' },
     { key:'doubleBoss', name:'ダブルボス', image:'mt/event_double.png', desc:'ハード全クリアで解放。2体のボスを同時に撃破する高難易度イベント。' },
     { key:'eventQuest', name:'イベントクエスト', image:'mt/ieve.png', desc:'イージー全クリアで解放。' },
@@ -194,14 +194,6 @@
         color:#151000;
         background:linear-gradient(#ffe66b,#ffb423);
         box-shadow:0 3px 0 rgba(0,0,0,.35);
-      }
-
-      .event-ticket-text{
-        margin-top:6px;
-        font-weight:1000;
-        font-size:12px;
-        color:#ffcf5b;
-        text-shadow:0 2px 0 #000;
       }
 
       .event-double-title{
@@ -560,7 +552,7 @@
   }
 
   function defaultItems(){
-    return { goldTicket:TEST_GOLD_TICKET_START, __testInitialized:true };
+    return { goldTicket:0, __testInitialized:true };
   }
 
   function loadItems(){
@@ -639,45 +631,18 @@
   }
 
   function getGoldTicket(){
-    return loadItems().goldTicket;
+    return 0;
   }
 
   function addGoldTicket(amount){
-    const items = loadItems();
-    const add = Number(amount || 0);
-
-    items.goldTicket = Math.max(0, Number(items.goldTicket || 0) + add);
-    saveItems(items);
-
-    if (add > 0) addStat('goldTicketTotal', add);
-
-    render();
-    window.dispatchEvent(new CustomEvent('mobshot:eventItemsUpdated'));
-
-    return items.goldTicket;
+    return 0;
   }
 
   function consumeGoldTicket(amount){
-    const need = Math.max(1, Number(amount || 1));
-    const items = loadItems();
-
-    if (Number(items.goldTicket || 0) < need) return false;
-
-    items.goldTicket = Number(items.goldTicket || 0) - need;
-    saveItems(items);
-    addStat('goldTicketSpent', need);
-
-    render();
-    window.dispatchEvent(new CustomEvent('mobshot:eventItemsUpdated'));
-
     return true;
   }
 
   function resetTestTickets(){
-    const items = loadItems();
-    items.goldTicket = TEST_GOLD_TICKET_START;
-    items.__testInitialized = true;
-    saveItems(items);
     render();
     window.dispatchEvent(new CustomEvent('mobshot:eventItemsUpdated'));
   }
@@ -988,14 +953,6 @@
   }
 
   function renderGoldButtons(parent, unlocked){
-    const ticket = getGoldTicket();
-
-    const ticketText = document.createElement('div');
-    ticketText.className = 'event-ticket-text';
-    ticketText.textContent = `GOLD TICKET: ${ticket}`;
-
-    parent.appendChild(ticketText);
-
     const wrap = document.createElement('div');
     wrap.className = 'event-difficulty-grid';
 
@@ -1003,13 +960,12 @@
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'event-difficulty-card';
-      btn.disabled = !unlocked || ticket <= 0;
+      btn.disabled = !unlocked;
 
       const status =
         !unlocked ? 'LOCK' :
-        ticket <= 0 ? 'チケット不足' :
         hasGoldCleared(diff.key) ? 'CLEAR済' :
-        'NEW';
+        'START';
 
       btn.innerHTML = `
         <img src="${diff.icon}" alt="${diff.name}">
@@ -1024,17 +980,11 @@
 
         if (!unlocked) return;
 
-        if (getGoldTicket() <= 0) {
-          showMessage('GOLD TICKET不足', '通常ステージの宝箱からまれに入手できます。');
-          render();
-          return;
-        }
-
         openConfirm({
           title:'GOLD STAGE',
           sub:`${diff.name}に出撃しますか？`,
           reward:rewardTextGold(diff),
-          extra:`消費\nGOLD TICKET 1枚\n\n${diff.label}`,
+          extra:`チケット消費なし\n自由に挑戦できます。\n\n${diff.label}`,
           onYes:function(){
             startEvent('gold', diff.key);
           }
@@ -1278,14 +1228,6 @@
     if (key === 'eventQuest' && !isEventQuestUnlocked()) {
       showMessage('LOCK', '通常ステージのイージーを全てクリアすると解放されます。');
       return;
-    }
-
-    if (key === 'gold') {
-      if (!consumeGoldTicket(1)) {
-        showMessage('GOLD TICKET不足', '通常ステージの宝箱からまれに入手できます。');
-        render();
-        return;
-      }
     }
 
     if (key === 'doubleBoss') {
