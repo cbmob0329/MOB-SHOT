@@ -390,15 +390,10 @@
     return {
       goldClear:0,
       scoreAttackClear:0,
-      doubleBossClear:0,
       eventQuestClear:0,
       eventCoinTotal:0,
       eventBossKills:0,
-      goldTicketTotal:0,
-      goldTicketSpent:0,
       bossKills:{},
-      doubleClearByDifficulty:{ veryHard:0, inferno:0, legend:0 },
-      doubleStageClear:{},
       questClearByDifficulty:{ easy:0, veryHard:0, legend:0 },
       questStageClear:{}
     };
@@ -810,9 +805,7 @@
     const missions = [];
 
     const goldRuns = [1,2,3,5,7,10,15,20,30,40,50,75,100,150,200,300,500];
-    const doubleRuns = [1,2,3,5,7,10,15,20,30,50,75,100,150,200,300];
     const questRuns = [1,2,3,5,7,10,15,20,30,50,75,100,150,200,300];
-    const tickets = [1,3,5,10,20,30,50,75,100,150,200,300,500,750,1000,2000];
     const bossKills = [1,3,5,10,25,50,100,150,200,300,500,750,1000,1500,2000];
     const eventCoins = [
       1000,3000,5000,10000,30000,50000,100000,200000,300000,
@@ -850,65 +843,6 @@
         difficulty:item.key,
         target:1,
         reward:eventRewardByTier(item.tier)
-      });
-    });
-
-    doubleRuns.forEach(n => {
-      const tier = n >= 150 ? 'huge' : n >= 50 ? 'large' : n >= 10 ? 'medium' : 'small';
-      missions.push({
-        id:`event_double_clear_${n}`,
-        tab:'eventDouble',
-        icon:'双',
-        title:`ダブルボス ${n}回クリア`,
-        desc:'ダブルボスの累計クリア回数',
-        currentType:'eventDoubleClear',
-        target:n,
-        reward:eventRewardByTier(tier)
-      });
-    });
-
-    const stageNames = {
-      1:'草原',
-      2:'砂漠',
-      3:'ネオン街',
-      4:'魔王城',
-      5:'監獄',
-      6:'海の線路',
-      7:'魔王の間'
-    };
-
-    [
-      { key:'veryHard', name:'ベリーハード', max:6 },
-      { key:'inferno', name:'インフェルノ', max:6 },
-      { key:'legend', name:'レジェンド', max:7 }
-    ].forEach(diff => {
-      for (let i = 1; i <= diff.max; i++) {
-        const tier = i === 7 ? 'huge' : diff.key === 'legend' ? 'large' : diff.key === 'inferno' ? 'medium' : 'small';
-        missions.push({
-          id:`event_double_${diff.key}_${i}`,
-          tab:'eventDouble',
-          icon:'双',
-          title:`ダブルボス ${diff.name} ${stageNames[i]}クリア`,
-          desc:`${diff.name}の${stageNames[i]}をクリア`,
-          currentType:'eventDoubleStage',
-          difficulty:diff.key,
-          stageId:i,
-          target:1,
-          reward:eventRewardByTier(tier)
-        });
-      }
-
-      missions.push({
-        id:`event_double_${diff.key}_all`,
-        tab:'eventDouble',
-        icon:'制',
-        title:`ダブルボス ${diff.name} 全制覇`,
-        desc:`${diff.name}の全ステージをクリア`,
-        currentType:'eventDoubleAll',
-        difficulty:diff.key,
-        maxStage:diff.max,
-        target:diff.max,
-        reward:eventRewardByTier(diff.key === 'legend' ? 'huge' : 'large')
       });
     });
 
@@ -966,20 +900,6 @@
         maxStage:6,
         target:6,
         reward:eventRewardByTier(diff.key === 'legend' ? 'huge' : 'large')
-      });
-    });
-
-    tickets.forEach(n => {
-      const tier = n >= 1000 ? 'huge' : n >= 300 ? 'large' : n >= 50 ? 'medium' : 'small';
-      missions.push({
-        id:`event_ticket_${n}`,
-        tab:'eventOther',
-        icon:'券',
-        title:`GOLD TICKET 累計${n}枚入手`,
-        desc:'通常ステージの宝箱などから入手した累計枚数',
-        currentType:'eventTicketTotal',
-        target:n,
-        reward:eventRewardByTier(tier)
       });
     });
 
@@ -1113,30 +1033,12 @@
     if (mission.currentType === 'skillUseCount') return Number(s.skillUseCount || 0);
 
     if (mission.currentType === 'eventGoldClear') return Number(ev.goldClear || 0);
-    if (mission.currentType === 'eventDoubleClear') return Number(ev.doubleBossClear || 0);
     if (mission.currentType === 'eventQuestClear') return Number(ev.eventQuestClear || 0);
-    if (mission.currentType === 'eventTicketTotal') return Number(ev.goldTicketTotal || 0);
     if (mission.currentType === 'eventBossKills') return Number(ev.eventBossKills || 0);
     if (mission.currentType === 'eventCoinTotal') return Number(ev.eventCoinTotal || 0);
 
     if (mission.currentType === 'eventGoldFirst') {
       return window.MobShotEvents && window.MobShotEvents.hasGoldCleared && window.MobShotEvents.hasGoldCleared(mission.difficulty) ? 1 : 0;
-    }
-
-    if (mission.currentType === 'eventDoubleStage') {
-      return window.MobShotEvents && window.MobShotEvents.hasDoubleCleared && window.MobShotEvents.hasDoubleCleared(mission.difficulty, mission.stageId) ? 1 : 0;
-    }
-
-    if (mission.currentType === 'eventDoubleAll') {
-      let count = 0;
-
-      for (let i = 1; i <= Number(mission.maxStage || 0); i++) {
-        if (window.MobShotEvents && window.MobShotEvents.hasDoubleCleared && window.MobShotEvents.hasDoubleCleared(mission.difficulty, i)) {
-          count++;
-        }
-      }
-
-      return count;
     }
 
     if (mission.currentType === 'eventQuestStage') {
@@ -1166,7 +1068,6 @@
       { id:'missionTabCollection', text:'石板', tab:'collection' },
       { id:'missionTabSkill', text:'スキル', tab:'skill' },
       { id:'missionTabEventGold', text:'GOLD', tab:'eventGold' },
-      { id:'missionTabEventDouble', text:'ダブル', tab:'eventDouble' },
       { id:'missionTabEventQuest', text:'クエスト', tab:'eventQuest' },
       { id:'missionTabEventOther', text:'イベント他', tab:'eventOther' }
     ].forEach(item => {
@@ -1315,7 +1216,6 @@
       collection:$('missionTabCollection'),
       skill:$('missionTabSkill'),
       eventGold:$('missionTabEventGold'),
-      eventDouble:$('missionTabEventDouble'),
       eventQuest:$('missionTabEventQuest'),
       eventOther:$('missionTabEventOther')
     };
@@ -1396,7 +1296,6 @@
       missionTabCollection:'collection',
       missionTabSkill:'skill',
       missionTabEventGold:'eventGold',
-      missionTabEventDouble:'eventDouble',
       missionTabEventQuest:'eventQuest',
       missionTabEventOther:'eventOther'
     };
