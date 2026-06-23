@@ -39,21 +39,7 @@
     return (stageData() && stageData().stage) || {};
   }
 
-  function isDoubleBossEntity(e){
-    return !!(
-      e &&
-      (
-        e.__doubleBoss ||
-        e.__doubleDifficulty ||
-        e.__doubleStageId ||
-        e.__doubleSide != null
-      )
-    );
-  }
-
   function isLegendContext(e){
-    if (isDoubleBossEntity(e)) return false;
-
     const st = stageInfo();
     const areaKey = String(st.areaKey || '').trim();
     const diff = String(st.difficulty || '').trim();
@@ -77,30 +63,10 @@
   function difficultyProfile(e){
     const st = stageInfo();
     const key = String(
-      (e && (e.eventDifficulty || e.__doubleDifficulty)) ||
+      (e && e.eventDifficulty) ||
       st.difficulty ||
       ''
     ).trim();
-
-    if (isDoubleBossEntity(e)) {
-      if (key === 'legend' || key === 'レジェンド') {
-        return { key:'doubleLegend', bullet:1.7, zako:0.42, speed:1.25, minBreakHp:60, summonAdd:0, summonMax:0 };
-      }
-
-      if (key === 'inferno' || key === 'インフェルノ') {
-        return { key:'doubleInferno', bullet:1.45, zako:0.38, speed:1.18, minBreakHp:50, summonAdd:0, summonMax:0 };
-      }
-
-      if (key === 'veryHard' || key === 'veryhard' || key === 'ベリーハード') {
-        return { key:'doubleVeryHard', bullet:1.25, zako:0.34, speed:1.12, minBreakHp:30, summonAdd:0, summonMax:0 };
-      }
-
-      if (key === 'hard' || key === 'ハード') {
-        return { key:'doubleHard', bullet:1.1, zako:0.3, speed:1.06, minBreakHp:15, summonAdd:0, summonMax:0 };
-      }
-
-      return { key:'doubleEasy', bullet:1, zako:0.28, speed:1, minBreakHp:8, summonAdd:0, summonMax:0 };
-    }
 
     if (isLegendContext(e)) {
       return { key:'legend', bullet:2.0, zako:1.65, speed:1.34, minBreakHp:80, summonAdd:1, summonMax:4 };
@@ -235,8 +201,6 @@
   }
 
   function summonStageEnemies(e, tools, count, hpRate){
-    if (isDoubleBossEntity(e)) return;
-
     const list = getAreaZakoList(tools);
 
     if (!list.length || !tools || !tools.state || !Array.isArray(tools.state.entities)) return;
@@ -310,11 +274,11 @@
 
     const moveBoost = Number(opt.moveBoost || (isLegendContext(e) ? 2.0 : 1.75));
     const diff = difficultyProfile(e);
-    const finalCount = isDoubleBossEntity(e) ? 1 : isLegendContext(e) ? Math.min(4, Math.max(count, 3)) : count;
+    const finalCount = isLegendContext(e) ? Math.min(4, Math.max(count, 3)) : count;
 
     for (let i = 0; i < finalCount; i++) {
       const offset = (i - (finalCount - 1) / 2) * 72;
-      const hp = Math.max(12, Math.ceil(Number(e.maxHp || 100) * (isDoubleBossEntity(e) ? 0.004 : 0.012) * diff.zako));
+      const hp = Math.max(12, Math.ceil(Number(e.maxHp || 100) * 0.012 * diff.zako));
 
       tools.state.entities.push({
         kind: 'enemy',
@@ -331,7 +295,7 @@
         score: 80,
         coinMin: 3,
         coinMax: 6,
-        canShoot: !isDoubleBossEntity(e),
+        canShoot: true,
         baseShootCd: isLegendContext(e) ? 120 : 150,
         shootCd: 70 + i * 20,
         burstShot: true,
@@ -363,8 +327,7 @@
     ];
 
     sisters.forEach((s, i) => {
-      const hpRate = isDoubleBossEntity(e) ? 0.7 : 1;
-      const hp = Math.max(16, Math.ceil(s.hp * diff.zako * hpRate));
+      const hp = Math.max(22, Math.ceil(s.hp * diff.zako));
 
       tools.state.entities.push({
         kind: 'enemy',
@@ -381,7 +344,7 @@
         score: 120,
         coinMin: 5,
         coinMax: 10,
-        canShoot: !isDoubleBossEntity(e),
+        canShoot: true,
         baseShootCd: s.cd,
         shootCd: s.cd + i * 18,
         burstShot: true,
