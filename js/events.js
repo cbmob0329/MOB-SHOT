@@ -48,16 +48,29 @@
     { id:6, key:'desert_sharks', title:'砂漠に潜む鮫', areaKey:'desert', areaName:'砂漠', background:null, desc:'モブサメが4体同時出現。全て倒すとクリア。', label:'モブサメ 4体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:7, key:'hot_magma', title:'アチアチマグマ', areaKey:'magma', areaName:'マグマ', background:null, desc:'開始直後からドラゴンと中ボス2体が同時出現。全て倒すとクリア。', label:'ドラゴン + 中ボス2体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:8, key:'magma_guardian', title:'マグマに潜むガーディアン', areaKey:'magma', areaName:'マグマ', background:null, desc:'マグモブレム3体とモブガーディアンⅡが同時出現。全て倒すとクリア。', label:'マグレム3 + 番人Ⅱ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:9, key:'sky_rulers', title:'空の支配者', areaKey:'town', areaName:'田舎町', background:null, desc:'モブバード、モブファル、モブマグプテラが少し出現。ホークモブⅡとドラゴンモブⅡを両方倒すとクリア。', label:'ホークⅡ + ドラゴンⅡ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:10, key:'neon_nightmare', title:'ネオン街の悪夢', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブコード、モブケーブル、ネオンモブが同時出現。全て倒すとクリア。', label:'コード + ケーブル + ネオン', rank:10, questEnemyMode:'low', gimmickSpawn:false },
+    { id:9, key:'sky_rulers', title:'空の支配者', areaKey:'town', areaName:'田舎町', background:null, desc:'モブバード、モブファル、モブマグプテラが少し出現。ホークモブⅡとドラゴンモブⅡを両方倒すとクリア。', label:'ホークⅡ + ドラゴンⅡ', rank:10, questEnemies:['モブバード','モブファル','モブマグプテラ'], questEnemyMode:'low', gimmickSpawn:false },
+    { id:10, key:'neon_nightmare', title:'ネオン街の悪夢', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブコード、モブケーブル、ネオンモブが同時出現。全て倒すとクリア。', label:'コード + ケーブル + ネオン', rank:10, questEnemies:['ナーガモブ','モブグリズリー','ネオスラモブ'], questEnemyMode:'low', gimmickSpawn:false },
     { id:11, key:'nine_heads', title:'9つの首', areaKey:'neon', areaName:'ネオン街', background:null, desc:'ネオンギドラ3体同時 → ネオンギドラ1体。倒すとクリア。', label:'ギドラ3体 + ギドラ1体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:12, key:'town_dragon', title:'街を襲うドラゴン', areaKey:'town', areaName:'田舎町', background:null, desc:'ドラゴンモブⅡとモブギドラ2体が同時出現。全て倒すとクリア。', label:'ドラゴンⅡ + ギドラ2', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:13, key:'three_birds', title:'三鳥見参', areaKey:'grass', areaName:'草原', background:null, desc:'ホークモブ2体とホークモブⅡが同時出現。全て倒すとクリア。', label:'ホーク2 + ホークⅡ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:14, key:'neon_maoh', title:'ネオン街の魔王', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブ魔王、モブケーブル、モブコードが同時出現。全て倒すとクリア。', label:'魔王 + ケーブル + コード', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:15, key:'magma_beauty', title:'マグマを好む美女', areaKey:'magma', areaName:'マグマ', background:null, desc:'モブリリスとモブメルト3体が同時出現。全て倒すとクリア。', label:'リリス + メルト3', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:16, key:'maoh_duel', title:'対峙する魔王', areaKey:'castle', areaName:'魔王城', background:null, desc:'モブ魔王を倒すと、次のモブ魔王と2体のミラモブが出現。全て倒すとクリア。', label:'魔王 → 魔王 + ミラ2体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
+    { id:16, key:'maoh_duel', title:'対峙する魔王', areaKey:'castle', areaName:'魔王城', background:null, desc:'モブ魔王を倒すと、次のモブ魔王と2体のミラモブが出現。全て倒すとクリア。', label:'魔王 → 魔王 + ミラ2体', rank:10, questEnemies:['ダークゴブモブ'], questEnemyMode:'low', gimmickSpawn:false },
     { id:17, key:'lilith_sisters', title:'リリス四姉妹', areaKey:'castle', areaName:'魔王城', background:null, desc:'モブリリスが4体同時に出現。全て倒すとクリア。', label:'モブリリス 4体同時', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:18, key:'castle_machine', title:'魔王城の精密機械', areaKey:'castle', areaName:'魔王城', background:null, desc:'ネオンモブ3体とホークモブが同時出現。全て倒すとクリア。', label:'ネオン3 + ホーク', rank:10, questEnemyMode:'low', gimmickSpawn:false }
+    { id:18, key:'castle_machine', title:'魔王城の精密機械', areaKey:'castle', areaName:'魔王城', background:null, desc:'ネオンモブ3体とホークモブが同時出現。全て倒すとクリア。', label:'ネオン3 + ホーク', rank:10, questEnemyMode:'low', gimmickSpawn:false },
+
+    { id:19, key:'iron_advance', title:'鉄壁の進撃', areaKey:'desert', areaName:'砂漠', background:null, desc:'モブピーとモブガラドが3フェーズで出現。最後の10体を撃破するとクリア。', label:'ピー3→4→6 / ガラド1→2→4', rank:10, questEnemyMode:'low', gimmickSpawn:false },
+    { id:20, key:'prison_break_hell', title:'脱獄地獄', areaKey:'prison', areaName:'監獄', background:'sta/stkan.png', desc:'モブテツが低頻度で無限湧き。モブニコ3体、モブラス3体、グラディモブ4体が同時出現。', label:'ニコ3 + ラス3 + グラディ4', rank:10, questEnemies:['モブテツ'], questEnemyMode:'low', gimmickSpawn:false },
+    { id:21, key:'annihilation_start', title:'殲滅作戦開始', areaKey:'matrix', areaName:'マトリックス', background:'sta/matrix.png', desc:'ガトリモブが2体 → 3体 → 5体で出現。全て倒すとクリア。', label:'ガトリ 2→3→5', rank:10, questEnemyMode:'low', gimmickSpawn:false },
+    { id:22, key:'marumaru_mobmob', title:'マルマルモブモブ', areaKey:'prison', areaName:'監獄', background:'sta/stkan.png', desc:'マルモブが低頻度で無限湧き。グラディモブ8体を倒すとクリア。', label:'マルモブ湧き + グラディ8', rank:10, questEnemies:['マルモブ'], questEnemyMode:'low', gimmickSpawn:false },
+    { id:23, key:'fishman_sea_battle', title:'魚人海戦', areaKey:'seaRail', areaName:'海の線路', background:'sta/umisenro.png', desc:'モブサメ、モブシャチ、モブマグシャーが各1体 → 2体 → 3体で出現。全て倒すとクリア。', label:'魚人 1→2→3', rank:10, questEnemyMode:'low', gimmickSpawn:false },
+    { id:24, key:'prison_end', title:'終焉の監獄', areaKey:'prison', areaName:'監獄', background:'sta/stkan.png', desc:'モブメルト、モブドラゴンⅡ、モブラス、モブニコが同時出現。全て倒すとクリア。', label:'メルト + ドラゴンⅡ + ラス + ニコ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
+    { id:25, key:'welcome_back_world', title:'お帰り世界', areaKey:'matrix', areaName:'マトリックス', background:'sta/matrix.png', desc:'モブスミスとガトリモブ4体が同時出現。全て倒すとクリア。', label:'スミス + ガトリ4', rank:10, questEnemyMode:'low', gimmickSpawn:false },
+    { id:26, key:'under_the_sea', title:'アンダーザシー', areaKey:'seaRail', areaName:'海の線路', background:'sta/umisenro.png', desc:'モブネプとモブシャチ4体が同時出現。全て倒すとクリア。', label:'ネプ + シャチ4', rank:10, questEnemyMode:'low', gimmickSpawn:false },
+    { id:27, key:'emotional_neon', title:'エモーショナルネオン', areaKey:'neonHighway', areaName:'ネオン高速', background:'sta/neonhighway.png', desc:'ブルネオモブ、パルネオモブ、モブコード、モブケーブルが同時出現。全て倒すとクリア。', label:'ブルネオ + パルネオ + コード + ケーブル', rank:10, questEnemyMode:'low', gimmickSpawn:false },
+    { id:28, key:'flame_king', title:'炎を統べる王', areaKey:'makai', areaName:'魔界', background:'sta/makai.png', desc:'閻魔モブ、モブドラゴン、モブドラゴンⅡが同時出現。全て倒すとクリア。', label:'閻魔 + ドラゴン + ドラゴンⅡ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
+    { id:29, key:'lilith_family', title:'リリスファミリー', areaKey:'castle', areaName:'魔王城', background:null, desc:'ウルモブリリスとモブリリス2体が同時出現。全て倒すとクリア。', label:'ウルリリス + リリス2', rank:10, questEnemyMode:'low', gimmickSpawn:false },
+    { id:30, key:'mob_artist', title:'MOB ARTIST', areaKey:'town', areaName:'田舎町', background:null, desc:'ランダム中ボスとランダムボスが複数フェーズで出現。最終フェーズの閻魔モブ3体を倒すとクリア。', label:'ランダム連戦 + 閻魔3', rank:10, questEnemyMode:'low', gimmickSpawn:false }
   ];
 
   const EVENTS = [
