@@ -1,4 +1,5 @@
 'use strict';
+
 (function(){
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
   const EVENT_START_VALID_MS = 12000;
@@ -33,11 +34,7 @@
   }
 
   function normalizeName(name){
-    return canonicalBossName(name)
-      .replace(/\s/g, '')
-      .replace(/　/g, '')
-      .replace(/Ⅱ/g, 'II')
-      .toLowerCase();
+    return canonicalBossName(name).replace(/\s/g, '').replace(/　/g, '').replace(/Ⅱ/g, 'II').toLowerCase();
   }
 
   function sameName(a, b){
@@ -45,41 +42,11 @@
   }
 
   const GOLD_DIFFICULTY_FALLBACK = {
-    easy:{
-      key:'easy', name:'イージー', color:'#9dff73',
-      clearCoin:300, firstCoin:3000, firstDiamond:5,
-      chestMul:0.8, bossHpMul:1.0, bossCoinMul:1.0, bossMinHp:600,
-      areaKey:'grass', areaName:'草原', background:'sta/backsougen.png',
-      bosses:['ホークモブ','ミラモブ'], enemySpawn:true
-    },
-    hard:{
-      key:'hard', name:'ハード', color:'#6be6ff',
-      clearCoin:800, firstCoin:8000, firstDiamond:8,
-      chestMul:1.4, bossHpMul:1.35, bossCoinMul:1.8, bossMinHp:1800,
-      areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png',
-      bosses:['ミラモブⅡ','ネオンモブ'], enemySpawn:true
-    },
-    veryHard:{
-      key:'veryHard', name:'ベリーハード', color:'#ffcf5b',
-      clearCoin:1500, firstCoin:15000, firstDiamond:10,
-      chestMul:2.2, bossHpMul:1.8, bossCoinMul:3.2, bossMinHp:3800,
-      areaKey:'magma', areaName:'マグマ', background:'sta/backmagma.png',
-      bosses:['ドラゴンモブ','ドラゴンモブⅡ'], enemySpawn:true
-    },
-    inferno:{
-      key:'inferno', name:'インフェルノ', color:'#ff5b5b',
-      clearCoin:3000, firstCoin:30000, firstDiamond:20,
-      chestMul:3.5, bossHpMul:2.35, bossCoinMul:6.0, bossMinHp:7200,
-      areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png',
-      bosses:['モブリリス','ドラゴンモブⅡ'], enemySpawn:true
-    },
-    legend:{
-      key:'legend', name:'レジェンド', color:'#d86bff',
-      clearCoin:7000, firstCoin:80000, firstDiamond:50,
-      chestMul:5.5, bossHpMul:3.2, bossCoinMul:10.0, bossMinHp:12000,
-      areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png',
-      bosses:['モブリリス','モブ魔王'], enemySpawn:true
-    }
+    easy:{ key:'easy', name:'イージー', color:'#9dff73', clearCoin:300, firstCoin:3000, firstDiamond:5, chestMul:0.8, bossHpMul:1.0, bossCoinMul:1.0, bossMinHp:600, areaKey:'grass', areaName:'草原', background:'sta/backsougen.png', bosses:['ホークモブ','ミラモブ'], enemySpawn:true },
+    hard:{ key:'hard', name:'ハード', color:'#6be6ff', clearCoin:800, firstCoin:8000, firstDiamond:8, chestMul:1.4, bossHpMul:1.35, bossCoinMul:1.8, bossMinHp:1800, areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', bosses:['ミラモブⅡ','ネオンモブ'], enemySpawn:true },
+    veryHard:{ key:'veryHard', name:'ベリーハード', color:'#ffcf5b', clearCoin:1500, firstCoin:15000, firstDiamond:10, chestMul:2.2, bossHpMul:1.8, bossCoinMul:3.2, bossMinHp:3800, areaKey:'magma', areaName:'マグマ', background:'sta/backmagma.png', bosses:['ドラゴンモブ','ドラゴンモブⅡ'], enemySpawn:true },
+    inferno:{ key:'inferno', name:'インフェルノ', color:'#ff5b5b', clearCoin:3000, firstCoin:30000, firstDiamond:20, chestMul:3.5, bossHpMul:2.35, bossCoinMul:6.0, bossMinHp:7200, areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', bosses:['モブリリス','ドラゴンモブⅡ'], enemySpawn:true },
+    legend:{ key:'legend', name:'レジェンド', color:'#d86bff', clearCoin:7000, firstCoin:80000, firstDiamond:50, chestMul:5.5, bossHpMul:3.2, bossCoinMul:10.0, bossMinHp:12000, areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', bosses:['モブリリス','モブ魔王'], enemySpawn:true }
   };
 
   const QUEST_DIFFICULTY_FALLBACK = {
@@ -106,6 +73,7 @@
     'モブガーディアンⅡ':{ name:'モブガーディアンⅡ', image:'boss/bossban2.png', hp:1600, score:2100, coin:420 },
     'ネオンモブ':{ name:'ネオンモブ', image:'boss/bossneon.png', hp:1500, score:2200, coin:440 },
     'ドラゴンモブ':{ name:'ドラゴンモブ', image:'boss/bossdragoon.png', hp:2100, score:3000, coin:600 },
+    'ドラゴンモブⅡ':{ name:'ドラゴンモブⅡ', image:'boss/bossdragoon2.png', hp:2900, score:3900, coin:780 },
     'モブリリス':{ name:'モブリリス', image:'boss/bossriris.png', hp:2800, score:4200, coin:840 },
     'モブ魔王':{ name:'モブ魔王', image:'boss/bossmaoh.png', hp:3800, score:6000, coin:1200 },
     'ウルモブリリス':{ name:'ウルモブリリス', image:'boss/bossulriri.png', hp:5200, score:9000, coin:1800 }
@@ -171,9 +139,11 @@
 
   function getEvent(){
     let ev = null;
+
     if (window.MobShotEvents && window.MobShotEvents.getCurrentEvent) {
       ev = window.MobShotEvents.getCurrentEvent();
     }
+
     if (ev && ev.key) return ev;
 
     ev = readEventRequest();
@@ -183,7 +153,7 @@
   }
 
   function getQuestInfoFromEvent(data){
-    data = data || eventData || {};
+    data = data || eventData || retryEventData || {};
 
     const diffKey = normalizeDifficultyKey(
       data.difficulty ||
@@ -213,6 +183,7 @@
 
     stage.id = Number(stage.id || qid || 1);
     const fallback = QUEST_STAGE_FALLBACK[stage.id] || QUEST_STAGE_FALLBACK[1];
+
     stage.key = stage.key || fallback.key;
     stage.title = stage.title || fallback.title;
     stage.areaKey = stage.areaKey || fallback.areaKey;
@@ -223,15 +194,8 @@
   }
 
   function getQuestInfo(){
-    if (eventData && eventData.key === 'eventQuest') {
-      return getQuestInfoFromEvent(eventData);
-    }
-
-    return getQuestInfoFromEvent({
-      key:'eventQuest',
-      difficulty:'easy',
-      stageId:1
-    });
+    if (questInfo && questInfo.difficulty && questInfo.stage) return questInfo;
+    return getQuestInfoFromEvent(eventData || retryEventData);
   }
 
   function getSave(){
@@ -560,12 +524,7 @@
   }
 
   function getGoldDifficulty(){
-    const key = normalizeDifficultyKey(
-      difficultyKey ||
-      (eventData && eventData.difficulty) ||
-      (eventData && eventData.difficultyKey)
-    );
-
+    const key = normalizeDifficultyKey(difficultyKey || (eventData && eventData.difficulty) || (eventData && eventData.difficultyKey));
     let diff = clone(GOLD_DIFFICULTY_FALLBACK[key] || GOLD_DIFFICULTY_FALLBACK.easy);
 
     if (eventData && eventData.goldDifficulty) {
@@ -709,11 +668,11 @@
   }
 
   function currentQuestDiff(){
-    return questInfo && questInfo.difficulty ? questInfo.difficulty : getQuestInfo().difficulty;
+    return getQuestInfo().difficulty;
   }
 
   function currentQuestStage(){
-    return questInfo && questInfo.stage ? questInfo.stage : getQuestInfo().stage;
+    return getQuestInfo().stage;
   }
 
   function questHpMul(extra){
@@ -1330,6 +1289,8 @@
       return false;
     }
 
+    retryEventData = clone(eventData);
+
     active = true;
     eventType = eventData.key;
     difficultyKey = normalizeDifficultyKey(eventData.difficulty || eventData.difficultyKey || '');
@@ -1341,8 +1302,6 @@
       (eventData.stage && eventData.stage.id) ||
       0
     );
-
-    retryEventData = clone(eventData);
 
     resetLocalState();
 
@@ -1520,7 +1479,7 @@
     }
 
     if (eventType === 'eventQuest') {
-      const info = questInfo || getQuestInfoFromEvent(eventData);
+      const info = questInfo || getQuestInfoFromEvent(eventData || retryEventData);
 
       if (api.hudStage) {
         api.hudStage.textContent = `QUEST ${info.difficulty.name}`;
