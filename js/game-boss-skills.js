@@ -84,22 +84,22 @@
 
     if (isDoubleBossEntity(e)) {
       if (key === 'legend' || key === 'レジェンド') {
-        return { key:'doubleLegend', bullet:1.7, zako:0.42, speed:1.25, minBreakHp:60, summonAdd:0, summonMax:1 };
+        return { key:'doubleLegend', bullet:1.7, zako:0.42, speed:1.25, minBreakHp:60, summonAdd:0, summonMax:0 };
       }
 
       if (key === 'inferno' || key === 'インフェルノ') {
-        return { key:'doubleInferno', bullet:1.45, zako:0.38, speed:1.18, minBreakHp:50, summonAdd:0, summonMax:1 };
+        return { key:'doubleInferno', bullet:1.45, zako:0.38, speed:1.18, minBreakHp:50, summonAdd:0, summonMax:0 };
       }
 
       if (key === 'veryHard' || key === 'veryhard' || key === 'ベリーハード') {
-        return { key:'doubleVeryHard', bullet:1.25, zako:0.34, speed:1.12, minBreakHp:30, summonAdd:0, summonMax:1 };
+        return { key:'doubleVeryHard', bullet:1.25, zako:0.34, speed:1.12, minBreakHp:30, summonAdd:0, summonMax:0 };
       }
 
       if (key === 'hard' || key === 'ハード') {
-        return { key:'doubleHard', bullet:1.1, zako:0.3, speed:1.06, minBreakHp:15, summonAdd:0, summonMax:1 };
+        return { key:'doubleHard', bullet:1.1, zako:0.3, speed:1.06, minBreakHp:15, summonAdd:0, summonMax:0 };
       }
 
-      return { key:'doubleEasy', bullet:1, zako:0.28, speed:1, minBreakHp:8, summonAdd:0, summonMax:1 };
+      return { key:'doubleEasy', bullet:1, zako:0.28, speed:1, minBreakHp:8, summonAdd:0, summonMax:0 };
     }
 
     if (isLegendContext(e)) {
@@ -235,15 +235,15 @@
   }
 
   function summonStageEnemies(e, tools, count, hpRate){
+    if (isDoubleBossEntity(e)) return;
+
     const list = getAreaZakoList(tools);
 
     if (!list.length || !tools || !tools.state || !Array.isArray(tools.state.entities)) return;
 
     const diff = difficultyProfile(e);
     const rate = Number(hpRate || 1.15);
-    const finalCount = isDoubleBossEntity(e)
-      ? 1
-      : Math.min(Number(diff.summonMax || 3), Math.max(1, Number(count || 1) + Number(diff.summonAdd || 0)));
+    const finalCount = Math.min(Number(diff.summonMax || 3), Math.max(1, Number(count || 1) + Number(diff.summonAdd || 0)));
 
     for (let i = 0; i < finalCount; i++) {
       const def = list[(Number(e.summonCount || 0) + i) % list.length];
@@ -270,7 +270,7 @@
         dead: false,
         bob: rand(tools, 0, Math.PI * 2),
         aiType: def.aiType || (i % 3 === 0 ? 'sway' : i % 3 === 1 ? 'hop' : 'fastSide'),
-        canShoot: isDoubleBossEntity(e) ? false : !!def.canShoot,
+        canShoot: !!def.canShoot,
         baseShootCd: def.baseShootCd || 165,
         shootCd: def.shootCd || def.baseShootCd || 130 + i * 18,
         bulletColor: def.bulletColor || '#dfeaff',
@@ -282,11 +282,11 @@
 
     e.summonCount = Number(e.summonCount || 0) + finalCount;
 
-    addText(tools, isDoubleBossEntity(e) ? '雑魚召喚！' : 'ステージ雑魚召喚！', e.x, e.y - 84, '#dfeaff');
+    addText(tools, 'ステージ雑魚召喚！', e.x, e.y - 84, '#dfeaff');
   }
 
   function summonWeakEnemy(e, tools, count){
-    summonStageEnemies(e, tools, isDoubleBossEntity(e) ? 1 : Number(count || 1), isDoubleBossEntity(e) ? 0.85 : isLegendContext(e) ? 1.35 : 1.15);
+    summonStageEnemies(e, tools, Number(count || 1), isLegendContext(e) ? 1.35 : 1.15);
   }
 
   function makeClones(e, tools, count, opt){
@@ -350,12 +350,6 @@
 
     if (e.sistersUsed) return;
 
-    if (isDoubleBossEntity(e)) {
-      summonStageEnemies(e, tools, 1, 0.9);
-      e.sistersUsed = true;
-      return;
-    }
-
     e.sistersUsed = true;
 
     const moveBoost = Number(opt.moveBoost || (isLegendContext(e) ? 1.9 : 1.6));
@@ -369,7 +363,8 @@
     ];
 
     sisters.forEach((s, i) => {
-      const hp = Math.max(22, Math.ceil(s.hp * diff.zako));
+      const hpRate = isDoubleBossEntity(e) ? 0.7 : 1;
+      const hp = Math.max(16, Math.ceil(s.hp * diff.zako * hpRate));
 
       tools.state.entities.push({
         kind: 'enemy',
@@ -386,7 +381,7 @@
         score: 120,
         coinMin: 5,
         coinMax: 10,
-        canShoot: true,
+        canShoot: !isDoubleBossEntity(e),
         baseShootCd: s.cd,
         shootCd: s.cd + i * 18,
         burstShot: true,
@@ -801,7 +796,7 @@
     }
 
     if (step % 8 === 6) {
-      summonStageEnemies(e, tools, isLegendContext(e) ? 2 : 1, isDoubleBossEntity(e) ? 0.85 : isLegendContext(e) ? 1.35 : 1.1);
+      summonStageEnemies(e, tools, isLegendContext(e) ? 2 : 1, isLegendContext(e) ? 1.35 : 1.1);
       return;
     }
 
@@ -842,7 +837,7 @@
     }
 
     if (step % 9 === 4) {
-      summonStageEnemies(e, tools, isLegendContext(e) ? 3 : 2, isDoubleBossEntity(e) ? 0.85 : isLegendContext(e) ? 1.5 : 1.15);
+      summonStageEnemies(e, tools, isLegendContext(e) ? 3 : 2, isLegendContext(e) ? 1.5 : 1.15);
       return;
     }
 
@@ -901,7 +896,7 @@
     }
 
     if (step % 8 === 2) {
-      summonStageEnemies(e, tools, isLegendContext(e) ? 3 : 2, isDoubleBossEntity(e) ? 0.85 : isLegendContext(e) ? 1.45 : 1.15);
+      summonStageEnemies(e, tools, isLegendContext(e) ? 3 : 2, isLegendContext(e) ? 1.45 : 1.15);
       return;
     }
 
@@ -954,7 +949,7 @@
     if (step % 8 === 7 && !e.extraHealUsed && e.hp <= e.maxHp * 0.5) {
       e.extraHealUsed = true;
       healBoss(e, tools, isLegendContext(e) ? 0.07 : 0.05);
-      summonStageEnemies(e, tools, isLegendContext(e) ? 2 : 1, isDoubleBossEntity(e) ? 0.85 : isLegendContext(e) ? 1.35 : 1.15);
+      summonStageEnemies(e, tools, isLegendContext(e) ? 2 : 1, isLegendContext(e) ? 1.35 : 1.15);
       return;
     }
 
@@ -1089,7 +1084,7 @@
     }
 
     if (step % 6 === 5) {
-      summonStageEnemies(e, tools, isLegendContext(e) ? 3 : 1, isDoubleBossEntity(e) ? 0.85 : isLegendContext(e) ? 1.35 : 1.15);
+      summonStageEnemies(e, tools, isLegendContext(e) ? 3 : 1, isLegendContext(e) ? 1.35 : 1.15);
       return;
     }
 
@@ -1286,7 +1281,7 @@
     }
 
     if (step % 8 === 6) {
-      summonStageEnemies(e, tools, isLegendContext(e) ? 3 : 2, isDoubleBossEntity(e) ? 0.85 : isLegendContext(e) ? 1.45 : 1.2);
+      summonStageEnemies(e, tools, isLegendContext(e) ? 3 : 2, isLegendContext(e) ? 1.45 : 1.2);
       return;
     }
 
@@ -1364,14 +1359,14 @@
     }
 
     if (step % 9 === 7) {
-      summonStageEnemies(e, tools, 3, isDoubleBossEntity(e) ? 0.85 : 1.45);
+      summonStageEnemies(e, tools, 3, 1.45);
       return;
     }
 
     if (step % 9 === 8 && !e.extraHealUsed && e.hp <= e.maxHp * 0.45) {
       e.extraHealUsed = true;
       healBoss(e, tools, 0.08);
-      summonStageEnemies(e, tools, 2, isDoubleBossEntity(e) ? 0.85 : 1.35);
+      summonStageEnemies(e, tools, 2, 1.35);
       return;
     }
 
