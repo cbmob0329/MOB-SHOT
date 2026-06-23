@@ -2,7 +2,7 @@
 
 (function(){
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
-  const EVENT_START_VALID_MS = 12000;
+  const EVENT_START_VALID_MS = 120000;
 
   let active = false;
   let eventData = null;
@@ -1502,15 +1502,18 @@
   function shouldRestoreRetryEvent(btn){
     if (!btn || btn.id !== 'resultRetryBtn') return false;
     if (!retryEventData || !retryEventData.key) return false;
-
-    const text = String(btn.textContent || '').trim();
-    return text === 'もう一度';
+    return true;
   }
 
   function restoreRetryEventForButton(e){
     const btn = e && e.target && e.target.closest ? e.target.closest('#resultRetryBtn') : null;
     if (!shouldRestoreRetryEvent(btn)) return;
+
     writeEventRequest(retryEventData);
+
+    if (window.MobShotEvents && window.MobShotEvents.setCurrentEvent) {
+      window.MobShotEvents.setCurrentEvent(clone(retryEventData));
+    }
   }
 
   function bindRetryRestore(){
@@ -1518,6 +1521,8 @@
     document.__mobShotEventRetryRestoreBound = true;
 
     document.addEventListener('pointerdown', restoreRetryEventForButton, true);
+    document.addEventListener('touchstart', restoreRetryEventForButton, true);
+    document.addEventListener('mousedown', restoreRetryEventForButton, true);
     document.addEventListener('click', restoreRetryEventForButton, true);
   }
 
