@@ -3,7 +3,6 @@
 (function(){
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
   const EVENT_START_VALID_MS = 120000;
-  const EVENT_MENU_BUTTON_LABEL = 'イベントメニューへ';
 
   let active = false;
   let eventData = null;
@@ -19,7 +18,6 @@
   let scoreAttackIndex = 0;
   let finishBonusApplied = false;
   let retryEventData = null;
-  let eventMenuNavLock = false;
 
   let questInfo = null;
   let questPhase = 0;
@@ -132,7 +130,7 @@
     } catch(e) {}
   }
 
-  function clearStoredEventRequest(){
+  function clearEventRequest(){
     try {
       localStorage.removeItem(EVENT_SAVE_KEY);
     } catch(e) {}
@@ -384,6 +382,33 @@
     if (bg) D.stage.background = bg;
   }
 
+  function applyVisualSize(entity, opt){
+    opt = opt || {};
+    const mul = Number(opt.visualScale || opt.scale || opt.sizeMul || entity.scale || 1);
+    const r = Number(opt.r || entity.r || 80);
+
+    entity.scale = mul;
+    entity.drawScale = mul;
+    entity.sizeMul = mul;
+    entity.imageScale = mul;
+    entity.spriteScale = mul;
+    entity.visualScale = mul;
+    entity.renderScale = mul;
+    entity.bossScale = mul;
+
+    entity.r = r;
+
+    const box = Math.max(24, Math.ceil(r * 2));
+    entity.w = box;
+    entity.h = box;
+    entity.width = box;
+    entity.height = box;
+    entity.drawW = box;
+    entity.drawH = box;
+    entity.renderW = box;
+    entity.renderH = box;
+  }
+
   function makeBossEntity(def, api, opt){
     opt = opt || {};
     def = fixBossDef(def);
@@ -398,9 +423,9 @@
     const r = opt.r != null ? opt.r : 112;
     const kind = opt.kind || 'boss';
     const hp = Math.max(minHp, Math.ceil(Number(def.hp || 1000) * hpMul));
-    const scale = opt.scale != null ? Number(opt.scale) : 1;
+    const scale = opt.scale != null ? Number(opt.scale) : Number(opt.sizeMul || 1);
 
-    return {
+    const entity = {
       kind,
       name:def.name || 'ホークモブ',
       image:def.image || fallbackBossByName(def.name).image || 'boss/hawks.png',
@@ -425,11 +450,19 @@
       scale,
       drawScale:scale,
       sizeMul:scale,
+      imageScale:scale,
+      spriteScale:scale,
+      visualScale:scale,
+      renderScale:scale,
       eventBoss:true,
       eventType:eventType,
       eventDifficulty:opt.eventDifficulty || difficultyKey || '',
       questBoss:!!opt.questBoss
     };
+
+    applyVisualSize(entity, opt);
+
+    return entity;
   }
 
   function makeEnemyEntity(def, api, hpMul, coinMul){
@@ -728,7 +761,7 @@
       const x = spanA + (spanB - spanA) * t;
       const side = index % 2 === 0 ? 1 : -1;
 
-      api.state.entities.push(makeBossEntity(def, api, {
+      const entity = makeBossEntity(def, api, {
         kind:opt.kind || 'midBoss',
         x,
         y:-170 - index * 24,
@@ -742,9 +775,16 @@
         attackCd:opt.attackCd != null ? opt.attackCd : 155,
         contactDmg:opt.contactDmg != null ? opt.contactDmg : 18,
         r:opt.r != null ? opt.r : 78,
-        scale:opt.scale != null ? opt.scale : 1,
+        scale:opt.scale != null ? opt.scale : opt.sizeMul != null ? opt.sizeMul : 1,
+        sizeMul:opt.sizeMul != null ? opt.sizeMul : opt.scale != null ? opt.scale : 1,
+        visualScale:opt.visualScale != null ? opt.visualScale : opt.sizeMul != null ? opt.sizeMul : opt.scale != null ? opt.scale : 1,
         questBoss:true
-      }));
+      });
+
+      if (opt.flag) entity[opt.flag] = true;
+      applyVisualSize(entity, opt);
+
+      api.state.entities.push(entity);
     });
   }
 
@@ -884,6 +924,8 @@
         scoreMul:0.9,
         coinMul:0.75,
         r:80,
+        sizeMul:1,
+        visualScale:1,
         contactDmg:20,
         shootCd:100,
         attackCd:150
@@ -905,11 +947,28 @@
         hpMul:2.35,
         scoreMul:1.8,
         coinMul:1.2,
-        r:116,
-        contactDmg:28,
+        r:138,
+        sizeMul:1.65,
+        visualScale:1.65,
+        scale:1.65,
+        contactDmg:34,
         vx:1.3,
         shootCd:90,
-        attackCd:140
+        attackCd:140,
+        flag:'eventGiantGhidora'
+      });
+
+      api.state.entities.forEach(e => {
+        if (e.questBoss && sameName(e.name, 'モブギドラ') && e.eventGiantGhidora) {
+          applyVisualSize(e, {
+            r:138,
+            sizeMul:1.65,
+            visualScale:1.65,
+            scale:1.65
+          });
+          e.hp = Math.max(e.hp, Math.ceil(e.maxHp));
+          e.maxHp = e.hp;
+        }
       });
 
       api.showBanner('大型モブギドラ');
@@ -930,9 +989,12 @@
     });
 
     if (questPhase === 0) {
-      if (questKills >= 30) {
+      if (questKills >= 30 || localFrame > 1500) {
         questPhase = 1;
         questWaveSpawned = false;
+        nextEnemyAt = localFrame + 999999;
+        nextGimmickAt = localFrame + 999999;
+        nextChestAt = localFrame + 999999;
         localFrame = 35;
         api.showBanner('ドラゴン出現');
       }
@@ -949,6 +1011,8 @@
         scoreMul:1.15,
         coinMul:0.9,
         r:88,
+        sizeMul:1,
+        visualScale:1,
         contactDmg:24,
         shootCd:100,
         attackCd:155
@@ -957,14 +1021,21 @@
       api.state.entities.forEach(e => {
         if (e.questBoss && sameName(e.name, 'ドラゴンモブ')) {
           e.kind = 'boss';
-          e.r = 106;
+          e.r = 112;
           e.hp = Math.ceil(e.hp * 1.25);
           e.maxHp = e.hp;
+          applyVisualSize(e, {
+            r:112,
+            sizeMul:1.08,
+            visualScale:1.08,
+            scale:1.08
+          });
         }
       });
 
       api.showBanner('アチアチマグマ');
       questWaveSpawned = true;
+      questBossSpawned = true;
     }
 
     if (questPhase === 1 && questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
@@ -985,23 +1056,34 @@
         hpMul:0.74,
         scoreMul:0.75,
         coinMul:0.65,
-        r:42,
-        scale:0.38,
+        r:34,
+        sizeMul:0.32,
+        visualScale:0.32,
+        scale:0.32,
         contactDmg:10,
         shootCd:105,
         attackCd:170,
-        vx:1.35
+        vx:1.35,
+        flag:'eventLilithSister'
       });
 
       api.state.entities.forEach(e => {
         if (e.questBoss && sameName(e.name, 'モブリリス')) {
-          e.r = 42;
-          e.w = 42;
-          e.h = 42;
-          e.scale = 0.38;
-          e.drawScale = 0.38;
-          e.sizeMul = 0.38;
           e.eventLilithSister = true;
+          applyVisualSize(e, {
+            r:34,
+            sizeMul:0.32,
+            visualScale:0.32,
+            scale:0.32
+          });
+          e.w = 54;
+          e.h = 54;
+          e.width = 54;
+          e.height = 54;
+          e.drawW = 54;
+          e.drawH = 54;
+          e.renderW = 54;
+          e.renderH = 54;
         }
       });
 
@@ -1094,122 +1176,56 @@
   function hideResultButtons(){
     const retry = document.getElementById('resultRetryBtn');
     const home = document.getElementById('resultHomeBtn');
+    const next = document.getElementById('resultNextBtn');
+
     if (retry) retry.style.display = 'none';
-    if (home) home.style.display = 'none';
+    if (next) next.style.display = 'none';
+    if (home) home.style.display = '';
   }
 
   function showResultButtons(){
     const retry = document.getElementById('resultRetryBtn');
     const home = document.getElementById('resultHomeBtn');
+
     if (retry) retry.style.display = '';
     if (home) home.style.display = '';
   }
 
-  function forceEventMenuResultButton(){
+  function forceEventResultButtons(){
     document.__mobShotEventResultMode = true;
 
     const retry = document.getElementById('resultRetryBtn');
+    const next = document.getElementById('resultNextBtn');
+    const home = document.getElementById('resultHomeBtn');
+
     if (retry) {
-      retry.textContent = EVENT_MENU_BUTTON_LABEL;
-      retry.dataset.mobShotEventMenu = '1';
-      retry.style.display = '';
+      retry.style.display = 'none';
+      retry.disabled = true;
+      retry.dataset.mobShotHiddenEventRetry = '1';
     }
 
-    const next = document.getElementById('resultNextBtn');
     if (next) {
       next.style.display = 'none';
       next.disabled = true;
     }
+
+    if (home) {
+      home.style.display = '';
+      home.disabled = false;
+    }
   }
 
-  function openEventMenuScreen(){
-    clearStoredEventRequest();
+  function blockHiddenEventRetry(e){
+    const retry = e && e.target && e.target.closest ? e.target.closest('#resultRetryBtn') : null;
+    if (!retry) return;
 
-    if (window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
-      window.MobShotEvents.clearCurrentEvent();
-    }
-
-    document.__mobShotEventResultMode = false;
-
-    const calls = [
-      function(){ return window.MobShotEvents && window.MobShotEvents.openEventMenu && window.MobShotEvents.openEventMenu(); },
-      function(){ return window.MobShotEvents && window.MobShotEvents.showEventMenu && window.MobShotEvents.showEventMenu(); },
-      function(){ return window.MobShotEvents && window.MobShotEvents.openMenu && window.MobShotEvents.openMenu('event'); },
-      function(){ return window.MobShotEvents && window.MobShotEvents.showMenu && window.MobShotEvents.showMenu('event'); },
-      function(){ return window.MobShotEvents && window.MobShotEvents.renderEventMenu && window.MobShotEvents.renderEventMenu(); },
-      function(){ return window.MobShotOpenEventMenu && window.MobShotOpenEventMenu(); },
-      function(){ return window.openEventMenu && window.openEventMenu(); },
-      function(){ return window.showEventMenu && window.showEventMenu(); }
-    ];
-
-    for (let i = 0; i < calls.length; i++) {
-      try {
-        const result = calls[i]();
-        if (result !== false && result != null) return;
-      } catch(e) {}
-    }
-
-    try {
-      if (typeof window.showScreen === 'function') {
-        window.showScreen('main');
-      }
-    } catch(e) {}
-
-    setTimeout(function(){
-      const selectors = [
-        '#eventBtn',
-        '#btnEvent',
-        '#mainEventBtn',
-        '[data-menu="event"]',
-        '[data-open="event"]',
-        '[data-view="event"]',
-        '.eventBtn',
-        '.event-button'
-      ];
-
-      for (let i = 0; i < selectors.length; i++) {
-        const el = document.querySelector(selectors[i]);
-        if (el) {
-          el.click();
-          return;
-        }
-      }
-
-      const buttons = Array.prototype.slice.call(document.querySelectorAll('button'));
-      const eventButton = buttons.find(btn => String(btn.textContent || '').replace(/\s/g, '').includes('イベント'));
-
-      if (eventButton) {
-        eventButton.click();
-        return;
-      }
-
-      location.hash = '#event';
-    }, 80);
-  }
-
-  function handleEventMenuResultButton(e){
-    const btn = e && e.target && e.target.closest ? e.target.closest('#resultRetryBtn') : null;
-    if (!btn) return;
-
-    const isEventButton =
-      document.__mobShotEventResultMode ||
-      btn.dataset.mobShotEventMenu === '1' ||
-      String(btn.textContent || '').trim() === EVENT_MENU_BUTTON_LABEL;
-
-    if (!isEventButton) return;
+    if (!document.__mobShotEventResultMode && retry.dataset.mobShotHiddenEventRetry !== '1') return;
 
     e.preventDefault();
     e.stopPropagation();
     if (e.stopImmediatePropagation) e.stopImmediatePropagation();
 
-    if (eventMenuNavLock) return;
-    eventMenuNavLock = true;
-
-    setTimeout(function(){
-      eventMenuNavLock = false;
-    }, 800);
-
-    openEventMenuScreen();
+    forceEventResultButtons();
   }
 
   function injectDropStyle(){
@@ -1323,16 +1339,14 @@
     if (ok) {
       ok.addEventListener('click', function(){
         pop.classList.add('hidden');
-        showResultButtons();
-        forceEventMenuResultButton();
+        forceEventResultButtons();
       });
     }
 
     pop.addEventListener('click', function(e){
       if (e.target === pop) {
         pop.classList.add('hidden');
-        showResultButtons();
-        forceEventMenuResultButton();
+        forceEventResultButtons();
       }
     });
 
@@ -1341,8 +1355,7 @@
 
   function showDropPop(drops){
     if (!drops || !drops.length) {
-      showResultButtons();
-      forceEventMenuResultButton();
+      forceEventResultButtons();
       return;
     }
 
@@ -1563,7 +1576,7 @@
       window.MobShotEvents.clearCurrentEvent();
     }
 
-    clearStoredEventRequest();
+    clearEventRequest();
 
     active = false;
     eventData = null;
@@ -1571,25 +1584,17 @@
     difficultyKey = '';
     stageId = 0;
 
-    setTimeout(function(){
-      forceEventMenuResultButton();
-    }, 0);
-
-    setTimeout(function(){
-      forceEventMenuResultButton();
-    }, 120);
-
-    setTimeout(function(){
-      forceEventMenuResultButton();
-    }, 420);
+    setTimeout(forceEventResultButtons, 0);
+    setTimeout(forceEventResultButtons, 100);
+    setTimeout(forceEventResultButtons, 300);
+    setTimeout(forceEventResultButtons, 700);
 
     return {
       event:true,
       text,
-      retryLabel:EVENT_MENU_BUTTON_LABEL,
-      retryText:EVENT_MENU_BUTTON_LABEL,
-      retryAction:'eventMenu',
-      next:false
+      retry:false,
+      next:false,
+      hideRetry:true
     };
   }
 
@@ -1637,22 +1642,22 @@
     return;
   }
 
-  function bindEventMenuResultButton(){
-    if (document.__mobShotEventMenuResultButtonBound) return;
-    document.__mobShotEventMenuResultButtonBound = true;
+  function bindEventResultGuards(){
+    if (document.__mobShotEventResultGuardsBound) return;
+    document.__mobShotEventResultGuardsBound = true;
 
-    document.addEventListener('pointerdown', handleEventMenuResultButton, true);
-    document.addEventListener('touchstart', handleEventMenuResultButton, true);
-    document.addEventListener('mousedown', handleEventMenuResultButton, true);
-    document.addEventListener('click', handleEventMenuResultButton, true);
+    document.addEventListener('pointerdown', blockHiddenEventRetry, true);
+    document.addEventListener('touchstart', blockHiddenEventRetry, true);
+    document.addEventListener('mousedown', blockHiddenEventRetry, true);
+    document.addEventListener('click', blockHiddenEventRetry, true);
   }
 
-  bindEventMenuResultButton();
+  bindEventResultGuards();
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bindEventMenuResultButton);
+    document.addEventListener('DOMContentLoaded', bindEventResultGuards);
   } else {
-    bindEventMenuResultButton();
+    bindEventResultGuards();
   }
 
   window.MobShotGameEvents = {
