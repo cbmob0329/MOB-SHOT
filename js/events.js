@@ -44,8 +44,21 @@
     { id:2, key:'thieves', title:'盗賊団', areaKey:'desert', areaName:'砂漠', background:null, desc:'ミラモブ1体と砂漠の雑魚敵30体を倒すとクリア。障害物も出現。', label:'ミラモブ + 雑魚30体', rank:10 },
     { id:3, key:'guardian_test', title:'番人試験', areaKey:'town', areaName:'田舎町', background:null, desc:'ミニサイズの番人が2体同時に出現。両方倒すとクリア。', label:'小番人 2体同時', rank:10 },
     { id:4, key:'nine_heads', title:'9つの首', areaKey:'neon', areaName:'ネオン街', background:null, desc:'ネオンギドラ3体同時 → 大型ネオンギドラ1体。倒すとクリア。', label:'ギドラ3体 + 大型1体', rank:10 },
-    { id:5, key:'hot_magma', title:'アチアチマグマ', areaKey:'magma', areaName:'マグマ', background:null, desc:'雑魚30体撃破後、ドラゴンと中ボス2体が同時出現。全て倒すとクリア。', label:'雑魚30体 + ドラゴン + 中ボス2体', rank:10 },
-    { id:6, key:'lilith_sisters', title:'リリス四姉妹', areaKey:'castle', areaName:'魔王城', background:null, desc:'小さめのモブリリスが4体同時に出現。全て倒すとクリア。', label:'小モブリリス 4体同時', rank:10 }
+    { id:5, key:'hot_magma', title:'アチアチマグマ', areaKey:'magma', areaName:'マグマ', background:null, desc:'開始直後からドラゴンと中ボス2体が同時出現。全て倒すとクリア。', label:'ドラゴン + 中ボス2体', rank:10 },
+
+    { id:6, key:'sky_rulers', title:'空の支配者', areaKey:'town', areaName:'田舎町', background:null, desc:'田舎町で空の敵が襲来。ホークモブⅡとドラゴンモブⅡを両方倒すとクリア。', label:'ホークⅡ + ドラゴンⅡ', rank:10 },
+    { id:7, key:'maoh_duel', title:'対峙する魔王', areaKey:'castle', areaName:'魔王城', background:null, desc:'モブ魔王を倒すと、次のモブ魔王と2体のミラモブが出現。全て倒すとクリア。', label:'魔王 → 魔王 + ミラ2体', rank:10 },
+    { id:8, key:'neon_nightmare', title:'ネオン街の悪夢', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブコード、モブケーブル、ネオンモブが同時出現。全て倒すとクリア。', label:'コード + ケーブル + ネオン', rank:10 },
+    { id:9, key:'grass_traveler', title:'草原の旅人', areaKey:'grass', areaName:'草原', background:null, desc:'グラディモブ2体とモブニコ2体が同時出現。全て倒すとクリア。', label:'グラディ2 + ニコ2', rank:10 },
+    { id:10, key:'desert_ruler', title:'砂漠を統べる者', areaKey:'desert', areaName:'砂漠', background:null, desc:'ミラモブⅡが2体同時出現。全て倒すとクリア。', label:'ミラモブⅡ 2体', rank:10 },
+    { id:11, key:'magma_guardian', title:'マグマに潜むガーディアン', areaKey:'magma', areaName:'マグマ', background:null, desc:'マグモブレム3体とモブガーディアンⅡが同時出現。全て倒すとクリア。', label:'マグレム3 + 番人Ⅱ', rank:10 },
+    { id:12, key:'lilith_sisters', title:'リリス四姉妹', areaKey:'castle', areaName:'魔王城', background:null, desc:'小さめのモブリリスが4体同時に出現。全て倒すとクリア。', label:'小モブリリス 4体同時', rank:10 },
+    { id:13, key:'three_birds', title:'三鳥見参', areaKey:'grass', areaName:'草原', background:null, desc:'ホークモブ2体とホークモブⅡが同時出現。全て倒すとクリア。', label:'ホーク2 + ホークⅡ', rank:10 },
+    { id:14, key:'desert_sharks', title:'砂漠に潜む鮫', areaKey:'desert', areaName:'砂漠', background:null, desc:'モブサメが2体同時出現。全て倒すとクリア。', label:'モブサメ 2体', rank:10 },
+    { id:15, key:'town_dragon', title:'街を襲うドラゴン', areaKey:'town', areaName:'田舎町', background:null, desc:'ドラゴンモブⅡとモブギドラ2体が同時出現。全て倒すとクリア。', label:'ドラゴンⅡ + ギドラ2', rank:10 },
+    { id:16, key:'neon_maoh', title:'ネオン街の魔王', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブ魔王、モブケーブル、モブコードが同時出現。全て倒すとクリア。', label:'魔王 + ケーブル + コード', rank:10 },
+    { id:17, key:'magma_beauty', title:'マグマを好む美女', areaKey:'magma', areaName:'マグマ', background:null, desc:'モブリリスとモブメルト3体が同時出現。全て倒すとクリア。', label:'リリス + メルト3', rank:10 },
+    { id:18, key:'castle_machine', title:'魔王城の精密機械', areaKey:'castle', areaName:'魔王城', background:null, desc:'ネオンモブ3体とホークモブが同時出現。全て倒すとクリア。', label:'ネオン3 + ホーク', rank:10 }
   ];
 
   const EVENTS = [
@@ -195,54 +208,14 @@
         box-shadow:0 3px 0 rgba(0,0,0,.35);
       }
 
-      .event-double-title{
-        display:flex;
-        align-items:center;
-        gap:8px;
-        margin:9px 0 4px;
-        font-size:15px;
-        font-weight:1000;
-        text-shadow:0 2px 0 #000;
-      }
-
-      .event-double-title img{
-        width:34px;
-        height:23px;
-        object-fit:cover;
-        border-radius:8px;
-      }
-
-      .event-stage-button{
-        width:100%;
-        border:0;
-        border-radius:14px;
-        padding:8px 10px;
-        font-size:13px;
-        font-weight:1000;
-        color:#fff;
-        text-align:left;
-        background:rgba(255,255,255,.12);
-        border:2px solid rgba(255,255,255,.22);
-        box-shadow:0 3px 0 rgba(0,0,0,.30);
-      }
-
-      .event-stage-button:disabled{
-        opacity:.45;
-        filter:grayscale(1);
-      }
-
-      .event-stage-button small{
-        display:block;
-        margin-top:2px;
-        font-size:9px;
-        color:#dfe8ff;
-      }
-
       .event-quest-wrap{
         display:grid;
         grid-template-columns:1fr;
         gap:9px;
         margin-top:8px;
+        max-height:60vh;
+        overflow:auto;
+        padding-right:2px;
       }
 
       .event-quest-box{
@@ -258,6 +231,15 @@
         color:#fff;
         text-shadow:0 2px 0 #000;
         margin-bottom:7px;
+      }
+
+      .event-quest-label{
+        font-size:10px;
+        font-weight:900;
+        color:#dfe8ff;
+        text-shadow:0 2px 0 #000;
+        margin:-3px 0 7px;
+        line-height:1.35;
       }
 
       .event-quest-diff-row{
@@ -1026,61 +1008,6 @@
     parent.appendChild(btn);
   }
 
-  function renderDoubleBossButtons(parent, unlocked){
-    const wrap = document.createElement('div');
-    wrap.style.display = 'grid';
-    wrap.style.gridTemplateColumns = '1fr';
-    wrap.style.gap = '7px';
-    wrap.style.marginTop = '8px';
-
-    DOUBLE_DIFFICULTIES.forEach(diff => {
-      const diffUnlocked = unlocked && isDoubleDifficultyUnlocked(diff.key);
-
-      const title = document.createElement('div');
-      title.className = 'event-double-title';
-      title.style.color = diffUnlocked ? diff.color : '#9aa4bd';
-      title.innerHTML = `<img src="${diff.icon}" alt="${diff.name}"><span>${diffUnlocked ? diff.name : diff.name + ' LOCK'}</span>`;
-
-      wrap.appendChild(title);
-
-      DOUBLE_STAGES.forEach(stage => {
-        if (!stage.allowed.includes(diff.key)) return;
-
-        const cleared = hasDoubleCleared(diff.key, stage.id);
-        const btn = document.createElement('button');
-
-        btn.type = 'button';
-        btn.className = 'event-stage-button';
-        btn.disabled = !diffUnlocked;
-
-        btn.innerHTML =
-          `${stage.id}. ${stage.title}` +
-          `<small>${cleared ? 'CLEAR' : 'NEW'} / ${stage.bossA} + ${stage.bossB}</small>`;
-
-        btn.addEventListener('click', function(e){
-          e.preventDefault();
-          e.stopPropagation();
-
-          if (!diffUnlocked) return;
-
-          openConfirm({
-            title:'ダブルボス',
-            sub:`${diff.name} / ${stage.title}に出撃しますか？`,
-            reward:rewardTextDouble(diff, stage),
-            extra:'ボス2体が同時に出現します。\n障害物と雑魚は出ません。\n20秒ごとにゲートが流れてきます。',
-            onYes:function(){
-              startEvent('doubleBoss', diff.key, stage.id);
-            }
-          });
-        });
-
-        wrap.appendChild(btn);
-      });
-    });
-
-    parent.appendChild(wrap);
-  }
-
   function renderQuestButtons(parent, unlocked){
     const wrap = document.createElement('div');
     wrap.className = 'event-quest-wrap';
@@ -1093,10 +1020,15 @@
       title.className = 'event-quest-title';
       title.textContent = `${stage.id}. ${stage.title}`;
 
+      const label = document.createElement('div');
+      label.className = 'event-quest-label';
+      label.textContent = stage.label || stage.desc || '';
+
       const diffRow = document.createElement('div');
       diffRow.className = 'event-quest-diff-row';
 
       box.appendChild(title);
+      box.appendChild(label);
 
       QUEST_DIFFICULTIES.forEach(diff => {
         const playOk = unlocked && canPlayQuest(stage, diff);
@@ -1138,7 +1070,7 @@
             title:'イベントクエスト',
             sub:`${stage.title} / ${diff.name}に出撃しますか？`,
             reward:rewardTextQuest(diff, stage),
-            extra:`消費COIN: ${cost.toLocaleString()}`,
+            extra:`消費COIN: ${cost.toLocaleString()}\n\n${stage.desc || stage.label || ''}`,
             onYes:function(){
               startEvent('eventQuest', diff.key, stage.id);
             }
@@ -1222,21 +1154,6 @@
     if (key === 'eventQuest' && !isEventQuestUnlocked()) {
       showMessage('LOCK', '通常ステージのイージーを全てクリアすると解放されます。');
       return;
-    }
-
-    if (key === 'doubleBoss') {
-      const diff = getDoubleDifficulty(difficultyKey || 'veryHard');
-      const stage = getDoubleStage(selectedStageId || 1);
-
-      if (!stage.allowed.includes(diff.key)) {
-        showMessage('LOCK', 'このステージは選択した難易度では挑戦できません。');
-        return;
-      }
-
-      if (!isDoubleDifficultyUnlocked(diff.key)) {
-        showMessage('LOCK', '前の難易度をクリアすると解放されます。');
-        return;
-      }
     }
 
     if (key === 'eventQuest') {
