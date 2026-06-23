@@ -41,7 +41,7 @@
 
   const QUEST_STAGES = [
     { id:1, key:'pterarush', title:'プテラッシュ', areaKey:'grass', areaName:'草原', background:null, desc:'中ボスのプテラが2体 → 3体 → 5体で出現。全て倒すとクリア。', label:'プテラ 2→3→5', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:2, key:'guardian_test', title:'番人試験', areaKey:'town', areaName:'田舎町', background:null, desc:'ミニサイズの番人が2体同時に出現。両方倒すとクリア。', label:'小番人 2体同時', rank:10, questEnemyMode:'low', gimmickSpawn:false },
+    { id:2, key:'guardian_test', title:'番人試験', areaKey:'town', areaName:'田舎町', background:null, desc:'番人が2体同時に出現。両方倒すとクリア。', label:'番人 2体同時', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:3, key:'grass_traveler', title:'草原の旅人', areaKey:'grass', areaName:'草原', background:null, desc:'グラディモブ2体とモブニコ2体が同時出現。全て倒すとクリア。', label:'グラディ2 + ニコ2', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:4, key:'thieves', title:'盗賊団', areaKey:'desert', areaName:'砂漠', background:null, desc:'ミラモブ1体と砂漠の雑魚敵を倒すとクリア。雑魚湧きは少なめ。', label:'ミラモブ + 雑魚少なめ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:5, key:'desert_ruler', title:'砂漠を統べる者', areaKey:'desert', areaName:'砂漠', background:null, desc:'ミラモブⅡが2体同時出現。全て倒すとクリア。', label:'ミラモブⅡ 2体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
@@ -50,20 +50,20 @@
     { id:8, key:'magma_guardian', title:'マグマに潜むガーディアン', areaKey:'magma', areaName:'マグマ', background:null, desc:'マグモブレム3体とモブガーディアンⅡが同時出現。全て倒すとクリア。', label:'マグレム3 + 番人Ⅱ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:9, key:'sky_rulers', title:'空の支配者', areaKey:'town', areaName:'田舎町', background:null, desc:'モブバード、モブファル、モブマグプテラが少し出現。ホークモブⅡとドラゴンモブⅡを両方倒すとクリア。', label:'ホークⅡ + ドラゴンⅡ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:10, key:'neon_nightmare', title:'ネオン街の悪夢', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブコード、モブケーブル、ネオンモブが同時出現。全て倒すとクリア。', label:'コード + ケーブル + ネオン', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:11, key:'nine_heads', title:'9つの首', areaKey:'neon', areaName:'ネオン街', background:null, desc:'ネオンギドラ3体同時 → 大型ネオンギドラ1体。倒すとクリア。', label:'ギドラ3体 + 大型1体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
+    { id:11, key:'nine_heads', title:'9つの首', areaKey:'neon', areaName:'ネオン街', background:null, desc:'ネオンギドラ3体同時 → ネオンギドラ1体。倒すとクリア。', label:'ギドラ3体 + ギドラ1体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:12, key:'town_dragon', title:'街を襲うドラゴン', areaKey:'town', areaName:'田舎町', background:null, desc:'ドラゴンモブⅡとモブギドラ2体が同時出現。全て倒すとクリア。', label:'ドラゴンⅡ + ギドラ2', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:13, key:'three_birds', title:'三鳥見参', areaKey:'grass', areaName:'草原', background:null, desc:'ホークモブ2体とホークモブⅡが同時出現。全て倒すとクリア。', label:'ホーク2 + ホークⅡ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:14, key:'neon_maoh', title:'ネオン街の魔王', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブ魔王、モブケーブル、モブコードが同時出現。全て倒すとクリア。', label:'魔王 + ケーブル + コード', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:15, key:'magma_beauty', title:'マグマを好む美女', areaKey:'magma', areaName:'マグマ', background:null, desc:'モブリリスとモブメルト3体が同時出現。全て倒すとクリア。', label:'リリス + メルト3', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:16, key:'maoh_duel', title:'対峙する魔王', areaKey:'castle', areaName:'魔王城', background:null, desc:'モブ魔王を倒すと、次のモブ魔王と2体のミラモブが出現。全て倒すとクリア。', label:'魔王 → 魔王 + ミラ2体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:17, key:'lilith_sisters', title:'リリス四姉妹', areaKey:'castle', areaName:'魔王城', background:null, desc:'小さめのモブリリスが4体同時に出現。全て倒すとクリア。', label:'小モブリリス 4体同時', rank:10, questEnemyMode:'low', gimmickSpawn:false },
+    { id:17, key:'lilith_sisters', title:'リリス四姉妹', areaKey:'castle', areaName:'魔王城', background:null, desc:'モブリリスが4体同時に出現。全て倒すとクリア。', label:'モブリリス 4体同時', rank:10, questEnemyMode:'low', gimmickSpawn:false },
     { id:18, key:'castle_machine', title:'魔王城の精密機械', areaKey:'castle', areaName:'魔王城', background:null, desc:'ネオンモブ3体とホークモブが同時出現。全て倒すとクリア。', label:'ネオン3 + ホーク', rank:10, questEnemyMode:'low', gimmickSpawn:false }
   ];
 
   const EVENTS = [
     { key:'gold', name:'GOLD STAGE', image:'mt/event_gold.png', desc:'自由に挑戦できるコイン稼ぎイベント。' },
     { key:'scoreAttack', name:'スコアアタック', image:'mt/event_score.png', desc:'歴代ボスを順番に倒してハイスコアを目指すイベント。' },
-    { key:'eventQuest', name:'イベントクエスト', image:'mt/ieve.png', desc:'イージー全クリアで解放。' },
+    { key:'eventQuest', name:'イベントクエスト', image:'mt/ieve.png', desc:'難易度別に特別な石板がドロップ！' },
     { key:'secretBoss', name:'シークレットボス', image:'mt/event_secret.png', desc:'COMING SOON' }
   ];
 
@@ -857,7 +857,7 @@
 
   function rewardTextQuest(diff, stage){
     const cleared = hasQuestCleared(diff.key, stage.id);
-    const rewardText = cleared ? 'クリア済み\n追加報酬は後で調整予定' : '初回クリア報酬\n特別な石板ドロップ予定';
+    const rewardText = cleared ? 'クリア済み\n難易度別の特別な石板がドロップ！' : '初回クリア報酬\n難易度別の特別な石板がドロップ！';
 
     return `${rewardText}\n\n消費: ${Number(diff.cost || 0).toLocaleString()} COIN`;
   }
@@ -898,7 +898,7 @@
       const desc = document.createElement('p');
 
       if (ev.key === 'eventQuest' && !eventQuestUnlocked) {
-        desc.textContent = unlocked ? '通常ステージのイージー全クリアで解放' : 'ランク10で解放';
+        desc.textContent = unlocked ? '通常ステージのイージー全クリアで解放 / 難易度別に特別な石板がドロップ！' : 'ランク10で解放';
       } else {
         desc.textContent = ev.desc || '';
       }
