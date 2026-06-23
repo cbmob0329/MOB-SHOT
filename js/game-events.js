@@ -3,6 +3,7 @@
 (function(){
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
   const EVENT_START_VALID_MS = 120000;
+  const EVENT_MENU_BUTTON_LABEL = 'イベントメニューへ';
 
   let active = false;
   let eventData = null;
@@ -18,6 +19,7 @@
   let scoreAttackIndex = 0;
   let finishBonusApplied = false;
   let retryEventData = null;
+  let eventMenuNavLock = false;
 
   let questInfo = null;
   let questPhase = 0;
@@ -127,6 +129,12 @@
       const save = clone(data);
       save.startedAt = Date.now();
       localStorage.setItem(EVENT_SAVE_KEY, JSON.stringify(save));
+    } catch(e) {}
+  }
+
+  function clearStoredEventRequest(){
+    try {
+      localStorage.removeItem(EVENT_SAVE_KEY);
     } catch(e) {}
   }
 
@@ -1097,6 +1105,113 @@
     if (home) home.style.display = '';
   }
 
+  function forceEventMenuResultButton(){
+    document.__mobShotEventResultMode = true;
+
+    const retry = document.getElementById('resultRetryBtn');
+    if (retry) {
+      retry.textContent = EVENT_MENU_BUTTON_LABEL;
+      retry.dataset.mobShotEventMenu = '1';
+      retry.style.display = '';
+    }
+
+    const next = document.getElementById('resultNextBtn');
+    if (next) {
+      next.style.display = 'none';
+      next.disabled = true;
+    }
+  }
+
+  function openEventMenuScreen(){
+    clearStoredEventRequest();
+
+    if (window.MobShotEvents && window.MobShotEvents.clearCurrentEvent) {
+      window.MobShotEvents.clearCurrentEvent();
+    }
+
+    document.__mobShotEventResultMode = false;
+
+    const calls = [
+      function(){ return window.MobShotEvents && window.MobShotEvents.openEventMenu && window.MobShotEvents.openEventMenu(); },
+      function(){ return window.MobShotEvents && window.MobShotEvents.showEventMenu && window.MobShotEvents.showEventMenu(); },
+      function(){ return window.MobShotEvents && window.MobShotEvents.openMenu && window.MobShotEvents.openMenu('event'); },
+      function(){ return window.MobShotEvents && window.MobShotEvents.showMenu && window.MobShotEvents.showMenu('event'); },
+      function(){ return window.MobShotEvents && window.MobShotEvents.renderEventMenu && window.MobShotEvents.renderEventMenu(); },
+      function(){ return window.MobShotOpenEventMenu && window.MobShotOpenEventMenu(); },
+      function(){ return window.openEventMenu && window.openEventMenu(); },
+      function(){ return window.showEventMenu && window.showEventMenu(); }
+    ];
+
+    for (let i = 0; i < calls.length; i++) {
+      try {
+        const result = calls[i]();
+        if (result !== false && result != null) return;
+      } catch(e) {}
+    }
+
+    try {
+      if (typeof window.showScreen === 'function') {
+        window.showScreen('main');
+      }
+    } catch(e) {}
+
+    setTimeout(function(){
+      const selectors = [
+        '#eventBtn',
+        '#btnEvent',
+        '#mainEventBtn',
+        '[data-menu="event"]',
+        '[data-open="event"]',
+        '[data-view="event"]',
+        '.eventBtn',
+        '.event-button'
+      ];
+
+      for (let i = 0; i < selectors.length; i++) {
+        const el = document.querySelector(selectors[i]);
+        if (el) {
+          el.click();
+          return;
+        }
+      }
+
+      const buttons = Array.prototype.slice.call(document.querySelectorAll('button'));
+      const eventButton = buttons.find(btn => String(btn.textContent || '').replace(/\s/g, '').includes('イベント'));
+
+      if (eventButton) {
+        eventButton.click();
+        return;
+      }
+
+      location.hash = '#event';
+    }, 80);
+  }
+
+  function handleEventMenuResultButton(e){
+    const btn = e && e.target && e.target.closest ? e.target.closest('#resultRetryBtn') : null;
+    if (!btn) return;
+
+    const isEventButton =
+      document.__mobShotEventResultMode ||
+      btn.dataset.mobShotEventMenu === '1' ||
+      String(btn.textContent || '').trim() === EVENT_MENU_BUTTON_LABEL;
+
+    if (!isEventButton) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+
+    if (eventMenuNavLock) return;
+    eventMenuNavLock = true;
+
+    setTimeout(function(){
+      eventMenuNavLock = false;
+    }, 800);
+
+    openEventMenuScreen();
+  }
+
   function injectDropStyle(){
     if (document.getElementById('mobEventDropStyle')) return;
 
@@ -1209,6 +1324,7 @@
       ok.addEventListener('click', function(){
         pop.classList.add('hidden');
         showResultButtons();
+        forceEventMenuResultButton();
       });
     }
 
@@ -1216,6 +1332,7 @@
       if (e.target === pop) {
         pop.classList.add('hidden');
         showResultButtons();
+        forceEventMenuResultButton();
       }
     });
 
@@ -1225,6 +1342,7 @@
   function showDropPop(drops){
     if (!drops || !drops.length) {
       showResultButtons();
+      forceEventMenuResultButton();
       return;
     }
 
@@ -1264,6 +1382,8 @@
   }
 
   function startCurrentEvent(api){
+    document.__mobShotEventResultMode = false;
+
     eventData = getEvent();
 
     if (!eventData || !eventData.key) {
@@ -1443,15 +1563,33 @@
       window.MobShotEvents.clearCurrentEvent();
     }
 
+    clearStoredEventRequest();
+
     active = false;
     eventData = null;
     eventType = '';
     difficultyKey = '';
     stageId = 0;
 
+    setTimeout(function(){
+      forceEventMenuResultButton();
+    }, 0);
+
+    setTimeout(function(){
+      forceEventMenuResultButton();
+    }, 120);
+
+    setTimeout(function(){
+      forceEventMenuResultButton();
+    }, 420);
+
     return {
       event:true,
-      text
+      text,
+      retryLabel:EVENT_MENU_BUTTON_LABEL,
+      retryText:EVENT_MENU_BUTTON_LABEL,
+      retryAction:'eventMenu',
+      next:false
     };
   }
 
@@ -1499,39 +1637,22 @@
     return;
   }
 
-  function shouldRestoreRetryEvent(btn){
-    if (!btn || btn.id !== 'resultRetryBtn') return false;
-    if (!retryEventData || !retryEventData.key) return false;
-    return true;
+  function bindEventMenuResultButton(){
+    if (document.__mobShotEventMenuResultButtonBound) return;
+    document.__mobShotEventMenuResultButtonBound = true;
+
+    document.addEventListener('pointerdown', handleEventMenuResultButton, true);
+    document.addEventListener('touchstart', handleEventMenuResultButton, true);
+    document.addEventListener('mousedown', handleEventMenuResultButton, true);
+    document.addEventListener('click', handleEventMenuResultButton, true);
   }
 
-  function restoreRetryEventForButton(e){
-    const btn = e && e.target && e.target.closest ? e.target.closest('#resultRetryBtn') : null;
-    if (!shouldRestoreRetryEvent(btn)) return;
-
-    writeEventRequest(retryEventData);
-
-    if (window.MobShotEvents && window.MobShotEvents.setCurrentEvent) {
-      window.MobShotEvents.setCurrentEvent(clone(retryEventData));
-    }
-  }
-
-  function bindRetryRestore(){
-    if (document.__mobShotEventRetryRestoreBound) return;
-    document.__mobShotEventRetryRestoreBound = true;
-
-    document.addEventListener('pointerdown', restoreRetryEventForButton, true);
-    document.addEventListener('touchstart', restoreRetryEventForButton, true);
-    document.addEventListener('mousedown', restoreRetryEventForButton, true);
-    document.addEventListener('click', restoreRetryEventForButton, true);
-  }
-
-  bindRetryRestore();
+  bindEventMenuResultButton();
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bindRetryRestore);
+    document.addEventListener('DOMContentLoaded', bindEventMenuResultButton);
   } else {
-    bindRetryRestore();
+    bindEventMenuResultButton();
   }
 
   window.MobShotGameEvents = {
