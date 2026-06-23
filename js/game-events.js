@@ -1383,7 +1383,7 @@
         flag:'eventGiantGhidora'
       });
 
-      api.showBanner('大型モブギドラ');
+      api.showBanner('モブギドラ出現');
       questWaveSpawned = true;
     }
 
