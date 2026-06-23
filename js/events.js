@@ -49,9 +49,8 @@
   ];
 
   const EVENTS = [
-    { key:'gold', name:'GOLD STAGE', image:'mt/event_gold.png', desc:'チケットなしで自由に挑戦できるコイン稼ぎイベント。' },
+    { key:'gold', name:'GOLD STAGE', image:'mt/event_gold.png', desc:'自由に挑戦できるコイン稼ぎイベント。' },
     { key:'scoreAttack', name:'スコアアタック', image:'mt/event_score.png', desc:'歴代ボスを順番に倒してハイスコアを目指すイベント。' },
-    { key:'doubleBoss', name:'ダブルボス', image:'mt/event_double.png', desc:'ハード全クリアで解放。2体のボスを同時に撃破する高難易度イベント。' },
     { key:'eventQuest', name:'イベントクエスト', image:'mt/ieve.png', desc:'イージー全クリアで解放。' },
     { key:'secretBoss', name:'シークレットボス', image:'mt/event_secret.png', desc:'COMING SOON' }
   ];
@@ -892,7 +891,6 @@
 
     const unlocked = isUnlocked();
     const eventQuestUnlocked = isEventQuestUnlocked();
-    const doubleBossUnlocked = isDoubleBossUnlocked();
 
     if (lock) {
       lock.classList.toggle('hidden', unlocked);
@@ -920,8 +918,6 @@
 
       if (ev.key === 'eventQuest' && !eventQuestUnlocked) {
         desc.textContent = unlocked ? '通常ステージのイージー全クリアで解放' : 'ランク10で解放';
-      } else if (ev.key === 'doubleBoss' && !doubleBossUnlocked) {
-        desc.textContent = unlocked ? '通常ステージのハード全クリアで解放' : 'ランク10で解放';
       } else {
         desc.textContent = ev.desc || '';
       }
@@ -933,8 +929,6 @@
         renderGoldButtons(info, unlocked);
       } else if (ev.key === 'scoreAttack') {
         renderScoreAttackButton(info, unlocked);
-      } else if (ev.key === 'doubleBoss') {
-        renderDoubleBossButtons(info, doubleBossUnlocked);
       } else if (ev.key === 'eventQuest') {
         renderQuestButtons(info, eventQuestUnlocked);
       } else {
