@@ -3,6 +3,7 @@
 (function(){
   const PET_SAVE_KEY = 'mobshot_pet_state_v4';
   const MAX_LEVEL = 30;
+  const MAX_EQUIPPED_PETS = 4;
 
   const PET_MASTER = [
     {
@@ -568,7 +569,7 @@
       }
     } catch(e) {}
 
-    state.equipped = Array.isArray(state.equipped) ? state.equipped.slice(0, 3) : [];
+    state.equipped = Array.isArray(state.equipped) ? state.equipped.slice(0, MAX_EQUIPPED_PETS) : [];
 
     state.equipped = state.equipped.filter((key, index, arr) => {
       const pet = getPet(key);
@@ -602,7 +603,7 @@
   }
 
   function saveState(state){
-    state.equipped = Array.isArray(state.equipped) ? state.equipped.slice(0, 3) : [];
+    state.equipped = Array.isArray(state.equipped) ? state.equipped.slice(0, MAX_EQUIPPED_PETS) : [];
 
     try {
       localStorage.setItem(PET_SAVE_KEY, JSON.stringify(state));
@@ -810,8 +811,8 @@
       return;
     }
 
-    if (state.equipped.length >= 3) {
-      alert('装備できるペットは最大3体です。先に外してください。');
+    if (state.equipped.length >= MAX_EQUIPPED_PETS) {
+      alert(`装備できるペットは最大${MAX_EQUIPPED_PETS}体です。先に外してください。`);
       return;
     }
 
@@ -867,7 +868,7 @@
 
     return `
       <img
-        src="${src}"
+        src="${src}?v=20260624_pet4"
         alt="${isLocked ? 'LOCK' : pet.name}"
         style="${isLocked ? 'filter:brightness(0) opacity(.75);' : ''}"
         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
@@ -883,7 +884,7 @@
     const state = loadState();
     wrap.innerHTML = '';
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < MAX_EQUIPPED_PETS; i++) {
       const key = state.equipped[i];
       const pet = getPet(key);
 
@@ -902,7 +903,10 @@
           equipPet(pet.key);
         });
       } else {
-        slot.innerHTML = `<span class="pet-slot-name">EMPTY</span>`;
+        slot.innerHTML = `
+          <span class="pet-slot-num">${i + 1}</span>
+          <span class="pet-slot-name">EMPTY</span>
+        `;
       }
 
       wrap.appendChild(slot);
@@ -916,12 +920,12 @@
     const state = loadState();
     layer.innerHTML = '';
 
-    state.equipped.forEach(key => {
+    state.equipped.slice(0, MAX_EQUIPPED_PETS).forEach((key, index) => {
       const pet = getPet(key);
       if (!pet) return;
 
       const el = document.createElement('div');
-      el.className = 'main-float-pet';
+      el.className = `main-float-pet pet-float-${index + 1}`;
       el.innerHTML = petImageHtml(pet, 'front', false);
       layer.appendChild(el);
     });
@@ -960,7 +964,7 @@
       } else if (owned && equipped) {
         mainButtonText = '外す';
       } else if (owned) {
-        mainButtonText = '装備';
+        mainButtonText = state.equipped.length >= MAX_EQUIPPED_PETS ? '満員' : '装備';
       }
 
       const displayName = lockedView ? '？？？' : pet.name;
@@ -1107,6 +1111,7 @@
     const state = loadState();
 
     return state.equipped
+      .slice(0, MAX_EQUIPPED_PETS)
       .map((key, index) => {
         const pet = getPet(key);
         if (!pet || !pet.implemented) return null;
@@ -1145,6 +1150,7 @@
     isOwned,
     isEquipped,
     PET_MASTER,
-    MAX_LEVEL
+    MAX_LEVEL,
+    MAX_EQUIPPED_PETS
   };
 })();
