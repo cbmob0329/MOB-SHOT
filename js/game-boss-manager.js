@@ -225,6 +225,31 @@
     return null;
   }
 
+  function createBarrierState(){
+    return {
+      barrierTimer: 0,
+      barrierHp: 0,
+      barrierMaxHp: 0,
+      barrierLabel: 'バリア',
+      barrierColor: '#9deeff',
+      barrierGaugeVisible: true,
+
+      frontBarrierTimer: 0,
+      frontBarrierHp: 0,
+      frontBarrierMaxHp: 0,
+      frontBarrierLabel: '前面バリア',
+      frontBarrierColor: '#ffcf5b',
+      frontBarrierGaugeVisible: true,
+
+      circleBarrierTimer: 0,
+      circleBarrierHp: 0,
+      circleBarrierMaxHp: 0,
+      circleBarrierLabel: '円形バリア',
+      circleBarrierColor: '#ff4aff',
+      circleBarrierGaugeVisible: true
+    };
+  }
+
   function fixBossDef(def, fallbackName){
     def = def || {};
 
@@ -469,7 +494,7 @@
       Math.floor(Number(def.attackCd || 220) * Number(balance.cdMul || 1))
     );
 
-    const e = {
+    const e = Object.assign({
       kind: 'boss',
       name: canonicalBossName(def.name),
       image: def.image || bossImageFromName(def.name),
@@ -498,7 +523,7 @@
       eventDifficulty: diff ? diff.key : '',
       spawnWeakEnemies: def.spawnWeakEnemies !== false,
       specialHpMul: Number(def.specialHpMul || 1.65)
-    };
+    }, createBarrierState());
 
     core.state.entities.push(e);
 
@@ -519,6 +544,8 @@
       targetY - 86,
       side === 0 ? '#ffe66b' : '#6be6ff'
     );
+
+    return e;
   }
 
   function spawnBossEntity(core, def, opt){
@@ -530,7 +557,7 @@
     const hpMul = Number(opt.hpMul || 1);
     const hp = Math.max(1, Math.ceil(Number(def.hp || 520) * hpMul));
 
-    const e = {
+    const e = Object.assign({
       kind: 'boss',
       name: canonicalBossName(def.name),
       image: def.image || bossImageFromName(def.name),
@@ -554,7 +581,7 @@
       eventDifficulty: opt.eventDifficulty || '',
       spawnWeakEnemies: def.spawnWeakEnemies !== false,
       specialHpMul: Number(def.specialHpMul || 1.65)
-    };
+    }, createBarrierState());
 
     core.state.entities.push(e);
     core.addText('BOSS!!', x, targetY - 86, '#ffe66b');
@@ -650,6 +677,8 @@
     allBossCandidates,
     getBossDefByName,
     getFallbackBossDef,
+
+    createBarrierState,
 
     doubleBossEntranceEffect,
     skillFlash,
