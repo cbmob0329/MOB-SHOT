@@ -32,6 +32,7 @@
     if (raw === '番人II') return 'モブガーディアンⅡ';
     if (raw === 'モブ鮫') return 'モブサメ';
     if (raw === 'モグガラド') return 'モブガラド';
+    if (raw === '閻魔') return '閻魔モブ';
     if (raw === 'モブドラゴン') return 'ドラゴンモブ';
     if (raw === 'モブドラゴンⅡ') return 'ドラゴンモブⅡ';
     if (raw === 'モブドラゴンII') return 'ドラゴンモブⅡ';
@@ -86,10 +87,10 @@
     22:{ id:22, key:'marumaru_mobmob', title:'マルマルモブモブ', areaKey:'prison', areaName:'監獄', background:'sta/stkan.png', questEnemies:['マルモブ'], questEnemyMode:'none', gimmickSpawn:false },
     23:{ id:23, key:'fishman_sea_war', title:'魚人海戦', areaKey:'seaRail', areaName:'海の線路', background:'sta/umisenro.png', questEnemyMode:'low', gimmickSpawn:false },
     24:{ id:24, key:'last_prison', title:'終焉の監獄', areaKey:'prison', areaName:'監獄', background:'sta/stkan.png', questEnemyMode:'low', gimmickSpawn:false },
-    25:{ id:25, key:'welcome_back_world', title:'お帰り世界', areaKey:'matrix', areaName:'マトリックス', background:'sta/stmatrix.png', questEnemyMode:'low', gimmickSpawn:false },
+    25:{ id:25, key:'welcome_back_world', title:'お帰り世界', areaKey:'neon', areaName:'ネオン街', background:'sta/backneon.png', questEnemyMode:'low', gimmickSpawn:false },
     26:{ id:26, key:'under_the_sea', title:'アンダーザシー', areaKey:'seaRail', areaName:'海の線路', background:'sta/umisenro.png', questEnemyMode:'low', gimmickSpawn:false },
-    27:{ id:27, key:'emotional_neon', title:'エモーショナルネオン', areaKey:'neonHighway', areaName:'ネオン高速', background:'sta/neonlord.png', questEnemyMode:'low', gimmickSpawn:false },
-    28:{ id:28, key:'fire_king', title:'炎を統べる王', areaKey:'makai', areaName:'魔界', background:'sta/makai.png', questEnemyMode:'low', gimmickSpawn:false },
+    27:{ id:27, key:'emotional_neon', title:'エモーショナルネオン', areaKey:'neon', areaName:'ネオン街', background:'sta/backneon.png', questEnemyMode:'low', gimmickSpawn:false },
+    28:{ id:28, key:'fire_king', title:'炎を統べる王', areaKey:'last', areaName:'魔界', background:'sta/makailast.png', questEnemyMode:'low', gimmickSpawn:false },
     29:{ id:29, key:'lilith_family', title:'リリスファミリー', areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', questEnemyMode:'low', gimmickSpawn:false },
     30:{ id:30, key:'mob_artist', title:'MOB ARTIST', areaKey:'town', areaName:'田舎町', background:null, questEnemyMode:'low', gimmickSpawn:false }
   };
@@ -1088,14 +1089,6 @@
     }
   }
 
-  function spawnWaveByCounts(api, names, counts, opt){
-    const items = [];
-    names.forEach((name, index) => {
-      items.push({ name:name, count:Number(counts[index] || 1), opt:opt && opt.itemOpt ? opt.itemOpt : {} });
-    });
-    spawnNamedGroup(api, items, opt || {});
-  }
-
   function updateWaveStage(api, config){
     updateQuestFieldSpawns(api, currentQuestStage().areaKey, config.spawn || {});
 
@@ -1803,7 +1796,7 @@
 
     if (!questWaveSpawned && localFrame > 55) {
       spawnNamedGroup(api, [
-        { name:'モブメルト', opt:{ kind:'midBoss', hpMul:1.1, r:78 } },
+        { name:'モブメイル', opt:{ kind:'boss', hpMul:1.1, r:108 } },
         { name:'ドラゴンモブⅡ', opt:{ kind:'boss', hpMul:1.15, r:108 } },
         { name:'モブラス', opt:{ kind:'midBoss', hpMul:1.1, r:78 } },
         { name:'モブニコ', opt:{ kind:'midBoss', hpMul:1.1, r:78 } }
@@ -1899,13 +1892,18 @@
   }
 
   function updateFireKing(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
+    updateQuestFieldSpawns(api, currentQuestStage().areaKey, {
+      enemyInterval:[340, 500],
+      chestRate:0.08,
+      enemyHpMul:0.36,
+      enemyCoinMul:0.35
+    });
 
-    if (!questWaveSpawned && localFrame > 55) {
+    if (!questWaveSpawned && localFrame > 35) {
       spawnNamedGroup(api, [
-        { name:'閻魔モブ', opt:{ kind:'boss', hpMul:1.15, r:118 } },
-        { name:'ドラゴンモブ', opt:{ kind:'boss', hpMul:1.0, r:106 } },
-        { name:'ドラゴンモブⅡ', opt:{ kind:'boss', hpMul:1.0, r:108 } }
+        { name:'閻魔モブ', opt:{ kind:'boss', hpMul:1.15, r:118, x:api.W * 0.50, y:-260 } },
+        { name:'ドラゴンモブ', opt:{ kind:'boss', hpMul:1.0, r:106, x:api.W * 0.25, y:-220 } },
+        { name:'ドラゴンモブⅡ', opt:{ kind:'boss', hpMul:1.0, r:108, x:api.W * 0.75, y:-220 } }
       ], {
         scoreMul:1.18,
         coinMul:1.0,
