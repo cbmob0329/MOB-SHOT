@@ -10,11 +10,11 @@
   const TEST_GOLD_TICKET_START = 0;
 
   const GOLD_DIFFICULTIES = [
-    { key:'easy', name:'イージー', icon:'mt/game1.png', color:'#9dff73', firstCoin:3000, firstDiamond:5, clearCoin:300, chestMul:0.8, bossHpMul:1.0, bossCoinMul:1.0, bossCount:2, bosses:['ホークモブ','ミラモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ホークモブ + ミラモブ' },
-    { key:'hard', name:'ハード', icon:'mt/game2.png', color:'#6be6ff', firstCoin:8000, firstDiamond:8, clearCoin:800, chestMul:1.4, bossHpMul:1.35, bossCoinMul:1.8, bossCount:2, bosses:['ミラモブⅡ','ネオンモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ミラモブⅡ + ネオンモブ' },
-    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', firstCoin:15000, firstDiamond:10, clearCoin:1500, chestMul:2.2, bossHpMul:1.8, bossCoinMul:3.2, bossCount:2, bosses:['ドラゴンモブ','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ドラゴンモブ + ドラゴンモブⅡ' },
-    { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', color:'#ff5b5b', firstCoin:30000, firstDiamond:20, clearCoin:3000, chestMul:3.5, bossHpMul:2.35, bossCoinMul:6.0, bossCount:2, bosses:['モブリリス','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + ドラゴンモブⅡ' },
-    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', firstCoin:80000, firstDiamond:50, clearCoin:7000, chestMul:5.5, bossHpMul:3.2, bossCoinMul:10.0, bossCount:2, bosses:['モブリリス','モブ魔王'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + モブ魔王' }
+    { key:'easy', name:'イージー', icon:'mt/game1.png', color:'#9dff73', firstCoin:3000, firstDiamond:5, clearCoin:300, chestMul:0.8, bossHpMul:1.0, bossCoinMul:1.0, bossCount:2, bosses:['ホークモブ','ミラモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ホークモブ + ミラモブ', timeLimitSec:30 },
+    { key:'hard', name:'ハード', icon:'mt/game2.png', color:'#6be6ff', firstCoin:8000, firstDiamond:8, clearCoin:800, chestMul:1.4, bossHpMul:1.35, bossCoinMul:1.8, bossCount:2, bosses:['ミラモブⅡ','ネオンモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ミラモブⅡ + ネオンモブ', timeLimitSec:30 },
+    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', firstCoin:15000, firstDiamond:10, clearCoin:1500, chestMul:2.2, bossHpMul:1.8, bossCoinMul:3.2, bossCount:2, bosses:['ドラゴンモブ','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ドラゴンモブ + ドラゴンモブⅡ', timeLimitSec:30 },
+    { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', color:'#ff5b5b', firstCoin:30000, firstDiamond:20, clearCoin:3000, chestMul:3.5, bossHpMul:2.35, bossCoinMul:6.0, bossCount:2, bosses:['モブリリス','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + ドラゴンモブⅡ', timeLimitSec:30 },
+    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', firstCoin:80000, firstDiamond:50, clearCoin:7000, chestMul:5.5, bossHpMul:3.2, bossCoinMul:10.0, bossCount:2, bosses:['モブリリス','モブ魔王'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + モブ魔王', timeLimitSec:30 }
   ];
 
   const DOUBLE_DIFFICULTIES = [
@@ -40,24 +40,24 @@
   ];
 
   const QUEST_STAGES = [
-    { id:1, key:'pterarush', title:'プテラッシュ', areaKey:'grass', areaName:'草原', background:null, desc:'中ボスのプテラが2体 → 3体 → 5体で出現。全て倒すとクリア。', label:'プテラ 2→3→5', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:2, key:'guardian_test', title:'番人試験', areaKey:'town', areaName:'田舎町', background:null, desc:'ミニサイズの番人が2体同時に出現。両方倒すとクリア。', label:'小番人 2体同時', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:3, key:'grass_traveler', title:'草原の旅人', areaKey:'grass', areaName:'草原', background:null, desc:'グラディモブ2体とモブニコ2体が同時出現。全て倒すとクリア。', label:'グラディ2 + ニコ2', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:4, key:'thieves', title:'盗賊団', areaKey:'desert', areaName:'砂漠', background:null, desc:'ミラモブ1体と砂漠の雑魚敵を倒すとクリア。雑魚湧きは少なめ。', label:'ミラモブ + 雑魚少なめ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:5, key:'desert_ruler', title:'砂漠を統べる者', areaKey:'desert', areaName:'砂漠', background:null, desc:'ミラモブⅡが2体同時出現。全て倒すとクリア。', label:'ミラモブⅡ 2体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:6, key:'desert_sharks', title:'砂漠に潜む鮫', areaKey:'desert', areaName:'砂漠', background:null, desc:'モブサメが4体同時出現。全て倒すとクリア。', label:'モブサメ 4体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:7, key:'hot_magma', title:'アチアチマグマ', areaKey:'magma', areaName:'マグマ', background:null, desc:'開始直後からドラゴンと中ボス2体が同時出現。全て倒すとクリア。', label:'ドラゴン + 中ボス2体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:8, key:'magma_guardian', title:'マグマに潜むガーディアン', areaKey:'magma', areaName:'マグマ', background:null, desc:'マグモブレム3体とモブガーディアンⅡが同時出現。全て倒すとクリア。', label:'マグレム3 + 番人Ⅱ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:9, key:'sky_rulers', title:'空の支配者', areaKey:'town', areaName:'田舎町', background:null, desc:'モブバード、モブファル、モブマグプテラが少し出現。ホークモブⅡとドラゴンモブⅡを両方倒すとクリア。', label:'ホークⅡ + ドラゴンⅡ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:10, key:'neon_nightmare', title:'ネオン街の悪夢', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブコード、モブケーブル、ネオンモブが同時出現。全て倒すとクリア。', label:'コード + ケーブル + ネオン', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:11, key:'nine_heads', title:'9つの首', areaKey:'neon', areaName:'ネオン街', background:null, desc:'ネオンギドラ3体同時 → 大型ネオンギドラ1体。倒すとクリア。', label:'ギドラ3体 + 大型1体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:12, key:'town_dragon', title:'街を襲うドラゴン', areaKey:'town', areaName:'田舎町', background:null, desc:'ドラゴンモブⅡとモブギドラ2体が同時出現。全て倒すとクリア。', label:'ドラゴンⅡ + ギドラ2', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:13, key:'three_birds', title:'三鳥見参', areaKey:'grass', areaName:'草原', background:null, desc:'ホークモブ2体とホークモブⅡが同時出現。全て倒すとクリア。', label:'ホーク2 + ホークⅡ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:14, key:'neon_maoh', title:'ネオン街の魔王', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブ魔王、モブケーブル、モブコードが同時出現。全て倒すとクリア。', label:'魔王 + ケーブル + コード', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:15, key:'magma_beauty', title:'マグマを好む美女', areaKey:'magma', areaName:'マグマ', background:null, desc:'モブリリスとモブメルト3体が同時出現。全て倒すとクリア。', label:'リリス + メルト3', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:16, key:'maoh_duel', title:'対峙する魔王', areaKey:'castle', areaName:'魔王城', background:null, desc:'モブ魔王を倒すと、次のモブ魔王と2体のミラモブが出現。全て倒すとクリア。', label:'魔王 → 魔王 + ミラ2体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:17, key:'lilith_sisters', title:'リリス四姉妹', areaKey:'castle', areaName:'魔王城', background:null, desc:'小さめのモブリリスが4体同時に出現。全て倒すとクリア。', label:'小モブリリス 4体同時', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:18, key:'castle_machine', title:'魔王城の精密機械', areaKey:'castle', areaName:'魔王城', background:null, desc:'ネオンモブ3体とホークモブが同時出現。全て倒すとクリア。', label:'ネオン3 + ホーク', rank:10, questEnemyMode:'low', gimmickSpawn:false }
+    { id:1, key:'pterarush', title:'プテラッシュ', areaKey:'grass', areaName:'草原', background:null, desc:'中ボスのプテラが2体 → 3体 → 5体で出現。全て倒すとクリア。', label:'プテラ 2→3→5', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:2, key:'guardian_test', title:'番人試験', areaKey:'town', areaName:'田舎町', background:null, desc:'ミニサイズの番人が2体同時に出現。両方倒すとクリア。', label:'小番人 2体同時', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:3, key:'grass_traveler', title:'草原の旅人', areaKey:'grass', areaName:'草原', background:null, desc:'グラディモブ2体とモブニコ2体が同時出現。全て倒すとクリア。', label:'グラディ2 + ニコ2', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:4, key:'thieves', title:'盗賊団', areaKey:'desert', areaName:'砂漠', background:null, desc:'ミラモブ1体と砂漠の雑魚敵を倒すとクリア。雑魚湧きは少なめ。', label:'ミラモブ + 雑魚少なめ', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:5, key:'desert_ruler', title:'砂漠を統べる者', areaKey:'desert', areaName:'砂漠', background:null, desc:'ミラモブⅡが2体同時出現。全て倒すとクリア。', label:'ミラモブⅡ 2体', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:6, key:'desert_sharks', title:'砂漠に潜む鮫', areaKey:'desert', areaName:'砂漠', background:null, desc:'モブサメが4体同時出現。全て倒すとクリア。', label:'モブサメ 4体', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:7, key:'hot_magma', title:'アチアチマグマ', areaKey:'magma', areaName:'マグマ', background:null, desc:'開始直後からドラゴンと中ボス2体が同時出現。全て倒すとクリア。', label:'ドラゴン + 中ボス2体', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:8, key:'magma_guardian', title:'マグマに潜むガーディアン', areaKey:'magma', areaName:'マグマ', background:null, desc:'マグモブレム3体とモブガーディアンⅡが同時出現。全て倒すとクリア。', label:'マグレム3 + 番人Ⅱ', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:9, key:'sky_rulers', title:'空の支配者', areaKey:'town', areaName:'田舎町', background:null, desc:'モブバード、モブファル、モブマグプテラが少し出現。ホークモブⅡとドラゴンモブⅡを両方倒すとクリア。', label:'ホークⅡ + ドラゴンⅡ', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:10, key:'neon_nightmare', title:'ネオン街の悪夢', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブコード、モブケーブル、ネオンモブが同時出現。全て倒すとクリア。', label:'コード + ケーブル + ネオン', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:11, key:'nine_heads', title:'9つの首', areaKey:'neon', areaName:'ネオン街', background:null, desc:'ネオンギドラ3体同時 → 大型ネオンギドラ1体。倒すとクリア。', label:'ギドラ3体 + 大型1体', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:12, key:'town_dragon', title:'街を襲うドラゴン', areaKey:'town', areaName:'田舎町', background:null, desc:'ドラゴンモブⅡとモブギドラ2体が同時出現。全て倒すとクリア。', label:'ドラゴンⅡ + ギドラ2', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:13, key:'three_birds', title:'三鳥見参', areaKey:'grass', areaName:'草原', background:null, desc:'ホークモブ2体とホークモブⅡが同時出現。全て倒すとクリア。', label:'ホーク2 + ホークⅡ', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:14, key:'neon_maoh', title:'ネオン街の魔王', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブ魔王、モブケーブル、モブコードが同時出現。全て倒すとクリア。', label:'魔王 + ケーブル + コード', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:15, key:'magma_beauty', title:'マグマを好む美女', areaKey:'magma', areaName:'マグマ', background:null, desc:'モブリリスとモブメルト3体が同時出現。全て倒すとクリア。', label:'リリス + メルト3', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:16, key:'maoh_duel', title:'対峙する魔王', areaKey:'castle', areaName:'魔王城', background:null, desc:'モブ魔王を倒すと、次のモブ魔王と2体のミラモブが出現。全て倒すとクリア。', label:'魔王 → 魔王 + ミラ2体', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:17, key:'lilith_sisters', title:'リリス四姉妹', areaKey:'castle', areaName:'魔王城', background:null, desc:'小さめのモブリリスが4体同時に出現。全て倒すとクリア。', label:'小モブリリス 4体同時', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:18, key:'castle_machine', title:'魔王城の精密機械', areaKey:'castle', areaName:'魔王城', background:null, desc:'ネオンモブ3体とホークモブが同時出現。全て倒すとクリア。', label:'ネオン3 + ホーク', rank:1, questEnemyMode:'low', gimmickSpawn:false }
   ];
 
   const EVENTS = [
@@ -503,7 +503,7 @@
   }
 
   function isUnlocked(){
-    return getRank() >= 10;
+    return true;
   }
 
   function isDifficultyAllCleared(difficultyName){
@@ -524,11 +524,11 @@
   }
 
   function isEventQuestUnlocked(){
-    return isUnlocked() && isDifficultyAllCleared('イージー');
+    return true;
   }
 
   function isDoubleBossUnlocked(){
-    return isUnlocked() && isDifficultyAllCleared('ハード');
+    return true;
   }
 
   function defaultItems(){
@@ -705,8 +705,6 @@
   function isDoubleDifficultyUnlocked(difficultyKey){
     difficultyKey = normalizeDifficultyKey(difficultyKey);
 
-    if (!isDoubleBossUnlocked()) return false;
-
     if (difficultyKey === 'veryHard') return true;
 
     if (difficultyKey === 'inferno') {
@@ -730,8 +728,7 @@
   }
 
   function canPlayQuest(stage, diff){
-    if (!stage || !diff) return false;
-    return isEventQuestUnlocked() && getRank() >= Number(stage.rank || 10);
+    return !!(stage && diff);
   }
 
   function consumeCoin(amount){
@@ -870,12 +867,12 @@
 
     if (!list) return;
 
-    const unlocked = isUnlocked();
-    const eventQuestUnlocked = isEventQuestUnlocked();
+    const unlocked = true;
+    const eventQuestUnlocked = true;
 
     if (lock) {
-      lock.classList.toggle('hidden', unlocked);
-      lock.textContent = `ランク10で解放されます。現在ランク: ${getRank()}`;
+      lock.classList.add('hidden');
+      lock.textContent = '';
     }
 
     list.innerHTML = '';
@@ -896,12 +893,7 @@
       title.textContent = ev.name;
 
       const desc = document.createElement('p');
-
-      if (ev.key === 'eventQuest' && !eventQuestUnlocked) {
-        desc.textContent = unlocked ? '通常ステージのイージー全クリアで解放' : 'ランク10で解放';
-      } else {
-        desc.textContent = ev.desc || '';
-      }
+      desc.textContent = ev.desc || '';
 
       info.appendChild(title);
       info.appendChild(desc);
@@ -916,7 +908,7 @@
         const btn = document.createElement('button');
         btn.className = 'event-play-btn';
         btn.type = 'button';
-        btn.textContent = unlocked ? 'COMING SOON' : 'LOCK';
+        btn.textContent = 'COMING SOON';
         btn.disabled = true;
         info.appendChild(btn);
       }
@@ -938,7 +930,6 @@
       btn.disabled = !unlocked;
 
       const status =
-        !unlocked ? 'LOCK' :
         hasGoldCleared(diff.key) ? 'CLEAR済' :
         'START';
 
@@ -953,13 +944,11 @@
         e.preventDefault();
         e.stopPropagation();
 
-        if (!unlocked) return;
-
         openConfirm({
           title:'GOLD STAGE',
           sub:`${diff.name}に出撃しますか？`,
           reward:rewardTextGold(diff),
-          extra:`チケット消費なし\n自由に挑戦できます。\n\n${diff.label}`,
+          extra:`制限時間30秒\nボス撃破では終了しません。\n30秒生存でクリアです。\n\n${diff.label}`,
           onYes:function(){
             startEvent('gold', diff.key);
           }
@@ -984,14 +973,12 @@
       <img src="mt/game2.png" alt="スコアアタック">
       <span class="event-difficulty-name">挑戦する</span>
       <span class="event-difficulty-small">歴代ボス連戦 / ハイスコア</span>
-      <span class="event-difficulty-badge">${unlocked ? 'START' : 'LOCK'}</span>
+      <span class="event-difficulty-badge">START</span>
     `;
 
     btn.addEventListener('click', function(e){
       e.preventDefault();
       e.stopPropagation();
-
-      if (!unlocked) return;
 
       openConfirm({
         title:'スコアアタック',
@@ -1038,11 +1025,7 @@
         btn.className = 'event-quest-diff-btn';
         btn.disabled = !playOk;
 
-        const status =
-          !unlocked ? 'LOCK' :
-          getRank() < Number(stage.rank || 10) ? `R${stage.rank}` :
-          cleared ? 'CLEAR' :
-          '';
+        const status = cleared ? 'CLEAR' : '';
 
         btn.innerHTML = `
           <img src="${diff.icon}" alt="${diff.name}">
@@ -1102,6 +1085,7 @@
 
       data.goldDifficulty = clone(diff);
       data.difficultyData = clone(diff);
+      data.timeLimitSec = Number(diff.timeLimitSec || 30);
     }
 
     if (key === 'doubleBoss') {
@@ -1146,16 +1130,6 @@
 
   function startEvent(key, difficultyKey, selectedStageId){
     difficultyKey = normalizeDifficultyKey(difficultyKey || '');
-
-    if (key === 'doubleBoss' && !isDoubleBossUnlocked()) {
-      showMessage('LOCK', '通常ステージのハードを全てクリアすると解放されます。');
-      return;
-    }
-
-    if (key === 'eventQuest' && !isEventQuestUnlocked()) {
-      showMessage('LOCK', '通常ステージのイージーを全てクリアすると解放されます。');
-      return;
-    }
 
     if (key === 'eventQuest') {
       const diff = getQuestDifficulty(difficultyKey || 'easy');
