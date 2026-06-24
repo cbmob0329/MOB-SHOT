@@ -152,18 +152,74 @@
       }
       .main-rank-next-badge strong{color:#ffe66b;font-size:12px}
 
-      .pet-equip-panel{padding:9px!important}
-      .pet-slot{height:62px!important}
-      .pet-slot img{width:44px!important;height:44px!important}
-      .main-float-pet{width:62px!important;height:62px!important;font-size:30px!important}
-      .main-float-pet img{width:46px!important;height:46px!important}
+      .pet-equip-panel{padding:8px!important}
+      #petEquipSlots{
+        display:grid!important;
+        grid-template-columns:repeat(4,1fr)!important;
+        gap:6px!important;
+      }
+      .pet-slot{
+        height:58px!important;
+        min-width:0!important;
+        padding:4px!important;
+      }
+      .pet-slot img{
+        width:38px!important;
+        height:38px!important;
+        object-fit:contain!important;
+      }
+      .pet-slot-name{
+        max-width:100%!important;
+        font-size:10px!important;
+        line-height:1.05!important;
+        white-space:nowrap!important;
+        overflow:hidden!important;
+        text-overflow:ellipsis!important;
+      }
+      .pet-slot-num{
+        font-size:11px!important;
+      }
+
+      #mainPetFloatLayer,.main-pet-float-layer{
+        position:absolute!important;
+        inset:0!important;
+        display:block!important;
+        pointer-events:none!important;
+        z-index:6!important;
+      }
+      .main-float-pet{
+        position:absolute!important;
+        width:58px!important;
+        height:58px!important;
+        display:flex!important;
+        align-items:center!important;
+        justify-content:center!important;
+        font-size:28px!important;
+        filter:drop-shadow(0 8px 0 rgba(0,0,0,.28));
+      }
+      .main-float-pet img{
+        width:44px!important;
+        height:44px!important;
+        object-fit:contain!important;
+      }
+
+      .main-float-pet.pet-float-1{left:13%!important;bottom:16%!important}
+      .main-float-pet.pet-float-2{left:33%!important;bottom:20%!important}
+      .main-float-pet.pet-float-3{left:57%!important;bottom:16%!important}
+      .main-float-pet.pet-float-4{left:77%!important;bottom:20%!important}
+
+      .main-float-pet:nth-child(1):not(.pet-float-1){left:13%!important;bottom:16%!important}
+      .main-float-pet:nth-child(2):not(.pet-float-2){left:33%!important;bottom:20%!important}
+      .main-float-pet:nth-child(3):not(.pet-float-3){left:57%!important;bottom:16%!important}
+      .main-float-pet:nth-child(4):not(.pet-float-4){left:77%!important;bottom:20%!important}
 
       @media (max-height:720px){
         .main-rank-next-badge{bottom:calc(10.8svh + 92px)}
-        .pet-slot{height:52px!important}
-        .pet-slot img{width:38px!important;height:38px!important}
-        .main-float-pet{width:52px!important;height:52px!important;font-size:25px!important}
-        .main-float-pet img{width:38px!important;height:38px!important}
+        .pet-slot{height:50px!important}
+        .pet-slot img{width:34px!important;height:34px!important}
+        .pet-slot-name{font-size:9px!important}
+        .main-float-pet{width:50px!important;height:50px!important;font-size:24px!important}
+        .main-float-pet img{width:36px!important;height:36px!important}
       }
 
       .mob-rankup-modal,.mob-game-confirm,.mob-admin-pass-modal{
