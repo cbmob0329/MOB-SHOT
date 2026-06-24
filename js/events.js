@@ -129,6 +129,7 @@
     if (raw === 'インフェルノ') return 'inferno';
     if (raw === 'レジェンド') return 'legend';
     if (raw === 'veryhard') return 'veryHard';
+    if (raw === 'veryHard') return 'veryHard';
     return raw || 'easy';
   }
 
@@ -162,7 +163,8 @@
     return safeJsonLoad(EVENT_STATS_KEY, {
       goldPlay:0,
       goldClear:0,
-      goldBestCoin:{}
+      goldBestCoin:{},
+      bossKills:{}
     });
   }
 
@@ -173,7 +175,6 @@
   function recordGoldClear(key, coin){
     key = normalizeDifficultyKey(key);
     const stats = getStats();
-    stats.goldPlay = Number(stats.goldPlay || 0) + 1;
     stats.goldClear = Number(stats.goldClear || 0) + 1;
     stats.goldBestCoin = stats.goldBestCoin || {};
     stats.goldBestCoin[key] = Math.max(Number(stats.goldBestCoin[key] || 0), Number(coin || 0));
@@ -184,6 +185,13 @@
     key = normalizeDifficultyKey(key);
     const stats = getStats();
     stats.goldPlay = Number(stats.goldPlay || 0) + 1;
+    saveStats(stats);
+  }
+
+  function recordEventBossKill(name){
+    const stats = getStats();
+    stats.bossKills = stats.bossKills || {};
+    stats.bossKills[name] = Number(stats.bossKills[name] || 0) + 1;
     saveStats(stats);
   }
 
@@ -216,18 +224,6 @@
     window.__mobShotCurrentEvent = null;
   }
 
-  function recordEventBossKill(name){
-    const stats = getStats();
-    stats.bossKills = stats.bossKills || {};
-    stats.bossKills[name] = Number(stats.bossKills[name] || 0) + 1;
-    saveStats(stats);
-  }
-
-  function getRank(){
-    const save = getMainSave();
-    return Number(save.rank || save.playerRank || save.currentRank || 1);
-  }
-
   function getMainSave(){
     if (window.MobShotStorage && window.MobShotStorage.load) {
       try {
@@ -240,6 +236,11 @@
     } catch(e) {
       return {};
     }
+  }
+
+  function getRank(){
+    const save = getMainSave();
+    return Number(save.rank || save.playerRank || save.currentRank || 1);
   }
 
   function startGold(diffKey){
@@ -287,7 +288,9 @@
     const sortieBtn =
       document.getElementById('btnSortie') ||
       document.getElementById('mainSortieBtn') ||
+      document.getElementById('sortieBtn') ||
       document.querySelector('[data-action="sortie"]') ||
+      document.querySelector('[data-menu="sortie"]') ||
       document.querySelector('[data-nav="game"]');
 
     if (sortieBtn && typeof sortieBtn.click === 'function') {
@@ -317,6 +320,9 @@
         background:rgba(0,0,0,.78);
         color:#fff;
         font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+        -webkit-user-select:none;
+        user-select:none;
+        touch-action:manipulation;
       }
       #mobShotEventMenu.show{
         display:flex!important;
@@ -460,6 +466,11 @@
         font-size:13px;
         font-weight:900;
       }
+      .mob-event-tap-target{
+        cursor:pointer!important;
+        pointer-events:auto!important;
+        touch-action:manipulation!important;
+      }
       @keyframes mobEventFloat{
         0%,100%{transform:translateY(0)}
         50%{transform:translateY(-6px)}
@@ -546,7 +557,9 @@
     }).join('');
 
     list.querySelectorAll('[data-gold-diff]').forEach(btn => {
-      btn.addEventListener('click', function(){
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
         startGold(btn.dataset.goldDiff);
       });
     });
@@ -554,6 +567,7 @@
 
   function openEventMenu(){
     const rank = getRank();
+
     if (rank < 10) {
       showLockedMessage();
       return;
@@ -570,7 +584,11 @@
   }
 
   function showLockedMessage(){
+    const old = document.getElementById('mobShotEventLockedMsg');
+    if (old) old.remove();
+
     const msg = document.createElement('div');
+    msg.id = 'mobShotEventLockedMsg';
     msg.style.position = 'fixed';
     msg.style.left = '50%';
     msg.style.top = '50%';
@@ -594,30 +612,160 @@
     }, 1200);
   }
 
+  function isEventElement(el){
+    if (!el || el === document || el === window) return false;
+
+    const id = String(el.id || '').toLowerCase();
+    const cls = String(el.className || '').toLowerCase();
+    const text = String(el.textContent || '').trim();
+    const action = String((el.dataset && (el.dataset.action || el.dataset.menu || el.dataset.nav || el.dataset.screen)) || '').toLowerCase();
+    const aria = String(el.getAttribute && (el.getAttribute('aria-label') || el.getAttribute('title') || '') || '').toLowerCase();
+
+    if (id.includes('event')) return true;
+    if (cls.includes('event')) return true;
+    if (action === 'event' || action === 'events') return true;
+    if (text === 'イベント' || text.includes('イベント')) return true;
+    if (aria.includes('event') || aria.includes('イベント')) return true;
+
+    if (el.tagName && el.tagName.toLowerCase() === 'img') {
+      const src = String(el.getAttribute('src') || '').toLowerCase();
+      const alt = String(el.getAttribute('alt') || '').toLowerCase();
+
+      if (src.includes('mt/event.png')) return true;
+      if (src.includes('/event.png')) return true;
+      if (src.endsWith('event.png')) return true;
+      if (alt.includes('event') || alt.includes('イベント')) return true;
+    }
+
+    const img = el.querySelector && el.querySelector('img');
+    if (img) {
+      const src = String(img.getAttribute('src') || '').toLowerCase();
+      const alt = String(img.getAttribute('alt') || '').toLowerCase();
+
+      if (src.includes('mt/event.png')) return true;
+      if (src.includes('/event.png')) return true;
+      if (src.endsWith('event.png')) return true;
+      if (alt.includes('event') || alt.includes('イベント')) return true;
+    }
+
+    return false;
+  }
+
+  function nearestEventTarget(start){
+    let el = start;
+
+    for (let i = 0; i < 6 && el && el !== document; i++) {
+      if (isEventElement(el)) return el;
+      el = el.parentElement;
+    }
+
+    return null;
+  }
+
+  function bindOneEventTarget(el){
+    if (!el || el.__mobShotEventBound) return;
+
+    el.__mobShotEventBound = true;
+    el.classList && el.classList.add('mob-event-tap-target');
+
+    el.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      openEventMenu();
+    }, true);
+
+    el.addEventListener('pointerdown', function(){
+      el.__mobShotEventPointerDown = Date.now();
+    }, true);
+
+    el.addEventListener('touchend', function(e){
+      const t = Date.now() - Number(el.__mobShotEventPointerDown || 0);
+      if (t < 900) {
+        e.preventDefault();
+        e.stopPropagation();
+        openEventMenu();
+      }
+    }, true);
+  }
+
   function bindEventButtons(){
     const selectors = [
       '#eventBtn',
       '#btnEvent',
       '#mainEventBtn',
       '#mobShotEventBtn',
+      '#menuEventBtn',
+      '#rightEventBtn',
       '[data-action="event"]',
-      '[data-menu="event"]'
+      '[data-menu="event"]',
+      '[data-nav="event"]',
+      '[data-screen="event"]',
+      'button',
+      'a',
+      '[role="button"]',
+      '.menu-btn',
+      '.main-menu-btn',
+      '.side-menu-btn',
+      '.right-menu-btn',
+      'img'
     ];
 
     selectors.forEach(sel => {
-      document.querySelectorAll(sel).forEach(btn => {
-        if (btn.__mobShotEventBound) return;
-        btn.__mobShotEventBound = true;
-        btn.addEventListener('click', function(e){
-          e.preventDefault();
-          openEventMenu();
-        });
+      document.querySelectorAll(sel).forEach(el => {
+        if (isEventElement(el)) {
+          bindOneEventTarget(el);
+          return;
+        }
+
+        const target = nearestEventTarget(el);
+        if (target) bindOneEventTarget(target);
       });
+    });
+
+    document.querySelectorAll('img').forEach(img => {
+      const src = String(img.getAttribute('src') || '').toLowerCase();
+      if (
+        src.includes('mt/event.png') ||
+        src.includes('/event.png') ||
+        src.endsWith('event.png')
+      ) {
+        bindOneEventTarget(img);
+        if (img.parentElement) bindOneEventTarget(img.parentElement);
+      }
     });
   }
 
+  function installGlobalEventClickGuard(){
+    if (document.__mobShotEventGlobalClickGuard) return;
+    document.__mobShotEventGlobalClickGuard = true;
+
+    document.addEventListener('click', function(e){
+      const target = nearestEventTarget(e.target);
+      if (!target) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+
+      openEventMenu();
+    }, true);
+
+    document.addEventListener('touchend', function(e){
+      const target = nearestEventTarget(e.target);
+      if (!target) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+
+      openEventMenu();
+    }, true);
+  }
+
   function installAutoBinder(){
+    injectStyle();
     bindEventButtons();
+    installGlobalEventClickGuard();
 
     if (document.__mobShotEventAutoBinder) return;
     document.__mobShotEventAutoBinder = true;
@@ -628,8 +776,12 @@
 
     obs.observe(document.documentElement, {
       childList:true,
-      subtree:true
+      subtree:true,
+      attributes:true,
+      attributeFilter:['src','alt','id','class','data-action','data-menu','data-nav','data-screen','title','aria-label']
     });
+
+    setInterval(bindEventButtons, 1200);
   }
 
   if (document.readyState === 'loading') {
@@ -654,6 +806,7 @@
     },
     getGoldDifficulty:function(key){
       return clone(difficultyByKey(key));
-    }
+    },
+    bindEventButtons
   };
 })();
