@@ -10,11 +10,11 @@
   const TEST_GOLD_TICKET_START = 0;
 
   const GOLD_DIFFICULTIES = [
-    { key:'easy', name:'イージー', icon:'mt/game1.png', color:'#9dff73', firstCoin:3000, firstDiamond:5, clearCoin:300, chestMul:0.8, bossHpMul:1.0, bossCoinMul:1.0, bossCount:2, bosses:['ホークモブ','ミラモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ホークモブ + ミラモブ', timeLimitSec:30 },
-    { key:'hard', name:'ハード', icon:'mt/game2.png', color:'#6be6ff', firstCoin:8000, firstDiamond:8, clearCoin:800, chestMul:1.4, bossHpMul:1.35, bossCoinMul:1.8, bossCount:2, bosses:['ミラモブⅡ','ネオンモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ミラモブⅡ + ネオンモブ', timeLimitSec:30 },
-    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', firstCoin:15000, firstDiamond:10, clearCoin:1500, chestMul:2.2, bossHpMul:1.8, bossCoinMul:3.2, bossCount:2, bosses:['ドラゴンモブ','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ドラゴンモブ + ドラゴンモブⅡ', timeLimitSec:30 },
-    { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', color:'#ff5b5b', firstCoin:30000, firstDiamond:20, clearCoin:3000, chestMul:3.5, bossHpMul:2.35, bossCoinMul:6.0, bossCount:2, bosses:['モブリリス','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + ドラゴンモブⅡ', timeLimitSec:30 },
-    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', firstCoin:80000, firstDiamond:50, clearCoin:7000, chestMul:5.5, bossHpMul:3.2, bossCoinMul:10.0, bossCount:2, bosses:['モブリリス','モブ魔王'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + モブ魔王', timeLimitSec:30 }
+    { key:'easy', name:'イージー', icon:'mt/game1.png', color:'#9dff73', firstCoin:3000, firstDiamond:5, clearCoin:300, chestMul:0.8, bossHpMul:1.0, bossCoinMul:1.0, bossCount:2, bosses:['ホークモブ','ミラモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ホークモブ + ミラモブ' },
+    { key:'hard', name:'ハード', icon:'mt/game2.png', color:'#6be6ff', firstCoin:8000, firstDiamond:8, clearCoin:800, chestMul:1.4, bossHpMul:1.35, bossCoinMul:1.8, bossCount:2, bosses:['ミラモブⅡ','ネオンモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ミラモブⅡ + ネオンモブ' },
+    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', firstCoin:15000, firstDiamond:10, clearCoin:1500, chestMul:2.2, bossHpMul:1.8, bossCoinMul:3.2, bossCount:2, bosses:['ドラゴンモブ','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ドラゴンモブ + ドラゴンモブⅡ' },
+    { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', color:'#ff5b5b', firstCoin:30000, firstDiamond:20, clearCoin:3000, chestMul:3.5, bossHpMul:2.35, bossCoinMul:6.0, bossCount:2, bosses:['モブリリス','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + ドラゴンモブⅡ' },
+    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', firstCoin:80000, firstDiamond:50, clearCoin:7000, chestMul:5.5, bossHpMul:3.2, bossCoinMul:10.0, bossCount:2, bosses:['モブリリス','モブ魔王'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + モブ魔王' }
   ];
 
   const DOUBLE_DIFFICULTIES = [
@@ -34,9 +34,9 @@
   ];
 
   const QUEST_DIFFICULTIES = [
-    { key:'easy', name:'イージー', icon:'mt/game1.png', color:'#9dff73', cost:5000, hpMul:0.85, scoreMul:1.0, coinMul:0.8, enemyHpMul:0.8, label:'低難度 / 初回確認向け' },
-    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', cost:30000, hpMul:1.6, scoreMul:1.6, coinMul:1.2, enemyHpMul:1.35, label:'高難度 / 中盤以降向け' },
-    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', cost:100000, hpMul:2.8, scoreMul:2.5, coinMul:1.8, enemyHpMul:2.2, label:'超高難度 / 終盤向け' }
+    { key:'easy', name:'イージー', icon:'mt/game1.png', color:'#9dff73', cost:0, hpMul:0.85, scoreMul:1.0, coinMul:0.8, enemyHpMul:0.8, label:'最初から挑戦可能' },
+    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', cost:0, hpMul:1.6, scoreMul:1.6, coinMul:1.2, enemyHpMul:1.35, label:'イージー全クリアで解放' },
+    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', cost:0, hpMul:2.8, scoreMul:2.5, coinMul:1.8, enemyHpMul:2.2, label:'ベリーハード全クリアで解放' }
   ];
 
   const QUEST_STAGES = [
@@ -63,7 +63,7 @@
   const EVENTS = [
     { key:'gold', name:'GOLD STAGE', image:'mt/event_gold.png', desc:'自由に挑戦できるコイン稼ぎイベント。' },
     { key:'scoreAttack', name:'スコアアタック', image:'mt/event_score.png', desc:'歴代ボスを順番に倒してハイスコアを目指すイベント。' },
-    { key:'eventQuest', name:'イベントクエスト', image:'mt/ieve.png', desc:'イージー全クリアで解放。' },
+    { key:'eventQuest', name:'イベントクエスト', image:'mt/ieve.png', desc:'クエストをクリアして特別な石板を手に入れよう！' },
     { key:'secretBoss', name:'シークレットボス', image:'mt/event_secret.png', desc:'COMING SOON' }
   ];
 
@@ -528,7 +528,7 @@
   }
 
   function isDoubleBossUnlocked(){
-    return true;
+    return isDifficultyAllCleared('ハード');
   }
 
   function defaultItems(){
@@ -705,6 +705,8 @@
   function isDoubleDifficultyUnlocked(difficultyKey){
     difficultyKey = normalizeDifficultyKey(difficultyKey);
 
+    if (!isDoubleBossUnlocked()) return false;
+
     if (difficultyKey === 'veryHard') return true;
 
     if (difficultyKey === 'inferno') {
@@ -727,26 +729,27 @@
     return !!(stats.questStageClear && stats.questStageClear[questClearKey(difficultyKey, questId)]);
   }
 
+  function isQuestDifficultyAllCleared(difficultyKey){
+    difficultyKey = normalizeDifficultyKey(difficultyKey);
+    return QUEST_STAGES.every(stage => hasQuestCleared(difficultyKey, stage.id));
+  }
+
+  function isQuestDifficultyUnlocked(difficultyKey){
+    difficultyKey = normalizeDifficultyKey(difficultyKey);
+
+    if (difficultyKey === 'easy') return true;
+    if (difficultyKey === 'veryHard') return isQuestDifficultyAllCleared('easy');
+    if (difficultyKey === 'legend') return isQuestDifficultyAllCleared('veryHard');
+
+    return false;
+  }
+
   function canPlayQuest(stage, diff){
-    return !!(stage && diff);
+    if (!stage || !diff) return false;
+    return isQuestDifficultyUnlocked(diff.key);
   }
 
   function consumeCoin(amount){
-    const need = Number(amount || 0);
-    const save = getSave();
-    const coin = Number(save.coin || 0);
-
-    if (coin < need) return false;
-
-    save.coin = coin - need;
-    saveMainData(save);
-
-    if (window.MobShotMain && window.MobShotMain.refreshMainHud) {
-      window.MobShotMain.refreshMainHud();
-    }
-
-    window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
-
     return true;
   }
 
@@ -854,9 +857,9 @@
 
   function rewardTextQuest(diff, stage){
     const cleared = hasQuestCleared(diff.key, stage.id);
-    const rewardText = cleared ? 'クリア済み\n追加報酬は後で調整予定' : '初回クリア報酬\n特別な石板ドロップ予定';
-
-    return `${rewardText}\n\n消費: ${Number(diff.cost || 0).toLocaleString()} COIN`;
+    return cleared
+      ? 'クリア済み\n特別な石板ドロップあり'
+      : 'クリア報酬\n特別な石板ドロップ予定';
   }
 
   function render(){
@@ -867,8 +870,8 @@
 
     if (!list) return;
 
-    const unlocked = true;
-    const eventQuestUnlocked = true;
+    const unlocked = isUnlocked();
+    const eventQuestUnlocked = isEventQuestUnlocked();
 
     if (lock) {
       lock.classList.add('hidden');
@@ -893,7 +896,12 @@
       title.textContent = ev.name;
 
       const desc = document.createElement('p');
-      desc.textContent = ev.desc || '';
+
+      if (ev.key === 'eventQuest') {
+        desc.textContent = 'クエストをクリアして特別な石板を手に入れよう！';
+      } else {
+        desc.textContent = ev.desc || '';
+      }
 
       info.appendChild(title);
       info.appendChild(desc);
@@ -930,6 +938,7 @@
       btn.disabled = !unlocked;
 
       const status =
+        !unlocked ? 'LOCK' :
         hasGoldCleared(diff.key) ? 'CLEAR済' :
         'START';
 
@@ -944,11 +953,13 @@
         e.preventDefault();
         e.stopPropagation();
 
+        if (!unlocked) return;
+
         openConfirm({
           title:'GOLD STAGE',
           sub:`${diff.name}に出撃しますか？`,
           reward:rewardTextGold(diff),
-          extra:`制限時間30秒\nボス撃破では終了しません。\n30秒生存でクリアです。\n\n${diff.label}`,
+          extra:`チケット消費なし\n自由に挑戦できます。\n\n${diff.label}`,
           onYes:function(){
             startEvent('gold', diff.key);
           }
@@ -973,12 +984,14 @@
       <img src="mt/game2.png" alt="スコアアタック">
       <span class="event-difficulty-name">挑戦する</span>
       <span class="event-difficulty-small">歴代ボス連戦 / ハイスコア</span>
-      <span class="event-difficulty-badge">START</span>
+      <span class="event-difficulty-badge">${unlocked ? 'START' : 'LOCK'}</span>
     `;
 
     btn.addEventListener('click', function(e){
       e.preventDefault();
       e.stopPropagation();
+
+      if (!unlocked) return;
 
       openConfirm({
         title:'スコアアタック',
@@ -1025,7 +1038,11 @@
         btn.className = 'event-quest-diff-btn';
         btn.disabled = !playOk;
 
-        const status = cleared ? 'CLEAR' : '';
+        const status =
+          !playOk && diff.key === 'veryHard' ? 'EASY全クリア' :
+          !playOk && diff.key === 'legend' ? 'VH全クリア' :
+          cleared ? 'CLEAR' :
+          '';
 
         btn.innerHTML = `
           <img src="${diff.icon}" alt="${diff.name}">
@@ -1039,20 +1056,11 @@
 
           if (!playOk) return;
 
-          const save = getSave();
-          const haveCoin = Number(save.coin || 0);
-          const cost = Number(diff.cost || 0);
-
-          if (haveCoin < cost) {
-            showMessage('COIN不足', `必要COIN: ${cost.toLocaleString()}\n現在COIN: ${haveCoin.toLocaleString()}`);
-            return;
-          }
-
           openConfirm({
             title:'イベントクエスト',
             sub:`${stage.title} / ${diff.name}に出撃しますか？`,
             reward:rewardTextQuest(diff, stage),
-            extra:`消費COIN: ${cost.toLocaleString()}\n\n${stage.desc || stage.label || ''}`,
+            extra:`COIN消費なし\n\n${stage.desc || stage.label || ''}`,
             onYes:function(){
               startEvent('eventQuest', diff.key, stage.id);
             }
@@ -1085,7 +1093,6 @@
 
       data.goldDifficulty = clone(diff);
       data.difficultyData = clone(diff);
-      data.timeLimitSec = Number(diff.timeLimitSec || 30);
     }
 
     if (key === 'doubleBoss') {
@@ -1131,18 +1138,23 @@
   function startEvent(key, difficultyKey, selectedStageId){
     difficultyKey = normalizeDifficultyKey(difficultyKey || '');
 
+    if (key === 'doubleBoss' && !isDoubleBossUnlocked()) {
+      showMessage('LOCK', '通常ステージのハードを全てクリアすると解放されます。');
+      return;
+    }
+
     if (key === 'eventQuest') {
       const diff = getQuestDifficulty(difficultyKey || 'easy');
       const quest = getQuestStage(selectedStageId || 1);
 
       if (!canPlayQuest(quest, diff)) {
-        showMessage('LOCK', 'このクエストはまだ解放されていません。');
-        return;
-      }
-
-      if (!consumeCoin(Number(diff.cost || 0))) {
-        const save = getSave();
-        showMessage('COIN不足', `必要COIN: ${Number(diff.cost || 0).toLocaleString()}\n現在COIN: ${Number(save.coin || 0).toLocaleString()}`);
+        if (diff.key === 'veryHard') {
+          showMessage('LOCK', 'イベントクエストのイージーを全てクリアすると解放されます。');
+        } else if (diff.key === 'legend') {
+          showMessage('LOCK', 'イベントクエストのベリーハードを全てクリアすると解放されます。');
+        } else {
+          showMessage('LOCK', 'このクエストはまだ解放されていません。');
+        }
         return;
       }
     }
@@ -1350,6 +1362,8 @@
     getQuestStage,
     getCurrentQuest,
     hasQuestCleared,
+    isQuestDifficultyAllCleared,
+    isQuestDifficultyUnlocked,
 
     hasGoldCleared,
     markGoldCleared,
