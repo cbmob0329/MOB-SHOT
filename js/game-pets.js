@@ -15,7 +15,7 @@
 
     if (!petImages.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260616_pet_battle_v3_balance';
+      image.src = src + '?v=20260624_pet_battle_v4_4slots_break_damage';
       petImages.set(src, image);
     }
 
@@ -64,7 +64,7 @@
 
     if (!window.MobShotPets || !window.MobShotPets.getEquippedPets) return;
 
-    const equipped = window.MobShotPets.getEquippedPets();
+    const equipped = window.MobShotPets.getEquippedPets().slice(0, 4);
 
     equipped.forEach((pet, index) => {
       battlePets.push({
@@ -90,14 +90,17 @@
 
     battlePets.forEach((pet, index) => {
       if (index === 0) {
-        pet.targetX = player.x - 48;
+        pet.targetX = player.x - 58;
         pet.targetY = player.y + 18;
       } else if (index === 1) {
-        pet.targetX = player.x + 48;
+        pet.targetX = player.x + 58;
         pet.targetY = player.y + 18;
+      } else if (index === 2) {
+        pet.targetX = player.x - 82;
+        pet.targetY = player.y + 50;
       } else {
-        pet.targetX = player.x + 86;
-        pet.targetY = player.y + 45;
+        pet.targetX = player.x + 82;
+        pet.targetY = player.y + 50;
       }
 
       pet.x += (pet.targetX - pet.x) * 0.18;
@@ -318,6 +321,10 @@
       rate = Number(pet.data.skillBossRate || rate);
     }
 
+    if (target && target.kind === 'enemyBullet') {
+      rate = Number(pet.data.skillBulletRate || rate);
+    }
+
     if (key === 'mobdrago' && lv >= 30) rate = 1.7;
     if (key === 'mobfrog' && lv >= 30) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 4.0 : 2.7;
     if (key === 'mobdenden' && lv >= 30) rate = 1.0;
@@ -337,23 +344,6 @@
     if (key === 'hero' && lv >= 30) rate = 7.0;
 
     return skillRate(pet, rate);
-  }
-
-  function getBreakPower(pet, type){
-    const lv = level(pet);
-    let power = Number(type === 'skill' ? pet.data.skillBreakPower || 0 : pet.data.normalBreakPower || 0);
-
-    if (type === 'skill') {
-      if (pet.data.key === 'mobdrago' && lv >= 30) power = 350;
-      if (pet.data.key === 'mobfrog' && lv >= 30) power = 550;
-      if (pet.data.key === 'mobdenden' && lv >= 30) power = 220;
-      if (pet.data.key === 'mobwolf' && lv >= 30) power = 700;
-      if (pet.data.key === 'mobchibihawk' && lv >= 30) power = 1000;
-      if (pet.data.key === 'minidramob' && lv >= 30) power = 1600;
-      if (pet.data.key === 'hero' && lv >= 30) power = 2000;
-    }
-
-    return power;
   }
 
   function pushBullet(pet, target, damage, type, offset){
@@ -377,7 +367,6 @@
       color:bulletColor(pet.data, type),
       image:pet.data.atkImage || '',
       htmlBullet:pet.data.htmlBullet || '',
-      breakPower:getBreakPower(pet, type),
       petKey:pet.data.key
     });
   }
@@ -474,10 +463,11 @@
   function damageBreakableBullet(target, bullet){
     if (!target || target.dead) return;
 
-    target.hp = Number(target.hp || 1) - Number(bullet.breakPower || 0);
+    const damage = Math.max(1, Number(bullet.damage || 1));
+    target.hp = Number(target.hp || 1) - damage;
 
     petTexts.push({
-      text:'BREAK',
+      text:'-' + Math.ceil(damage),
       x:target.x,
       y:target.y - 12,
       life:26,
@@ -486,6 +476,13 @@
 
     if (target.hp <= 0) {
       target.dead = true;
+      petTexts.push({
+        text:'BREAK',
+        x:target.x,
+        y:target.y - 26,
+        life:28,
+        color:'#9deeff'
+      });
     }
   }
 
