@@ -105,6 +105,34 @@
     );
   }
 
+  function setBarrierGauge(e, kind, hp, label, color){
+    const finalHp = Math.max(1, Math.ceil(Number(hp || 1)));
+
+    if (kind === 'front') {
+      e.frontBarrierHp = Math.max(Number(e.frontBarrierHp || 0), finalHp);
+      e.frontBarrierMaxHp = Math.max(Number(e.frontBarrierMaxHp || 0), finalHp);
+      e.frontBarrierLabel = label || '前面バリア';
+      e.frontBarrierColor = color || '#ffcf5b';
+      e.frontBarrierGaugeVisible = true;
+      return;
+    }
+
+    if (kind === 'circle') {
+      e.circleBarrierHp = Math.max(Number(e.circleBarrierHp || 0), finalHp);
+      e.circleBarrierMaxHp = Math.max(Number(e.circleBarrierMaxHp || 0), finalHp);
+      e.circleBarrierLabel = label || '円形バリア';
+      e.circleBarrierColor = color || '#ff4aff';
+      e.circleBarrierGaugeVisible = true;
+      return;
+    }
+
+    e.barrierHp = Math.max(Number(e.barrierHp || 0), finalHp);
+    e.barrierMaxHp = Math.max(Number(e.barrierMaxHp || 0), finalHp);
+    e.barrierLabel = label || 'バリア';
+    e.barrierColor = color || '#9deeff';
+    e.barrierGaugeVisible = true;
+  }
+
   function normalShotOpt(e, opt){
     opt = opt || {};
 
@@ -160,26 +188,32 @@
   }
 
   function makeBarrier(e, tools, sec, hp){
-    e.barrierTimer = Math.max(Number(e.barrierTimer || 0), sec * 60);
-    e.barrierHp = Math.max(Number(e.barrierHp || 0), Number(hp || 1));
+    const finalHp = Math.max(1, Math.ceil(Number(hp || 1)));
 
-    addText(tools, 'バリア！', e.x, e.y - 92, '#9deeff');
+    e.barrierTimer = Math.max(Number(e.barrierTimer || 0), sec * 60);
+    setBarrierGauge(e, 'normal', finalHp, 'バリア', '#9deeff');
+
+    addText(tools, 'バリア！ ' + finalHp, e.x, e.y - 92, '#9deeff');
     burst(tools, e.x, e.y, '#9deeff', 30);
   }
 
   function makeFrontBarrier(e, tools, sec, hp){
-    e.frontBarrierTimer = Math.max(Number(e.frontBarrierTimer || 0), sec * 60);
-    e.frontBarrierHp = Math.max(Number(e.frontBarrierHp || 0), Number(hp || 1));
+    const finalHp = Math.max(1, Math.ceil(Number(hp || 1)));
 
-    addText(tools, '前面バリア！', e.x, e.y - 92, '#ffcf5b');
+    e.frontBarrierTimer = Math.max(Number(e.frontBarrierTimer || 0), sec * 60);
+    setBarrierGauge(e, 'front', finalHp, '前面バリア', '#ffcf5b');
+
+    addText(tools, '前面バリア！ ' + finalHp, e.x, e.y - 92, '#ffcf5b');
     burst(tools, e.x, e.y, '#ffcf5b', 34);
   }
 
   function makeCircleBarrier(e, tools, sec, hp){
-    e.circleBarrierTimer = Math.max(Number(e.circleBarrierTimer || 0), sec * 60);
-    e.circleBarrierHp = Math.max(Number(e.circleBarrierHp || 0), Number(hp || 1));
+    const finalHp = Math.max(1, Math.ceil(Number(hp || 1)));
 
-    addText(tools, '円形バリア！', e.x, e.y - 96, '#ff4aff');
+    e.circleBarrierTimer = Math.max(Number(e.circleBarrierTimer || 0), sec * 60);
+    setBarrierGauge(e, 'circle', finalHp, '円形バリア', '#ff4aff');
+
+    addText(tools, '円形バリア！ ' + finalHp, e.x, e.y - 96, '#ff4aff');
     burst(tools, e.x, e.y, '#ff4aff', 42);
   }
 
@@ -196,7 +230,7 @@
 
     e.hp = Math.min(Number(e.maxHp || e.hp || 1), Number(e.hp || 0) + amount);
 
-    addText(tools, '回復！', e.x, e.y - 92, '#9dff73');
+    addText(tools, '回復！ +' + amount, e.x, e.y - 92, '#9dff73');
     burst(tools, e.x, e.y, '#9dff73', 30);
   }
 
@@ -258,8 +292,8 @@
 
     if (e.cloneUsed) {
       if (b() && b().fireSlowSpread) {
-        b().fireSlowSpread(e, tools, 3, 0.24, normalShotOpt(e, {
-          hp: 8,
+        b().fireSlowSpread(e, tools, 4, 0.22, normalShotOpt(e, {
+          hp: 9,
           safeCenter: true,
           color: '#ff8cff'
         }));
@@ -272,13 +306,13 @@
     addText(tools, '分身！', e.x, e.y - 92, '#b78cff');
     burst(tools, e.x, e.y, '#b78cff', 24);
 
-    const moveBoost = Number(opt.moveBoost || (isLegendContext(e) ? 2.0 : 1.75));
+    const moveBoost = Number(opt.moveBoost || (isLegendContext(e) ? 2.15 : 1.9));
     const diff = difficultyProfile(e);
-    const finalCount = isLegendContext(e) ? Math.min(4, Math.max(count, 3)) : count;
+    const finalCount = isLegendContext(e) ? Math.min(4, Math.max(count, 4)) : Math.max(count, 3);
 
     for (let i = 0; i < finalCount; i++) {
       const offset = (i - (finalCount - 1) / 2) * 72;
-      const hp = Math.max(12, Math.ceil(Number(e.maxHp || 100) * 0.012 * diff.zako));
+      const hp = Math.max(16, Math.ceil(Number(e.maxHp || 100) * 0.016 * diff.zako));
 
       tools.state.entities.push({
         kind: 'enemy',
@@ -296,8 +330,8 @@
         coinMin: 3,
         coinMax: 6,
         canShoot: true,
-        baseShootCd: isLegendContext(e) ? 120 : 150,
-        shootCd: 70 + i * 20,
+        baseShootCd: isLegendContext(e) ? 105 : 135,
+        shootCd: 58 + i * 16,
         burstShot: true,
         bulletLarge: false,
         bulletColor: '#ff8cff',
@@ -316,18 +350,18 @@
 
     e.sistersUsed = true;
 
-    const moveBoost = Number(opt.moveBoost || (isLegendContext(e) ? 1.9 : 1.6));
+    const moveBoost = Number(opt.moveBoost || (isLegendContext(e) ? 2.05 : 1.75));
     const diff = difficultyProfile(e);
 
     const sisters = [
-      { name:'リリスレッド', image:'atk/red.png', hp:30, speed:1.34, cd:155, color:'#ff5b5b', aiType:'fastSide' },
-      { name:'リリスブルー', image:'atk/blue.png', hp:36, speed:1.14, cd:170, color:'#6be6ff', aiType:'wideHop' },
-      { name:'リリスイエロー', image:'atk/yellow.png', hp:28, speed:1.44, cd:160, color:'#ffe66b', aiType:'teleport' },
-      { name:'リリスホワイト', image:'atk/white.png', hp:26, speed:1.2, cd:185, color:'#ffffff', aiType:'fastSide' }
+      { name:'リリスレッド', image:'atk/red.png', hp:34, speed:1.42, cd:140, color:'#ff5b5b', aiType:'fastSide' },
+      { name:'リリスブルー', image:'atk/blue.png', hp:40, speed:1.22, cd:155, color:'#6be6ff', aiType:'wideHop' },
+      { name:'リリスイエロー', image:'atk/yellow.png', hp:32, speed:1.52, cd:145, color:'#ffe66b', aiType:'teleport' },
+      { name:'リリスホワイト', image:'atk/white.png', hp:30, speed:1.28, cd:170, color:'#ffffff', aiType:'fastSide' }
     ];
 
     sisters.forEach((s, i) => {
-      const hp = Math.max(22, Math.ceil(s.hp * diff.zako));
+      const hp = Math.max(26, Math.ceil(s.hp * diff.zako));
 
       tools.state.entities.push({
         kind: 'enemy',
@@ -346,7 +380,7 @@
         coinMax: 10,
         canShoot: true,
         baseShootCd: s.cd,
-        shootCd: s.cd + i * 18,
+        shootCd: s.cd + i * 14,
         burstShot: true,
         bulletLarge: false,
         bulletColor: s.color,
@@ -713,33 +747,44 @@
     if (!b()) return;
 
     if (step % 8 === 1) {
-      makeBarrier(e, tools, 3, getBarrierHp(e, 0.025, 12));
+      makeBarrier(e, tools, 4, getBarrierHp(e, isLegendContext(e) ? 0.04 : 0.032, 18));
       return;
     }
 
     if (step % 8 === 2) {
-      makeClones(e, tools, 3, { moveBoost: isLegendContext(e) ? 2.0 : 1.8 });
+      makeClones(e, tools, isLegendContext(e) ? 4 : 3, { moveBoost: isLegendContext(e) ? 2.15 : 1.9 });
+
+      if (b() && b().chargeHoming) {
+        b().chargeHoming(e, tools, '分身追尾！', isLegendContext(e) ? 2 : 1, specialShotOpt(e, {
+          sizeType: 'normal',
+          speed: 1.42,
+          hp: 8,
+          homingPower: 0.0033,
+          gap: 28,
+          color: '#ff8cff'
+        }));
+      }
       return;
     }
 
     if (step % 8 === 3) {
-      b().chargeHoming(e, tools, '薔薇追尾！', 2, specialShotOpt(e, {
+      b().chargeHoming(e, tools, '薔薇追尾！', isLegendContext(e) ? 3 : 3, specialShotOpt(e, {
         sizeType: 'normal',
-        speed: 1.45,
-        hp: 8,
-        homingPower: 0.0035,
-        gap: 32,
+        speed: 1.52,
+        hp: 10,
+        homingPower: 0.0038,
+        gap: 30,
         color: '#ff8cff'
       }));
       return;
     }
 
     if (step % 8 === 4) {
-      b().fireSafeFanDown(e, tools, 5, normalShotOpt(e, {
+      b().fireSafeFanDown(e, tools, isLegendContext(e) ? 7 : 6, normalShotOpt(e, {
         sizeType: 'normal',
-        speed: 1.8,
-        hp: 7,
-        spread: 0.16,
+        speed: 1.88,
+        hp: 8,
+        spread: 0.155,
         color: '#ff8cff'
       }));
       return;
@@ -747,11 +792,11 @@
 
     if (step % 8 === 5) {
       addText(tools, '雷撃！', e.x, e.y - 92, '#6be6ff');
-      b().chargeLine(e, tools, '', 4, specialShotOpt(e, {
-        delay: 54,
+      b().chargeLine(e, tools, '', isLegendContext(e) ? 6 : 5, specialShotOpt(e, {
+        delay: 50,
         sizeType: 'normal',
-        speed: 1.85,
-        hp: 8,
+        speed: 1.92,
+        hp: 10,
         safeCenter: true,
         color: '#6be6ff'
       }));
@@ -759,18 +804,19 @@
     }
 
     if (step % 8 === 6) {
-      summonStageEnemies(e, tools, isLegendContext(e) ? 2 : 1, isLegendContext(e) ? 1.35 : 1.1);
+      summonStageEnemies(e, tools, isLegendContext(e) ? 3 : 2, isLegendContext(e) ? 1.45 : 1.2);
       return;
     }
 
-    if (step % 8 === 7 && !e.extraHealUsed && e.hp <= e.maxHp * 0.42) {
+    if (step % 8 === 7 && !e.extraHealUsed && e.hp <= e.maxHp * 0.46) {
       e.extraHealUsed = true;
-      healBoss(e, tools, 0.06);
+      healBoss(e, tools, isLegendContext(e) ? 0.10 : 0.09);
+      makeBarrier(e, tools, 3, getBarrierHp(e, isLegendContext(e) ? 0.035 : 0.026, 16));
       return;
     }
 
-    b().fireSlowSpread(e, tools, 3, 0.20, normalShotOpt(e, {
-      hp: 7,
+    b().fireSlowSpread(e, tools, isLegendContext(e) ? 4 : 3, 0.19, normalShotOpt(e, {
+      hp: 8,
       color: '#ff8cff'
     }));
   }
@@ -848,32 +894,32 @@
     if (!b()) return;
 
     if (step % 8 === 1) {
-      b().chargeAimed(e, tools, '鉄球連射！', isLegendContext(e) ? 3 : 2, specialShotOpt(e, {
+      b().chargeAimed(e, tools, '鉄球連射！', isLegendContext(e) ? 4 : 3, specialShotOpt(e, {
         sizeType: 'huge',
-        speed: isLegendContext(e) ? 1.35 : 1.25,
-        hp: isLegendContext(e) ? 24 : 18,
-        gap: 34,
+        speed: isLegendContext(e) ? 1.42 : 1.32,
+        hp: isLegendContext(e) ? 30 : 23,
+        gap: 32,
         color: '#bfc7d5'
       }));
       return;
     }
 
     if (step % 8 === 2) {
-      summonStageEnemies(e, tools, isLegendContext(e) ? 3 : 2, isLegendContext(e) ? 1.45 : 1.15);
+      summonStageEnemies(e, tools, isLegendContext(e) ? 4 : 3, isLegendContext(e) ? 1.55 : 1.25);
       return;
     }
 
     if (step % 8 === 3) {
-      makeBarrier(e, tools, 4, getBarrierHp(e, isLegendContext(e) ? 0.045 : 0.032, 22));
+      makeBarrier(e, tools, 5, getBarrierHp(e, isLegendContext(e) ? 0.058 : 0.042, 28));
       return;
     }
 
     if (step % 8 === 4) {
-      b().chargeLine(e, tools, '鉄壁ライン！', isLegendContext(e) ? 4 : 3, specialShotOpt(e, {
-        delay: 52,
+      b().chargeLine(e, tools, '鉄壁ライン！', isLegendContext(e) ? 5 : 4, specialShotOpt(e, {
+        delay: 48,
         sizeType: 'big',
-        speed: isLegendContext(e) ? 1.7 : 1.55,
-        hp: isLegendContext(e) ? 22 : 16,
+        speed: isLegendContext(e) ? 1.78 : 1.62,
+        hp: isLegendContext(e) ? 28 : 20,
         safeCenter: true,
         color: '#bfc7d5'
       }));
@@ -882,28 +928,28 @@
 
     if (step % 8 === 5) {
       addText(tools, '高速突進乱射！', e.x, e.y - 92, '#bfc7d5');
-      startDive(e, tools, isLegendContext(e) ? 4.7 : 4.15);
-      fireBarrage(e, tools, isLegendContext(e) ? 9 : 6, {
+      startDive(e, tools, isLegendContext(e) ? 4.95 : 4.35);
+      fireBarrage(e, tools, isLegendContext(e) ? 11 : 8, {
         sizeType:'small',
-        speed:isLegendContext(e) ? 2.35 : 2.1,
-        hp:isLegendContext(e) ? 7 : 5,
+        speed:isLegendContext(e) ? 2.45 : 2.2,
+        hp:isLegendContext(e) ? 9 : 6,
         spreadCount:isLegendContext(e) ? 3 : 2,
-        spread:0.16,
-        delay:isLegendContext(e) ? 38 : 45,
+        spread:0.155,
+        delay:isLegendContext(e) ? 35 : 40,
         color:'#bfc7d5'
       });
       return;
     }
 
     if (step % 8 === 6) {
-      makeFrontBarrier(e, tools, 4, getBarrierHp(e, isLegendContext(e) ? 0.055 : 0.04, 24));
-      fireBarrage(e, tools, isLegendContext(e) ? 7 : 4, {
+      makeFrontBarrier(e, tools, 5, getBarrierHp(e, isLegendContext(e) ? 0.07 : 0.052, 30));
+      fireBarrage(e, tools, isLegendContext(e) ? 9 : 6, {
         sizeType:'small',
-        speed:2.0,
-        hp:6,
+        speed:2.12,
+        hp:7,
         spreadCount:2,
         spread:0.22,
-        delay:44,
+        delay:40,
         color:'#bfc7d5'
       });
       return;
@@ -911,15 +957,26 @@
 
     if (step % 8 === 7 && !e.extraHealUsed && e.hp <= e.maxHp * 0.5) {
       e.extraHealUsed = true;
-      healBoss(e, tools, isLegendContext(e) ? 0.07 : 0.05);
-      summonStageEnemies(e, tools, isLegendContext(e) ? 2 : 1, isLegendContext(e) ? 1.35 : 1.15);
+      healBoss(e, tools, isLegendContext(e) ? 0.08 : 0.06);
+      summonStageEnemies(e, tools, isLegendContext(e) ? 3 : 2, isLegendContext(e) ? 1.45 : 1.2);
+
+      if (b() && b().chargeLine) {
+        b().chargeLine(e, tools, '再鉄壁ライン！', isLegendContext(e) ? 4 : 3, specialShotOpt(e, {
+          delay: 50,
+          sizeType: 'big',
+          speed: isLegendContext(e) ? 1.7 : 1.55,
+          hp: isLegendContext(e) ? 24 : 18,
+          safeCenter: true,
+          color: '#bfc7d5'
+        }));
+      }
       return;
     }
 
-    b().fireSlowSpread(e, tools, isLegendContext(e) ? 4 : 2, 0.24, normalShotOpt(e, {
+    b().fireSlowSpread(e, tools, isLegendContext(e) ? 5 : 3, 0.23, normalShotOpt(e, {
       sizeType: 'big',
-      speed: isLegendContext(e) ? 1.7 : 1.55,
-      hp: isLegendContext(e) ? 10 : 8,
+      speed: isLegendContext(e) ? 1.78 : 1.62,
+      hp: isLegendContext(e) ? 12 : 9,
       color: '#bfc7d5'
     }));
   }
@@ -928,25 +985,26 @@
     if (!b()) return;
 
     if (step % 6 === 1) {
-      b().chargeHoming(e, tools, '弱追尾！', 2, specialShotOpt(e, {
+      b().chargeHoming(e, tools, '弱追尾！', 3, specialShotOpt(e, {
         sizeType: 'normal',
-        speed: 1.45,
-        hp: 8,
-        homingPower: 0.0036,
+        speed: 1.52,
+        hp: 10,
+        homingPower: 0.004,
+        gap: 28,
         color: '#7bffea'
       }));
       return;
     }
 
     if (step % 6 === 2) {
-      e.x = clamp(tools, e.x + rand(tools, -130, 130), tools.W * 0.2, tools.W * 0.8);
+      e.x = clamp(tools, e.x + rand(tools, -150, 150), tools.W * 0.2, tools.W * 0.8);
 
       addText(tools, 'マトリックス！', e.x, e.y - 92, '#7bffea');
 
-      b().fireLineDown(e, tools, isLegendContext(e) ? 6 : 4, normalShotOpt(e, {
+      b().fireLineDown(e, tools, isLegendContext(e) ? 7 : 5, normalShotOpt(e, {
         sizeType: 'normal',
-        speed: 1.8,
-        hp: 7,
+        speed: 1.95,
+        hp: 8,
         safeCenter: true,
         color: '#7bffea'
       }));
@@ -954,11 +1012,11 @@
     }
 
     if (step % 6 === 3) {
-      b().chargeAimed(e, tools, 'コード弾！', 2, specialShotOpt(e, {
+      b().chargeAimed(e, tools, 'コード弾！', isLegendContext(e) ? 3 : 2, specialShotOpt(e, {
         sizeType: 'big',
-        speed: 1.5,
-        hp: 12,
-        gap: 34,
+        speed: 1.62,
+        hp: 15,
+        gap: 30,
         color: '#7bffea'
       }));
       return;
@@ -966,13 +1024,13 @@
 
     if (step % 6 === 4) {
       addText(tools, '高速コード乱射！', e.x, e.y - 92, '#7bffea');
-      fireBarrage(e, tools, isLegendContext(e) ? 11 : 8, {
+      fireBarrage(e, tools, isLegendContext(e) ? 13 : 10, {
         sizeType:'small',
-        speed:2.05,
-        hp:5,
-        spreadCount:2,
-        spread:0.16,
-        delay:44,
+        speed:2.22,
+        hp:6,
+        spreadCount:isLegendContext(e) ? 3 : 2,
+        spread:0.15,
+        delay:38,
         color:'#7bffea'
       });
       return;
@@ -980,17 +1038,24 @@
 
     if (step % 6 === 5) {
       e.x = clamp(tools, rand(tools, tools.W * 0.2, tools.W * 0.8), tools.W * 0.2, tools.W * 0.8);
-      b().fireSlowSpread(e, tools, isLegendContext(e) ? 5 : 4, 0.16, normalShotOpt(e, {
+
+      if (!e.smithGhostUsed || isLegendContext(e)) {
+        setGhost(e, tools, isLegendContext(e) ? 2.4 : 1.8);
+        e.smithGhostUsed = true;
+      }
+
+      b().fireSlowSpread(e, tools, isLegendContext(e) ? 6 : 5, 0.15, normalShotOpt(e, {
         sizeType:'normal',
-        speed:1.9,
-        hp:7,
+        speed:2.02,
+        hp:8,
         color:'#7bffea'
       }));
       return;
     }
 
-    b().fireSlowSpread(e, tools, 3, 0.18, normalShotOpt(e, {
-      hp: 7,
+    b().fireSlowSpread(e, tools, isLegendContext(e) ? 4 : 3, 0.17, normalShotOpt(e, {
+      hp: 8,
+      speed: 1.95,
       color: '#7bffea'
     }));
   }
@@ -1001,33 +1066,33 @@
     if (step % 6 === 1) {
       addText(tools, '大波！', e.x, e.y - 92, '#6be6ff');
 
-      b().fireWave(e, tools, isLegendContext(e) ? 7 : 5, specialShotOpt(e, {
+      b().fireWave(e, tools, isLegendContext(e) ? 8 : 6, specialShotOpt(e, {
         sizeType: 'big',
-        speed: 1.6,
-        hp: 12,
-        waveAmp: 28,
+        speed: 1.72,
+        hp: 15,
+        waveAmp: 32,
         color: '#6be6ff'
       }));
       return;
     }
 
     if (step % 6 === 2) {
-      b().chargeAimed(e, tools, '水流弾！', isLegendContext(e) ? 3 : 2, specialShotOpt(e, {
+      b().chargeAimed(e, tools, '水流弾！', isLegendContext(e) ? 4 : 3, specialShotOpt(e, {
         sizeType: 'big',
-        speed: 1.45,
-        hp: 14,
-        gap: 36,
+        speed: 1.56,
+        hp: 17,
+        gap: 32,
         color: '#6be6ff'
       }));
       return;
     }
 
     if (step % 6 === 3) {
-      b().fireSafeFanDown(e, tools, isLegendContext(e) ? 7 : 5, normalShotOpt(e, {
+      b().fireSafeFanDown(e, tools, isLegendContext(e) ? 8 : 6, normalShotOpt(e, {
         sizeType: 'normal',
-        speed: 1.7,
-        hp: 7,
-        spread: 0.17,
+        speed: 1.82,
+        hp: 8,
+        spread: 0.165,
         color: '#6be6ff'
       }));
       return;
@@ -1037,8 +1102,8 @@
       addText(tools, '巨大トライデント！', e.x, e.y - 96, '#6be6ff');
       b().chargeAimed(e, tools, '巨大トライデント！', 1, specialShotOpt(e, {
         sizeType: 'super',
-        speed: 0.58,
-        hp: 32,
+        speed: isLegendContext(e) ? 0.72 : 0.68,
+        hp: isLegendContext(e) ? 42 : 36,
         gap: 0,
         color: '#6be6ff',
         trident: true
@@ -1047,12 +1112,13 @@
     }
 
     if (step % 6 === 5) {
-      summonStageEnemies(e, tools, isLegendContext(e) ? 3 : 1, isLegendContext(e) ? 1.35 : 1.15);
+      summonStageEnemies(e, tools, isLegendContext(e) ? 3 : 2, isLegendContext(e) ? 1.45 : 1.22);
       return;
     }
 
-    b().fireSlowSpread(e, tools, 3, 0.22, normalShotOpt(e, {
-      hp: 7,
+    b().fireSlowSpread(e, tools, isLegendContext(e) ? 4 : 4, 0.20, normalShotOpt(e, {
+      hp: 8,
+      speed: 1.82,
       color: '#6be6ff'
     }));
   }
@@ -1189,22 +1255,23 @@
     if (step % 8 === 1) {
       addText(tools, '地獄門！', e.x, e.y - 92, '#ff3b3b');
 
-      b().fireSafeFanDown(e, tools, isLegendContext(e) ? 8 : 6, specialShotOpt(e, {
+      b().fireSafeFanDown(e, tools, isLegendContext(e) ? 9 : 7, specialShotOpt(e, {
         sizeType: 'big',
-        speed: 1.55,
-        hp: 13,
-        spread: 0.15,
+        speed: 1.68,
+        hp: 16,
+        spread: 0.145,
         color: '#ff3b3b'
       }));
       return;
     }
 
     if (step % 8 === 2) {
-      b().chargeHoming(e, tools, '魂追尾！', 2, specialShotOpt(e, {
+      b().chargeHoming(e, tools, '魂追尾！', 3, specialShotOpt(e, {
         sizeType: 'normal',
-        speed: 1.35,
-        hp: 9,
-        homingPower: 0.003,
+        speed: 1.45,
+        hp: 11,
+        homingPower: 0.0034,
+        gap: 30,
         color: '#ff3b3b'
       }));
       return;
@@ -1212,46 +1279,60 @@
 
     if (step % 8 === 3) {
       b().chargeBigFireball(e, tools, '閻魔火球！', specialShotOpt(e, {
-        delay: 84,
-        hp: 22,
-        speed: 0.88,
-        waveAmp: 46,
+        delay: 80,
+        hp: 28,
+        speed: 0.94,
+        waveAmp: 50,
         color: '#ff3b3b'
       }));
       return;
     }
 
     if (step % 8 === 4) {
-      startFastDash(e, tools, 4.7);
+      startFastDash(e, tools, isLegendContext(e) ? 5.05 : 4.9);
       return;
     }
 
     if (step % 8 === 5) {
       addText(tools, '左右揺れ乱射！', e.x, e.y - 92, '#ff3b3b');
       e.specialMove = 'swayDash';
-      e.specialTimer = isLegendContext(e) ? 125 : 95;
+      e.specialTimer = isLegendContext(e) ? 140 : 110;
       e.specialBaseX = e.x;
-      fireBarrage(e, tools, isLegendContext(e) ? 13 : 10, {
+      fireBarrage(e, tools, isLegendContext(e) ? 15 : 12, {
         sizeType:'small',
-        speed:1.9,
-        hp:5,
+        speed:2.02,
+        hp:6,
         spreadCount:3,
-        spread:0.20,
-        delay:42,
+        spread:0.19,
+        delay:38,
         color:'#ff3b3b'
       });
       return;
     }
 
     if (step % 8 === 6) {
-      summonStageEnemies(e, tools, isLegendContext(e) ? 3 : 2, isLegendContext(e) ? 1.45 : 1.2);
+      summonStageEnemies(e, tools, isLegendContext(e) ? 4 : 3, isLegendContext(e) ? 1.55 : 1.3);
       return;
     }
 
-    b().fireSlowSpread(e, tools, 3, 0.22, specialShotOpt(e, {
+    if (step % 8 === 7 && !e.enmaRageBarrierUsed && e.hp <= e.maxHp * 0.5) {
+      e.enmaRageBarrierUsed = true;
+      makeCircleBarrier(e, tools, 4, getBarrierHp(e, isLegendContext(e) ? 0.075 : 0.055, 28));
+
+      b().fireSafeFanDown(e, tools, isLegendContext(e) ? 8 : 6, specialShotOpt(e, {
+        sizeType: 'big',
+        speed: 1.62,
+        hp: 14,
+        spread: 0.16,
+        color: '#ff3b3b'
+      }));
+      return;
+    }
+
+    b().fireSlowSpread(e, tools, isLegendContext(e) ? 4 : 3, 0.21, specialShotOpt(e, {
       sizeType: 'big',
-      speed: 1.55,
-      hp: 12,
+      speed: 1.65,
+      hp: 14,
       color: '#ff3b3b'
     }));
   }
@@ -1260,37 +1341,38 @@
     if (!b()) return;
 
     if (step === 1) {
-      summonLilithSisters(e, tools, { moveBoost: 2.0 });
+      summonLilithSisters(e, tools, { moveBoost: 2.15 });
+      makeBarrier(e, tools, 3, getBarrierHp(e, 0.035, 22));
       return;
     }
 
     if (step % 9 === 1) {
-      makeBarrier(e, tools, 5, getBarrierHp(e, 0.04, 22));
+      makeBarrier(e, tools, 5, getBarrierHp(e, 0.052, 30));
       return;
     }
 
     if (step % 9 === 2) {
-      makeClones(e, tools, 4, { moveBoost: 2.1 });
+      makeClones(e, tools, 4, { moveBoost: 2.25 });
       return;
     }
 
     if (step % 9 === 3) {
       b().chargeBigFireball(e, tools, 'ウルリリ火球！', specialShotOpt(e, {
-        delay: 84,
-        hp: 22,
-        speed: 0.9,
-        waveAmp: 44,
+        delay: 80,
+        hp: 28,
+        speed: 0.96,
+        waveAmp: 48,
         color: '#ff8cff'
       }));
       return;
     }
 
     if (step % 9 === 4) {
-      b().fireSafeFanDown(e, tools, 7, specialShotOpt(e, {
+      b().fireSafeFanDown(e, tools, 8, specialShotOpt(e, {
         sizeType: 'big',
-        speed: 1.55,
-        hp: 12,
-        spread: 0.15,
+        speed: 1.68,
+        hp: 15,
+        spread: 0.145,
         color: '#ff8cff'
       }));
       return;
@@ -1299,11 +1381,11 @@
     if (step % 9 === 5) {
       addText(tools, '最終雷撃！', e.x, e.y - 92, '#6be6ff');
 
-      b().chargeLine(e, tools, '', 5, specialShotOpt(e, {
-        delay: 58,
+      b().chargeLine(e, tools, '', 6, specialShotOpt(e, {
+        delay: 52,
         sizeType: 'big',
-        speed: 1.75,
-        hp: 12,
+        speed: 1.86,
+        hp: 16,
         safeCenter: true,
         color: '#6be6ff'
       }));
@@ -1311,30 +1393,32 @@
     }
 
     if (step % 9 === 6) {
-      b().chargeHoming(e, tools, '精霊追尾！', 3, specialShotOpt(e, {
+      b().chargeHoming(e, tools, '精霊追尾！', 4, specialShotOpt(e, {
         sizeType: 'normal',
-        speed: 1.35,
-        hp: 8,
-        homingPower: 0.003,
+        speed: 1.45,
+        hp: 10,
+        homingPower: 0.0035,
+        gap: 30,
         color: '#ff8cff'
       }));
       return;
     }
 
     if (step % 9 === 7) {
-      summonStageEnemies(e, tools, 3, 1.45);
+      summonStageEnemies(e, tools, 4, 1.55);
       return;
     }
 
     if (step % 9 === 8 && !e.extraHealUsed && e.hp <= e.maxHp * 0.45) {
       e.extraHealUsed = true;
-      healBoss(e, tools, 0.08);
-      summonStageEnemies(e, tools, 2, 1.35);
+      healBoss(e, tools, 0.10);
+      summonStageEnemies(e, tools, 3, 1.45);
+      makeCircleBarrier(e, tools, 4, getBarrierHp(e, 0.065, 30));
       return;
     }
 
-    b().fireSlowSpread(e, tools, 4, 0.18, normalShotOpt(e, {
-      hp: 8,
+    b().fireSlowSpread(e, tools, 5, 0.17, normalShotOpt(e, {
+      hp: 9,
       safeCenter: true,
       color: '#ff8cff'
     }));
