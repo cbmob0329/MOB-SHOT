@@ -3,6 +3,8 @@
 (function(){
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
   const EVENT_START_VALID_MS = 120000;
+  const GOLD_TIME_LIMIT_SEC = 30;
+  const FRAME_RATE = 60;
 
   let active = false;
   let eventData = null;
@@ -15,6 +17,7 @@
   let nextChestAt = 0;
   let nextGimmickAt = 0;
   let spawnedBoss = false;
+  let goldBossRespawnAt = 0;
   let scoreAttackIndex = 0;
   let finishBonusApplied = false;
   let retryEventData = null;
@@ -43,11 +46,11 @@
   }
 
   const GOLD_DIFFICULTY_FALLBACK = {
-    easy:{ key:'easy', name:'イージー', color:'#9dff73', clearCoin:300, firstCoin:3000, firstDiamond:5, chestMul:0.8, bossHpMul:1.0, bossCoinMul:1.0, bossMinHp:600, areaKey:'grass', areaName:'草原', background:'sta/backsougen.png', bosses:['ホークモブ','ミラモブ'], enemySpawn:true },
-    hard:{ key:'hard', name:'ハード', color:'#6be6ff', clearCoin:800, firstCoin:8000, firstDiamond:8, chestMul:1.4, bossHpMul:1.35, bossCoinMul:1.8, bossMinHp:1800, areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', bosses:['ミラモブⅡ','ネオンモブ'], enemySpawn:true },
-    veryHard:{ key:'veryHard', name:'ベリーハード', color:'#ffcf5b', clearCoin:1500, firstCoin:15000, firstDiamond:10, chestMul:2.2, bossHpMul:1.8, bossCoinMul:3.2, bossMinHp:3800, areaKey:'magma', areaName:'マグマ', background:'sta/backmagma.png', bosses:['ドラゴンモブ','ドラゴンモブⅡ'], enemySpawn:true },
-    inferno:{ key:'inferno', name:'インフェルノ', color:'#ff5b5b', clearCoin:3000, firstCoin:30000, firstDiamond:20, chestMul:3.5, bossHpMul:2.35, bossCoinMul:6.0, bossMinHp:7200, areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', bosses:['モブリリス','ドラゴンモブⅡ'], enemySpawn:true },
-    legend:{ key:'legend', name:'レジェンド', color:'#d86bff', clearCoin:7000, firstCoin:80000, firstDiamond:50, chestMul:5.5, bossHpMul:3.2, bossCoinMul:10.0, bossMinHp:12000, areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', bosses:['モブリリス','モブ魔王'], enemySpawn:true }
+    easy:{ key:'easy', name:'イージー', color:'#9dff73', clearCoin:300, firstCoin:3000, firstDiamond:5, chestMul:0.8, bossHpMul:1.0, bossCoinMul:1.0, bossMinHp:600, areaKey:'grass', areaName:'草原', background:'sta/backsougen.png', bosses:['ホークモブ','ミラモブ'], enemySpawn:true, timeLimitSec:30 },
+    hard:{ key:'hard', name:'ハード', color:'#6be6ff', clearCoin:800, firstCoin:8000, firstDiamond:8, chestMul:1.4, bossHpMul:1.35, bossCoinMul:1.8, bossMinHp:1800, areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', bosses:['ミラモブⅡ','ネオンモブ'], enemySpawn:true, timeLimitSec:30 },
+    veryHard:{ key:'veryHard', name:'ベリーハード', color:'#ffcf5b', clearCoin:1500, firstCoin:15000, firstDiamond:10, chestMul:2.2, bossHpMul:1.8, bossCoinMul:3.2, bossMinHp:3800, areaKey:'magma', areaName:'マグマ', background:'sta/backmagma.png', bosses:['ドラゴンモブ','ドラゴンモブⅡ'], enemySpawn:true, timeLimitSec:30 },
+    inferno:{ key:'inferno', name:'インフェルノ', color:'#ff5b5b', clearCoin:3000, firstCoin:30000, firstDiamond:20, chestMul:3.5, bossHpMul:2.35, bossCoinMul:6.0, bossMinHp:7200, areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', bosses:['モブリリス','ドラゴンモブⅡ'], enemySpawn:true, timeLimitSec:30 },
+    legend:{ key:'legend', name:'レジェンド', color:'#d86bff', clearCoin:7000, firstCoin:80000, firstDiamond:50, chestMul:5.5, bossHpMul:3.2, bossCoinMul:10.0, bossMinHp:12000, areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', bosses:['モブリリス','モブ魔王'], enemySpawn:true, timeLimitSec:30 }
   };
 
   const QUEST_DIFFICULTY_FALLBACK = {
@@ -700,8 +703,24 @@
     diff.bossMinHp = fixed.bossMinHp;
     diff.chestMul = fixed.chestMul;
     diff.enemySpawn = fixed.enemySpawn;
+    diff.timeLimitSec = Number(fixed.timeLimitSec || GOLD_TIME_LIMIT_SEC);
 
     return diff;
+  }
+
+  function goldLimitFrames(){
+    const diff = getGoldDifficulty();
+    const sec = Number(
+      (eventData && eventData.timeLimitSec) ||
+      diff.timeLimitSec ||
+      GOLD_TIME_LIMIT_SEC
+    );
+
+    return Math.max(1, Math.floor(sec * FRAME_RATE));
+  }
+
+  function goldRemainingSec(){
+    return Math.max(0, Math.ceil((goldLimitFrames() - localFrame) / FRAME_RATE));
   }
 
   function spawnGoldBosses(api){
@@ -735,6 +754,7 @@
     });
 
     spawnedBoss = true;
+    goldBossRespawnAt = 0;
   }
 
   function updateGold(api){
@@ -745,8 +765,13 @@
 
     localFrame++;
 
-    if (localFrame === 1) api.showBanner(`GOLD STAGE ${diff.name}`);
+    if (localFrame === 1) api.showBanner(`GOLD STAGE ${diff.name} 30秒`);
     if (localFrame >= 40) spawnGoldBosses(api);
+
+    if (localFrame >= goldLimitFrames()) {
+      api.finishRun(true);
+      return true;
+    }
 
     if (localFrame >= nextEnemyAt) {
       if (diff.enemySpawn !== false) {
@@ -773,7 +798,15 @@
     }
 
     const bossAlive = state.entities.some(e => !e.dead && e.kind === 'boss');
-    if (spawnedBoss && !bossAlive && localFrame > 120) api.finishRun(true);
+
+    if (spawnedBoss && !bossAlive && localFrame > 120 && !goldBossRespawnAt) {
+      goldBossRespawnAt = localFrame + 90;
+    }
+
+    if (goldBossRespawnAt && localFrame >= goldBossRespawnAt) {
+      spawnedBoss = false;
+      spawnGoldBosses(api);
+    }
 
     return true;
   }
@@ -1900,6 +1933,7 @@
     nextChestAt = 360;
     nextGimmickAt = 999999;
     spawnedBoss = false;
+    goldBossRespawnAt = 0;
     scoreAttackIndex = 0;
     finishBonusApplied = false;
 
@@ -1968,7 +2002,7 @@
 
       api.setEventMode({ active:true, key:'gold' });
       setStageVisual(api, `GOLD ${diff.name}`, diff.background || 'sta/backmao.png', diff.areaKey || 'grass', diff.areaName || 'ゴールドステージ');
-      api.showBanner(`GOLD STAGE ${diff.name}`);
+      api.showBanner(`GOLD STAGE ${diff.name} 30秒`);
       return true;
     }
 
@@ -2062,7 +2096,7 @@
         window.MobShotEvents.recordGoldClear(diff.key, api.state.coin);
       }
 
-      text = `${diff.name} クリア！ 報酬 ${bonusCoin.toLocaleString()} COIN${bonusDiamond ? ' + ' + bonusDiamond + ' DIAMOND' : ''}`;
+      text = `${diff.name} 30秒クリア！ 報酬 ${bonusCoin.toLocaleString()} COIN${bonusDiamond ? ' + ' + bonusDiamond + ' DIAMOND' : ''}`;
     }
 
     if (clear && eventType === 'scoreAttack') {
@@ -2128,7 +2162,7 @@
     if (eventType === 'gold') {
       const diff = getGoldDifficulty();
 
-      if (api.hudStage) api.hudStage.textContent = `GOLD ${diff.name}`;
+      if (api.hudStage) api.hudStage.textContent = `GOLD ${diff.name} ${goldRemainingSec()}秒`;
       if (api.hudScore) api.hudScore.textContent = Math.floor(api.state.score).toLocaleString();
       if (api.hudCoin) api.hudCoin.textContent = Math.floor(api.state.coin).toLocaleString();
       if (api.hudLife) api.hudLife.textContent = Math.max(0, Math.ceil(api.state.hp));
