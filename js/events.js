@@ -224,25 +224,6 @@
     window.__mobShotCurrentEvent = null;
   }
 
-  function getMainSave(){
-    if (window.MobShotStorage && window.MobShotStorage.load) {
-      try {
-        return window.MobShotStorage.load() || {};
-      } catch(e) {}
-    }
-
-    try {
-      return JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
-    } catch(e) {
-      return {};
-    }
-  }
-
-  function getRank(){
-    const save = getMainSave();
-    return Number(save.rank || save.playerRank || save.currentRank || 1);
-  }
-
   function startGold(diffKey){
     const diff = difficultyByKey(diffKey);
 
@@ -566,13 +547,6 @@
   }
 
   function openEventMenu(){
-    const rank = getRank();
-
-    if (rank < 10) {
-      showLockedMessage();
-      return;
-    }
-
     const menu = ensureEventMenu();
     renderGoldDifficulties();
     menu.classList.add('show');
@@ -581,35 +555,6 @@
   function closeEventMenu(){
     const menu = document.getElementById('mobShotEventMenu');
     if (menu) menu.classList.remove('show');
-  }
-
-  function showLockedMessage(){
-    const old = document.getElementById('mobShotEventLockedMsg');
-    if (old) old.remove();
-
-    const msg = document.createElement('div');
-    msg.id = 'mobShotEventLockedMsg';
-    msg.style.position = 'fixed';
-    msg.style.left = '50%';
-    msg.style.top = '50%';
-    msg.style.transform = 'translate(-50%,-50%)';
-    msg.style.zIndex = '200000';
-    msg.style.padding = '16px 22px';
-    msg.style.borderRadius = '18px';
-    msg.style.background = 'rgba(0,0,0,.82)';
-    msg.style.border = '3px solid rgba(255,255,255,.35)';
-    msg.style.color = '#ffe66b';
-    msg.style.fontWeight = '1000';
-    msg.style.fontFamily = 'system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
-    msg.style.textAlign = 'center';
-    msg.style.boxShadow = '0 14px 36px rgba(0,0,0,.45)';
-    msg.textContent = 'イベントはRANK10で解放！';
-
-    document.body.appendChild(msg);
-
-    setTimeout(function(){
-      msg.remove();
-    }, 1200);
   }
 
   function isEventElement(el){
