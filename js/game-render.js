@@ -168,6 +168,129 @@
     ctx.fillText(hpText,entity.x,barY + barH + 2);
   }
 
+  function drawSingleBarrierGauge(ctx,entity,y,size,opt){
+    const hp = Number(entity[opt.hpKey] || 0);
+    const maxHp = Math.max(1,Number(entity[opt.maxKey] || hp || 1));
+    const timer = Number(entity[opt.timerKey] || 0);
+
+    if(hp <= 0 && timer <= 0) return;
+
+    const ratio = Math.max(0,Math.min(1,hp / maxHp));
+
+    const barW = entity.kind === 'boss' ? size * 0.78 : size * 0.74;
+    const barH = entity.kind === 'boss' ? 9 : 7;
+    const barX = entity.x - barW / 2;
+    const barY = y - size * 0.53 + opt.offsetY;
+
+    ctx.save();
+
+    ctx.globalAlpha = 0.96;
+
+    ctx.fillStyle = 'rgba(0,0,0,.68)';
+    roundRect(ctx,barX,barY,barW,barH,6);
+    ctx.fill();
+
+    ctx.fillStyle = opt.color;
+    roundRect(ctx,barX,barY,barW * ratio,barH,6);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255,255,255,.85)';
+    ctx.lineWidth = 2;
+    roundRect(ctx,barX,barY,barW,barH,6);
+    ctx.stroke();
+
+    const label = entity[opt.labelKey] || opt.label;
+    const text = label + ' ' + Math.ceil(Math.max(0,hp)) + '/' + Math.ceil(maxHp);
+
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 4;
+    ctx.font = entity.kind === 'boss' ? '900 14px system-ui' : '900 12px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+
+    ctx.strokeText(text,entity.x,barY - 2);
+    ctx.fillText(text,entity.x,barY - 2);
+
+    ctx.restore();
+  }
+
+  function drawBarrierGauges(ctx,entity,y,size){
+    drawSingleBarrierGauge(ctx,entity,y,size,{
+      hpKey:'barrierHp',
+      maxKey:'barrierMaxHp',
+      timerKey:'barrierTimer',
+      labelKey:'barrierLabel',
+      label:'バリア',
+      color:entity.barrierColor || '#9deeff',
+      offsetY:0
+    });
+
+    drawSingleBarrierGauge(ctx,entity,y,size,{
+      hpKey:'frontBarrierHp',
+      maxKey:'frontBarrierMaxHp',
+      timerKey:'frontBarrierTimer',
+      labelKey:'frontBarrierLabel',
+      label:'前面バリア',
+      color:entity.frontBarrierColor || '#ffcf5b',
+      offsetY:18
+    });
+
+    drawSingleBarrierGauge(ctx,entity,y,size,{
+      hpKey:'circleBarrierHp',
+      maxKey:'circleBarrierMaxHp',
+      timerKey:'circleBarrierTimer',
+      labelKey:'circleBarrierLabel',
+      label:'円形バリア',
+      color:entity.circleBarrierColor || '#ff4aff',
+      offsetY:36
+    });
+  }
+
+  function drawBarrierAura(ctx,entity,y,size){
+    const hasNormal = Number(entity.barrierHp || 0) > 0 || Number(entity.barrierTimer || 0) > 0;
+    const hasFront = Number(entity.frontBarrierHp || 0) > 0 || Number(entity.frontBarrierTimer || 0) > 0;
+    const hasCircle = Number(entity.circleBarrierHp || 0) > 0 || Number(entity.circleBarrierTimer || 0) > 0;
+
+    if(!hasNormal && !hasFront && !hasCircle) return;
+
+    ctx.save();
+
+    const pulse = 1 + Math.sin(Date.now() / 120) * 0.035;
+    const r = size * 0.43 * pulse;
+
+    if(hasNormal){
+      ctx.globalAlpha = 0.45;
+      ctx.strokeStyle = entity.barrierColor || '#9deeff';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.arc(entity.x,y,r,0,Math.PI*2);
+      ctx.stroke();
+    }
+
+    if(hasFront){
+      ctx.globalAlpha = 0.62;
+      ctx.strokeStyle = entity.frontBarrierColor || '#ffcf5b';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(entity.x,y,r,Math.PI*0.12,Math.PI*0.88);
+      ctx.stroke();
+    }
+
+    if(hasCircle){
+      ctx.globalAlpha = 0.5;
+      ctx.strokeStyle = entity.circleBarrierColor || '#ff4aff';
+      ctx.lineWidth = 7;
+      ctx.setLineDash([10,8]);
+      ctx.beginPath();
+      ctx.arc(entity.x,y,r + 9,0,Math.PI*2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    ctx.restore();
+  }
+
   function drawEnemyBulletNumber(ctx,entity){
     if(!entity.breakable) return;
     if(!entity.hp || entity.hp <= 0) return;
@@ -241,6 +364,8 @@
     const size = entitySize(entity);
     const image = entity.image ? getImage(entity.image) : null;
 
+    drawBarrierAura(ctx,entity,y,size);
+
     if(imageReady(image)){
       drawImageContain(ctx,image,entity.x,y,size,size);
     }else{
@@ -250,6 +375,8 @@
     if(entity.hp != null && entity.maxHp != null){
       drawHpNumber(ctx,entity,y,size);
     }
+
+    drawBarrierGauges(ctx,entity,y,size);
   }
 
   function drawBullet(ctx,bullet,bulletImage){
@@ -371,6 +498,8 @@
     drawGate,
     entitySize,
     drawHpNumber,
+    drawBarrierGauges,
+    drawBarrierAura,
     drawEnemyBulletNumber,
     drawEnemyBullet,
     drawEntity,
