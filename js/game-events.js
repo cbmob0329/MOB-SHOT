@@ -36,6 +36,8 @@
     if (raw === 'モブドラゴン') return 'ドラゴンモブ';
     if (raw === 'モブドラゴンⅡ') return 'ドラゴンモブⅡ';
     if (raw === 'モブドラゴンII') return 'ドラゴンモブⅡ';
+    if (raw === 'メルト') return 'モブメイル';
+    if (raw === 'モブメルト') return 'モブメイル';
     return raw;
   }
 
@@ -47,53 +49,33 @@
     return normalizeName(a) === normalizeName(b);
   }
 
-  const GOLD_DIFFICULTY_FALLBACK = {
-    easy:{ key:'easy', name:'イージー', color:'#9dff73', clearCoin:300, firstCoin:3000, firstDiamond:5, chestMul:0.8, bossHpMul:1.0, bossCoinMul:1.0, bossMinHp:600, areaKey:'grass', areaName:'草原', background:'sta/backsougen.png', bosses:['ホークモブ','ミラモブ'], enemySpawn:true },
-    hard:{ key:'hard', name:'ハード', color:'#6be6ff', clearCoin:800, firstCoin:8000, firstDiamond:8, chestMul:1.4, bossHpMul:1.35, bossCoinMul:1.8, bossMinHp:1800, areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', bosses:['ミラモブⅡ','ネオンモブ'], enemySpawn:true },
-    veryHard:{ key:'veryHard', name:'ベリーハード', color:'#ffcf5b', clearCoin:1500, firstCoin:15000, firstDiamond:10, chestMul:2.2, bossHpMul:1.8, bossCoinMul:3.2, bossMinHp:3800, areaKey:'magma', areaName:'マグマ', background:'sta/backmagma.png', bosses:['ドラゴンモブ','ドラゴンモブⅡ'], enemySpawn:true },
-    inferno:{ key:'inferno', name:'インフェルノ', color:'#ff5b5b', clearCoin:3000, firstCoin:30000, firstDiamond:20, chestMul:3.5, bossHpMul:2.35, bossCoinMul:6.0, bossMinHp:7200, areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', bosses:['モブリリス','ドラゴンモブⅡ'], enemySpawn:true },
-    legend:{ key:'legend', name:'レジェンド', color:'#d86bff', clearCoin:7000, firstCoin:80000, firstDiamond:50, chestMul:5.5, bossHpMul:3.2, bossCoinMul:10.0, bossMinHp:12000, areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', bosses:['モブリリス','モブ魔王'], enemySpawn:true }
-  };
+  function clone(obj){
+    return JSON.parse(JSON.stringify(obj));
+  }
 
-  const QUEST_DIFFICULTY_FALLBACK = {
-    easy:{ key:'easy', name:'イージー', color:'#9dff73', hpMul:0.85, scoreMul:1, coinMul:0.8, enemyHpMul:0.8, cost:5000 },
-    veryHard:{ key:'veryHard', name:'ベリーハード', color:'#ffcf5b', hpMul:1.6, scoreMul:1.6, coinMul:1.2, enemyHpMul:1.35, cost:30000 },
-    legend:{ key:'legend', name:'レジェンド', color:'#d86bff', hpMul:2.8, scoreMul:2.5, coinMul:1.8, enemyHpMul:2.2, cost:100000 }
-  };
+  function rand(a, b){
+    return a + Math.random() * (b - a);
+  }
 
-  const QUEST_STAGE_FALLBACK = {
-    1:{ id:1, key:'pterarush', title:'プテラッシュ', areaKey:'grass', areaName:'草原', background:'sta/backsougen.png', questEnemyMode:'low', gimmickSpawn:false },
-    2:{ id:2, key:'guardian_test', title:'番人試験', areaKey:'town', areaName:'田舎町', background:null, questEnemyMode:'low', gimmickSpawn:false },
-    3:{ id:3, key:'grass_traveler', title:'草原の旅人', areaKey:'grass', areaName:'草原', background:'sta/backsougen.png', questEnemyMode:'low', gimmickSpawn:false },
-    4:{ id:4, key:'thieves', title:'盗賊団', areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', questEnemyMode:'low', gimmickSpawn:false },
-    5:{ id:5, key:'desert_ruler', title:'砂漠を統べる者', areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', questEnemyMode:'low', gimmickSpawn:false },
-    6:{ id:6, key:'desert_sharks', title:'砂漠に潜む鮫', areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', questEnemyMode:'low', gimmickSpawn:false },
-    7:{ id:7, key:'hot_magma', title:'アチアチマグマ', areaKey:'magma', areaName:'マグマ', background:'sta/backmagma.png', questEnemyMode:'low', gimmickSpawn:false },
-    8:{ id:8, key:'magma_guardian', title:'マグマに潜むガーディアン', areaKey:'magma', areaName:'マグマ', background:'sta/backmagma.png', questEnemyMode:'low', gimmickSpawn:false },
-    9:{ id:9, key:'sky_rulers', title:'空の支配者', areaKey:'town', areaName:'田舎町', background:'sta/backumi.png', questEnemies:['モブバード','モブファル','モブマグプテラ'], questEnemyMode:'low', gimmickSpawn:false },
-    10:{ id:10, key:'neon_nightmare', title:'ネオン街の悪夢', areaKey:'neon', areaName:'ネオン街', background:'sta/backneon.png', questEnemies:['ナーガモブ','モブグリズリー','ネオスラモブ'], questEnemyMode:'low', gimmickSpawn:false },
-    11:{ id:11, key:'nine_heads', title:'9つの首', areaKey:'neon', areaName:'ネオン街', background:'sta/backneon.png', questEnemyMode:'low', gimmickSpawn:false },
-    12:{ id:12, key:'town_dragon', title:'街を襲うドラゴン', areaKey:'town', areaName:'田舎町', background:'sta/backumi.png', questEnemyMode:'low', gimmickSpawn:false },
-    13:{ id:13, key:'three_birds', title:'三鳥見参', areaKey:'grass', areaName:'草原', background:'sta/backsougen.png', questEnemyMode:'low', gimmickSpawn:false },
-    14:{ id:14, key:'neon_maoh', title:'ネオン街の魔王', areaKey:'neon', areaName:'ネオン街', background:'sta/backneon.png', questEnemyMode:'low', gimmickSpawn:false },
-    15:{ id:15, key:'magma_beauty', title:'マグマを好む美女', areaKey:'magma', areaName:'マグマ', background:'sta/backmagma.png', questEnemyMode:'low', gimmickSpawn:false },
-    16:{ id:16, key:'maoh_duel', title:'対峙する魔王', areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', questEnemies:['ダークゴブモブ'], questEnemyMode:'low', gimmickSpawn:false },
-    17:{ id:17, key:'lilith_sisters', title:'リリス四姉妹', areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', questEnemyMode:'low', gimmickSpawn:false },
-    18:{ id:18, key:'castle_machine', title:'魔王城の精密機械', areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', questEnemyMode:'low', gimmickSpawn:false },
+  function intRand(a, b){
+    return Math.floor(rand(a, b + 1));
+  }
 
-    19:{ id:19, key:'iron_advance', title:'鉄壁の進撃', areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', questEnemyMode:'low', gimmickSpawn:false },
-    20:{ id:20, key:'prison_break_hell', title:'脱獄地獄', areaKey:'prison', areaName:'監獄', background:'sta/stkan.png', questEnemies:['モブテツ'], questEnemyMode:'none', gimmickSpawn:false },
-    21:{ id:21, key:'annihilation_start', title:'殲滅作戦開始', areaKey:'matrix', areaName:'マトリックス', background:'sta/stmatrix.png', questEnemyMode:'low', gimmickSpawn:false },
-    22:{ id:22, key:'marumaru_mobmob', title:'マルマルモブモブ', areaKey:'prison', areaName:'監獄', background:'sta/stkan.png', questEnemies:['マルモブ'], questEnemyMode:'none', gimmickSpawn:false },
-    23:{ id:23, key:'fishman_sea_war', title:'魚人海戦', areaKey:'seaRail', areaName:'海の線路', background:'sta/umisenro.png', questEnemyMode:'low', gimmickSpawn:false },
-    24:{ id:24, key:'last_prison', title:'終焉の監獄', areaKey:'prison', areaName:'監獄', background:'sta/stkan.png', questEnemyMode:'low', gimmickSpawn:false },
-    25:{ id:25, key:'welcome_back_world', title:'お帰り世界', areaKey:'neon', areaName:'ネオン街', background:'sta/backneon.png', questEnemyMode:'low', gimmickSpawn:false },
-    26:{ id:26, key:'under_the_sea', title:'アンダーザシー', areaKey:'seaRail', areaName:'海の線路', background:'sta/umisenro.png', questEnemyMode:'low', gimmickSpawn:false },
-    27:{ id:27, key:'emotional_neon', title:'エモーショナルネオン', areaKey:'neon', areaName:'ネオン街', background:'sta/backneon.png', questEnemyMode:'low', gimmickSpawn:false },
-    28:{ id:28, key:'fire_king', title:'炎を統べる王', areaKey:'last', areaName:'魔界', background:'sta/makailast.png', questEnemyMode:'low', gimmickSpawn:false },
-    29:{ id:29, key:'lilith_family', title:'リリスファミリー', areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', questEnemyMode:'low', gimmickSpawn:false },
-    30:{ id:30, key:'mob_artist', title:'MOB ARTIST', areaKey:'town', areaName:'田舎町', background:null, questEnemyMode:'low', gimmickSpawn:false }
-  };
+  function pick(arr){
+    return arr && arr.length ? arr[Math.floor(Math.random() * arr.length)] : null;
+  }
+
+  function normalizeDifficultyKey(key){
+    const raw = String(key || '').trim();
+    if (raw === 'イージー') return 'easy';
+    if (raw === 'ハード') return 'hard';
+    if (raw === 'ベリーハード') return 'veryHard';
+    if (raw === 'インフェルノ') return 'inferno';
+    if (raw === 'レジェンド') return 'legend';
+    if (raw === 'veryhard') return 'veryHard';
+    if (raw === 'veryHard') return 'veryHard';
+    return raw || 'easy';
+  }
 
   const ENEMY_FALLBACK = {
     'スラモブ':{ name:'スラモブ', image:'en/sra.png', hp:5, score:10, coinMin:2, coinMax:5 },
@@ -108,14 +90,21 @@
     'モブマグプテラ':{ name:'モブマグプテラ', image:'en/enmagpte.png', hp:36, score:70, coinMin:6, coinMax:15 },
     'ダークゴブモブ':{ name:'ダークゴブモブ', image:'en/enmaogob.png', hp:45, score:90, coinMin:7, coinMax:18 },
     'モブアサシン':{ name:'モブアサシン', image:'en/enasa.png', hp:48, score:95, coinMin:8, coinMax:20 },
-    'ネオスラモブ':{ name:'ネオスラモブ', image:'en/neosura.png', hp:60, score:120, coinMin:10, coinMax:24 },
-    'モブテツ':{ name:'モブテツ', image:'en/mobtetsu.png', hp:50, score:100, coinMin:8, coinMax:18 },
+
+    'モブテツ':{ name:'モブテツ', image:'en/mobtetu.png', hp:50, score:100, coinMin:8, coinMax:18 },
     'マルモブ':{ name:'マルモブ', image:'en/marumob.png', hp:35, score:75, coinMin:6, coinMax:15 },
     'モブサラ':{ name:'モブサラ', image:'en/mobsara.png', hp:45, score:90, coinMin:8, coinMax:18 },
     'モブシノ':{ name:'モブシノ', image:'en/mobsino.png', hp:45, score:90, coinMin:8, coinMax:18 },
+    'ウミシモブ':{ name:'ウミシモブ', image:'en/umisimob.png', hp:50, score:100, coinMin:8, coinMax:18 },
+    'バブモブ':{ name:'バブモブ', image:'en/babumob.png', hp:55, score:110, coinMin:9, coinMax:20 },
+    'ネオスラモブ':{ name:'ネオスラモブ', image:'en/neosura.png', hp:60, score:120, coinMin:10, coinMax:24 },
+    'モブネオレム':{ name:'モブネオレム', image:'en/neorem.png', hp:70, score:140, coinMin:12, coinMax:28 },
     'モブデビブルー':{ name:'モブデビブルー', image:'en/mobdebib.png', hp:55, score:110, coinMin:10, coinMax:22 },
     'モブデビピンク':{ name:'モブデビピンク', image:'en/mobdebipink.png', hp:55, score:110, coinMin:10, coinMax:22 },
-    'モブデビパープル':{ name:'モブデビパープル', image:'en/mobdebip.png', hp:55, score:110, coinMin:10, coinMax:22 }
+    'モブデビパープル':{ name:'モブデビパープル', image:'en/mobdebip.png', hp:55, score:110, coinMin:10, coinMax:22 },
+    'モブデビイエロー':{ name:'モブデビイエロー', image:'en/mobdebiy.png', hp:58, score:118, coinMin:10, coinMax:24 },
+    'モブデーモンレッド':{ name:'モブデーモンレッド', image:'en/mobdemonr.png', hp:68, score:140, coinMin:12, coinMax:28 },
+    'モブデーモンパープル':{ name:'モブデーモンパープル', image:'en/mobdemonp.png', hp:68, score:140, coinMin:12, coinMax:28 }
   };
 
   const BOSS_FALLBACK = {
@@ -126,6 +115,7 @@
     'モブガーディアン':{ name:'モブガーディアン', image:'boss/bossban.png', hp:1100, score:1600, coin:320 },
     'モブガーディアンⅡ':{ name:'モブガーディアンⅡ', image:'boss/bossban2.png', hp:1600, score:2100, coin:420 },
     'ネオンモブ':{ name:'ネオンモブ', image:'boss/bossneon.png', hp:1500, score:2200, coin:440 },
+    'ネオンモブⅡ':{ name:'ネオンモブⅡ', image:'boss/bossneon2.png', hp:2100, score:3000, coin:600 },
     'ドラゴンモブ':{ name:'ドラゴンモブ', image:'boss/bossdragoon.png', hp:2100, score:3000, coin:600 },
     'ドラゴンモブⅡ':{ name:'ドラゴンモブⅡ', image:'boss/bossdragoon2.png', hp:2900, score:3900, coin:780 },
     'モブリリス':{ name:'モブリリス', image:'boss/bossriris.png', hp:2800, score:4200, coin:840 },
@@ -156,7 +146,155 @@
     'モブケーブル':{ name:'モブケーブル', image:'en/mobcable.png', hp:520, score:2000, coin:200 },
     'モブマグシャー':{ name:'モブマグシャー', image:'en/mobmagsya.png', hp:560, score:2100, coin:210 },
     'モブガラド':{ name:'モブガラド', image:'en/mobgarado.png', hp:580, score:2200, coin:220 },
-    'モブメルト':{ name:'モブメルト', image:'en/mobmerut.png', hp:620, score:2400, coin:240 }
+    'モブメイル':{ name:'モブメイル', image:'boss/bossmeiru.png', hp:620, score:2400, coin:240 }
+  };
+
+  const AREA_FALLBACK = {
+    grass:{
+      name:'草原',
+      background:'sta/backsougen.png',
+      zako:['スラモブ','モブロック'],
+      gimmicks:[],
+      chests:null
+    },
+    desert:{
+      name:'砂漠',
+      background:'sta/backsabaku.png',
+      zako:['モブ盗賊','モブドワーフ'],
+      gimmicks:[],
+      chests:null
+    },
+    town:{
+      name:'田舎町',
+      background:'sta/backumi.png',
+      zako:['モブバード','モブファル'],
+      gimmicks:[],
+      chests:null
+    },
+    neon:{
+      name:'ネオン街',
+      background:'sta/backneon.png',
+      zako:['ナーガモブ','モブグリズリー','ネオスラモブ'],
+      gimmicks:[],
+      chests:null
+    },
+    magma:{
+      name:'マグマ',
+      background:'sta/backmagma.png',
+      zako:['モブマグトカゲ','モブマグプテラ'],
+      gimmicks:[],
+      chests:null
+    },
+    castle:{
+      name:'魔王城',
+      background:'sta/backmao.png',
+      zako:['ダークゴブモブ','モブアサシン'],
+      gimmicks:[],
+      chests:null
+    },
+    prison:{
+      name:'監獄',
+      background:'sta/stkan.png',
+      zako:['モブテツ','マルモブ'],
+      gimmicks:[],
+      chests:null
+    },
+    matrix:{
+      name:'マトリックス',
+      background:'sta/stmatrix.png',
+      zako:['モブサラ','モブシノ'],
+      gimmicks:[],
+      chests:null
+    },
+    seaRail:{
+      name:'海の線路',
+      background:'sta/umisenro.png',
+      zako:['ウミシモブ','バブモブ'],
+      gimmicks:[],
+      chests:null
+    },
+    neonHighway:{
+      name:'ネオン高速',
+      background:'sta/neonlord.png',
+      zako:['ネオスラモブ','モブネオレム'],
+      gimmicks:[],
+      chests:null
+    },
+    makai:{
+      name:'魔界',
+      background:'sta/makai.png',
+      zako:['モブデビブルー','モブデビピンク','モブデビパープル'],
+      gimmicks:[],
+      chests:null
+    },
+    maohRoom:{
+      name:'魔王の間',
+      background:'sta/makailast.png',
+      zako:['モブデビイエロー','モブデーモンレッド','モブデーモンパープル'],
+      gimmicks:[],
+      chests:null
+    },
+    last:{
+      name:'魔王の間',
+      background:'sta/makailast.png',
+      zako:['モブデビイエロー','モブデーモンレッド','モブデーモンパープル'],
+      gimmicks:[],
+      chests:null
+    }
+  };
+
+  AREA_FALLBACK.neonroad = AREA_FALLBACK.neonHighway;
+  AREA_FALLBACK.neonRoad = AREA_FALLBACK.neonHighway;
+  AREA_FALLBACK.highway = AREA_FALLBACK.neonHighway;
+  AREA_FALLBACK.neonLord = AREA_FALLBACK.neonHighway;
+  AREA_FALLBACK.makailast = AREA_FALLBACK.maohRoom;
+  AREA_FALLBACK.maouRoom = AREA_FALLBACK.maohRoom;
+
+  const GOLD_DIFFICULTY_FALLBACK = {
+    easy:{ key:'easy', name:'イージー', color:'#9dff73', clearCoin:300, firstCoin:3000, firstDiamond:5, chestMul:0.8, bossHpMul:1.0, bossCoinMul:1.0, bossMinHp:600, areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', bosses:['モブガーディアン','モブガーディアンⅡ'], enemySpawn:true },
+    hard:{ key:'hard', name:'ハード', color:'#6be6ff', clearCoin:500, firstCoin:5000, firstDiamond:5, chestMul:1.4, bossHpMul:1.35, bossCoinMul:1.8, bossMinHp:1800, areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', bosses:['モブガーディアン','モブガーディアンⅡ'], enemySpawn:true },
+    veryHard:{ key:'veryHard', name:'ベリーハード', color:'#ffcf5b', clearCoin:800, firstCoin:10000, firstDiamond:5, chestMul:2.2, bossHpMul:1.8, bossCoinMul:3.2, bossMinHp:3800, areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', bosses:['モブガーディアン','モブガーディアンⅡ'], enemySpawn:true },
+    inferno:{ key:'inferno', name:'インフェルノ', color:'#ff5b5b', clearCoin:1000, firstCoin:15000, firstDiamond:10, chestMul:3.5, bossHpMul:2.35, bossCoinMul:6.0, bossMinHp:7200, areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', bosses:['モブガーディアンⅡ','モブデュアル'], enemySpawn:true },
+    legend:{ key:'legend', name:'レジェンド', color:'#d86bff', clearCoin:1500, firstCoin:30000, firstDiamond:30, chestMul:5.5, bossHpMul:3.2, bossCoinMul:10.0, bossMinHp:12000, areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', bosses:['モブガーディアンⅡ','モブデュアル'], enemySpawn:true }
+  };
+
+  const QUEST_DIFFICULTY_FALLBACK = {
+    easy:{ key:'easy', name:'イージー', color:'#9dff73', hpMul:0.85, scoreMul:1, coinMul:0.8, enemyHpMul:0.8, cost:5000 },
+    veryHard:{ key:'veryHard', name:'ベリーハード', color:'#ffcf5b', hpMul:1.6, scoreMul:1.6, coinMul:1.2, enemyHpMul:1.35, cost:30000 },
+    legend:{ key:'legend', name:'レジェンド', color:'#d86bff', hpMul:2.8, scoreMul:2.5, coinMul:1.8, enemyHpMul:2.2, cost:100000 }
+  };
+
+  const QUEST_STAGE_FALLBACK = {
+    1:{ id:1, key:'pterarush', title:'プテラッシュ', areaKey:'grass', areaName:'草原', background:'sta/backsougen.png', questEnemyMode:'low', gimmickSpawn:false },
+    2:{ id:2, key:'guardian_test', title:'番人試験', areaKey:'town', areaName:'田舎町', background:'sta/backumi.png', questEnemyMode:'low', gimmickSpawn:false },
+    3:{ id:3, key:'grass_traveler', title:'草原の旅人', areaKey:'grass', areaName:'草原', background:'sta/backsougen.png', questEnemyMode:'low', gimmickSpawn:false },
+    4:{ id:4, key:'thieves', title:'盗賊団', areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', questEnemyMode:'low', gimmickSpawn:false },
+    5:{ id:5, key:'desert_ruler', title:'砂漠を統べる者', areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', questEnemyMode:'low', gimmickSpawn:false },
+    6:{ id:6, key:'desert_sharks', title:'砂漠に潜む鮫', areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', questEnemyMode:'low', gimmickSpawn:false },
+    7:{ id:7, key:'hot_magma', title:'アチアチマグマ', areaKey:'magma', areaName:'マグマ', background:'sta/backmagma.png', questEnemyMode:'low', gimmickSpawn:false },
+    8:{ id:8, key:'magma_guardian', title:'マグマに潜むガーディアン', areaKey:'magma', areaName:'マグマ', background:'sta/backmagma.png', questEnemyMode:'low', gimmickSpawn:false },
+    9:{ id:9, key:'sky_rulers', title:'空の支配者', areaKey:'town', areaName:'田舎町', background:'sta/backumi.png', questEnemies:['モブバード','モブファル','モブマグプテラ'], questEnemyMode:'low', gimmickSpawn:false },
+    10:{ id:10, key:'neon_nightmare', title:'ネオン街の悪夢', areaKey:'neon', areaName:'ネオン街', background:'sta/backneon.png', questEnemies:['ナーガモブ','モブグリズリー','ネオスラモブ'], questEnemyMode:'low', gimmickSpawn:false },
+    11:{ id:11, key:'nine_heads', title:'9つの首', areaKey:'neon', areaName:'ネオン街', background:'sta/backneon.png', questEnemyMode:'low', gimmickSpawn:false },
+    12:{ id:12, key:'town_dragon', title:'街を襲うドラゴン', areaKey:'town', areaName:'田舎町', background:'sta/backumi.png', questEnemyMode:'low', gimmickSpawn:false },
+    13:{ id:13, key:'three_birds', title:'三鳥見参', areaKey:'grass', areaName:'草原', background:'sta/backsougen.png', questEnemyMode:'low', gimmickSpawn:false },
+    14:{ id:14, key:'neon_maoh', title:'ネオン街の魔王', areaKey:'neon', areaName:'ネオン街', background:'sta/backneon.png', questEnemyMode:'low', gimmickSpawn:false },
+    15:{ id:15, key:'magma_beauty', title:'マグマを好む美女', areaKey:'magma', areaName:'マグマ', background:'sta/backmagma.png', questEnemyMode:'low', gimmickSpawn:false },
+    16:{ id:16, key:'maoh_duel', title:'対峙する魔王', areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', questEnemies:['ダークゴブモブ'], questEnemyMode:'low', gimmickSpawn:false },
+    17:{ id:17, key:'lilith_sisters', title:'リリス四姉妹', areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', questEnemyMode:'low', gimmickSpawn:false },
+    18:{ id:18, key:'castle_machine', title:'魔王城の精密機械', areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', questEnemyMode:'low', gimmickSpawn:false },
+    19:{ id:19, key:'iron_advance', title:'鉄壁の進撃', areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', questEnemyMode:'low', gimmickSpawn:false },
+    20:{ id:20, key:'prison_break_hell', title:'脱獄地獄', areaKey:'prison', areaName:'監獄', background:'sta/stkan.png', questEnemies:['モブテツ'], questEnemyMode:'none', gimmickSpawn:false },
+    21:{ id:21, key:'annihilation_start', title:'殲滅作戦開始', areaKey:'matrix', areaName:'マトリックス', background:'sta/stmatrix.png', questEnemies:['モブサラ','モブシノ'], questEnemyMode:'low', gimmickSpawn:false },
+    22:{ id:22, key:'marumaru_mobmob', title:'マルマルモブモブ', areaKey:'prison', areaName:'監獄', background:'sta/stkan.png', questEnemies:['マルモブ'], questEnemyMode:'none', gimmickSpawn:false },
+    23:{ id:23, key:'fishman_sea_war', title:'魚人海戦', areaKey:'seaRail', areaName:'海の線路', background:'sta/umisenro.png', questEnemies:['ウミシモブ','バブモブ'], questEnemyMode:'low', gimmickSpawn:false },
+    24:{ id:24, key:'last_prison', title:'終焉の監獄', areaKey:'prison', areaName:'監獄', background:'sta/stkan.png', questEnemies:['モブテツ','マルモブ'], questEnemyMode:'low', gimmickSpawn:false },
+    25:{ id:25, key:'welcome_back_world', title:'お帰り世界', areaKey:'neon', areaName:'ネオン街', background:'sta/backneon.png', questEnemies:['ネオスラモブ','モブネオレム'], questEnemyMode:'low', gimmickSpawn:false },
+    26:{ id:26, key:'under_the_sea', title:'アンダーザシー', areaKey:'seaRail', areaName:'海の線路', background:'sta/umisenro.png', questEnemies:['ウミシモブ','バブモブ'], questEnemyMode:'low', gimmickSpawn:false },
+    27:{ id:27, key:'emotional_neon', title:'エモーショナルネオン', areaKey:'neonHighway', areaName:'ネオン高速', background:'sta/neonlord.png', questEnemies:['ネオスラモブ','モブネオレム'], questEnemyMode:'low', gimmickSpawn:false },
+    28:{ id:28, key:'fire_king', title:'炎を統べる王', areaKey:'makai', areaName:'魔界', background:'sta/makai.png', questEnemies:['モブデビブルー','モブデビピンク','モブデビパープル'], questEnemyMode:'low', gimmickSpawn:false },
+    29:{ id:29, key:'lilith_family', title:'リリスファミリー', areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', questEnemyMode:'low', gimmickSpawn:false },
+    30:{ id:30, key:'mob_artist', title:'MOB ARTIST', areaKey:'town', areaName:'田舎町', background:'sta/backumi.png', questEnemyMode:'low', gimmickSpawn:false }
   };
 
   const SCORE_ATTACK_BOSSES = [
@@ -170,20 +308,182 @@
     BOSS_FALLBACK['ウルモブリリス']
   ];
 
-  function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
-  function rand(a, b){ return a + Math.random() * (b - a); }
-  function intRand(a, b){ return Math.floor(rand(a, b + 1)); }
-  function pick(arr){ return arr && arr.length ? arr[Math.floor(Math.random() * arr.length)] : null; }
+  const STAGE_CONFIG = {
+    pterarush:[
+      { banner:'プテラッシュ 2体', items:[{ name:'モブプテラ', count:2, opt:{ kind:'midBoss', hpMul:0.9, r:72, contactDmg:15 } }], margin:0.30 },
+      { banner:'プテラッシュ 3体', items:[{ name:'モブプテラ', count:3, opt:{ kind:'midBoss', hpMul:1.08, r:72, contactDmg:17 } }], margin:0.20 },
+      { banner:'プテラッシュ 5体', items:[{ name:'モブプテラ', count:5, opt:{ kind:'midBoss', hpMul:1.26, r:68, contactDmg:19 } }], margin:0.10 }
+    ],
+    guardian_test:[
+      { banner:'番人試験', items:[{ name:'モブガーディアン', count:2, opt:{ kind:'boss', hpMul:0.92, r:66, contactDmg:16 } }], margin:0.30 }
+    ],
+    grass_traveler:[
+      { banner:'草原の旅人', items:[
+        { name:'グラディモブ', count:2, opt:{ kind:'midBoss', hpMul:1.15, r:78 } },
+        { name:'モブニコ', count:2, opt:{ kind:'midBoss', hpMul:1.15, r:78 } }
+      ], margin:0.12 }
+    ],
+    thieves:[
+      { banner:'盗賊団', items:[{ name:'ミラモブ', opt:{ kind:'boss', hpMul:1.18, r:96 } }], margin:0.34 }
+    ],
+    desert_ruler:[
+      { banner:'砂漠を統べる者', items:[{ name:'ミラモブⅡ', count:2, opt:{ kind:'boss', hpMul:1.1, r:104 } }], margin:0.30 }
+    ],
+    desert_sharks:[
+      { banner:'砂漠に潜む鮫', items:[{ name:'モブサメ', count:4, opt:{ kind:'midBoss', hpMul:1.15, r:82 } }], margin:0.12 }
+    ],
+    hot_magma:[
+      { banner:'ドラゴン出現', items:[
+        { name:'ドラゴンモブ', opt:{ kind:'boss', hpMul:1.6, r:112, drawSize:224 } },
+        { name:'マグモブレム', count:2, opt:{ kind:'midBoss', hpMul:1.28, r:82 } }
+      ], margin:0.18 }
+    ],
+    magma_guardian:[
+      { banner:'マグマに潜むガーディアン', items:[
+        { name:'マグモブレム', count:3, opt:{ kind:'midBoss', hpMul:1.05, r:76 } },
+        { name:'モブガーディアンⅡ', opt:{ kind:'boss', hpMul:1.25, r:108 } }
+      ], margin:0.12 }
+    ],
+    sky_rulers:[
+      { banner:'空の支配者', items:[
+        { name:'ホークモブⅡ', opt:{ kind:'boss', hpMul:1.1, r:104 } },
+        { name:'ドラゴンモブⅡ', opt:{ kind:'boss', hpMul:1.1, r:108 } }
+      ], margin:0.30 }
+    ],
+    neon_nightmare:[
+      { banner:'ネオン街の悪夢', items:[
+        { name:'モブコード', opt:{ kind:'midBoss', hpMul:1.05, r:82 } },
+        { name:'モブケーブル', opt:{ kind:'midBoss', hpMul:1.05, r:82 } },
+        { name:'ネオンモブ', opt:{ kind:'boss', hpMul:1.2, r:108 } }
+      ], margin:0.20 }
+    ],
+    nine_heads:[
+      { banner:'9つの首', items:[{ name:'モブギドラ', count:3, opt:{ kind:'midBoss', hpMul:1.1, r:80, drawSize:160 } }], margin:0.20 },
+      { banner:'モブギドラ出現', items:[{ name:'モブギドラ', opt:{ kind:'midBoss', hpMul:2.35, r:145, scale:1.85, drawSize:285, contactDmg:34, flag:'eventGiantGhidora' } }], margin:0.34 }
+    ],
+    town_dragon:[
+      { banner:'街を襲うドラゴン', items:[
+        { name:'ドラゴンモブⅡ', opt:{ kind:'boss', hpMul:1.2, r:112 } },
+        { name:'モブギドラ', count:2, opt:{ kind:'midBoss', hpMul:1.15, r:82 } }
+      ], margin:0.20 }
+    ],
+    three_birds:[
+      { banner:'三鳥見参', items:[
+        { name:'ホークモブ', count:2, opt:{ kind:'boss', hpMul:0.95, r:94 } },
+        { name:'ホークモブⅡ', opt:{ kind:'boss', hpMul:1.2, r:108 } }
+      ], margin:0.20 }
+    ],
+    neon_maoh:[
+      { banner:'ネオン街の魔王', items:[
+        { name:'モブ魔王', opt:{ kind:'boss', hpMul:1.25, r:112 } },
+        { name:'モブケーブル', opt:{ kind:'midBoss', hpMul:1.1, r:82 } },
+        { name:'モブコード', opt:{ kind:'midBoss', hpMul:1.1, r:82 } }
+      ], margin:0.20 }
+    ],
+    magma_beauty:[
+      { banner:'マグマを好む美女', items:[
+        { name:'モブリリス', opt:{ kind:'boss', hpMul:1.2, r:106 } },
+        { name:'モブメイル', count:3, opt:{ kind:'midBoss', hpMul:1.1, r:78 } }
+      ], margin:0.12 }
+    ],
+    maoh_duel:[
+      { banner:'魔王出現', items:[{ name:'モブ魔王', opt:{ kind:'boss', hpMul:0.9, r:112 } }], margin:0.34 },
+      { banner:'魔王とミラモブ', items:[
+        { name:'モブ魔王', opt:{ kind:'boss', hpMul:1.15, r:116 } },
+        { name:'ミラモブ', count:2, opt:{ kind:'boss', hpMul:0.85, r:88 } }
+      ], margin:0.20 }
+    ],
+    lilith_sisters:[
+      { banner:'リリス四姉妹', items:[{ name:'モブリリス', count:4, opt:{ kind:'boss', hpMul:0.74, r:34, scale:0.3, drawSize:58, contactDmg:10, flag:'eventLilithSister' } }], margin:0.12 }
+    ],
+    castle_machine:[
+      { banner:'魔王城の精密機械', items:[
+        { name:'ネオンモブ', count:3, opt:{ kind:'boss', hpMul:1.0, r:96 } },
+        { name:'ホークモブ', opt:{ kind:'boss', hpMul:1.0, r:92 } }
+      ], margin:0.12 }
+    ],
+    iron_advance:[
+      { banner:'鉄壁の進撃 1/3', items:[{ name:'モブピー', count:3, opt:{ kind:'midBoss', hpMul:1.0, r:72 } }, { name:'モブガラド', count:1, opt:{ kind:'midBoss', hpMul:1.0, r:82 } }], margin:0.14 },
+      { banner:'鉄壁の進撃 2/3', items:[{ name:'モブピー', count:4, opt:{ kind:'midBoss', hpMul:1.05, r:72 } }, { name:'モブガラド', count:2, opt:{ kind:'midBoss', hpMul:1.05, r:82 } }], margin:0.10 },
+      { banner:'鉄壁の進撃 3/3', items:[{ name:'モブピー', count:6, opt:{ kind:'midBoss', hpMul:1.1, r:68 } }, { name:'モブガラド', count:4, opt:{ kind:'midBoss', hpMul:1.1, r:76 } }], margin:0.08 }
+    ],
+    prison_break_hell:[
+      { banner:'脱獄地獄', items:[
+        { name:'モブニコ', count:3, opt:{ kind:'midBoss', hpMul:1.05, r:72 } },
+        { name:'モブラス', count:3, opt:{ kind:'midBoss', hpMul:1.05, r:72 } },
+        { name:'グラディモブ', count:4, opt:{ kind:'midBoss', hpMul:1.05, r:72 } }
+      ], margin:0.08 }
+    ],
+    annihilation_start:[
+      { banner:'ガトリモブ 2体', items:[{ name:'ガトリモブ', count:2, opt:{ kind:'midBoss', hpMul:1.0, r:82 } }], margin:0.30 },
+      { banner:'ガトリモブ 3体', items:[{ name:'ガトリモブ', count:3, opt:{ kind:'midBoss', hpMul:1.08, r:82 } }], margin:0.20 },
+      { banner:'ガトリモブ 5体', items:[{ name:'ガトリモブ', count:5, opt:{ kind:'midBoss', hpMul:1.15, r:78 } }], margin:0.10 }
+    ],
+    marumaru_mobmob:[
+      { banner:'マルマルモブモブ', items:[{ name:'グラディモブ', count:8, opt:{ kind:'midBoss', hpMul:1.0, r:70 } }], margin:0.08 }
+    ],
+    fishman_sea_war:[
+      { banner:'魚人海戦 1/3', items:[{ name:'モブサメ', count:1, opt:{ kind:'midBoss', hpMul:1.0, r:82 } }, { name:'モブシャチ', count:1, opt:{ kind:'midBoss', hpMul:1.0, r:82 } }, { name:'モブマグシャー', count:1, opt:{ kind:'midBoss', hpMul:1.0, r:82 } }], margin:0.20 },
+      { banner:'魚人海戦 2/3', items:[{ name:'モブサメ', count:2, opt:{ kind:'midBoss', hpMul:1.05, r:78 } }, { name:'モブシャチ', count:2, opt:{ kind:'midBoss', hpMul:1.05, r:78 } }, { name:'モブマグシャー', count:2, opt:{ kind:'midBoss', hpMul:1.05, r:78 } }], margin:0.10 },
+      { banner:'魚人海戦 3/3', items:[{ name:'モブサメ', count:3, opt:{ kind:'midBoss', hpMul:1.1, r:72 } }, { name:'モブシャチ', count:3, opt:{ kind:'midBoss', hpMul:1.1, r:72 } }, { name:'モブマグシャー', count:3, opt:{ kind:'midBoss', hpMul:1.1, r:72 } }], margin:0.08 }
+    ],
+    last_prison:[
+      { banner:'終焉の監獄', items:[
+        { name:'モブメイル', opt:{ kind:'boss', hpMul:1.1, r:108 } },
+        { name:'ドラゴンモブⅡ', opt:{ kind:'boss', hpMul:1.15, r:108 } },
+        { name:'モブラス', opt:{ kind:'midBoss', hpMul:1.1, r:78 } },
+        { name:'モブニコ', opt:{ kind:'midBoss', hpMul:1.1, r:78 } }
+      ], margin:0.12 }
+    ],
+    welcome_back_world:[
+      { banner:'お帰り世界', items:[
+        { name:'モブスミス', opt:{ kind:'boss', hpMul:1.15, r:110 } },
+        { name:'ガトリモブ', count:4, opt:{ kind:'midBoss', hpMul:1.05, r:76 } }
+      ], margin:0.12 }
+    ],
+    under_the_sea:[
+      { banner:'アンダーザシー', items:[
+        { name:'モブネプ', opt:{ kind:'boss', hpMul:1.15, r:112 } },
+        { name:'モブシャチ', count:4, opt:{ kind:'midBoss', hpMul:1.05, r:76 } }
+      ], margin:0.12 }
+    ],
+    emotional_neon:[
+      { banner:'エモーショナルネオン', items:[
+        { name:'ブルネオモブ', opt:{ kind:'boss', hpMul:1.0, r:96 } },
+        { name:'パルネオモブ', opt:{ kind:'boss', hpMul:1.0, r:96 } },
+        { name:'モブコード', opt:{ kind:'midBoss', hpMul:1.05, r:78 } },
+        { name:'モブケーブル', opt:{ kind:'midBoss', hpMul:1.05, r:78 } }
+      ], margin:0.12 }
+    ],
+    fire_king:[
+      { banner:'炎を統べる王', items:[
+        { name:'閻魔モブ', opt:{ kind:'boss', hpMul:1.15, r:118, xMul:0.50, y:-260 } },
+        { name:'ドラゴンモブ', opt:{ kind:'boss', hpMul:1.0, r:106, xMul:0.25, y:-220 } },
+        { name:'ドラゴンモブⅡ', opt:{ kind:'boss', hpMul:1.0, r:108, xMul:0.75, y:-220 } }
+      ], margin:0.18 }
+    ],
+    lilith_family:[
+      { banner:'リリスファミリー', items:[
+        { name:'ウルモブリリス', opt:{ kind:'boss', hpMul:1.1, r:118 } },
+        { name:'モブリリス', count:2, opt:{ kind:'boss', hpMul:0.9, r:94 } }
+      ], margin:0.20 }
+    ]
+  };
 
-  function normalizeDifficultyKey(key){
-    const raw = String(key || '').trim();
-    if (raw === 'イージー') return 'easy';
-    if (raw === 'ハード') return 'hard';
-    if (raw === 'ベリーハード') return 'veryHard';
-    if (raw === 'インフェルノ') return 'inferno';
-    if (raw === 'レジェンド') return 'legend';
-    if (raw === 'veryhard') return 'veryHard';
-    return raw || 'easy';
+  function stageAreaData(areaKey){
+    const key = String(areaKey || '').trim();
+    const stageData = window.MOBSHOT_STAGE_DATA || {};
+    const direct = stageData[key];
+    if (direct) return direct;
+
+    if (AREA_FALLBACK[key]) {
+      const area = clone(AREA_FALLBACK[key]);
+      area.zako = (area.zako || []).map(name => enemyDefByName({ D:null }, name));
+      area.gimmicks = area.gimmicks || [];
+      return area;
+    }
+
+    return null;
   }
 
   function readEventRequest(){
@@ -264,12 +564,32 @@
     stage.questEnemyMode = stage.questEnemyMode || fallback.questEnemyMode || 'low';
     stage.gimmickSpawn = stage.gimmickSpawn === true || fallback.gimmickSpawn === true;
 
+    const area = stageAreaData(stage.areaKey);
+    if (!stage.background && area && area.background) stage.background = area.background;
+    if (!stage.areaName && area && area.name) stage.areaName = area.name;
+
     return { difficulty, stage };
   }
 
   function getQuestInfo(){
     if (questInfo && questInfo.difficulty && questInfo.stage) return questInfo;
     return getQuestInfoFromEvent(eventData || retryEventData);
+  }
+
+  function currentQuestStageSafe(){
+    try {
+      if (questInfo && questInfo.stage) return questInfo.stage;
+      if (eventData || retryEventData) return getQuestInfoFromEvent(eventData || retryEventData).stage;
+    } catch(e) {}
+    return null;
+  }
+
+  function currentQuestDiff(){
+    return getQuestInfo().difficulty;
+  }
+
+  function currentQuestStage(){
+    return getQuestInfo().stage;
   }
 
   function getSave(){
@@ -302,11 +622,6 @@
     saveMainData(save);
   }
 
-  function stageAreaData(areaKey){
-    const stageData = window.MOBSHOT_STAGE_DATA || {};
-    return stageData[areaKey] || null;
-  }
-
   function eventEnemyPowerMul(key){
     key = normalizeDifficultyKey(key);
     if (key === 'easy') return 1;
@@ -325,14 +640,6 @@
     return 1;
   }
 
-  function currentQuestStageSafe(){
-    try {
-      if (questInfo && questInfo.stage) return questInfo.stage;
-      if (eventData || retryEventData) return getQuestInfoFromEvent(eventData || retryEventData).stage;
-    } catch(e) {}
-    return null;
-  }
-
   function allAreaEnemies(api){
     const out = [];
     const stageData = window.MOBSHOT_STAGE_DATA || {};
@@ -343,7 +650,14 @@
       if (area && area.enemies && Array.isArray(area.enemies.zako)) area.enemies.zako.forEach(e => e && out.push(e));
     });
 
-    if (api.D && api.D.enemies && Array.isArray(api.D.enemies.zako)) {
+    Object.keys(AREA_FALLBACK).forEach(key => {
+      const area = AREA_FALLBACK[key];
+      if (area && Array.isArray(area.zako)) {
+        area.zako.forEach(name => out.push(enemyDefByName({ D:null }, name)));
+      }
+    });
+
+    if (api && api.D && api.D.enemies && Array.isArray(api.D.enemies.zako)) {
       api.D.enemies.zako.forEach(e => e && out.push(e));
     }
 
@@ -352,7 +666,7 @@
 
   function enemyDefByName(api, name){
     name = canonicalBossName(name);
-    const list = allAreaEnemies(api);
+    const list = allAreaEnemiesShallow(api);
     const found = list.find(item => item && sameName(item.name, name));
     if (found) return clone(found);
 
@@ -364,8 +678,29 @@
     return { name:name || 'スラモブ', image:'en/sra.png', hp:10, score:10, coinMin:2, coinMax:5 };
   }
 
+  function allAreaEnemiesShallow(api){
+    const out = [];
+    const stageData = window.MOBSHOT_STAGE_DATA || {};
+
+    Object.keys(stageData).forEach(key => {
+      const area = stageData[key];
+      if (area && Array.isArray(area.zako)) area.zako.forEach(e => e && out.push(e));
+      if (area && area.enemies && Array.isArray(area.enemies.zako)) area.enemies.zako.forEach(e => e && out.push(e));
+    });
+
+    if (api && api.D && api.D.enemies && Array.isArray(api.D.enemies.zako)) {
+      api.D.enemies.zako.forEach(e => e && out.push(e));
+    }
+
+    return out;
+  }
+
   function areaEnemyList(areaKey, api){
     const stage = currentQuestStageSafe();
+
+    if (eventType === 'eventQuest' && stage && stage.questEnemyMode === 'none') {
+      return [];
+    }
 
     if (stage && Array.isArray(stage.questEnemies) && stage.questEnemies.length) {
       return stage.questEnemies.map(name => enemyDefByName(api, name));
@@ -374,22 +709,25 @@
     const area = stageAreaData(areaKey);
     if (area && Array.isArray(area.zako)) return area.zako;
     if (area && area.enemies && Array.isArray(area.enemies.zako)) return area.enemies.zako;
-    if (api.D && api.D.enemies && Array.isArray(api.D.enemies.zako)) return api.D.enemies.zako;
+    if (api && api.D && api.D.enemies && Array.isArray(api.D.enemies.zako)) return api.D.enemies.zako;
 
     return [];
   }
 
   function areaGimmickList(areaKey, api){
+    const stage = currentQuestStageSafe();
+    if (eventType === 'eventQuest' && !(stage && stage.gimmickSpawn === true)) return [];
+
     const area = stageAreaData(areaKey);
     if (area && Array.isArray(area.gimmicks)) return area.gimmicks;
-    if (api.D && Array.isArray(api.D.gimmicks)) return api.D.gimmicks;
+    if (api && api.D && Array.isArray(api.D.gimmicks)) return api.D.gimmicks;
     return [];
   }
 
   function areaChestList(areaKey, api){
     const area = stageAreaData(areaKey);
     if (area && Array.isArray(area.chests)) return area.chests;
-    if (api.D && Array.isArray(api.D.chests)) return api.D.chests;
+    if (api && api.D && Array.isArray(api.D.chests)) return api.D.chests;
 
     return [
       { name:'銀の宝箱', image:'gimi/takagin.png', hp:10, score:80, coinMin:10, coinMax:25 },
@@ -429,54 +767,6 @@
     def.coin = Number(def.coin || fallback.coin || 100);
 
     return def;
-  }
-
-  function findBossDef(api, areaKey, name, fallback){
-    name = canonicalBossName(name);
-
-    const area = stageAreaData(areaKey);
-    const candidates = [];
-
-    if (area) {
-      ['boss','strongBoss','legendBoss'].forEach(key => {
-        if (area[key]) candidates.push(area[key]);
-      });
-
-      ['midBoss','midboss','middleBoss','bosses','extraBosses','bossList'].forEach(key => {
-        if (Array.isArray(area[key])) area[key].forEach(item => item && candidates.push(item));
-        else if (area[key]) candidates.push(area[key]);
-      });
-    }
-
-    const found = candidates.find(item => item && sameName(item.name, name));
-    if (found) return fixBossDef(found);
-
-    if (fallback) {
-      const fixed = Object.assign(fallbackBossByName(name), fallback);
-      fixed.name = canonicalBossName(name || fixed.name);
-      return fixBossDef(fixed);
-    }
-
-    return fallbackBossByName(name);
-  }
-
-  function getMidBossDef(api, areaKey, name, fallback){
-    name = canonicalBossName(name);
-
-    const area = stageAreaData(areaKey);
-    const list = [];
-
-    if (area) {
-      ['midBoss','midboss','middleBoss'].forEach(key => {
-        if (Array.isArray(area[key])) area[key].forEach(item => item && list.push(item));
-        else if (area[key]) list.push(area[key]);
-      });
-    }
-
-    const found = list.find(item => item && sameName(item.name, name));
-    if (found) return fixBossDef(found);
-
-    return findBossDef(api, areaKey, name, fallback || fallbackBossByName(name));
   }
 
   function setStageVisual(api, title, background, areaKey, areaName){
@@ -554,7 +844,7 @@
 
     const W = api.W;
     const H = api.H;
-    const x = opt.x != null ? opt.x : W / 2;
+    const x = opt.x != null ? opt.x : opt.xMul != null ? W * Number(opt.xMul) : W / 2;
     const hpMul = opt.hpMul != null ? opt.hpMul : 1;
     const scoreMul = opt.scoreMul != null ? opt.scoreMul : 1;
     const coinMul = opt.coinMul != null ? opt.coinMul : 1;
@@ -744,6 +1034,9 @@
     diff.bossMinHp = fixed.bossMinHp;
     diff.chestMul = fixed.chestMul;
     diff.enemySpawn = fixed.enemySpawn;
+    diff.clearCoin = fixed.clearCoin;
+    diff.firstCoin = fixed.firstCoin;
+    diff.firstDiamond = fixed.firstDiamond;
 
     return diff;
   }
@@ -756,9 +1049,9 @@
     const diff = getGoldDifficulty();
     const names = Array.isArray(diff.bosses) && diff.bosses.length
       ? diff.bosses.slice(0, 2).map(canonicalBossName)
-      : ['ホークモブ','ミラモブ'];
+      : ['モブガーディアン','モブガーディアンⅡ'];
 
-    while (names.length < 2) names.push(names[0] || 'ホークモブ');
+    while (names.length < 2) names.push(names[0] || 'モブガーディアン');
 
     const positions = [W * 0.34, W * 0.66];
 
@@ -784,7 +1077,7 @@
   function updateGold(api){
     const state = api.state;
     const diff = getGoldDifficulty();
-    const areaKey = diff.areaKey || 'grass';
+    const areaKey = diff.areaKey || 'desert';
     const enemyPower = eventEnemyPowerMul(diff.key);
 
     localFrame++;
@@ -871,14 +1164,6 @@
     return true;
   }
 
-  function currentQuestDiff(){
-    return getQuestInfo().difficulty;
-  }
-
-  function currentQuestStage(){
-    return getQuestInfo().stage;
-  }
-
   function questHpMul(extra){
     const diff = currentQuestDiff();
     return Number(diff.hpMul || 1) * questDifficultyPowerMul(diff.key) * Number(extra == null ? 1 : extra);
@@ -905,53 +1190,6 @@
       (e.kind === 'boss' || e.kind === 'midBoss') &&
       e.questBoss
     );
-  }
-
-  function spawnQuestBossGroup(api, defs, opt){
-    opt = opt || {};
-
-    const W = api.W;
-    const H = api.H;
-    const count = defs.length;
-    const margin = opt.margin != null ? opt.margin : count <= 2 ? 0.32 : count <= 3 ? 0.24 : 0.14;
-    const spanA = W * margin;
-    const spanB = W * (1 - margin);
-
-    defs.forEach((def, index) => {
-      def = fixBossDef(def);
-
-      const t = count === 1 ? 0.5 : index / (count - 1);
-      const x = spanA + (spanB - spanA) * t;
-      const side = index % 2 === 0 ? 1 : -1;
-
-      const entity = makeBossEntity(def, api, {
-        kind:opt.kind || 'midBoss',
-        x,
-        y:-170 - index * 24,
-        baseY:H * 0.22 + index * 8,
-        targetY:H * 0.22 + index * 8,
-        hpMul:questHpMul(opt.hpMul != null ? opt.hpMul : 1),
-        scoreMul:questScoreMul(opt.scoreMul != null ? opt.scoreMul : 1),
-        coinMul:questCoinMul(opt.coinMul != null ? opt.coinMul : 1),
-        vx:side * Number(opt.vx != null ? opt.vx : 1.15),
-        shootCd:opt.shootCd != null ? opt.shootCd : 100,
-        attackCd:opt.attackCd != null ? opt.attackCd : 155,
-        contactDmg:opt.contactDmg != null ? opt.contactDmg : 18,
-        r:opt.r != null ? opt.r : 78,
-        scale:opt.scale != null ? opt.scale : opt.sizeMul != null ? opt.sizeMul : 1,
-        sizeMul:opt.sizeMul != null ? opt.sizeMul : opt.scale != null ? opt.scale : 1,
-        visualScale:opt.visualScale != null ? opt.visualScale : opt.sizeMul != null ? opt.sizeMul : opt.scale != null ? opt.scale : 1,
-        drawSize:opt.drawSize,
-        customSize:opt.customSize,
-        eventDrawSize:opt.eventDrawSize,
-        questBoss:true
-      });
-
-      if (opt.flag) entity[opt.flag] = true;
-      applyVisualSize(entity, opt);
-
-      api.state.entities.push(entity);
-    });
   }
 
   function spawnNamedGroup(api, items, defaultOpt){
@@ -993,7 +1231,7 @@
       const kind = merged.kind || (isMainBoss ? 'boss' : 'midBoss');
 
       const t = count === 1 ? 0.5 : index / (count - 1);
-      const x = merged.x != null ? merged.x : spanA + (spanB - spanA) * t;
+      const x = merged.x != null ? merged.x : merged.xMul != null ? W * Number(merged.xMul) : spanA + (spanB - spanA) * t;
       const side = index % 2 === 0 ? 1 : -1;
 
       const entity = makeBossEntity(def, api, {
@@ -1055,6 +1293,8 @@
     }
 
     return {
+      enemySpawn:mode !== 'none',
+      chestSpawn:mode !== 'none',
       enemyInterval:opt.enemyInterval || enemyInterval,
       gimmickInterval:opt.gimmickInterval || [999999, 999999],
       chestInterval:opt.chestInterval || chestInterval,
@@ -1070,7 +1310,7 @@
   function updateQuestFieldSpawns(api, areaKey, opt){
     const set = questSpawnSetting(opt);
 
-    if (localFrame >= nextEnemyAt) {
+    if (set.enemySpawn && localFrame >= nextEnemyAt) {
       spawnAreaEnemy(api, areaKey, questEnemyHpMul(set.enemyHpMul), questCoinMul(set.enemyCoinMul));
       nextEnemyAt = localFrame + intRand(set.enemyInterval[0], set.enemyInterval[1]);
     }
@@ -1080,7 +1320,7 @@
       nextGimmickAt = localFrame + intRand(set.gimmickInterval[0], set.gimmickInterval[1]);
     }
 
-    if (localFrame >= nextChestAt) {
+    if (set.chestSpawn && localFrame >= nextChestAt) {
       if (Math.random() < set.chestRate) {
         spawnAreaChest(api, areaKey, questEnemyHpMul(0.45), questCoinMul(0.55));
       }
@@ -1121,827 +1361,6 @@
       if (questPhase >= waves.length) {
         api.finishRun(true);
       }
-    }
-  }
-
-  function updatePteraRush(api){
-    const stage = currentQuestStage();
-    const ptera = getMidBossDef(api, 'grass', 'モブプテラ', MID_BOSS_FALLBACK['モブプテラ']);
-    const waves = [2, 3, 5];
-
-    updateQuestFieldSpawns(api, stage.areaKey);
-
-    if (!questWaveSpawned && localFrame > 45) {
-      const count = waves[questPhase] || 0;
-      const defs = [];
-
-      for (let i = 0; i < count; i++) defs.push(ptera);
-
-      spawnQuestBossGroup(api, defs, {
-        kind:'midBoss',
-        hpMul:0.9 + questPhase * 0.18,
-        scoreMul:0.8,
-        coinMul:0.7,
-        r:72,
-        contactDmg:15 + questPhase * 2,
-        shootCd:110,
-        attackCd:165
-      });
-
-      api.showBanner(`プテラッシュ ${count}体`);
-      questWaveSpawned = true;
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 90) {
-      questPhase++;
-      questWaveSpawned = false;
-      localFrame = 35;
-
-      if (questPhase >= waves.length) api.finishRun(true);
-    }
-  }
-
-  function updateGuardianTest(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && !questBossSpawned && localFrame > 55) {
-      const guardian = eventBossDef('モブガーディアン');
-
-      spawnQuestBossGroup(api, [guardian, guardian], {
-        kind:'boss',
-        hpMul:0.92,
-        scoreMul:0.75,
-        coinMul:0.65,
-        r:66,
-        contactDmg:16,
-        vx:1.0,
-        shootCd:110,
-        attackCd:170
-      });
-
-      api.showBanner('番人試験');
-      questWaveSpawned = true;
-      questBossSpawned = true;
-    }
-
-    if (questBossSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateGrassTraveler(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'グラディモブ', opt:{ kind:'midBoss', hpMul:1.15, r:78 } },
-        { name:'グラディモブ', opt:{ kind:'midBoss', hpMul:1.15, r:78 } },
-        { name:'モブニコ', opt:{ kind:'midBoss', hpMul:1.15, r:78 } },
-        { name:'モブニコ', opt:{ kind:'midBoss', hpMul:1.15, r:78 } }
-      ], {
-        scoreMul:1.1,
-        coinMul:0.9,
-        contactDmg:22,
-        margin:0.12
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('草原の旅人');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateThieves(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey, {
-      enemyInterval:[220, 340],
-      chestRate:0.12,
-      enemyHpMul:0.42,
-      enemyCoinMul:0.38
-    });
-
-    if (!questBossSpawned && localFrame > 45) {
-      spawnQuestBossGroup(api, [eventBossDef('ミラモブ')], {
-        kind:'boss',
-        hpMul:1.18,
-        scoreMul:1,
-        coinMul:0.8,
-        r:96,
-        contactDmg:22
-      });
-
-      api.showBanner('盗賊団');
-      questBossSpawned = true;
-    }
-
-    if (questBossSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateDesertRuler(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'ミラモブⅡ', opt:{ kind:'boss', hpMul:1.1, r:104 } },
-        { name:'ミラモブⅡ', opt:{ kind:'boss', hpMul:1.1, r:104 } }
-      ], {
-        scoreMul:1.1,
-        coinMul:0.95,
-        contactDmg:26,
-        margin:0.30
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('砂漠を統べる者');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateDesertSharks(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'モブサメ', opt:{ kind:'midBoss', hpMul:1.15, r:82 } },
-        { name:'モブサメ', opt:{ kind:'midBoss', hpMul:1.15, r:82 } },
-        { name:'モブサメ', opt:{ kind:'midBoss', hpMul:1.15, r:82 } },
-        { name:'モブサメ', opt:{ kind:'midBoss', hpMul:1.15, r:82 } }
-      ], {
-        scoreMul:1.1,
-        coinMul:0.9,
-        contactDmg:23,
-        margin:0.12
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('砂漠に潜む鮫');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateHotMagma(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'ドラゴンモブ', opt:{ kind:'boss', hpMul:1.6, r:112, drawSize:224, customSize:224, eventDrawSize:224 } },
-        { name:'マグモブレム', opt:{ kind:'midBoss', hpMul:1.28, r:82 } },
-        { name:'マグモブレム', opt:{ kind:'midBoss', hpMul:1.28, r:82 } }
-      ], {
-        scoreMul:1.15,
-        coinMul:0.9,
-        contactDmg:24,
-        shootCd:100,
-        attackCd:155,
-        margin:0.18
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('ドラゴン出現');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 140) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateMagmaGuardian(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'マグモブレム', opt:{ kind:'midBoss', hpMul:1.05, r:76 } },
-        { name:'マグモブレム', opt:{ kind:'midBoss', hpMul:1.05, r:76 } },
-        { name:'マグモブレム', opt:{ kind:'midBoss', hpMul:1.05, r:76 } },
-        { name:'モブガーディアンⅡ', opt:{ kind:'boss', hpMul:1.25, r:108 } }
-      ], {
-        scoreMul:1.15,
-        coinMul:0.95,
-        contactDmg:24,
-        margin:0.12
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('マグマに潜むガーディアン');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateSkyRulers(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey, {
-      enemyInterval:[230, 350],
-      chestRate:0.10,
-      enemyHpMul:0.36,
-      enemyCoinMul:0.35
-    });
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'ホークモブⅡ', opt:{ kind:'boss', hpMul:1.1, r:104 } },
-        { name:'ドラゴンモブⅡ', opt:{ kind:'boss', hpMul:1.1, r:108 } }
-      ], {
-        scoreMul:1.15,
-        coinMul:0.95,
-        contactDmg:24,
-        margin:0.30
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('空の支配者');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateNeonNightmare(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey, {
-      enemyInterval:[240, 360],
-      chestRate:0.10,
-      enemyHpMul:0.36,
-      enemyCoinMul:0.35
-    });
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'モブコード', opt:{ kind:'midBoss', hpMul:1.05, r:82 } },
-        { name:'モブケーブル', opt:{ kind:'midBoss', hpMul:1.05, r:82 } },
-        { name:'ネオンモブ', opt:{ kind:'boss', hpMul:1.2, r:108 } }
-      ], {
-        scoreMul:1.12,
-        coinMul:0.9,
-        contactDmg:24,
-        margin:0.20
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('ネオン街の悪夢');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateNineHeads(api){
-    const stage = currentQuestStage();
-    const ghidora = getMidBossDef(api, 'neon', 'モブギドラ', MID_BOSS_FALLBACK['モブギドラ']);
-
-    updateQuestFieldSpawns(api, stage.areaKey);
-
-    if (!questWaveSpawned && questPhase === 0 && localFrame > 55) {
-      spawnQuestBossGroup(api, [ghidora, ghidora, ghidora], {
-        kind:'midBoss',
-        hpMul:1.1,
-        scoreMul:0.9,
-        coinMul:0.75,
-        r:80,
-        sizeMul:1,
-        visualScale:1,
-        drawSize:160,
-        customSize:160,
-        eventDrawSize:160,
-        contactDmg:20,
-        shootCd:100,
-        attackCd:150
-      });
-
-      api.showBanner('9つの首');
-      questWaveSpawned = true;
-    }
-
-    if (questPhase === 0 && questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      questPhase = 1;
-      questWaveSpawned = false;
-      localFrame = 35;
-    }
-
-    if (!questWaveSpawned && questPhase === 1 && localFrame > 55) {
-      spawnQuestBossGroup(api, [ghidora], {
-        kind:'midBoss',
-        hpMul:2.35,
-        scoreMul:1.8,
-        coinMul:1.2,
-        r:145,
-        sizeMul:1.85,
-        visualScale:1.85,
-        scale:1.85,
-        drawSize:285,
-        customSize:285,
-        eventDrawSize:285,
-        contactDmg:34,
-        vx:1.3,
-        shootCd:90,
-        attackCd:140,
-        flag:'eventGiantGhidora'
-      });
-
-      api.showBanner('モブギドラ出現');
-      questWaveSpawned = true;
-    }
-
-    if (questPhase === 1 && questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateTownDragon(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'ドラゴンモブⅡ', opt:{ kind:'boss', hpMul:1.2, r:112 } },
-        { name:'モブギドラ', opt:{ kind:'midBoss', hpMul:1.15, r:82 } },
-        { name:'モブギドラ', opt:{ kind:'midBoss', hpMul:1.15, r:82 } }
-      ], {
-        scoreMul:1.15,
-        coinMul:0.95,
-        contactDmg:25,
-        margin:0.20
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('街を襲うドラゴン');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateThreeBirds(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'ホークモブ', opt:{ kind:'boss', hpMul:0.95, r:94 } },
-        { name:'ホークモブ', opt:{ kind:'boss', hpMul:0.95, r:94 } },
-        { name:'ホークモブⅡ', opt:{ kind:'boss', hpMul:1.2, r:108 } }
-      ], {
-        scoreMul:1.15,
-        coinMul:0.95,
-        contactDmg:24,
-        margin:0.20
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('三鳥見参');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateNeonMaoh(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'モブ魔王', opt:{ kind:'boss', hpMul:1.25, r:112 } },
-        { name:'モブケーブル', opt:{ kind:'midBoss', hpMul:1.1, r:82 } },
-        { name:'モブコード', opt:{ kind:'midBoss', hpMul:1.1, r:82 } }
-      ], {
-        scoreMul:1.16,
-        coinMul:0.95,
-        contactDmg:25,
-        margin:0.20
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('ネオン街の魔王');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateMagmaBeauty(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'モブリリス', opt:{ kind:'boss', hpMul:1.2, r:106 } },
-        { name:'モブメルト', opt:{ kind:'midBoss', hpMul:1.1, r:78 } },
-        { name:'モブメルト', opt:{ kind:'midBoss', hpMul:1.1, r:78 } },
-        { name:'モブメルト', opt:{ kind:'midBoss', hpMul:1.1, r:78 } }
-      ], {
-        scoreMul:1.16,
-        coinMul:0.95,
-        contactDmg:25,
-        margin:0.12
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('マグマを好む美女');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateMaohDuel(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey, {
-      enemyInterval:[260, 380],
-      chestRate:0.08,
-      enemyHpMul:0.36,
-      enemyCoinMul:0.35
-    });
-
-    if (questPhase === 0 && !questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'モブ魔王', opt:{ kind:'boss', hpMul:0.9, r:112 } }
-      ], {
-        scoreMul:1,
-        coinMul:0.85,
-        contactDmg:28,
-        margin:0.34
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('魔王出現');
-    }
-
-    if (questPhase === 0 && questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      questPhase = 1;
-      questWaveSpawned = false;
-      localFrame = 35;
-      api.showBanner('第二波');
-    }
-
-    if (questPhase === 1 && !questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'モブ魔王', opt:{ kind:'boss', hpMul:1.15, r:116 } },
-        { name:'ミラモブ', opt:{ kind:'boss', hpMul:0.85, r:88 } },
-        { name:'ミラモブ', opt:{ kind:'boss', hpMul:0.85, r:88 } }
-      ], {
-        scoreMul:1.1,
-        coinMul:0.95,
-        contactDmg:26,
-        margin:0.20
-      });
-
-      questWaveSpawned = true;
-      api.showBanner('魔王とミラモブ');
-    }
-
-    if (questPhase === 1 && questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateLilithSisters(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && !questBossSpawned && localFrame > 55) {
-      const lilith = eventBossDef('モブリリス');
-
-      spawnQuestBossGroup(api, [lilith, lilith, lilith, lilith], {
-        kind:'boss',
-        hpMul:0.74,
-        scoreMul:0.75,
-        coinMul:0.65,
-        r:34,
-        sizeMul:0.30,
-        visualScale:0.30,
-        scale:0.30,
-        drawSize:58,
-        customSize:58,
-        eventDrawSize:58,
-        contactDmg:10,
-        shootCd:105,
-        attackCd:170,
-        vx:1.35,
-        flag:'eventLilithSister'
-      });
-
-      api.showBanner('リリス四姉妹');
-      questWaveSpawned = true;
-      questBossSpawned = true;
-    }
-
-    if (questBossSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateCastleMachine(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'ネオンモブ', opt:{ kind:'boss', hpMul:1.0, r:96 } },
-        { name:'ネオンモブ', opt:{ kind:'boss', hpMul:1.0, r:96 } },
-        { name:'ネオンモブ', opt:{ kind:'boss', hpMul:1.0, r:96 } },
-        { name:'ホークモブ', opt:{ kind:'boss', hpMul:1.0, r:92 } }
-      ], {
-        scoreMul:1.16,
-        coinMul:0.95,
-        contactDmg:24,
-        margin:0.12
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('魔王城の精密機械');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateIronAdvance(api){
-    updateWaveStage(api, {
-      title:'鉄壁の進撃',
-      waves:[
-        { banner:'鉄壁の進撃 1/3', items:[
-          { name:'モブピー', count:3, opt:{ kind:'midBoss', hpMul:1.0, r:72 } },
-          { name:'モブガラド', count:1, opt:{ kind:'midBoss', hpMul:1.0, r:82 } }
-        ], margin:0.14 },
-        { banner:'鉄壁の進撃 2/3', items:[
-          { name:'モブピー', count:4, opt:{ kind:'midBoss', hpMul:1.05, r:72 } },
-          { name:'モブガラド', count:2, opt:{ kind:'midBoss', hpMul:1.05, r:82 } }
-        ], margin:0.10 },
-        { banner:'鉄壁の進撃 3/3', items:[
-          { name:'モブピー', count:6, opt:{ kind:'midBoss', hpMul:1.1, r:68 } },
-          { name:'モブガラド', count:4, opt:{ kind:'midBoss', hpMul:1.1, r:76 } }
-        ], margin:0.08 }
-      ]
-    });
-  }
-
-  function updatePrisonBreakHell(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey, {
-      enemyInterval:[360, 520],
-      chestRate:0.08,
-      enemyHpMul:0.34,
-      enemyCoinMul:0.3
-    });
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'モブニコ', count:3, opt:{ kind:'midBoss', hpMul:1.05, r:72 } },
-        { name:'モブラス', count:3, opt:{ kind:'midBoss', hpMul:1.05, r:72 } },
-        { name:'グラディモブ', count:4, opt:{ kind:'midBoss', hpMul:1.05, r:72 } }
-      ], {
-        scoreMul:1.12,
-        coinMul:0.9,
-        contactDmg:23,
-        margin:0.08
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('脱獄地獄');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateAnnihilationStart(api){
-    updateWaveStage(api, {
-      title:'殲滅作戦開始',
-      waves:[
-        { banner:'ガトリモブ 2体', items:[{ name:'ガトリモブ', count:2, opt:{ kind:'midBoss', hpMul:1.0, r:82 } }], margin:0.30 },
-        { banner:'ガトリモブ 3体', items:[{ name:'ガトリモブ', count:3, opt:{ kind:'midBoss', hpMul:1.08, r:82 } }], margin:0.20 },
-        { banner:'ガトリモブ 5体', items:[{ name:'ガトリモブ', count:5, opt:{ kind:'midBoss', hpMul:1.15, r:78 } }], margin:0.10 }
-      ]
-    });
-  }
-
-  function updateMarumaruMobmob(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey, {
-      enemyInterval:[380, 560],
-      chestRate:0.08,
-      enemyHpMul:0.32,
-      enemyCoinMul:0.3
-    });
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'グラディモブ', count:8, opt:{ kind:'midBoss', hpMul:1.0, r:70 } }
-      ], {
-        scoreMul:1.1,
-        coinMul:0.9,
-        contactDmg:23,
-        margin:0.08
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('マルマルモブモブ');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateFishmanSeaWar(api){
-    updateWaveStage(api, {
-      title:'魚人海戦',
-      waves:[
-        { banner:'魚人海戦 1/3', items:[
-          { name:'モブサメ', count:1, opt:{ kind:'midBoss', hpMul:1.0, r:82 } },
-          { name:'モブシャチ', count:1, opt:{ kind:'midBoss', hpMul:1.0, r:82 } },
-          { name:'モブマグシャー', count:1, opt:{ kind:'midBoss', hpMul:1.0, r:82 } }
-        ], margin:0.20 },
-        { banner:'魚人海戦 2/3', items:[
-          { name:'モブサメ', count:2, opt:{ kind:'midBoss', hpMul:1.05, r:78 } },
-          { name:'モブシャチ', count:2, opt:{ kind:'midBoss', hpMul:1.05, r:78 } },
-          { name:'モブマグシャー', count:2, opt:{ kind:'midBoss', hpMul:1.05, r:78 } }
-        ], margin:0.10 },
-        { banner:'魚人海戦 3/3', items:[
-          { name:'モブサメ', count:3, opt:{ kind:'midBoss', hpMul:1.1, r:72 } },
-          { name:'モブシャチ', count:3, opt:{ kind:'midBoss', hpMul:1.1, r:72 } },
-          { name:'モブマグシャー', count:3, opt:{ kind:'midBoss', hpMul:1.1, r:72 } }
-        ], margin:0.08 }
-      ]
-    });
-  }
-
-  function updateLastPrison(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'モブメイル', opt:{ kind:'boss', hpMul:1.1, r:108 } },
-        { name:'ドラゴンモブⅡ', opt:{ kind:'boss', hpMul:1.15, r:108 } },
-        { name:'モブラス', opt:{ kind:'midBoss', hpMul:1.1, r:78 } },
-        { name:'モブニコ', opt:{ kind:'midBoss', hpMul:1.1, r:78 } }
-      ], {
-        scoreMul:1.15,
-        coinMul:0.95,
-        contactDmg:24,
-        margin:0.12
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('終焉の監獄');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateWelcomeBackWorld(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'モブスミス', opt:{ kind:'boss', hpMul:1.15, r:110 } },
-        { name:'ガトリモブ', count:4, opt:{ kind:'midBoss', hpMul:1.05, r:76 } }
-      ], {
-        scoreMul:1.16,
-        coinMul:0.95,
-        contactDmg:24,
-        margin:0.12
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('お帰り世界');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateUnderTheSea(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'モブネプ', opt:{ kind:'boss', hpMul:1.15, r:112 } },
-        { name:'モブシャチ', count:4, opt:{ kind:'midBoss', hpMul:1.05, r:76 } }
-      ], {
-        scoreMul:1.16,
-        coinMul:0.95,
-        contactDmg:24,
-        margin:0.12
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('アンダーザシー');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateEmotionalNeon(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'ブルネオモブ', opt:{ kind:'boss', hpMul:1.0, r:96 } },
-        { name:'パルネオモブ', opt:{ kind:'boss', hpMul:1.0, r:96 } },
-        { name:'モブコード', opt:{ kind:'midBoss', hpMul:1.05, r:78 } },
-        { name:'モブケーブル', opt:{ kind:'midBoss', hpMul:1.05, r:78 } }
-      ], {
-        scoreMul:1.16,
-        coinMul:0.95,
-        contactDmg:24,
-        margin:0.12
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('エモーショナルネオン');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateFireKing(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey, {
-      enemyInterval:[340, 500],
-      chestRate:0.08,
-      enemyHpMul:0.36,
-      enemyCoinMul:0.35
-    });
-
-    if (!questWaveSpawned && localFrame > 35) {
-      spawnNamedGroup(api, [
-        { name:'閻魔モブ', opt:{ kind:'boss', hpMul:1.15, r:118, x:api.W * 0.50, y:-260 } },
-        { name:'ドラゴンモブ', opt:{ kind:'boss', hpMul:1.0, r:106, x:api.W * 0.25, y:-220 } },
-        { name:'ドラゴンモブⅡ', opt:{ kind:'boss', hpMul:1.0, r:108, x:api.W * 0.75, y:-220 } }
-      ], {
-        scoreMul:1.18,
-        coinMul:1.0,
-        contactDmg:28,
-        margin:0.18
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('炎を統べる王');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
-    }
-  }
-
-  function updateLilithFamily(api){
-    updateQuestFieldSpawns(api, currentQuestStage().areaKey);
-
-    if (!questWaveSpawned && localFrame > 55) {
-      spawnNamedGroup(api, [
-        { name:'ウルモブリリス', opt:{ kind:'boss', hpMul:1.1, r:118 } },
-        { name:'モブリリス', count:2, opt:{ kind:'boss', hpMul:0.9, r:94 } }
-      ], {
-        scoreMul:1.18,
-        coinMul:1.0,
-        contactDmg:28,
-        margin:0.20
-      });
-
-      questWaveSpawned = true;
-      questBossSpawned = true;
-      api.showBanner('リリスファミリー');
-    }
-
-    if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
-      api.finishRun(true);
     }
   }
 
@@ -2021,36 +1440,31 @@
       api.showBanner(`${stage.title} ${currentQuestDiff().name}`);
     }
 
-    if (stage.key === 'pterarush') updatePteraRush(api);
-    else if (stage.key === 'guardian_test') updateGuardianTest(api);
-    else if (stage.key === 'grass_traveler') updateGrassTraveler(api);
-    else if (stage.key === 'thieves') updateThieves(api);
-    else if (stage.key === 'desert_ruler') updateDesertRuler(api);
-    else if (stage.key === 'desert_sharks') updateDesertSharks(api);
-    else if (stage.key === 'hot_magma') updateHotMagma(api);
-    else if (stage.key === 'magma_guardian') updateMagmaGuardian(api);
-    else if (stage.key === 'sky_rulers') updateSkyRulers(api);
-    else if (stage.key === 'neon_nightmare') updateNeonNightmare(api);
-    else if (stage.key === 'nine_heads') updateNineHeads(api);
-    else if (stage.key === 'town_dragon') updateTownDragon(api);
-    else if (stage.key === 'three_birds') updateThreeBirds(api);
-    else if (stage.key === 'neon_maoh') updateNeonMaoh(api);
-    else if (stage.key === 'magma_beauty') updateMagmaBeauty(api);
-    else if (stage.key === 'maoh_duel') updateMaohDuel(api);
-    else if (stage.key === 'lilith_sisters') updateLilithSisters(api);
-    else if (stage.key === 'castle_machine') updateCastleMachine(api);
-    else if (stage.key === 'iron_advance') updateIronAdvance(api);
-    else if (stage.key === 'prison_break_hell') updatePrisonBreakHell(api);
-    else if (stage.key === 'annihilation_start') updateAnnihilationStart(api);
-    else if (stage.key === 'marumaru_mobmob') updateMarumaruMobmob(api);
-    else if (stage.key === 'fishman_sea_war') updateFishmanSeaWar(api);
-    else if (stage.key === 'last_prison') updateLastPrison(api);
-    else if (stage.key === 'welcome_back_world') updateWelcomeBackWorld(api);
-    else if (stage.key === 'under_the_sea') updateUnderTheSea(api);
-    else if (stage.key === 'emotional_neon') updateEmotionalNeon(api);
-    else if (stage.key === 'fire_king') updateFireKing(api);
-    else if (stage.key === 'lilith_family') updateLilithFamily(api);
-    else if (stage.key === 'mob_artist') updateMobArtist(api);
+    if (stage.key === 'mob_artist') {
+      updateMobArtist(api);
+    } else if (STAGE_CONFIG[stage.key]) {
+      updateWaveStage(api, {
+        title:stage.title,
+        waves:STAGE_CONFIG[stage.key]
+      });
+    } else {
+      updateQuestFieldSpawns(api, stage.areaKey, {});
+      if (!questWaveSpawned && localFrame > 55) {
+        spawnNamedGroup(api, [{ name:'ホークモブ', opt:{ kind:'boss', hpMul:1, r:104 } }], {
+          scoreMul:1,
+          coinMul:1,
+          contactDmg:24,
+          margin:0.34
+        });
+        questWaveSpawned = true;
+        questBossSpawned = true;
+        api.showBanner(stage.title);
+      }
+
+      if (questWaveSpawned && !activeQuestBossAlive(api) && localFrame > 120) {
+        api.finishRun(true);
+      }
+    }
 
     removeUnauthorizedQuestGimmicks(api);
     return true;
@@ -2383,14 +1797,14 @@
       nextGimmickAt = 150;
 
       api.setEventMode({ active:true, key:'gold' });
-      setStageVisual(api, `GOLD ${diff.name}`, diff.background || 'sta/backmao.png', diff.areaKey || 'grass', diff.areaName || 'ゴールドステージ');
+      setStageVisual(api, `GOLD ${diff.name}`, diff.background || 'sta/backsabaku.png', diff.areaKey || 'desert', diff.areaName || 'ゴールドステージ');
       api.showBanner(`GOLD STAGE ${diff.name}`);
       return true;
     }
 
     if (eventType === 'scoreAttack') {
       api.setEventMode({ active:true, key:'scoreAttack' });
-      setStageVisual(api, 'SCORE ATTACK', 'sta/backneon.png', 'neon', 'スコアアタック');
+      setStageVisual(api, 'SCORE ATTACK', 'sta/backsougen.png', 'grass', 'スコアアタック');
       api.showBanner('スコアアタック');
       return true;
     }
