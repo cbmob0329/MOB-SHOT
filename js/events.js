@@ -2,493 +2,238 @@
 
 (function(){
   const EVENT_SAVE_KEY = 'mobshot_event_mode_v1';
-  const GOLD_CLEAR_KEY = 'mobshot_gold_stage_clear_v1';
-  const DOUBLE_CLEAR_KEY = 'mobshot_double_boss_clear_v1';
-  const EVENT_ITEM_KEY = 'mobshot_event_items_v1';
-  const EVENT_STATS_KEY = 'mobshot_event_stats_v1';
-
-  const TEST_GOLD_TICKET_START = 0;
+  const GOLD_CLEAR_KEY = 'mobshot_gold_stage_clear_v2';
+  const EVENT_STATS_KEY = 'mobshot_event_stats_v2';
 
   const GOLD_DIFFICULTIES = [
-    { key:'easy', name:'イージー', icon:'mt/game1.png', color:'#9dff73', firstCoin:3000, firstDiamond:5, clearCoin:300, chestMul:0.8, bossHpMul:1.0, bossCoinMul:1.0, bossCount:2, bosses:['ホークモブ','ミラモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ホークモブ + ミラモブ' },
-    { key:'hard', name:'ハード', icon:'mt/game2.png', color:'#6be6ff', firstCoin:8000, firstDiamond:8, clearCoin:800, chestMul:1.4, bossHpMul:1.35, bossCoinMul:1.8, bossCount:2, bosses:['ミラモブⅡ','ネオンモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ミラモブⅡ + ネオンモブ' },
-    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', firstCoin:15000, firstDiamond:10, clearCoin:1500, chestMul:2.2, bossHpMul:1.8, bossCoinMul:3.2, bossCount:2, bosses:['ドラゴンモブ','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ドラゴンモブ + ドラゴンモブⅡ' },
-    { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', color:'#ff5b5b', firstCoin:30000, firstDiamond:20, clearCoin:3000, chestMul:3.5, bossHpMul:2.35, bossCoinMul:6.0, bossCount:2, bosses:['モブリリス','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + ドラゴンモブⅡ' },
-    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', firstCoin:80000, firstDiamond:50, clearCoin:7000, chestMul:5.5, bossHpMul:3.2, bossCoinMul:10.0, bossCount:2, bosses:['モブリリス','モブ魔王'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + モブ魔王' }
+    {
+      key:'easy',
+      name:'イージー',
+      icon:'mt/game1.png',
+      color:'#9dff73',
+      timeLimitSec:30,
+      firstCoin:3000,
+      firstDiamond:5,
+      clearCoin:300,
+      chestMul:0.8,
+      bossHpMul:1.0,
+      bossCoinMul:1.0,
+      bossMinHp:600,
+      areaKey:'desert',
+      areaName:'砂漠',
+      background:'sta/backsabaku.png',
+      bosses:['モブガーディアン']
+    },
+    {
+      key:'hard',
+      name:'ハード',
+      icon:'mt/game2.png',
+      color:'#6be6ff',
+      timeLimitSec:30,
+      firstCoin:5000,
+      firstDiamond:5,
+      clearCoin:500,
+      chestMul:1.4,
+      bossHpMul:1.35,
+      bossCoinMul:1.8,
+      bossMinHp:1800,
+      areaKey:'desert',
+      areaName:'砂漠',
+      background:'sta/backsabaku.png',
+      bosses:['モブガーディアン','モブガーディアンⅡ']
+    },
+    {
+      key:'veryHard',
+      name:'ベリーハード',
+      icon:'mt/game3.png',
+      color:'#ffcf5b',
+      timeLimitSec:30,
+      firstCoin:10000,
+      firstDiamond:5,
+      clearCoin:800,
+      chestMul:2.2,
+      bossHpMul:1.8,
+      bossCoinMul:3.2,
+      bossMinHp:3800,
+      areaKey:'desert',
+      areaName:'砂漠',
+      background:'sta/backsabaku.png',
+      bosses:['モブガーディアンⅡ','モブデュアル']
+    },
+    {
+      key:'inferno',
+      name:'インフェルノ',
+      icon:'mt/game4.png',
+      color:'#ff5b5b',
+      timeLimitSec:30,
+      firstCoin:15000,
+      firstDiamond:10,
+      clearCoin:1000,
+      chestMul:3.5,
+      bossHpMul:2.35,
+      bossCoinMul:6.0,
+      bossMinHp:7200,
+      areaKey:'desert',
+      areaName:'砂漠',
+      background:'sta/backsabaku.png',
+      bosses:['モブガーディアンⅡ','モブデュアル']
+    },
+    {
+      key:'legend',
+      name:'レジェンド',
+      icon:'mt/game5.png',
+      color:'#d86bff',
+      timeLimitSec:30,
+      firstCoin:30000,
+      firstDiamond:30,
+      clearCoin:1500,
+      chestMul:5.5,
+      bossHpMul:3.2,
+      bossCoinMul:10.0,
+      bossMinHp:12000,
+      areaKey:'desert',
+      areaName:'砂漠',
+      background:'sta/backsabaku.png',
+      bosses:['モブガーディアンⅡ','モブデュアル']
+    }
   ];
-
-  const DOUBLE_DIFFICULTIES = [
-    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', firstCoin:5000, firstDiamond:5, hpMul:1.35, scoreMul:1.25, bossMinHp:2200 },
-    { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', color:'#ff5b5b', firstCoin:10000, firstDiamond:10, hpMul:1.95, scoreMul:1.55, bossMinHp:4300 },
-    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', firstCoin:30000, firstDiamond:50, hpMul:2.75, scoreMul:2.1, bossMinHp:7800 }
-  ];
-
-  const DOUBLE_STAGES = [
-    { id:1, areaKey:'grass', areaName:'草原', title:'草原', background:'sta/backsougen.png', bossA:'ホークモブ', bossB:'ミラモブ', allowed:['veryHard','inferno','legend'], final:false },
-    { id:2, areaKey:'desert', areaName:'砂漠', title:'砂漠', background:'sta/backsabaku.png', bossA:'モブガーディアン', bossB:'ネオンモブ', allowed:['veryHard','inferno','legend'], final:false },
-    { id:3, areaKey:'neon', areaName:'ネオン街', title:'ネオン街', background:'sta/backneon.png', bossA:'ドラゴンモブ', bossB:'ドラゴンモブⅡ', allowed:['veryHard','inferno','legend'], final:false },
-    { id:4, areaKey:'castle', areaName:'魔王城', title:'魔王城', background:'sta/backmao.png', bossA:'モブリリス', bossB:'モブ魔王', allowed:['veryHard','inferno','legend'], final:false },
-    { id:5, areaKey:'prison', areaName:'監獄', title:'監獄', background:'sta/stkan.png', bossA:'モブメイル', bossB:'モブスミス', allowed:['veryHard','inferno','legend'], final:false },
-    { id:6, areaKey:'seaRail', areaName:'海の線路', title:'海の線路', background:'sta/umisenro.png', bossA:'モブネプ', bossB:'ホークモブⅡ', allowed:['veryHard','inferno','legend'], final:false },
-    { id:7, areaKey:'last', areaName:'魔王の間', title:'魔王の間', background:'sta/makailast.png', bossA:'閻魔モブ', bossB:'ウルモブリリス', allowed:['legend'], final:true, firstCoin:50000, firstDiamond:100 }
-  ];
-
-  const QUEST_DIFFICULTIES = [
-    { key:'easy', name:'イージー', icon:'mt/game1.png', color:'#9dff73', cost:5000, hpMul:0.85, scoreMul:1.0, coinMul:0.8, enemyHpMul:0.8, label:'低難度 / 初回確認向け' },
-    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', cost:30000, hpMul:1.6, scoreMul:1.6, coinMul:1.2, enemyHpMul:1.35, label:'高難度 / 中盤以降向け' },
-    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', cost:100000, hpMul:2.8, scoreMul:2.5, coinMul:1.8, enemyHpMul:2.2, label:'超高難度 / 終盤向け' }
-  ];
-
-  const QUEST_STAGES = [
-    { id:1, key:'pterarush', title:'プテラッシュ', areaKey:'grass', areaName:'草原', background:null, desc:'中ボスのプテラが2体 → 3体 → 5体で出現。全て倒すとクリア。', label:'プテラ 2→3→5', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:2, key:'guardian_test', title:'番人試験', areaKey:'town', areaName:'田舎町', background:null, desc:'番人が2体同時に出現。両方倒すとクリア。', label:'番人 2体同時', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:3, key:'grass_traveler', title:'草原の旅人', areaKey:'grass', areaName:'草原', background:null, desc:'グラディモブ2体とモブニコ2体が同時出現。全て倒すとクリア。', label:'グラディ2 + ニコ2', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:4, key:'thieves', title:'盗賊団', areaKey:'desert', areaName:'砂漠', background:null, desc:'ミラモブ1体と砂漠の雑魚敵を倒すとクリア。雑魚湧きは少なめ。', label:'ミラモブ + 雑魚少なめ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:5, key:'desert_ruler', title:'砂漠を統べる者', areaKey:'desert', areaName:'砂漠', background:null, desc:'ミラモブⅡが2体同時出現。全て倒すとクリア。', label:'ミラモブⅡ 2体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:6, key:'desert_sharks', title:'砂漠に潜む鮫', areaKey:'desert', areaName:'砂漠', background:null, desc:'モブサメが4体同時出現。全て倒すとクリア。', label:'モブサメ 4体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:7, key:'hot_magma', title:'アチアチマグマ', areaKey:'magma', areaName:'マグマ', background:null, desc:'開始直後からドラゴンと中ボス2体が同時出現。全て倒すとクリア。', label:'ドラゴン + 中ボス2体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:8, key:'magma_guardian', title:'マグマに潜むガーディアン', areaKey:'magma', areaName:'マグマ', background:null, desc:'マグモブレム3体とモブガーディアンⅡが同時出現。全て倒すとクリア。', label:'マグレム3 + 番人Ⅱ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:9, key:'sky_rulers', title:'空の支配者', areaKey:'town', areaName:'田舎町', background:null, desc:'モブバード、モブファル、モブマグプテラが少し出現。ホークモブⅡとドラゴンモブⅡを両方倒すとクリア。', label:'ホークⅡ + ドラゴンⅡ', rank:10, questEnemies:['モブバード','モブファル','モブマグプテラ'], questEnemyMode:'low', gimmickSpawn:false },
-    { id:10, key:'neon_nightmare', title:'ネオン街の悪夢', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブコード、モブケーブル、ネオンモブが同時出現。全て倒すとクリア。', label:'コード + ケーブル + ネオン', rank:10, questEnemies:['ナーガモブ','モブグリズリー','ネオスラモブ'], questEnemyMode:'low', gimmickSpawn:false },
-    { id:11, key:'nine_heads', title:'9つの首', areaKey:'neon', areaName:'ネオン街', background:null, desc:'ネオンギドラ3体同時 → ネオンギドラ1体。倒すとクリア。', label:'ギドラ3体 + ギドラ1体', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:12, key:'town_dragon', title:'街を襲うドラゴン', areaKey:'town', areaName:'田舎町', background:null, desc:'ドラゴンモブⅡとモブギドラ2体が同時出現。全て倒すとクリア。', label:'ドラゴンⅡ + ギドラ2', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:13, key:'three_birds', title:'三鳥見参', areaKey:'grass', areaName:'草原', background:null, desc:'ホークモブ2体とホークモブⅡが同時出現。全て倒すとクリア。', label:'ホーク2 + ホークⅡ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:14, key:'neon_maoh', title:'ネオン街の魔王', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブ魔王、モブケーブル、モブコードが同時出現。全て倒すとクリア。', label:'魔王 + ケーブル + コード', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:15, key:'magma_beauty', title:'マグマを好む美女', areaKey:'magma', areaName:'マグマ', background:null, desc:'モブリリスとモブメルト3体が同時出現。全て倒すとクリア。', label:'リリス + メルト3', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:16, key:'maoh_duel', title:'対峙する魔王', areaKey:'castle', areaName:'魔王城', background:null, desc:'モブ魔王を倒すと、次のモブ魔王と2体のミラモブが出現。全て倒すとクリア。', label:'魔王 → 魔王 + ミラ2体', rank:10, questEnemies:['ダークゴブモブ'], questEnemyMode:'low', gimmickSpawn:false },
-    { id:17, key:'lilith_sisters', title:'リリス四姉妹', areaKey:'castle', areaName:'魔王城', background:null, desc:'モブリリスが4体同時に出現。全て倒すとクリア。', label:'モブリリス 4体同時', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:18, key:'castle_machine', title:'魔王城の精密機械', areaKey:'castle', areaName:'魔王城', background:null, desc:'ネオンモブ3体とホークモブが同時出現。全て倒すとクリア。', label:'ネオン3 + ホーク', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-
-    { id:19, key:'iron_advance', title:'鉄壁の進撃', areaKey:'desert', areaName:'砂漠', background:null, desc:'モブピーとモブガラドが3フェーズで出現。最後の10体を撃破するとクリア。', label:'ピー3→4→6 / ガラド1→2→4', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:20, key:'prison_break_hell', title:'脱獄地獄', areaKey:'prison', areaName:'監獄', background:'sta/stkan.png', desc:'モブテツが低頻度で無限湧き。モブニコ3体、モブラス3体、グラディモブ4体が同時出現。', label:'ニコ3 + ラス3 + グラディ4', rank:10, questEnemies:['モブテツ'], questEnemyMode:'low', gimmickSpawn:false },
-    { id:21, key:'annihilation_start', title:'殲滅作戦開始', areaKey:'matrix', areaName:'マトリックス', background:'sta/matrix.png', desc:'ガトリモブが2体 → 3体 → 5体で出現。全て倒すとクリア。', label:'ガトリ 2→3→5', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:22, key:'marumaru_mobmob', title:'マルマルモブモブ', areaKey:'prison', areaName:'監獄', background:'sta/stkan.png', desc:'マルモブが低頻度で無限湧き。グラディモブ8体を倒すとクリア。', label:'マルモブ湧き + グラディ8', rank:10, questEnemies:['マルモブ'], questEnemyMode:'low', gimmickSpawn:false },
-    { id:23, key:'fishman_sea_battle', title:'魚人海戦', areaKey:'seaRail', areaName:'海の線路', background:'sta/umisenro.png', desc:'モブサメ、モブシャチ、モブマグシャーが各1体 → 2体 → 3体で出現。全て倒すとクリア。', label:'魚人 1→2→3', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:24, key:'prison_end', title:'終焉の監獄', areaKey:'prison', areaName:'監獄', background:'sta/stkan.png', desc:'モブメルト、モブドラゴンⅡ、モブラス、モブニコが同時出現。全て倒すとクリア。', label:'メルト + ドラゴンⅡ + ラス + ニコ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:25, key:'welcome_back_world', title:'お帰り世界', areaKey:'matrix', areaName:'マトリックス', background:'sta/matrix.png', desc:'モブスミスとガトリモブ4体が同時出現。全て倒すとクリア。', label:'スミス + ガトリ4', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:26, key:'under_the_sea', title:'アンダーザシー', areaKey:'seaRail', areaName:'海の線路', background:'sta/umisenro.png', desc:'モブネプとモブシャチ4体が同時出現。全て倒すとクリア。', label:'ネプ + シャチ4', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:27, key:'emotional_neon', title:'エモーショナルネオン', areaKey:'neonHighway', areaName:'ネオン高速', background:'sta/neonhighway.png', desc:'ブルネオモブ、パルネオモブ、モブコード、モブケーブルが同時出現。全て倒すとクリア。', label:'ブルネオ + パルネオ + コード + ケーブル', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:28, key:'flame_king', title:'炎を統べる王', areaKey:'makai', areaName:'魔界', background:'sta/makai.png', desc:'閻魔モブ、モブドラゴン、モブドラゴンⅡが同時出現。全て倒すとクリア。', label:'閻魔 + ドラゴン + ドラゴンⅡ', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:29, key:'lilith_family', title:'リリスファミリー', areaKey:'castle', areaName:'魔王城', background:null, desc:'ウルモブリリスとモブリリス2体が同時出現。全て倒すとクリア。', label:'ウルリリス + リリス2', rank:10, questEnemyMode:'low', gimmickSpawn:false },
-    { id:30, key:'mob_artist', title:'MOB ARTIST', areaKey:'town', areaName:'田舎町', background:null, desc:'ランダム中ボスとランダムボスが複数フェーズで出現。最終フェーズの閻魔モブ3体を倒すとクリア。', label:'ランダム連戦 + 閻魔3', rank:10, questEnemyMode:'low', gimmickSpawn:false }
-  ];
-
-  const EVENTS = [
-    { key:'gold', name:'GOLD STAGE', image:'mt/event_gold.png', desc:'自由に挑戦できるコイン稼ぎイベント。' },
-    { key:'scoreAttack', name:'スコアアタック', image:'mt/event_score.png', desc:'歴代ボスを順番に倒してハイスコアを目指すイベント。' },
-    { key:'eventQuest', name:'イベントクエスト', image:'mt/ieve.png', desc:'難易度別に特別な石板がドロップ！' },
-    { key:'secretBoss', name:'シークレットボス', image:'mt/event_secret.png', desc:'COMING SOON' }
-  ];
-
-  function qs(id){
-    return document.getElementById(id);
-  }
 
   function clone(obj){
     return JSON.parse(JSON.stringify(obj));
   }
 
+  function now(){
+    return Date.now();
+  }
+
+  function safeJsonLoad(key, fallback){
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch(e) {
+      return fallback;
+    }
+  }
+
+  function safeJsonSave(key, value){
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch(e) {}
+  }
+
   function normalizeDifficultyKey(key){
     const raw = String(key || '').trim();
-
     if (raw === 'イージー') return 'easy';
     if (raw === 'ハード') return 'hard';
     if (raw === 'ベリーハード') return 'veryHard';
     if (raw === 'インフェルノ') return 'inferno';
     if (raw === 'レジェンド') return 'legend';
-
-    if (raw === 'easy') return 'easy';
-    if (raw === 'hard') return 'hard';
-    if (raw === 'veryHard') return 'veryHard';
     if (raw === 'veryhard') return 'veryHard';
-    if (raw === 'inferno') return 'inferno';
-    if (raw === 'legend') return 'legend';
-
     return raw || 'easy';
   }
 
-  function injectEventStyle(){
-    if (document.getElementById('mobEventUiStyle')) return;
-
-    const style = document.createElement('style');
-    style.id = 'mobEventUiStyle';
-    style.textContent = `
-      .event-card{
-        grid-template-columns:72px 1fr !important;
-        align-items:start !important;
-        gap:10px !important;
-        padding:10px !important;
-      }
-
-      .event-icon{
-        width:64px !important;
-        height:64px !important;
-        object-fit:contain !important;
-      }
-
-      .event-info h3{
-        font-size:19px !important;
-        margin-bottom:3px !important;
-      }
-
-      .event-info p{
-        font-size:11px !important;
-        margin-bottom:6px !important;
-      }
-
-      .event-info p:empty{
-        display:none !important;
-      }
-
-      .event-difficulty-grid{
-        display:grid;
-        grid-template-columns:1fr;
-        gap:7px;
-        margin-top:8px;
-      }
-
-      .event-difficulty-card{
-        position:relative;
-        width:100%;
-        min-height:56px;
-        overflow:hidden;
-        border:0;
-        border-radius:15px;
-        padding:0;
-        background:rgba(255,255,255,.08);
-        box-shadow:0 4px 0 rgba(0,0,0,.34);
-      }
-
-      .event-difficulty-card:disabled{
-        opacity:.45;
-        filter:grayscale(1);
-      }
-
-      .event-difficulty-card img{
-        position:absolute;
-        inset:0;
-        width:100%;
-        height:100%;
-        object-fit:cover;
-      }
-
-      .event-difficulty-card::after{
-        content:"";
-        position:absolute;
-        inset:0;
-        background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.14),rgba(0,0,0,.44));
-        pointer-events:none;
-      }
-
-      .event-difficulty-name{
-        position:absolute;
-        left:12px;
-        top:7px;
-        z-index:2;
-        font-size:15px;
-        font-weight:1000;
-        color:#fff;
-        text-shadow:0 3px 0 #000;
-        letter-spacing:.04em;
-      }
-
-      .event-difficulty-small{
-        position:absolute;
-        left:12px;
-        bottom:7px;
-        z-index:2;
-        font-size:10px;
-        line-height:1.2;
-        font-weight:1000;
-        color:#dfe8ff;
-        text-shadow:0 2px 0 #000;
-        text-align:left;
-        max-width:76%;
-      }
-
-      .event-difficulty-badge{
-        position:absolute;
-        right:8px;
-        top:7px;
-        z-index:2;
-        padding:4px 7px;
-        border-radius:999px;
-        font-size:10px;
-        font-weight:1000;
-        color:#151000;
-        background:linear-gradient(#ffe66b,#ffb423);
-        box-shadow:0 3px 0 rgba(0,0,0,.35);
-      }
-
-      .event-quest-wrap{
-        display:grid;
-        grid-template-columns:1fr;
-        gap:9px;
-        margin-top:8px;
-        max-height:60vh;
-        overflow:auto;
-        padding-right:2px;
-      }
-
-      .event-quest-box{
-        padding:8px;
-        border-radius:16px;
-        background:rgba(255,255,255,.07);
-        border:2px solid rgba(255,255,255,.15);
-      }
-
-      .event-quest-title{
-        font-size:16px;
-        font-weight:1000;
-        color:#fff;
-        text-shadow:0 2px 0 #000;
-        margin-bottom:7px;
-      }
-
-      .event-quest-label{
-        font-size:10px;
-        font-weight:900;
-        color:#dfe8ff;
-        text-shadow:0 2px 0 #000;
-        margin:-3px 0 7px;
-        line-height:1.35;
-      }
-
-      .event-quest-diff-row{
-        display:grid;
-        grid-template-columns:repeat(3,1fr);
-        gap:6px;
-      }
-
-      .event-quest-diff-btn{
-        position:relative;
-        width:100%;
-        height:48px;
-        overflow:hidden;
-        border:0;
-        border-radius:13px;
-        padding:0;
-        background:rgba(255,255,255,.08);
-        box-shadow:0 3px 0 rgba(0,0,0,.34);
-      }
-
-      .event-quest-diff-btn:disabled{
-        opacity:.45;
-        filter:grayscale(1);
-      }
-
-      .event-quest-diff-btn img{
-        position:absolute;
-        inset:0;
-        width:100%;
-        height:100%;
-        object-fit:cover;
-      }
-
-      .event-quest-diff-btn::after{
-        content:"";
-        position:absolute;
-        inset:0;
-        background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.58));
-        pointer-events:none;
-      }
-
-      .event-quest-diff-name{
-        position:absolute;
-        left:4px;
-        right:4px;
-        bottom:5px;
-        z-index:2;
-        color:#fff;
-        font-size:10px;
-        font-weight:1000;
-        text-align:center;
-        text-shadow:0 2px 0 #000;
-        white-space:nowrap;
-      }
-
-      .event-quest-diff-lock{
-        position:absolute;
-        top:4px;
-        right:4px;
-        z-index:3;
-        padding:2px 5px;
-        border-radius:999px;
-        background:rgba(0,0,0,.68);
-        color:#ffe66b;
-        font-size:8px;
-        font-weight:1000;
-      }
-    `;
-    document.head.appendChild(style);
+  function difficultyByKey(key){
+    key = normalizeDifficultyKey(key);
+    return GOLD_DIFFICULTIES.find(d => d.key === key) || GOLD_DIFFICULTIES[0];
   }
 
-  function injectConfirmStyle(){
-    if (document.getElementById('mobEventConfirmStyle')) return;
-
-    const style = document.createElement('style');
-    style.id = 'mobEventConfirmStyle';
-    style.textContent = `
-      .mob-event-confirm{
-        position:absolute;
-        inset:0;
-        z-index:120;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding:18px;
-        background:rgba(0,0,0,.72);
-      }
-      .mob-event-confirm.hidden{display:none}
-      .mob-event-confirm-card{
-        width:min(90vw,440px);
-        border-radius:28px;
-        padding:18px;
-        background:linear-gradient(180deg,rgba(34,26,70,.98),rgba(6,8,24,.98));
-        border:4px solid rgba(255,255,255,.35);
-        box-shadow:0 18px 48px rgba(0,0,0,.65), inset 0 0 0 2px rgba(255,255,255,.08);
-        text-align:center;
-      }
-      .mob-event-confirm-title{
-        margin:0 0 10px;
-        font-size:26px;
-        font-weight:1000;
-        color:#fff;
-        text-shadow:0 4px 0 #000;
-      }
-      .mob-event-confirm-sub{
-        margin:0 0 14px;
-        font-size:17px;
-        font-weight:1000;
-        color:#ffe66b;
-        line-height:1.45;
-      }
-      .mob-event-confirm-reward{
-        margin:10px 0;
-        padding:12px;
-        border-radius:18px;
-        background:rgba(255,255,255,.10);
-        border:2px solid rgba(255,255,255,.22);
-        color:#fff;
-        font-size:15px;
-        font-weight:900;
-        line-height:1.55;
-      }
-      .mob-event-confirm-extra{
-        margin:8px 0 14px;
-        color:#dfe8ff;
-        font-size:13px;
-        font-weight:800;
-        line-height:1.45;
-      }
-      .mob-event-confirm-actions{
-        display:grid;
-        grid-template-columns:1fr;
-        gap:10px;
-      }
-      .mob-event-confirm-yes,
-      .mob-event-confirm-no{
-        border:0;
-        border-radius:999px;
-        padding:14px 18px;
-        font-size:18px;
-        font-weight:1000;
-        box-shadow:0 5px 0 rgba(0,0,0,.38);
-      }
-      .mob-event-confirm-yes{
-        background:linear-gradient(#9dff73,#26b63e);
-        color:#07370f;
-      }
-      .mob-event-confirm-no{
-        background:linear-gradient(#ffffff,#aeb7c8);
-        color:#182033;
-      }
-    `;
-    document.head.appendChild(style);
+  function getClearState(){
+    return safeJsonLoad(GOLD_CLEAR_KEY, {});
   }
 
-  function ensureConfirmModal(){
-    injectConfirmStyle();
-
-    let modal = qs('mobEventConfirm');
-    if (modal) return modal;
-
-    modal = document.createElement('div');
-    modal.id = 'mobEventConfirm';
-    modal.className = 'mob-event-confirm hidden';
-    modal.innerHTML = `
-      <div class="mob-event-confirm-card">
-        <h2 id="mobEventConfirmTitle" class="mob-event-confirm-title">EVENT</h2>
-        <p id="mobEventConfirmSub" class="mob-event-confirm-sub"></p>
-        <div id="mobEventConfirmReward" class="mob-event-confirm-reward"></div>
-        <div id="mobEventConfirmExtra" class="mob-event-confirm-extra"></div>
-        <div class="mob-event-confirm-actions">
-          <button id="mobEventConfirmYes" class="mob-event-confirm-yes" type="button">はい</button>
-          <button id="mobEventConfirmNo" class="mob-event-confirm-no" type="button">いいえ</button>
-        </div>
-      </div>
-    `;
-
-    const app = qs('app') || document.body;
-    app.appendChild(modal);
-
-    return modal;
+  function saveClearState(state){
+    safeJsonSave(GOLD_CLEAR_KEY, state || {});
   }
 
-  function openConfirm(opt){
-    const modal = ensureConfirmModal();
-    const title = qs('mobEventConfirmTitle');
-    const sub = qs('mobEventConfirmSub');
-    const reward = qs('mobEventConfirmReward');
-    const extra = qs('mobEventConfirmExtra');
-    const yes = qs('mobEventConfirmYes');
-    const no = qs('mobEventConfirmNo');
-
-    if (title) title.textContent = opt.title || 'EVENT';
-    if (sub) sub.textContent = opt.sub || '';
-    if (reward) reward.innerHTML = String(opt.reward || '').replace(/\n/g, '<br>');
-    if (extra) extra.innerHTML = String(opt.extra || '').replace(/\n/g, '<br>');
-
-    if (yes) {
-      yes.textContent = opt.yesText || 'はい';
-      yes.style.display = '';
-    }
-
-    if (no) {
-      no.textContent = opt.noText || 'いいえ';
-      no.style.display = opt.hideNo ? 'none' : '';
-    }
-
-    modal.classList.remove('hidden');
-
-    yes.onclick = function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      modal.classList.add('hidden');
-      if (typeof opt.onYes === 'function') opt.onYes();
-    };
-
-    no.onclick = function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      modal.classList.add('hidden');
-      if (typeof opt.onNo === 'function') opt.onNo();
-    };
+  function hasGoldCleared(key){
+    const state = getClearState();
+    key = normalizeDifficultyKey(key);
+    return !!state[key];
   }
 
-  function showMessage(title, message){
-    openConfirm({
-      title,
-      sub: message,
-      reward: '',
-      extra: '',
-      yesText:'OK',
-      hideNo:true
+  function markGoldCleared(key){
+    key = normalizeDifficultyKey(key);
+    const state = getClearState();
+    state[key] = true;
+    saveClearState(state);
+  }
+
+  function getStats(){
+    return safeJsonLoad(EVENT_STATS_KEY, {
+      goldPlay:0,
+      goldClear:0,
+      goldBestCoin:{}
     });
   }
 
-  function getSave(){
-    if (window.MobShotStorage && window.MobShotStorage.load) return window.MobShotStorage.load();
+  function saveStats(stats){
+    safeJsonSave(EVENT_STATS_KEY, stats || {});
+  }
+
+  function recordGoldClear(key, coin){
+    key = normalizeDifficultyKey(key);
+    const stats = getStats();
+    stats.goldPlay = Number(stats.goldPlay || 0) + 1;
+    stats.goldClear = Number(stats.goldClear || 0) + 1;
+    stats.goldBestCoin = stats.goldBestCoin || {};
+    stats.goldBestCoin[key] = Math.max(Number(stats.goldBestCoin[key] || 0), Number(coin || 0));
+    saveStats(stats);
+  }
+
+  function recordGoldPlay(key){
+    key = normalizeDifficultyKey(key);
+    const stats = getStats();
+    stats.goldPlay = Number(stats.goldPlay || 0) + 1;
+    saveStats(stats);
+  }
+
+  function setCurrentEvent(data){
+    const ev = Object.assign({}, data || {}, {
+      startedAt:now()
+    });
+
+    safeJsonSave(EVENT_SAVE_KEY, ev);
+    window.__mobShotCurrentEvent = clone(ev);
+    return ev;
+  }
+
+  function getCurrentEvent(){
+    if (window.__mobShotCurrentEvent && window.__mobShotCurrentEvent.key) {
+      return clone(window.__mobShotCurrentEvent);
+    }
+
+    const ev = safeJsonLoad(EVENT_SAVE_KEY, null);
+    if (!ev || !ev.key) return null;
+
+    window.__mobShotCurrentEvent = clone(ev);
+    return ev;
+  }
+
+  function clearCurrentEvent(){
+    try {
+      localStorage.removeItem(EVENT_SAVE_KEY);
+    } catch(e) {}
+    window.__mobShotCurrentEvent = null;
+  }
+
+  function recordEventBossKill(name){
+    const stats = getStats();
+    stats.bossKills = stats.bossKills || {};
+    stats.bossKills[name] = Number(stats.bossKills[name] || 0) + 1;
+    saveStats(stats);
+  }
+
+  function getRank(){
+    const save = getMainSave();
+    return Number(save.rank || save.playerRank || save.currentRank || 1);
+  }
+
+  function getMainSave(){
+    if (window.MobShotStorage && window.MobShotStorage.load) {
+      try {
+        return window.MobShotStorage.load() || {};
+      } catch(e) {}
+    }
 
     try {
       return JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
@@ -497,925 +242,418 @@
     }
   }
 
-  function saveMainData(save){
-    if (window.MobShotStorage && window.MobShotStorage.save) {
-      window.MobShotStorage.save(save);
-      return true;
-    }
-
-    try {
-      localStorage.setItem('mobshot_split_v1', JSON.stringify(save));
-      return true;
-    } catch(e) {
-      return false;
-    }
-  }
-
-  function getRank(){
-    return Number(getSave().rank || 1);
-  }
-
-  function isUnlocked(){
-    return getRank() >= 10;
-  }
-
-  function isDifficultyAllCleared(difficultyName){
-    if (!window.MobShotStorage || !window.MobShotStorage.STAGE_LIST || !window.MobShotStorage.load) {
-      return false;
-    }
-
-    const save = window.MobShotStorage.load();
-    const cleared = save.stageProgress && save.stageProgress.clearedStageIds
-      ? save.stageProgress.clearedStageIds
-      : {};
-
-    const targets = window.MobShotStorage.STAGE_LIST.filter(stage => stage.difficulty === difficultyName);
-
-    if (!targets.length) return false;
-
-    return targets.every(stage => !!cleared[stage.id]);
-  }
-
-  function isEventQuestUnlocked(){
-    return isUnlocked() && isDifficultyAllCleared('イージー');
-  }
-
-  function isDoubleBossUnlocked(){
-    return isUnlocked() && isDifficultyAllCleared('ハード');
-  }
-
-  function defaultItems(){
-    return { goldTicket:0, __testInitialized:true };
-  }
-
-  function loadItems(){
-    let items = null;
-
-    try {
-      items = JSON.parse(localStorage.getItem(EVENT_ITEM_KEY)) || null;
-    } catch(e) {
-      items = null;
-    }
-
-    if (!items || !items.__testInitialized) {
-      items = defaultItems();
-      saveItems(items);
-    }
-
-    items.goldTicket = Math.max(0, Number(items.goldTicket || 0));
-    return items;
-  }
-
-  function saveItems(items){
-    try {
-      localStorage.setItem(EVENT_ITEM_KEY, JSON.stringify(items || defaultItems()));
-    } catch(e) {}
-  }
-
-  function defaultStats(){
-    return {
-      goldClear:0,
-      scoreAttackClear:0,
-      doubleBossClear:0,
-      eventQuestClear:0,
-      eventCoinTotal:0,
-      eventBossKills:0,
-      goldTicketTotal:0,
-      goldTicketSpent:0,
-      bossKills:{},
-      doubleClearByDifficulty:{ veryHard:0, inferno:0, legend:0 },
-      doubleStageClear:{},
-      questClearByDifficulty:{ easy:0, veryHard:0, legend:0 },
-      questStageClear:{}
-    };
-  }
-
-  function loadStats(){
-    let stats = null;
-
-    try {
-      stats = JSON.parse(localStorage.getItem(EVENT_STATS_KEY)) || null;
-    } catch(e) {
-      stats = null;
-    }
-
-    stats = Object.assign(defaultStats(), stats || {});
-    stats.bossKills = stats.bossKills || {};
-    stats.doubleClearByDifficulty = Object.assign({ veryHard:0, inferno:0, legend:0 }, stats.doubleClearByDifficulty || {});
-    stats.doubleStageClear = stats.doubleStageClear || {};
-    stats.questClearByDifficulty = Object.assign({ easy:0, veryHard:0, legend:0 }, stats.questClearByDifficulty || {});
-    stats.questStageClear = stats.questStageClear || {};
-
-    return stats;
-  }
-
-  function saveStats(stats){
-    try {
-      localStorage.setItem(EVENT_STATS_KEY, JSON.stringify(stats || defaultStats()));
-    } catch(e) {}
-  }
-
-  function addStat(key, amount){
-    const stats = loadStats();
-    stats[key] = Number(stats[key] || 0) + Number(amount || 0);
-    saveStats(stats);
-    notifyMission();
-    return stats[key];
-  }
-
-  function getGoldTicket(){
-    return 0;
-  }
-
-  function addGoldTicket(amount){
-    return 0;
-  }
-
-  function consumeGoldTicket(amount){
-    return true;
-  }
-
-  function resetTestTickets(){
-    render();
-    window.dispatchEvent(new CustomEvent('mobshot:eventItemsUpdated'));
-  }
-
-  function getDifficulty(key){
-    key = normalizeDifficultyKey(key);
-    return GOLD_DIFFICULTIES.find(d => d.key === key) || GOLD_DIFFICULTIES[0];
-  }
-
-  function getDoubleDifficulty(key){
-    key = normalizeDifficultyKey(key || 'veryHard');
-    return DOUBLE_DIFFICULTIES.find(d => d.key === key) || DOUBLE_DIFFICULTIES[0];
-  }
-
-  function getDoubleStage(id){
-    return DOUBLE_STAGES.find(s => Number(s.id) === Number(id)) || DOUBLE_STAGES[0];
-  }
-
-  function getQuestDifficulty(key){
-    key = normalizeDifficultyKey(key);
-    return QUEST_DIFFICULTIES.find(d => d.key === key) || QUEST_DIFFICULTIES[0];
-  }
-
-  function getQuestStage(id){
-    return QUEST_STAGES.find(s => Number(s.id) === Number(id)) || QUEST_STAGES[0];
-  }
-
-  function loadGoldClear(){
-    try {
-      return JSON.parse(localStorage.getItem(GOLD_CLEAR_KEY)) || {};
-    } catch(e) {
-      return {};
-    }
-  }
-
-  function saveGoldClear(data){
-    try {
-      localStorage.setItem(GOLD_CLEAR_KEY, JSON.stringify(data || {}));
-    } catch(e) {}
-  }
-
-  function hasGoldCleared(difficultyKey){
-    return !!loadGoldClear()[normalizeDifficultyKey(difficultyKey)];
-  }
-
-  function markGoldCleared(difficultyKey){
-    const data = loadGoldClear();
-    data[normalizeDifficultyKey(difficultyKey)] = true;
-    saveGoldClear(data);
-  }
-
-  function loadDoubleClear(){
-    try {
-      return JSON.parse(localStorage.getItem(DOUBLE_CLEAR_KEY)) || {};
-    } catch(e) {
-      return {};
-    }
-  }
-
-  function saveDoubleClear(data){
-    try {
-      localStorage.setItem(DOUBLE_CLEAR_KEY, JSON.stringify(data || {}));
-    } catch(e) {}
-  }
-
-  function doubleClearKey(difficultyKey, stageId){
-    return `${normalizeDifficultyKey(difficultyKey)}_${Number(stageId || 0)}`;
-  }
-
-  function hasDoubleCleared(difficultyKey, stageId){
-    return !!loadDoubleClear()[doubleClearKey(difficultyKey, stageId)];
-  }
-
-  function markDoubleCleared(difficultyKey, stageId){
-    const data = loadDoubleClear();
-    data[doubleClearKey(difficultyKey, stageId)] = true;
-    saveDoubleClear(data);
-  }
-
-  function isDoubleDifficultyUnlocked(difficultyKey){
-    difficultyKey = normalizeDifficultyKey(difficultyKey);
-
-    if (!isDoubleBossUnlocked()) return false;
-
-    if (difficultyKey === 'veryHard') return true;
-
-    if (difficultyKey === 'inferno') {
-      return DOUBLE_STAGES.filter(s => !s.final).every(s => hasDoubleCleared('veryHard', s.id));
-    }
-
-    if (difficultyKey === 'legend') {
-      return DOUBLE_STAGES.filter(s => !s.final).every(s => hasDoubleCleared('inferno', s.id));
-    }
-
-    return false;
-  }
-
-  function questClearKey(difficultyKey, questId){
-    return `${normalizeDifficultyKey(difficultyKey)}_${Number(questId || 0)}`;
-  }
-
-  function hasQuestCleared(difficultyKey, questId){
-    const stats = loadStats();
-    return !!(stats.questStageClear && stats.questStageClear[questClearKey(difficultyKey, questId)]);
-  }
-
-  function canPlayQuest(stage, diff){
-    if (!stage || !diff) return false;
-    return isEventQuestUnlocked() && getRank() >= Number(stage.rank || 10);
-  }
-
-  function consumeCoin(amount){
-    const need = Number(amount || 0);
-    const save = getSave();
-    const coin = Number(save.coin || 0);
-
-    if (coin < need) return false;
-
-    save.coin = coin - need;
-    saveMainData(save);
-
-    if (window.MobShotMain && window.MobShotMain.refreshMainHud) {
-      window.MobShotMain.refreshMainHud();
-    }
-
-    window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
-
-    return true;
-  }
-
-  function recordGoldClear(difficultyKey, coinAmount){
-    const stats = loadStats();
-    stats.goldClear = Number(stats.goldClear || 0) + 1;
-    stats.eventCoinTotal = Number(stats.eventCoinTotal || 0) + Number(coinAmount || 0);
-    saveStats(stats);
-    notifyMission();
-  }
-
-  function recordScoreAttackClear(coinAmount){
-    const stats = loadStats();
-    stats.scoreAttackClear = Number(stats.scoreAttackClear || 0) + 1;
-    stats.eventCoinTotal = Number(stats.eventCoinTotal || 0) + Number(coinAmount || 0);
-    saveStats(stats);
-    notifyMission();
-  }
-
-  function recordDoubleBossClear(difficultyKey, stageId, coinAmount){
-    difficultyKey = normalizeDifficultyKey(difficultyKey);
-
-    const stats = loadStats();
-    const stageKey = doubleClearKey(difficultyKey, stageId);
-
-    stats.doubleBossClear = Number(stats.doubleBossClear || 0) + 1;
-    stats.eventCoinTotal = Number(stats.eventCoinTotal || 0) + Number(coinAmount || 0);
-    stats.doubleClearByDifficulty[difficultyKey] = Number(stats.doubleClearByDifficulty[difficultyKey] || 0) + 1;
-    stats.doubleStageClear[stageKey] = Number(stats.doubleStageClear[stageKey] || 0) + 1;
-
-    saveStats(stats);
-    notifyMission();
-  }
-
-  function recordEventQuestClear(difficultyKey, questId, coinAmount){
-    difficultyKey = normalizeDifficultyKey(difficultyKey);
-
-    const stats = loadStats();
-    const stageKey = questClearKey(difficultyKey, questId);
-
-    stats.eventQuestClear = Number(stats.eventQuestClear || 0) + 1;
-    stats.eventCoinTotal = Number(stats.eventCoinTotal || 0) + Number(coinAmount || 0);
-    stats.questClearByDifficulty[difficultyKey] = Number(stats.questClearByDifficulty[difficultyKey] || 0) + 1;
-    stats.questStageClear[stageKey] = Number(stats.questStageClear[stageKey] || 0) + 1;
-
-    saveStats(stats);
-    notifyMission();
-  }
-
-  function recordEventBossKill(bossName){
-    const stats = loadStats();
-    const name = String(bossName || 'BOSS');
-
-    stats.eventBossKills = Number(stats.eventBossKills || 0) + 1;
-    stats.bossKills[name] = Number(stats.bossKills[name] || 0) + 1;
-
-    saveStats(stats);
-    notifyMission();
-  }
-
-  function notifyMission(){
-    if (window.MobShotMission && window.MobShotMission.refresh) {
-      window.MobShotMission.refresh();
-    }
-
-    window.dispatchEvent(new CustomEvent('mobshot:eventStatsUpdated'));
-  }
-
-  function openModal(){
-    const modal = qs('eventModal');
-    if (!modal) return;
-
-    clearCurrentEvent();
-    injectEventStyle();
-    render();
-    modal.classList.remove('hidden');
-  }
-
-  function closeModal(){
-    const modal = qs('eventModal');
-    if (!modal) return;
-    modal.classList.add('hidden');
-  }
-
-  function rewardTextGold(diff){
-    const cleared = hasGoldCleared(diff.key);
-
-    if (cleared) {
-      return `クリア報酬\n${diff.clearCoin.toLocaleString()} COIN`;
-    }
-
-    return `初回報酬\n${diff.firstCoin.toLocaleString()} COIN + ${diff.firstDiamond} DIAMOND`;
-  }
-
-  function rewardTextDouble(diff, stage){
-    const cleared = hasDoubleCleared(diff.key, stage.id);
-
-    if (cleared) return 'クリア済み\n初回報酬なし';
-
-    const coin = stage.final ? stage.firstCoin : diff.firstCoin;
-    const diamond = stage.final ? stage.firstDiamond : diff.firstDiamond;
-
-    return `初回報酬\n${coin.toLocaleString()} COIN + ${diamond} DIAMOND`;
-  }
-
-  function rewardTextQuest(diff, stage){
-    const cleared = hasQuestCleared(diff.key, stage.id);
-    const rewardText = cleared ? 'クリア済み\n難易度別の特別な石板がドロップ！' : '初回クリア報酬\n難易度別の特別な石板がドロップ！';
-
-    return `${rewardText}\n\n消費: ${Number(diff.cost || 0).toLocaleString()} COIN`;
-  }
-
-  function render(){
-    injectEventStyle();
-
-    const list = qs('eventList');
-    const lock = qs('eventLockText');
-
-    if (!list) return;
-
-    const unlocked = isUnlocked();
-    const eventQuestUnlocked = isEventQuestUnlocked();
-
-    if (lock) {
-      lock.classList.toggle('hidden', unlocked);
-      lock.textContent = `ランク10で解放されます。現在ランク: ${getRank()}`;
-    }
-
-    list.innerHTML = '';
-
-    EVENTS.forEach(ev => {
-      const card = document.createElement('div');
-      card.className = 'event-card';
-
-      const icon = document.createElement('img');
-      icon.className = 'event-icon';
-      icon.src = ev.image;
-      icon.alt = ev.name;
-
-      const info = document.createElement('div');
-      info.className = 'event-info';
-
-      const title = document.createElement('h3');
-      title.textContent = ev.name;
-
-      const desc = document.createElement('p');
-
-      if (ev.key === 'eventQuest' && !eventQuestUnlocked) {
-        desc.textContent = unlocked ? '通常ステージのイージー全クリアで解放 / 難易度別に特別な石板がドロップ！' : 'ランク10で解放';
-      } else {
-        desc.textContent = ev.desc || '';
-      }
-
-      info.appendChild(title);
-      info.appendChild(desc);
-
-      if (ev.key === 'gold') {
-        renderGoldButtons(info, unlocked);
-      } else if (ev.key === 'scoreAttack') {
-        renderScoreAttackButton(info, unlocked);
-      } else if (ev.key === 'eventQuest') {
-        renderQuestButtons(info, eventQuestUnlocked);
-      } else {
-        const btn = document.createElement('button');
-        btn.className = 'event-play-btn';
-        btn.type = 'button';
-        btn.textContent = unlocked ? 'COMING SOON' : 'LOCK';
-        btn.disabled = true;
-        info.appendChild(btn);
-      }
-
-      card.appendChild(icon);
-      card.appendChild(info);
-      list.appendChild(card);
-    });
-  }
-
-  function renderGoldButtons(parent, unlocked){
-    const wrap = document.createElement('div');
-    wrap.className = 'event-difficulty-grid';
-
-    GOLD_DIFFICULTIES.forEach(diff => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'event-difficulty-card';
-      btn.disabled = !unlocked;
-
-      const status =
-        !unlocked ? 'LOCK' :
-        hasGoldCleared(diff.key) ? 'CLEAR済' :
-        'START';
-
-      btn.innerHTML = `
-        <img src="${diff.icon}" alt="${diff.name}">
-        <span class="event-difficulty-name">${diff.name}</span>
-        <span class="event-difficulty-small">${diff.label}</span>
-        <span class="event-difficulty-badge">${status}</span>
-      `;
-
-      btn.addEventListener('click', function(e){
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (!unlocked) return;
-
-        openConfirm({
-          title:'GOLD STAGE',
-          sub:`${diff.name}に出撃しますか？`,
-          reward:rewardTextGold(diff),
-          extra:`チケット消費なし\n自由に挑戦できます。\n\n${diff.label}`,
-          onYes:function(){
-            startEvent('gold', diff.key);
-          }
-        });
-      });
-
-      wrap.appendChild(btn);
+  function startGold(diffKey){
+    const diff = difficultyByKey(diffKey);
+
+    setCurrentEvent({
+      key:'gold',
+      type:'gold',
+      difficulty:diff.key,
+      difficultyKey:diff.key,
+      goldDifficulty:clone(diff),
+      timeLimitSec:Number(diff.timeLimitSec || 30),
+      title:'ゴールドステージ'
     });
 
-    parent.appendChild(wrap);
+    recordGoldPlay(diff.key);
+    closeEventMenu();
+
+    setTimeout(function(){
+      startGameScene();
+    }, 80);
   }
 
-  function renderScoreAttackButton(parent, unlocked){
-    const btn = document.createElement('button');
+  function startGameScene(){
+    if (window.MobShotApp && typeof window.MobShotApp.showGame === 'function') {
+      window.MobShotApp.showGame();
+      return;
+    }
 
-    btn.className = 'event-difficulty-card';
-    btn.type = 'button';
-    btn.disabled = !unlocked;
-    btn.style.marginTop = '8px';
+    if (window.MobShotScene && typeof window.MobShotScene.show === 'function') {
+      window.MobShotScene.show('game');
+      return;
+    }
 
-    btn.innerHTML = `
-      <img src="mt/game2.png" alt="スコアアタック">
-      <span class="event-difficulty-name">挑戦する</span>
-      <span class="event-difficulty-small">歴代ボス連戦 / ハイスコア</span>
-      <span class="event-difficulty-badge">${unlocked ? 'START' : 'LOCK'}</span>
+    if (typeof window.mobshotShowGame === 'function') {
+      window.mobshotShowGame();
+      return;
+    }
+
+    if (typeof window.startGame === 'function') {
+      window.startGame();
+      return;
+    }
+
+    const sortieBtn =
+      document.getElementById('btnSortie') ||
+      document.getElementById('mainSortieBtn') ||
+      document.querySelector('[data-action="sortie"]') ||
+      document.querySelector('[data-nav="game"]');
+
+    if (sortieBtn && typeof sortieBtn.click === 'function') {
+      sortieBtn.click();
+      return;
+    }
+
+    window.dispatchEvent(new CustomEvent('mobshot:startGame', {
+      detail:{ from:'event', key:'gold' }
+    }));
+  }
+
+  function injectStyle(){
+    if (document.getElementById('mobShotEventMenuStyle')) return;
+
+    const style = document.createElement('style');
+    style.id = 'mobShotEventMenuStyle';
+    style.textContent = `
+      #mobShotEventMenu{
+        position:fixed;
+        inset:0;
+        z-index:180000;
+        display:none;
+        align-items:center;
+        justify-content:center;
+        padding:14px;
+        background:rgba(0,0,0,.78);
+        color:#fff;
+        font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      }
+      #mobShotEventMenu.show{
+        display:flex!important;
+      }
+      .mob-event-panel{
+        width:min(94vw,480px);
+        max-height:90vh;
+        overflow:auto;
+        border-radius:28px;
+        padding:16px;
+        background:linear-gradient(160deg,#1b2541,#070d19);
+        border:4px solid rgba(255,255,255,.32);
+        box-shadow:0 24px 70px rgba(0,0,0,.62);
+      }
+      .mob-event-head{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        margin-bottom:12px;
+      }
+      .mob-event-title{
+        font-size:28px;
+        font-weight:1000;
+        color:#ffe66b;
+        text-shadow:0 3px 0 #000;
+      }
+      .mob-event-close{
+        border:0;
+        border-radius:999px;
+        padding:9px 14px;
+        color:#fff;
+        background:#39445f;
+        font-size:14px;
+        font-weight:1000;
+      }
+      .mob-event-main-card{
+        position:relative;
+        overflow:hidden;
+        border-radius:24px;
+        padding:14px;
+        margin-bottom:12px;
+        background:linear-gradient(135deg,rgba(255,218,67,.20),rgba(255,122,26,.08)),linear-gradient(160deg,#263858,#101827);
+        border:3px solid rgba(255,230,107,.45);
+        box-shadow:inset 0 2px 0 rgba(255,255,255,.12),0 8px 0 rgba(0,0,0,.25);
+      }
+      .mob-event-main-top{
+        display:grid;
+        grid-template-columns:72px 1fr;
+        gap:12px;
+        align-items:center;
+      }
+      .mob-event-main-img{
+        width:72px;
+        height:72px;
+        object-fit:contain;
+        filter:drop-shadow(0 5px 0 rgba(0,0,0,.35));
+        animation:mobEventFloat 1.6s ease-in-out infinite;
+      }
+      .mob-event-main-name{
+        font-size:24px;
+        font-weight:1000;
+        color:#ffe66b;
+        text-shadow:0 3px 0 #000;
+      }
+      .mob-event-main-desc{
+        margin-top:4px;
+        font-size:13px;
+        font-weight:900;
+        line-height:1.45;
+        color:rgba(255,255,255,.88);
+      }
+      .mob-event-note{
+        margin:10px 0 12px;
+        padding:10px 12px;
+        border-radius:16px;
+        background:rgba(255,255,255,.07);
+        border:2px solid rgba(255,255,255,.13);
+        font-size:12px;
+        font-weight:900;
+        line-height:1.5;
+        color:rgba(255,255,255,.86);
+      }
+      .mob-gold-diff-list{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:10px;
+      }
+      .mob-gold-diff{
+        display:grid;
+        grid-template-columns:54px 1fr 92px;
+        gap:10px;
+        align-items:center;
+        min-height:82px;
+        border-radius:18px;
+        padding:10px;
+        background:linear-gradient(135deg,rgba(35,52,83,.98),rgba(10,18,32,.98));
+        border:2px solid rgba(255,255,255,.18);
+        box-shadow:0 6px 0 rgba(0,0,0,.24);
+      }
+      .mob-gold-diff img{
+        width:50px;
+        height:50px;
+        object-fit:contain;
+        filter:drop-shadow(0 4px 0 rgba(0,0,0,.28));
+      }
+      .mob-gold-name{
+        font-size:17px;
+        font-weight:1000;
+        line-height:1.1;
+      }
+      .mob-gold-meta{
+        margin-top:5px;
+        font-size:11px;
+        font-weight:900;
+        line-height:1.35;
+        color:rgba(255,255,255,.82);
+      }
+      .mob-gold-start{
+        border:0;
+        border-radius:16px;
+        min-height:42px;
+        padding:8px 4px;
+        color:#2c1600;
+        background:linear-gradient(#ffe66b,#ff9419);
+        box-shadow:0 5px 0 #7c3900;
+        font-size:14px;
+        font-weight:1000;
+      }
+      .mob-event-disabled{
+        margin-top:12px;
+        display:grid;
+        gap:8px;
+      }
+      .mob-event-disabled-card{
+        border-radius:16px;
+        padding:12px;
+        background:rgba(255,255,255,.05);
+        border:2px dashed rgba(255,255,255,.16);
+        color:rgba(255,255,255,.55);
+        font-size:13px;
+        font-weight:900;
+      }
+      @keyframes mobEventFloat{
+        0%,100%{transform:translateY(0)}
+        50%{transform:translateY(-6px)}
+      }
     `;
 
-    btn.addEventListener('click', function(e){
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (!unlocked) return;
-
-      openConfirm({
-        title:'スコアアタック',
-        sub:'ボス連戦に挑戦しますか？',
-        reward:'報酬\nスコア記録のみ',
-        extra:'歴代ボスを順番に撃破します。',
-        onYes:function(){
-          startEvent('scoreAttack', '');
-        }
-      });
-    });
-
-    parent.appendChild(btn);
+    document.head.appendChild(style);
   }
 
-  function renderQuestButtons(parent, unlocked){
-    const wrap = document.createElement('div');
-    wrap.className = 'event-quest-wrap';
+  function ensureEventMenu(){
+    injectStyle();
 
-    QUEST_STAGES.forEach(stage => {
-      const box = document.createElement('div');
-      box.className = 'event-quest-box';
+    let menu = document.getElementById('mobShotEventMenu');
+    if (menu) return menu;
 
-      const title = document.createElement('div');
-      title.className = 'event-quest-title';
-      title.textContent = `${stage.id}. ${stage.title}`;
+    menu = document.createElement('div');
+    menu.id = 'mobShotEventMenu';
+    menu.innerHTML = `
+      <div class="mob-event-panel">
+        <div class="mob-event-head">
+          <div class="mob-event-title">イベント</div>
+          <button class="mob-event-close" type="button" id="mobEventCloseBtn">閉じる</button>
+        </div>
 
-      const label = document.createElement('div');
-      label.className = 'event-quest-label';
-      label.textContent = stage.label || stage.desc || '';
+        <section class="mob-event-main-card">
+          <div class="mob-event-main-top">
+            <img class="mob-event-main-img" src="mt/goldmenu.png" alt="ゴールドステージ" onerror="this.style.display='none'">
+            <div>
+              <div class="mob-event-main-name">ゴールドステージ</div>
+              <div class="mob-event-main-desc">30秒間、ボスと戦いながら宝箱を壊してコインを稼ごう！</div>
+            </div>
+          </div>
+        </section>
 
-      const diffRow = document.createElement('div');
-      diffRow.className = 'event-quest-diff-row';
+        <div class="mob-event-note">
+          クリア条件：30秒生存でクリア。<br>
+          ボスを倒しても終了せず、30秒までコイン稼ぎを続けます。
+        </div>
 
-      box.appendChild(title);
-      box.appendChild(label);
+        <div id="mobGoldDiffList" class="mob-gold-diff-list"></div>
 
-      QUEST_DIFFICULTIES.forEach(diff => {
-        const playOk = unlocked && canPlayQuest(stage, diff);
-        const cleared = hasQuestCleared(diff.key, stage.id);
+        <div class="mob-event-disabled">
+          <div class="mob-event-disabled-card">イベントクエスト：調整のため一時停止中</div>
+          <div class="mob-event-disabled-card">ダブルボス：調整のため一時停止中</div>
+          <div class="mob-event-disabled-card">スコアアタック：調整のため一時停止中</div>
+        </div>
+      </div>
+    `;
 
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'event-quest-diff-btn';
-        btn.disabled = !playOk;
+    document.body.appendChild(menu);
 
-        const status =
-          !unlocked ? 'LOCK' :
-          getRank() < Number(stage.rank || 10) ? `R${stage.rank}` :
-          cleared ? 'CLEAR' :
-          '';
+    const close = document.getElementById('mobEventCloseBtn');
+    if (close) close.addEventListener('click', closeEventMenu);
 
-        btn.innerHTML = `
-          <img src="${diff.icon}" alt="${diff.name}">
-          <span class="event-quest-diff-name">${diff.name}</span>
-          ${status ? `<span class="event-quest-diff-lock">${status}</span>` : ''}
-        `;
+    menu.addEventListener('click', function(e){
+      if (e.target === menu) closeEventMenu();
+    });
 
+    renderGoldDifficulties();
+
+    return menu;
+  }
+
+  function renderGoldDifficulties(){
+    const list = document.getElementById('mobGoldDiffList');
+    if (!list) return;
+
+    list.innerHTML = GOLD_DIFFICULTIES.map(diff => {
+      const first = !hasGoldCleared(diff.key);
+      const rewardText = first
+        ? `初回 ${Number(diff.firstCoin || 0).toLocaleString()} COIN + ${Number(diff.firstDiamond || 0)} DIAMOND`
+        : `クリア ${Number(diff.clearCoin || 0).toLocaleString()} COIN`;
+
+      return `
+        <div class="mob-gold-diff" style="border-color:${diff.color}">
+          <img src="${diff.icon}" alt="${diff.name}" onerror="this.style.display='none'">
+          <div>
+            <div class="mob-gold-name" style="color:${diff.color}">${diff.name}</div>
+            <div class="mob-gold-meta">制限時間 ${diff.timeLimitSec}秒 / ${rewardText}</div>
+          </div>
+          <button class="mob-gold-start" type="button" data-gold-diff="${diff.key}">開始</button>
+        </div>
+      `;
+    }).join('');
+
+    list.querySelectorAll('[data-gold-diff]').forEach(btn => {
+      btn.addEventListener('click', function(){
+        startGold(btn.dataset.goldDiff);
+      });
+    });
+  }
+
+  function openEventMenu(){
+    const rank = getRank();
+    if (rank < 10) {
+      showLockedMessage();
+      return;
+    }
+
+    const menu = ensureEventMenu();
+    renderGoldDifficulties();
+    menu.classList.add('show');
+  }
+
+  function closeEventMenu(){
+    const menu = document.getElementById('mobShotEventMenu');
+    if (menu) menu.classList.remove('show');
+  }
+
+  function showLockedMessage(){
+    const msg = document.createElement('div');
+    msg.style.position = 'fixed';
+    msg.style.left = '50%';
+    msg.style.top = '50%';
+    msg.style.transform = 'translate(-50%,-50%)';
+    msg.style.zIndex = '200000';
+    msg.style.padding = '16px 22px';
+    msg.style.borderRadius = '18px';
+    msg.style.background = 'rgba(0,0,0,.82)';
+    msg.style.border = '3px solid rgba(255,255,255,.35)';
+    msg.style.color = '#ffe66b';
+    msg.style.fontWeight = '1000';
+    msg.style.fontFamily = 'system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    msg.style.textAlign = 'center';
+    msg.style.boxShadow = '0 14px 36px rgba(0,0,0,.45)';
+    msg.textContent = 'イベントはRANK10で解放！';
+
+    document.body.appendChild(msg);
+
+    setTimeout(function(){
+      msg.remove();
+    }, 1200);
+  }
+
+  function bindEventButtons(){
+    const selectors = [
+      '#eventBtn',
+      '#btnEvent',
+      '#mainEventBtn',
+      '#mobShotEventBtn',
+      '[data-action="event"]',
+      '[data-menu="event"]'
+    ];
+
+    selectors.forEach(sel => {
+      document.querySelectorAll(sel).forEach(btn => {
+        if (btn.__mobShotEventBound) return;
+        btn.__mobShotEventBound = true;
         btn.addEventListener('click', function(e){
           e.preventDefault();
-          e.stopPropagation();
-
-          if (!playOk) return;
-
-          const save = getSave();
-          const haveCoin = Number(save.coin || 0);
-          const cost = Number(diff.cost || 0);
-
-          if (haveCoin < cost) {
-            showMessage('COIN不足', `必要COIN: ${cost.toLocaleString()}\n現在COIN: ${haveCoin.toLocaleString()}`);
-            return;
-          }
-
-          openConfirm({
-            title:'イベントクエスト',
-            sub:`${stage.title} / ${diff.name}に出撃しますか？`,
-            reward:rewardTextQuest(diff, stage),
-            extra:`消費COIN: ${cost.toLocaleString()}\n\n${stage.desc || stage.label || ''}`,
-            onYes:function(){
-              startEvent('eventQuest', diff.key, stage.id);
-            }
-          });
+          openEventMenu();
         });
-
-        diffRow.appendChild(btn);
       });
+    });
+  }
 
-      box.appendChild(diffRow);
-      wrap.appendChild(box);
+  function installAutoBinder(){
+    bindEventButtons();
+
+    if (document.__mobShotEventAutoBinder) return;
+    document.__mobShotEventAutoBinder = true;
+
+    const obs = new MutationObserver(function(){
+      bindEventButtons();
     });
 
-    parent.appendChild(wrap);
-  }
-
-  function makeEventData(key, diffKey, selectedStageId){
-    diffKey = normalizeDifficultyKey(diffKey || '');
-
-    const data = {
-      key,
-      difficulty:diffKey,
-      difficultyKey:diffKey,
-      stageId:Number(selectedStageId || 0),
-      startedAt:Date.now()
-    };
-
-    if (key === 'gold') {
-      const diff = getDifficulty(diffKey || 'easy');
-
-      data.goldDifficulty = clone(diff);
-      data.difficultyData = clone(diff);
-    }
-
-    if (key === 'doubleBoss') {
-      const diff = getDoubleDifficulty(diffKey || 'veryHard');
-      const stage = getDoubleStage(selectedStageId || 1);
-
-      data.doubleStageId = Number(stage.id);
-      data.doubleBossStageId = Number(stage.id);
-      data.selectedStageId = Number(stage.id);
-      data.stageId = Number(stage.id);
-
-      data.difficultyData = clone(diff);
-      data.difficultyData.key = diff.key;
-
-      data.stage = clone(stage);
-      data.doubleStage = clone(stage);
-
-      data.areaKey = stage.areaKey;
-      data.areaName = stage.areaName;
-      data.title = stage.title;
-      data.background = stage.background || null;
-      data.bossA = stage.bossA;
-      data.bossB = stage.bossB;
-    }
-
-    if (key === 'eventQuest') {
-      const diff = getQuestDifficulty(diffKey || 'easy');
-      const quest = getQuestStage(selectedStageId || 1);
-
-      data.difficultyData = clone(diff);
-      data.questDifficulty = clone(diff);
-      data.questStageId = Number(quest.id);
-      data.stageId = Number(quest.id);
-      data.stage = clone(quest);
-      data.questStage = clone(quest);
-      data.questEnemyMode = quest.questEnemyMode || 'low';
-      data.gimmickSpawn = quest.gimmickSpawn === true;
-    }
-
-    return data;
-  }
-
-  function startEvent(key, difficultyKey, selectedStageId){
-    difficultyKey = normalizeDifficultyKey(difficultyKey || '');
-
-    if (key === 'doubleBoss' && !isDoubleBossUnlocked()) {
-      showMessage('LOCK', '通常ステージのハードを全てクリアすると解放されます。');
-      return;
-    }
-
-    if (key === 'eventQuest' && !isEventQuestUnlocked()) {
-      showMessage('LOCK', '通常ステージのイージーを全てクリアすると解放されます。');
-      return;
-    }
-
-    if (key === 'eventQuest') {
-      const diff = getQuestDifficulty(difficultyKey || 'easy');
-      const quest = getQuestStage(selectedStageId || 1);
-
-      if (!canPlayQuest(quest, diff)) {
-        showMessage('LOCK', 'このクエストはまだ解放されていません。');
-        return;
-      }
-
-      if (!consumeCoin(Number(diff.cost || 0))) {
-        const save = getSave();
-        showMessage('COIN不足', `必要COIN: ${Number(diff.cost || 0).toLocaleString()}\n現在COIN: ${Number(save.coin || 0).toLocaleString()}`);
-        return;
-      }
-    }
-
-    const eventData = makeEventData(key, difficultyKey, selectedStageId);
-
-    try {
-      localStorage.setItem(EVENT_SAVE_KEY, JSON.stringify(eventData));
-    } catch(e) {}
-
-    closeModal();
-
-    document.querySelectorAll('.screen').forEach(screen => {
-      screen.classList.remove('active');
+    obs.observe(document.documentElement, {
+      childList:true,
+      subtree:true
     });
-
-    const game = qs('gameScreen');
-    if (game) game.classList.add('active');
-
-    if (window.MobShotGame && window.MobShotGame.start) {
-      window.MobShotGame.start();
-    }
   }
 
-  function getCurrentEvent(){
-    try {
-      const raw = localStorage.getItem(EVENT_SAVE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch(e) {
-      return null;
-    }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', installAutoBinder);
+  } else {
+    installAutoBinder();
   }
-
-  function isGoldStage(){
-    const ev = getCurrentEvent();
-    return !!(ev && ev.key === 'gold');
-  }
-
-  function isScoreAttack(){
-    const ev = getCurrentEvent();
-    return !!(ev && ev.key === 'scoreAttack');
-  }
-
-  function isDoubleBoss(){
-    const ev = getCurrentEvent();
-    return !!(ev && ev.key === 'doubleBoss');
-  }
-
-  function isEventQuest(){
-    const ev = getCurrentEvent();
-    return !!(ev && ev.key === 'eventQuest');
-  }
-
-  function getCurrentGoldDifficulty(){
-    const ev = getCurrentEvent();
-    if (!ev || ev.key !== 'gold') return getDifficulty('easy');
-    return getDifficulty(ev.difficulty || ev.difficultyKey || 'easy');
-  }
-
-  function getCurrentDoubleBoss(){
-    const ev = getCurrentEvent();
-
-    if (!ev || ev.key !== 'doubleBoss') {
-      return {
-        difficulty:getDoubleDifficulty('veryHard'),
-        stage:getDoubleStage(1)
-      };
-    }
-
-    const diffKey = normalizeDifficultyKey(ev.difficulty || ev.difficultyKey || 'veryHard');
-    const difficulty = getDoubleDifficulty(diffKey);
-
-    const id = Number(
-      ev.stageId ||
-      ev.doubleStageId ||
-      ev.doubleBossStageId ||
-      ev.selectedStageId ||
-      (ev.stage && ev.stage.id) ||
-      (ev.doubleStage && ev.doubleStage.id) ||
-      1
-    );
-
-    let stage = getDoubleStage(id);
-
-    if (ev.stage && ev.stage.bossA && ev.stage.bossB) {
-      stage = Object.assign({}, stage, ev.stage);
-    }
-
-    if (ev.doubleStage && ev.doubleStage.bossA && ev.doubleStage.bossB) {
-      stage = Object.assign({}, stage, ev.doubleStage);
-    }
-
-    if (ev.bossA) stage.bossA = ev.bossA;
-    if (ev.bossB) stage.bossB = ev.bossB;
-    if (ev.areaKey) stage.areaKey = ev.areaKey;
-    if (ev.areaName) stage.areaName = ev.areaName;
-    if (ev.title) stage.title = ev.title;
-    if (ev.background) stage.background = ev.background;
-
-    return { difficulty, stage };
-  }
-
-  function getCurrentQuest(){
-    const ev = getCurrentEvent();
-    const difficulty = getQuestDifficulty(ev && (ev.difficulty || ev.difficultyKey) ? (ev.difficulty || ev.difficultyKey) : 'easy');
-    const stage = getQuestStage(ev && ev.stageId ? ev.stageId : 1);
-
-    return { difficulty, stage };
-  }
-
-  function clearCurrentEvent(){
-    try {
-      localStorage.removeItem(EVENT_SAVE_KEY);
-    } catch(e) {}
-  }
-
-  function bind(){
-    const openBtn = qs('openEventBtn');
-    const closeBtn = qs('eventCloseBtn');
-    const modal = qs('eventModal');
-
-    if (openBtn && !openBtn.__mobEventBound) {
-      openBtn.__mobEventBound = true;
-
-      openBtn.addEventListener('click', function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        openModal();
-      });
-
-      openBtn.addEventListener('pointerup', function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        openModal();
-      }, { passive:false });
-    }
-
-    if (closeBtn && !closeBtn.__mobEventBound) {
-      closeBtn.__mobEventBound = true;
-
-      closeBtn.addEventListener('click', function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        closeModal();
-      });
-    }
-
-    if (modal && !modal.__mobEventBgBound) {
-      modal.__mobEventBgBound = true;
-
-      modal.addEventListener('click', function(e){
-        if (e.target === modal) closeModal();
-      });
-    }
-  }
-
-  function init(){
-    loadItems();
-    loadStats();
-    injectEventStyle();
-    bind();
-    ensureConfirmModal();
-  }
-
-  document.addEventListener('DOMContentLoaded', init);
-  init();
 
   window.MobShotEvents = {
-    EVENTS,
-    GOLD_DIFFICULTIES,
-    DOUBLE_DIFFICULTIES,
-    DOUBLE_STAGES,
-    QUEST_DIFFICULTIES,
-    QUEST_STAGES,
-    EVENT_SAVE_KEY,
-    GOLD_CLEAR_KEY,
-    DOUBLE_CLEAR_KEY,
-    EVENT_ITEM_KEY,
-    EVENT_STATS_KEY,
-    TEST_GOLD_TICKET_START,
-
-    openModal,
-    closeModal,
-    render,
-    startEvent,
+    openEventMenu,
+    closeEventMenu,
+    startGold,
     getCurrentEvent,
     clearCurrentEvent,
-
-    isGoldStage,
-    isScoreAttack,
-    isDoubleBoss,
-    isEventQuest,
-    isUnlocked,
-    isEventQuestUnlocked,
-    isDoubleBossUnlocked,
-    isDifficultyAllCleared,
-
-    getDifficulty,
-    getCurrentGoldDifficulty,
-    getDoubleDifficulty,
-    getDoubleStage,
-    getCurrentDoubleBoss,
-
-    getQuestDifficulty,
-    getQuestStage,
-    getCurrentQuest,
-    hasQuestCleared,
-
     hasGoldCleared,
     markGoldCleared,
-
-    loadDoubleClear,
-    saveDoubleClear,
-    hasDoubleCleared,
-    markDoubleCleared,
-    isDoubleDifficultyUnlocked,
-
-    loadItems,
-    saveItems,
-    getGoldTicket,
-    addGoldTicket,
-    consumeGoldTicket,
-    resetTestTickets,
-
-    loadStats,
-    saveStats,
-    addStat,
     recordGoldClear,
-    recordScoreAttackClear,
-    recordDoubleBossClear,
-    recordEventQuestClear,
+    recordGoldPlay,
     recordEventBossKill,
-
-    makeEventData,
-    normalizeDifficultyKey
+    getGoldDifficulties:function(){
+      return clone(GOLD_DIFFICULTIES);
+    },
+    getGoldDifficulty:function(key){
+      return clone(difficultyByKey(key));
+    }
   };
 })();
