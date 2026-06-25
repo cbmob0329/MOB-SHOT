@@ -2,7 +2,7 @@
 
 (function(){
   const PET_SAVE_KEY = 'mobshot_pet_state_v4';
-  const MAX_LEVEL = 30;
+  const MAX_LEVEL = 50;
   const MAX_EQUIPPED_PETS = 4;
 
   const PET_MASTER = [
@@ -30,9 +30,9 @@
       skillBreakPower:150,
       skillCt:30,
       firstCt:10,
-      skillWideAt:[30],
-      normalWideAt:[10,20],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv5火球+1、Lv10通常ワイド+1、Lv15速度少しUP、Lv20通常ワイド+1、Lv25爆発、Lv30スキルワイド+1・170%×12・弾破壊350'
+      skillWideAt:[30,50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv30スキルワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'mobfrog',
@@ -58,9 +58,9 @@
       skillBreakPower:250,
       skillCt:25,
       firstCt:5,
-      skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv5水弾+1、Lv10通常ワイド+1、Lv15障害物+35%、Lv20通常ワイド+1、Lv25範囲拡大、Lv30 270%×5・障害物400%・弾破壊550'
+      skillWideAt:[50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'mobdenden',
@@ -86,9 +86,9 @@
       skillBreakPower:80,
       skillCt:35,
       firstCt:15,
-      skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv5雷弾+2、Lv10通常ワイド+1、Lv15感電、Lv20通常ワイド+1、Lv25連鎖雷、Lv30 100%×16・弾破壊220'
+      skillWideAt:[50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'mobwolf',
@@ -114,9 +114,9 @@
       skillBreakPower:300,
       skillCt:30,
       firstCt:20,
-      skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv5追尾弾+1、Lv10通常ワイド+1、Lv15ボス特攻+35%、Lv20通常ワイド+1、Lv25追尾強化、Lv30 230%×8・ボス360%・弾破壊700'
+      skillWideAt:[50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'mobslime',
@@ -132,19 +132,24 @@
       atkImage:'atk/miraatk.png',
       htmlBullet:'',
       skillName:'スライムヒール',
-      normalAttackRate:0.45,
-      normalRateRate:0.45,
-      normalBreakPower:100,
-      skillBaseCount:4,
-      skillPowerRate:0.78,
-      skillObstacleRate:0.78,
-      skillBossRate:0.78,
-      skillBreakPower:100,
-      skillCt:32,
-      firstCt:12,
+      normalAttackRate:0.40,
+      normalRateRate:0.42,
+      normalBreakPower:80,
+      skillBaseCount:3,
+      skillPowerRate:0.58,
+      skillObstacleRate:0.58,
+      skillBossRate:0.58,
+      skillBreakPower:80,
+      skillCt:42,
+      firstCt:20,
       skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv1 HP30回復、Lv5回復+20、Lv10通常ワイド+1、Lv15バリア、Lv20通常ワイド+1、Lv25バリアワイド+1、Lv30 140%×6・HP100回復'
+      normalWideAt:[15,30,45],
+      healBase:15,
+      healLv5:20,
+      healLv30:45,
+      healLv50:60,
+      barrierAt:25,
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv1 HP15回復、Lv5 HP20回復、Lv15通常ワイド+1、Lv25小バリア、Lv30 HP45回復、Lv45通常ワイド+1、Lv50 HP60回復'
     },
     {
       key:'mobchibihawk',
@@ -170,9 +175,9 @@
       skillBreakPower:600,
       skillCt:28,
       firstCt:8,
-      skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv5スキル350%、Lv10通常ワイド+1、Lv15クリティカル、Lv20通常ワイド+1、Lv25連射+15%、Lv30 600%×2・弾破壊1000'
+      skillWideAt:[50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'punimobpink',
@@ -198,9 +203,9 @@
       skillBreakPower:120,
       skillCt:40,
       firstCt:12,
-      skillWideAt:[25],
-      normalWideAt:[10,20],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv1コイン2倍、Lv5コイン倍率+0.5、Lv10通常ワイド+1、Lv15宝箱率+15%、Lv20通常ワイド+1、Lv25スキルワイド+1、Lv30 135%×10・コイン2倍'
+      skillWideAt:[25,50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv25スキルワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'minimiramob',
@@ -226,9 +231,9 @@
       skillBreakPower:150,
       skillCt:35,
       firstCt:12,
-      skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'5秒間自身を分身。Lv5分身+1、Lv10通常ワイド+1、Lv15分身威力+15%、Lv20通常ワイド+1、Lv25分身+1、Lv30 175%×10'
+      skillWideAt:[50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'neonkidmob',
@@ -254,9 +259,9 @@
       skillBreakPower:200,
       skillCt:30,
       firstCt:10,
-      skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'3ワイドでネオン弾。Lv5ボム+1、Lv10通常ワイド+1、Lv15貫通、Lv20通常ワイド+1、Lv25発射速度少しUP、Lv30 230%×4'
+      skillWideAt:[50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'minidramob',
@@ -282,9 +287,9 @@
       skillBreakPower:1000,
       skillCt:38,
       firstCt:18,
-      skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'火球を放つ。Lv5火球+1、Lv10通常ワイド+1、Lv15爆発範囲+35%、Lv20通常ワイド+1、Lv25燃焼、Lv30 600%×3・弾破壊1600'
+      skillWideAt:[50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'merurumob',
@@ -310,9 +315,9 @@
       skillBreakPower:250,
       skillCt:36,
       firstCt:14,
-      skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'薔薇弾。Lv5吸収率+2%、Lv10通常ワイド+1、Lv15薔薇+2、Lv20通常ワイド+1、Lv25吸収率+5%、Lv30 270%×6・吸収10%'
+      skillWideAt:[50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'lilmoblilith',
@@ -338,9 +343,9 @@
       skillBreakPower:300,
       skillCt:42,
       firstCt:16,
-      skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'Lv5薔薇+2、Lv10通常ワイド+1、Lv15発射速度少しUP、Lv20通常ワイド+1、Lv25薔薇+3、Lv30 190%×14'
+      skillWideAt:[50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'chibimaohmob',
@@ -366,16 +371,16 @@
       skillBreakPower:800,
       skillCt:45,
       firstCt:20,
-      skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'巨大球。Lv5威力+70%、Lv10通常ワイド+1、Lv15貫通、Lv20通常ワイド+1、Lv25爆発、Lv30 800%×2'
+      skillWideAt:[50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'chibimobtetsu',
       name:'ちびモブテツ',
       role:'防御補助',
-      unlock:'インフェルノ全クリア',
-      unlockType:'infernoClear',
+      unlock:'ベリーハード全クリア',
+      unlockType:'veryHardClear',
       rank:1,
       price:100000,
       implemented:true,
@@ -394,16 +399,16 @@
       skillBreakPower:400,
       skillCt:40,
       firstCt:15,
-      skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'盾3秒。Lv5盾+1秒、Lv10通常ワイド+1、Lv15反撃、Lv20通常ワイド+1、Lv25盾+2秒、Lv30盾6秒'
+      skillWideAt:[50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'chibimobmelt',
       name:'ちびモブメルト',
       role:'障害物破壊',
-      unlock:'インフェルノ全クリア',
-      unlockType:'infernoClear',
+      unlock:'ベリーハード全クリア',
+      unlockType:'veryHardClear',
       rank:1,
       price:100000,
       implemented:true,
@@ -422,16 +427,16 @@
       skillBreakPower:600,
       skillCt:38,
       firstCt:14,
-      skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'Lv5衝撃波+1、Lv10通常ワイド+1、Lv15障害物+70%、Lv20通常ワイド+1、Lv25衝撃波巨大化、Lv30 500%×3・障害物700%'
+      skillWideAt:[50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'wondamob',
       name:'ワンダモブ',
       role:'支援',
-      unlock:'インフェルノ全クリア',
-      unlockType:'infernoClear',
+      unlock:'ベリーハード全クリア',
+      unlockType:'veryHardClear',
       rank:1,
       price:100000,
       implemented:true,
@@ -450,16 +455,16 @@
       skillBreakPower:250,
       skillCt:50,
       firstCt:20,
-      skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'味方連射1.15倍。Lv5連射+8%、Lv10通常ワイド+1、Lv15攻撃+8%、Lv20通常ワイド+1、Lv25攻撃速度+8%、Lv30味方連射1.35倍'
+      skillWideAt:[50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'lilmobnep',
       name:'リルモブネプ',
       role:'範囲殲滅',
-      unlock:'レジェンド全クリア',
-      unlockType:'legendClear',
+      unlock:'インフェルノ全クリア',
+      unlockType:'infernoClear',
       rank:1,
       price:100000,
       implemented:true,
@@ -478,16 +483,16 @@
       skillBreakPower:600,
       skillCt:42,
       firstCt:16,
-      skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'トライデント。Lv5トライデント+1、Lv10通常ワイド+1、Lv15弾サイズ+30%、Lv20通常ワイド+1、Lv25弾速度少しUP、Lv30 360%×5'
+      skillWideAt:[50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'chibiulmob',
       name:'ちびウルモブ',
       role:'最終弾幕',
-      unlock:'レジェンド全クリア',
-      unlockType:'legendClear',
+      unlock:'インフェルノ全クリア',
+      unlockType:'infernoClear',
       rank:1,
       price:100000,
       implemented:true,
@@ -506,16 +511,16 @@
       skillBreakPower:800,
       skillCt:45,
       firstCt:18,
-      skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'Lv5薔薇+2、Lv10通常ワイド+1、Lv15敵弾消し性能、Lv20通常ワイド+1、Lv25薔薇+3、Lv30 270%×13'
+      skillWideAt:[50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     },
     {
       key:'hero',
       name:'あのヒーロー',
       role:'最強万能',
-      unlock:'レジェンド全クリア',
-      unlockType:'legendClear',
+      unlock:'インフェルノ全クリア',
+      unlockType:'infernoClear',
       rank:1,
       price:100000,
       implemented:true,
@@ -534,9 +539,9 @@
       skillBreakPower:3000,
       skillCt:50,
       firstCt:20,
-      skillWideAt:[],
-      normalWideAt:[10,20],
-      growthText:'Lv5追尾+1、Lv10通常ワイド+1、Lv15クリティカル、Lv20通常ワイド+1、Lv25弾サイズ50%UP、Lv30 700%×4・弾破壊2000'
+      skillWideAt:[50],
+      normalWideAt:[10,20,40],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
     }
   ];
 
@@ -698,6 +703,7 @@
     if (pet.unlockType === 'rank') return rank >= Number(pet.rank || 1);
     if (pet.unlockType === 'grassClear') return hasClearedStageId(save, '1-3');
     if (pet.unlockType === 'hardClear') return hasClearedStageId(save, '4-9');
+    if (pet.unlockType === 'veryHardClear') return hasClearedStageId(save, '6-9');
     if (pet.unlockType === 'infernoClear') return hasClearedStageId(save, '8-9');
     if (pet.unlockType === 'legendClear') return hasClearedStageId(save, '14-9');
 
@@ -729,7 +735,9 @@
     if (lv === 4) return 1200;
     if (lv < 10) return 1500 + ((lv - 5) * 500);
     if (lv < 20) return 4000 + ((lv - 10) * 1000);
-    return 14000 + ((lv - 20) * 2000);
+    if (lv < 30) return 14000 + ((lv - 20) * 2000);
+    if (lv < 40) return 34000 + ((lv - 30) * 3000);
+    return 64000 + ((lv - 40) * 5000);
   }
 
   function normalLevelRate(level){
@@ -868,7 +876,7 @@
 
     return `
       <img
-        src="${src}?v=20260624_pet4"
+        src="${src}?v=20260625_pet50"
         alt="${isLocked ? 'LOCK' : pet.name}"
         style="${isLocked ? 'filter:brightness(0) opacity(.75);' : ''}"
         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
@@ -977,7 +985,7 @@
         <div class="pet-card-body">
           <div class="pet-card-name">
             ${displayName}
-            <span>${lockedView ? '' : `Lv${level}`}</span>
+            <span>${lockedView ? '' : `Lv${level}/${MAX_LEVEL}`}</span>
           </div>
 
           <div class="pet-card-desc">${displayRole} / ${displayUnlock}</div>
@@ -991,11 +999,11 @@
           </div>
 
           <div class="pet-card-spec">
-            ${lockedView ? '？？？' : `通常攻撃 ${Math.round(pet.normalAttackRate * 100)}% / 連射 ${Math.round(pet.normalRateRate * 100)}% / 通常ワイド+${normalWideBonus(level, pet)}`}
+            ${lockedView ? '？？？' : `通常攻撃 ${Math.round(pet.normalAttackRate * normalLevelRate(level) * 100)}% / 連射 ${Math.round(pet.normalRateRate * 100)}% / 通常ワイド+${normalWideBonus(level, pet)}`}
           </div>
 
           <div class="pet-card-spec">
-            ${lockedView ? '？？？' : `スキル: ${pet.skillName} / CT${Math.round(skillCooldown(pet, level) * 10) / 10}秒 / 初回${pet.firstCt}秒 / スキルワイド+${skillWideBonus(level, pet)}`}
+            ${lockedView ? '？？？' : `スキル: ${pet.skillName} / 威力倍率${Math.round(skillLevelRate(level) * 100)}% / CT${Math.round(skillCooldown(pet, level) * 10) / 10}秒 / 初回${pet.firstCt}秒 / スキルワイド+${skillWideBonus(level, pet)}`}
           </div>
 
           <div class="pet-card-spec">
