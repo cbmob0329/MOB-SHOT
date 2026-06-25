@@ -302,15 +302,16 @@
     legend: 4
   };
 
-  /*
-    バランス調整：
-    魔王城イージー最大値より、草原ハード開始値が少し上になるように調整。
-    EASY: 1.00 → 2.10
-    HARD: 2.25 → 4.00
-    これで「草原ハード > 魔王城イージー」が成立します。
-  */
-  const DIFFICULTY_BASE_SCALE = [1.00, 2.25, 4.10, 6.30, 8.80];
-  const DIFFICULTY_MAX_SCALE = [2.10, 4.00, 6.20, 8.80, 12.00];
+  const DIFFICULTY_BASE_SCALE = [1.00, 2.35, 4.10, 6.30, 8.80];
+  const DIFFICULTY_MAX_SCALE = [2.20, 4.00, 6.20, 8.80, 12.00];
+
+  const HP_COMPRESSION = {
+    zako:    [1.00, 1.70, 2.50, 3.50, 5.00, 7.00, 7.60, 8.20, 8.80, 9.50, 10.20, 11.00],
+    midBoss: [1.00, 1.50, 2.00, 2.80, 3.80, 5.00, 5.50, 6.10, 6.80, 7.50, 8.20, 9.00],
+    boss:    [1.00, 1.15, 1.55, 1.90, 2.55, 3.70, 4.20, 4.80, 5.40, 6.00, 6.70, 7.50],
+    gimmick: [1.00, 1.80, 2.60, 3.80, 5.40, 8.20, 8.80, 9.50, 10.20, 11.00, 12.00, 13.00],
+    chest:   [1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00]
+  };
 
   function getStageInfo(){
     if (window.MobShotStorage && window.MobShotStorage.getCurrentStage) {
@@ -363,17 +364,15 @@
     }
 
     const stageNo = Number(info && info.stageNo || 1);
-
     return Math.max(0, (stageNo - 1) % 3);
   }
 
   function progressInDifficulty(info){
     const area = areaIndex(info);
     const slot = slotIndex(info);
-
     const diff = difficultyIndex(info);
-    const areaMax = diff >= 4 ? AREA_ORDER.length - 1 : 5;
 
+    const areaMax = diff >= 4 ? AREA_ORDER.length - 1 : 5;
     const safeArea = Math.max(0, Math.min(area, areaMax));
     const areaRate = areaMax > 0 ? safeArea / areaMax : 0;
     const slotRate = Math.max(0, Math.min(1, slot / 2));
@@ -395,12 +394,24 @@
     return Math.max(1, scale);
   }
 
-  function scaleList(list, scale){
+  function hpCompression(info, kind){
+    const list = HP_COMPRESSION[kind] || HP_COMPRESSION.zako;
+    const idx = areaIndex(info);
+    return Number(list[idx] || list[list.length - 1] || 1);
+  }
+
+  function scaledHp(value, scale, compression){
+    const base = Number(value || 1);
+    const comp = Math.max(1, Number(compression || 1));
+    return Math.max(1, Math.ceil((base / comp) * scale));
+  }
+
+  function scaleList(list, scale, hpComp){
     return list.map(item => {
       const copy = clone(item);
 
       copy.name = fixBossName(copy.name);
-      copy.hp = Math.ceil(Number(copy.hp || 1) * scale);
+      copy.hp = scaledHp(copy.hp, scale, hpComp);
       copy.score = Math.ceil(Number(copy.score || 0) * scale);
       copy.coinMin = Math.ceil(Number(copy.coinMin || 1) * scale);
       copy.coinMax = Math.ceil(Number(copy.coinMax || copy.coinMin || 1) * scale);
@@ -413,12 +424,13 @@
     });
   }
 
-  function scaleBossDef(def, scale, strong){
+  function scaleBossDef(def, scale, strong, hpComp){
     const copy = fixDef(def);
+    const strongMul = strong ? 1.15 : 1;
 
-    copy.hp = Math.ceil(Number(copy.hp || 1) * scale * (strong ? 1.15 : 1));
-    copy.score = Math.ceil(Number(copy.score || 0) * scale * (strong ? 1.15 : 1));
-    copy.coin = Math.ceil(Number(copy.coin || 0) * scale * (strong ? 1.15 : 1));
+    copy.hp = Math.max(1, Math.ceil(scaledHp(copy.hp, scale, hpComp) * strongMul));
+    copy.score = Math.ceil(Number(copy.score || 0) * scale * strongMul);
+    copy.coin = Math.ceil(Number(copy.coin || 0) * scale * strongMul);
     copy.strong = !!strong;
 
     return copy;
@@ -436,9 +448,10 @@
 
   function buildBoss(area, info, scale){
     const strong = !!info.isStrongBoss || !!info.isLegend;
+    const bossHpComp = hpCompression(info, 'boss');
 
     if (area.doubleBoss && Array.isArray(area.doubleBosses) && area.doubleBosses.length >= 2) {
-      const bosses = area.doubleBosses.map(def => scaleBossDef(def, scale, strong));
+      const bosses = area.doubleBosses.map(def => scaleBossDef(def, scale, strong, bossHpComp));
 
       bosses.forEach(boss => {
         boss.isLegendBoss = !!info.isLegend;
@@ -459,7 +472,7 @@
     }
 
     const src = strong ? (area.strongBoss || area.boss) : area.boss;
-    const copy = scaleBossDef(src || area.boss, scale, strong);
+    const copy = scaleBossDef(src || area.boss, scale, strong, bossHpComp);
 
     copy.isLegendBoss = !!info.isLegend;
 
@@ -474,7 +487,13 @@
     const info = getStageInfo();
     const area = AREA_DATA[info.areaKey] || AREA_DATA.grass;
     const scale = totalScale(info);
-    const gimmicks = scaleList(area.gimmicks || [], scale);
+
+    const zakoHpComp = hpCompression(info, 'zako');
+    const midHpComp = hpCompression(info, 'midBoss');
+    const gimmickHpComp = hpCompression(info, 'gimmick');
+    const chestHpComp = hpCompression(info, 'chest');
+
+    const gimmicks = scaleList(area.gimmicks || [], scale, gimmickHpComp);
     const boss = buildBoss(area, info, scale);
 
     D.stage = Object.assign(D.stage || {}, {
@@ -491,12 +510,18 @@
       isLegend: !!info.isLegend,
       isTest: !!info.isTest,
       stagePowerScale: scale,
+      hpCompression: {
+        zako: zakoHpComp,
+        midBoss: midHpComp,
+        boss: hpCompression(info, 'boss'),
+        gimmick: gimmickHpComp
+      },
       doubleBoss: !!boss.doubleBoss
     });
 
     D.enemies = D.enemies || {};
-    D.enemies.zako = scaleList(area.zako || [], scale);
-    D.enemies.midBoss = scaleList(pickMidBoss(area, info), scale);
+    D.enemies.zako = scaleList(area.zako || [], scale, zakoHpComp);
+    D.enemies.midBoss = scaleList(pickMidBoss(area, info), scale, midHpComp);
     D.enemies.boss = boss;
 
     if (boss.doubleBoss && Array.isArray(boss.bosses)) {
@@ -513,7 +538,7 @@
     D.obstacles = gimmicks;
     D.enemies.obstacles = gimmicks;
 
-    D.chests = scaleList(CHESTS, scale);
+    D.chests = scaleList(CHESTS, scale, chestHpComp);
 
     return info;
   }
