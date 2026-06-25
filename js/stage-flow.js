@@ -302,8 +302,15 @@
     legend: 4
   };
 
-  const DIFFICULTY_BASE_SCALE = [1.00, 2.35, 4.10, 6.30, 8.80];
-  const DIFFICULTY_MAX_SCALE = [2.20, 4.00, 6.20, 8.80, 12.00];
+  /*
+    バランス調整：
+    魔王城イージー最大値より、草原ハード開始値が少し上になるように調整。
+    EASY: 1.00 → 2.10
+    HARD: 2.25 → 4.00
+    これで「草原ハード > 魔王城イージー」が成立します。
+  */
+  const DIFFICULTY_BASE_SCALE = [1.00, 2.25, 4.10, 6.30, 8.80];
+  const DIFFICULTY_MAX_SCALE = [2.10, 4.00, 6.20, 8.80, 12.00];
 
   function getStageInfo(){
     if (window.MobShotStorage && window.MobShotStorage.getCurrentStage) {
@@ -351,17 +358,25 @@
   }
 
   function slotIndex(info){
-    const slot = Number(info && (info.areaSlot || info.stageNo) || 1);
-    return Math.max(0, slot - 1);
+    if (info && info.areaSlot != null) {
+      return Math.max(0, Number(info.areaSlot || 1) - 1);
+    }
+
+    const stageNo = Number(info && info.stageNo || 1);
+
+    return Math.max(0, (stageNo - 1) % 3);
   }
 
   function progressInDifficulty(info){
     const area = areaIndex(info);
     const slot = slotIndex(info);
 
-    const areaMax = AREA_ORDER.length - 1;
-    const areaRate = areaMax > 0 ? area / areaMax : 0;
-    const slotRate = slot / 2;
+    const diff = difficultyIndex(info);
+    const areaMax = diff >= 4 ? AREA_ORDER.length - 1 : 5;
+
+    const safeArea = Math.max(0, Math.min(area, areaMax));
+    const areaRate = areaMax > 0 ? safeArea / areaMax : 0;
+    const slotRate = Math.max(0, Math.min(1, slot / 2));
 
     return Math.max(0, Math.min(1, (areaRate * 0.82) + (slotRate * 0.18)));
   }
