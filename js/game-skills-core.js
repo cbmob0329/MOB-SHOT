@@ -57,7 +57,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=skill_split_core_20260618_balance2';
+      image.src = src + '?v=skill_balance_20260626';
       images.set(src, image);
     }
 
