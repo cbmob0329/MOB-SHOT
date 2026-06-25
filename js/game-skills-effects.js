@@ -76,7 +76,7 @@
     if (bullet.type === 'twinMissile') return p * Number((skill.powerRate && skill.powerRate.bullet) || 1.4) + plusDamage(skill);
     if (bullet.type === 'darkFire') return Number(bullet.damage || p * 2.2) + plusDamage(skill);
     if (bullet.type === 'shadowCloneShot') return p * Number(bullet.powerRate || 0.5);
-    if (bullet.type === 'rosePulse') return p * Number((skill.powerRate && skill.powerRate.rose) || 0.9) + plusDamage(skill);
+    if (bullet.type === 'rosePulse') return p * Number((skill.powerRate && skill.powerRate.rose) || 0.55) + plusDamage(skill);
     if (bullet.type === 'darkThunder') return p * Number((skill.powerRate && skill.powerRate.darkThunder) || 2) + plusDamage(skill);
     if (bullet.type === 'darkAura') return Number(bullet.damage || basePlayerPower());
     if (bullet.type === 'neonBomb') return p * Number((skill.powerRate && skill.powerRate.pierce) || 1.4) + plusDamage(skill);
@@ -204,7 +204,7 @@
 
   function fireEnergyRush(skill){
     const st = state();
-    const count = Math.max(1, Number(skill.count || 12));
+    const count = Math.max(1, Number(skill.count || 18));
 
     effects().push({
       type: 'muzzleFlash',
@@ -232,7 +232,7 @@
   }
 
   function fireTwinMissile(skill){
-    const volleyCount = Math.max(1, Number(skill.twinVolleyCount || 2));
+    const volleyCount = Math.max(1, Number(skill.twinVolleyCount || 3));
 
     for (let volley = 0; volley < volleyCount; volley++) {
       fireTwinMissileVolley(skill, volley * 12);
@@ -290,8 +290,8 @@
     effects().push({
       type: 'arcaneBarrier',
       skill,
-      timer: Math.floor(Number(skill.duration || 5) * 60),
-      damage: Number(skill.barrierDamage || 0),
+      timer: Math.floor(Number(skill.duration || 6) * 60),
+      damage: Number(skill.barrierDamage || 2),
       hitCd: 0,
       rot: 0,
       rot2: 0,
@@ -302,14 +302,16 @@
   function startDarkPower(skill){
     const st = state();
 
-    effects().push({
+    const effect = {
       type: 'darkPower',
       skill,
-      timer: Math.floor(Number(skill.duration || 6) * 60),
-      attackAdd: Number(skill.darkPowerAttackAdd || 4),
+      timer: Math.floor(Number(skill.duration || 4) * 60),
+      attackAdd: Number(skill.darkPowerAttackAdd || 3),
       ghostTick: 0,
-      darkFireCd: 0
-    });
+      darkFireDone: true
+    };
+
+    effects().push(effect);
 
     effects().push({
       type: 'darkBurst',
@@ -317,6 +319,8 @@
       y: st.player.y,
       timer: 36
     });
+
+    fireDarkFire(effect);
   }
 
   function fireDarkFire(effect){
@@ -375,9 +379,9 @@
       skill,
       x: st.player.x,
       y: st.player.y,
-      amount: Math.ceil(Number(skill.healAmount || 50)),
+      amount: Math.ceil(Number(skill.healAmount || 70)),
       tick: 0,
-      interval: Math.floor(Number(skill.healInterval || 2) * 60),
+      interval: Math.floor(Number(skill.healInterval || 1.5) * 60),
       timer: Math.floor(Number(skill.duration || 10) * 60),
       total: Math.floor(Number(skill.duration || 10) * 60),
       leaves: makeLeaves(st.player.x, st.player.y, 24)
@@ -557,12 +561,12 @@
 
   function fireMiraPoison(skill){
     const st = state();
-    const count = 5;
+    const count = Math.max(5, Number(skill.count || 5));
     const spread = Math.PI * 0.46;
     const base = -Math.PI / 2;
 
     for (let i = 0; i < count; i++) {
-      const angle = base + (i - (count - 1) / 2) * (spread / (count - 1));
+      const angle = base + (i - (count - 1) / 2) * (spread / Math.max(1, count - 1));
 
       bullets().push({
         type: 'miraPoison',
@@ -596,8 +600,8 @@
       y: p.y - 92,
       vx: 0,
       vy: -2,
-      timer: Math.floor(Number(skill.duration || 5) * 60),
-      total: Math.floor(Number(skill.duration || 5) * 60),
+      timer: Math.floor(Number(skill.duration || 8) * 60),
+      total: Math.floor(Number(skill.duration || 8) * 60),
       size: Number(skill.bulletSize || 70),
       target: findStrongestTarget(),
       hitMap: {},
@@ -646,20 +650,13 @@
             timer: 18
           });
         }
-
-        effect.darkFireCd--;
-
-        if (effect.darkFireCd <= 0) {
-          effect.darkFireCd = Math.max(1, Number(effect.skill.darkFireInterval || 64));
-          fireDarkFire(effect);
-        }
       }
 
       if (effect.type === 'rosePulse') {
         effect.tick--;
 
         if (effect.tick <= 0) {
-          effect.tick = 12;
+          effect.tick = 22;
           fireRoseBullet(effect.skill);
         }
       }
@@ -681,9 +678,9 @@
         effect.tick--;
 
         if (effect.tick <= 0) {
-          effect.tick = Math.max(1, Number(effect.interval || 120));
+          effect.tick = Math.max(1, Number(effect.interval || 90));
 
-          const amount = Math.ceil(Number(effect.amount || 50));
+          const amount = Math.ceil(Number(effect.amount || 70));
           st.hp = Math.min(st.maxHp, Number(st.hp || 0) + amount);
 
           effects().push({
@@ -905,7 +902,7 @@
       }
 
       if (bullet.type === 'rosePulse') {
-        damageEntity(e, playerPower() * Number((bullet.skill.powerRate && bullet.skill.powerRate.rose) || 0.9) + plusDamage(bullet.skill));
+        damageEntity(e, playerPower() * Number((bullet.skill.powerRate && bullet.skill.powerRate.rose) || 0.55) + plusDamage(bullet.skill));
         effects().push({ type:'roseHit', x:bullet.x, y:bullet.y, timer:16 });
         bullet.dead = true;
         break;
@@ -989,7 +986,7 @@
   }
 
   function smallExplode(x, y, skill){
-    const radius = Number(skill.explosionRange || 100);
+    const radius = Number(skill.explosionRange || 115);
     const damage = playerPower() * Number((skill.powerRate && skill.powerRate.explosion) || 0.65) + plusDamage(skill);
 
     effects().push({ type:'smallExplosion', x, y, radius, timer:20 });
@@ -1111,9 +1108,10 @@
 
   function addMiraPoison(entity, skill){
     entity.__miraPoison = {
-      timer: Math.floor(Number(skill.duration || 4) * 60),
-      tick: Math.floor(Number(skill.poisonTick || 2) * 60),
-      damage: playerPower() * Number((skill.powerRate && skill.powerRate.poison) || 2.2),
+      timer: Math.floor(Number(skill.duration || 6) * 60),
+      tick: Math.floor(Number(skill.poisonTick || 1.5) * 60),
+      interval: Math.floor(Number(skill.poisonTick || 1.5) * 60),
+      damage: playerPower() * Number((skill.powerRate && skill.powerRate.poison) || 2.6),
       spark: 0
     };
   }
@@ -1159,7 +1157,7 @@
         }
 
         if (e.__miraPoison.tick <= 0) {
-          e.__miraPoison.tick = Math.floor(Number(e.__miraPoison.interval || 120));
+          e.__miraPoison.tick = Math.floor(Number(e.__miraPoison.interval || 90));
           damageEntity(e, e.__miraPoison.damage);
           effects().push({ type:'miraPoisonHit', x:e.x, y:e.y, timer:18 });
         }
