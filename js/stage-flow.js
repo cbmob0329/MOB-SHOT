@@ -302,6 +302,63 @@
     legend: 4
   };
 
+  const DIFFICULTY_KEY = ['easy', 'hard', 'veryHard', 'inferno', 'legend'];
+
+  /*
+    ステージ倍率テーブル。
+    ここだけ見れば、どのステージがどれくらい強いか分かる形。
+
+    注意：
+    元の敵HPはエリアごとに違うため、同じ倍率でも魔王城の敵は草原より硬い。
+    今回はAI・当たり判定・戦闘処理には触らず、全カテゴリへ同じ倍率を掛ける安全寄りの調整。
+  */
+  const STAGE_SCALE_TABLE = {
+    easy: {
+      grass:  [1.00, 1.08, 1.16],
+      desert: [1.22, 1.30, 1.38],
+      town:   [1.45, 1.54, 1.63],
+      neon:   [1.72, 1.82, 1.92],
+      magma:  [2.02, 2.13, 2.24],
+      castle: [1.18, 1.26, 1.34]
+    },
+
+    hard: {
+      grass:  [4.90, 5.15, 5.40],
+      desert: [4.35, 4.55, 4.75],
+      town:   [3.80, 4.00, 4.20],
+      neon:   [3.25, 3.45, 3.65],
+      magma:  [2.75, 2.95, 3.15],
+      castle: [2.10, 2.30, 2.50]
+    },
+
+    veryHard: {
+      grass:  [6.20, 6.50, 6.80],
+      desert: [6.00, 6.30, 6.60],
+      town:   [5.80, 6.10, 6.40],
+      neon:   [5.60, 5.90, 6.20],
+      magma:  [5.40, 5.70, 6.00],
+      castle: [4.90, 5.20, 5.50]
+    },
+
+    inferno: {
+      grass:  [8.00, 8.35, 8.70],
+      desert: [8.10, 8.45, 8.80],
+      town:   [8.20, 8.60, 9.00],
+      neon:   [8.50, 8.95, 9.40],
+      magma:  [8.90, 9.35, 9.80],
+      castle: [9.20, 9.70, 10.20]
+    },
+
+    legend: {
+      prison:      [10.80, 11.30, 11.80],
+      matrix:      [12.20, 12.80, 13.40],
+      seaRail:     [13.70, 14.30, 14.90],
+      neonHighway: [15.20, 15.90, 16.60],
+      makai:       [17.20, 18.00, 18.80],
+      last:        [19.50, 20.40, 21.30]
+    }
+  };
+
   const DIFFICULTY_BASE_SCALE = [1.00, 2.35, 4.10, 6.30, 8.80];
   const DIFFICULTY_MAX_SCALE = [2.20, 4.00, 6.20, 8.80, 12.00];
 
@@ -340,6 +397,11 @@
     return 0;
   }
 
+  function difficultyKey(info){
+    const idx = difficultyIndex(info);
+    return DIFFICULTY_KEY[idx] || 'easy';
+  }
+
   function areaIndex(info){
     const key = info && info.areaKey;
     const found = AREA_ORDER.indexOf(key);
@@ -351,8 +413,12 @@
   }
 
   function slotIndex(info){
-    const slot = Number(info && (info.areaSlot || info.stageNo) || 1);
-    return Math.max(0, slot - 1);
+    if (info && info.areaSlot != null) {
+      return Math.max(0, Math.min(2, Number(info.areaSlot || 1) - 1));
+    }
+
+    const stageNo = Number(info && info.stageNo || 1);
+    return Math.max(0, Math.min(2, (stageNo - 1) % 3));
   }
 
   function progressInDifficulty(info){
@@ -366,13 +432,38 @@
     return Math.max(0, Math.min(1, (areaRate * 0.82) + (slotRate * 0.18)));
   }
 
-  function totalScale(info){
+  function curveScale(info){
     const diff = difficultyIndex(info);
     const base = DIFFICULTY_BASE_SCALE[diff] || 1;
     const max = DIFFICULTY_MAX_SCALE[diff] || base;
     const progress = progressInDifficulty(info);
 
-    let scale = base + ((max - base) * progress);
+    return base + ((max - base) * progress);
+  }
+
+  function tableScale(info){
+    const diffKey = difficultyKey(info);
+    const areaKey = info && info.areaKey;
+    const slot = slotIndex(info);
+
+    const diffTable = STAGE_SCALE_TABLE[diffKey];
+    if (!diffTable) return null;
+
+    const areaTable = diffTable[areaKey];
+    if (!areaTable) return null;
+
+    const value = Number(areaTable[slot]);
+    if (!Number.isFinite(value)) return null;
+
+    return value;
+  }
+
+  function totalScale(info){
+    let scale = tableScale(info);
+
+    if (scale == null) {
+      scale = curveScale(info);
+    }
 
     if (info.isStrongBoss) scale += 0.18;
     if (info.isLegend) scale += 0.35;
