@@ -1,7 +1,7 @@
-'use strict';
+　'use strict';
 
 (function(){
-  const SAVE_KEY = 'mobshot_pet_boss_rush_v1';
+  const SAVE_KEY = 'mobshot_pet_boss_rush_v2';
 
   const FALLBACK_ASSET = {
     bg:'sta/backsabaku.png',
@@ -10,133 +10,33 @@
   };
 
   const DIFFICULTIES = [
-    {
-      key:'easy',
-      name:'イージー',
-      icon:'mt/game1.png',
-      hpRate:0.65,
-      atkRate:0.60,
-      rewardCoin:3000,
-      rewardDiamond:1
-    },
-    {
-      key:'hard',
-      name:'ハード',
-      icon:'mt/game2.png',
-      hpRate:1.00,
-      atkRate:1.00,
-      rewardCoin:6000,
-      rewardDiamond:2
-    },
-    {
-      key:'veryhard',
-      name:'ベリーハード',
-      icon:'mt/game3.png',
-      hpRate:1.65,
-      atkRate:1.45,
-      rewardCoin:12000,
-      rewardDiamond:4
-    },
-    {
-      key:'inferno',
-      name:'インフェルノ',
-      icon:'mt/game4.png',
-      hpRate:2.45,
-      atkRate:2.10,
-      rewardCoin:25000,
-      rewardDiamond:8
-    },
-    {
-      key:'legend',
-      name:'レジェンド',
-      icon:'mt/game5.png',
-      hpRate:3.60,
-      atkRate:3.00,
-      rewardCoin:50000,
-      rewardDiamond:15
-    }
+    { key:'easy', name:'イージー', icon:'mt/game1.png', hpRate:0.65, atkRate:0.60, rewardCoin:3000, rewardDiamond:1 },
+    { key:'hard', name:'ハード', icon:'mt/game2.png', hpRate:1.00, atkRate:1.00, rewardCoin:6000, rewardDiamond:2 },
+    { key:'veryhard', name:'ベリーハード', icon:'mt/game3.png', hpRate:1.65, atkRate:1.45, rewardCoin:12000, rewardDiamond:4 },
+    { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', hpRate:2.45, atkRate:2.10, rewardCoin:25000, rewardDiamond:8 },
+    { key:'legend', name:'レジェンド', icon:'mt/game5.png', hpRate:3.60, atkRate:3.00, rewardCoin:50000, rewardDiamond:15 }
   ];
 
   const BOSS_WAVES = [
     {
       title:'TAG BOSS 1',
       bosses:[
-        {
-          key:'hawk',
-          name:'ホークモブ',
-          image:'boss/hawks.png',
-          atkImage:'atk/hawkatk.png',
-          hp:1200,
-          power:12,
-          moveSpeed:0.020,
-          shotCd:92,
-          pattern:'spread'
-        },
-        {
-          key:'mira',
-          name:'ミラモブ',
-          image:'boss/miraboss.png',
-          atkImage:'atk/miraatk.png',
-          hp:1350,
-          power:14,
-          moveSpeed:0.018,
-          shotCd:105,
-          pattern:'aim'
-        }
+        { key:'hawk', name:'ホークモブ', image:'boss/hawks.png', atkImage:'atk/hawkatk.png', hp:1200, power:12, moveSpeed:0.020, shotCd:92, pattern:'spread' },
+        { key:'mira', name:'ミラモブ', image:'boss/miraboss.png', atkImage:'atk/miraatk.png', hp:1350, power:14, moveSpeed:0.018, shotCd:105, pattern:'aim' }
       ]
     },
     {
       title:'TAG BOSS 2',
       bosses:[
-        {
-          key:'dragoon2',
-          name:'ドラゴンモブⅡ',
-          image:'boss/bossdragoon2.png',
-          atkImage:'atk/dragon.png',
-          hp:2100,
-          power:22,
-          moveSpeed:0.016,
-          shotCd:118,
-          pattern:'heavy'
-        },
-        {
-          key:'neon2',
-          name:'ネオンモブⅡ',
-          image:'boss/bossneon2.png',
-          atkImage:'atk/kaminari.png',
-          hp:1950,
-          power:20,
-          moveSpeed:0.024,
-          shotCd:82,
-          pattern:'random'
-        }
+        { key:'dragoon2', name:'ドラゴンモブⅡ', image:'boss/bossdragoon2.png', atkImage:'atk/dragon.png', hp:2100, power:22, moveSpeed:0.016, shotCd:118, pattern:'heavy' },
+        { key:'neon2', name:'ネオンモブⅡ', image:'boss/bossneon2.png', atkImage:'atk/kaminari.png', hp:1950, power:20, moveSpeed:0.024, shotCd:82, pattern:'random' }
       ]
     },
     {
       title:'FINAL TAG BOSS',
       bosses:[
-        {
-          key:'lilith',
-          name:'モブリリス',
-          image:'boss/bossriris.png',
-          atkImage:'atk/atkriri.png',
-          hp:2700,
-          power:28,
-          moveSpeed:0.020,
-          shotCd:86,
-          pattern:'rose'
-        },
-        {
-          key:'maoh',
-          name:'モブ魔王',
-          image:'boss/bossmaoh.png',
-          atkImage:'atk/atkmaoh.png',
-          hp:3300,
-          power:34,
-          moveSpeed:0.017,
-          shotCd:115,
-          pattern:'maoh'
-        }
+        { key:'lilith', name:'モブリリス', image:'boss/bossriris.png', atkImage:'atk/atkriri.png', hp:2700, power:28, moveSpeed:0.020, shotCd:86, pattern:'rose' },
+        { key:'maoh', name:'モブ魔王', image:'boss/bossmaoh.png', atkImage:'atk/atkmaoh.png', hp:3300, power:34, moveSpeed:0.017, shotCd:115, pattern:'maoh' }
       ]
     }
   ];
@@ -166,50 +66,40 @@
     bossBullets:[],
     particles:[],
     texts:[],
-    support:{
-      rapid:1,
-      power:1,
-      shield:0,
-      coin:1
-    },
-    stats:{
-      damage:0,
-      petLost:0,
-      bossKilled:0,
-      clear:false
-    }
+    support:{ rapid:1, power:1, shield:0, coin:1 },
+    stats:{ damage:0, petLost:0, bossKilled:0, clear:false }
   };
 
-  function $(id){
-    return document.getElementById(id);
-  }
-
-  function rand(a,b){
-    return a + Math.random() * (b - a);
-  }
-
-  function intRand(a,b){
-    return Math.floor(rand(a, b + 1));
-  }
-
-  function clamp(v,a,b){
-    return Math.max(a, Math.min(b, v));
-  }
+  function $(id){ return document.getElementById(id); }
+  function rand(a,b){ return a + Math.random() * (b - a); }
+  function intRand(a,b){ return Math.floor(rand(a, b + 1)); }
+  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
 
   function img(src){
     if (!src) return null;
-
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260626_pet_boss_rush';
+      image.src = src + '?v=20260626_pet_rush_back_move_aspect';
       images.set(src, image);
     }
-
     return images.get(src);
   }
 
   function imageReady(image){
     return image && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
+  }
+
+  function drawImageContain(ctx, image, cx, cy, maxW, maxH){
+    if (!imageReady(image)) return false;
+
+    const iw = image.naturalWidth || image.width;
+    const ih = image.naturalHeight || image.height;
+    const scale = Math.min(maxW / iw, maxH / ih);
+    const w = iw * scale;
+    const h = ih * scale;
+
+    ctx.drawImage(image, cx - w / 2, cy - h / 2, w, h);
+    return true;
   }
 
   function ensureScreen(){
@@ -237,131 +127,23 @@
     const style = document.createElement('style');
     style.id = 'mobBattleStyle';
     style.textContent = `
-      #battleScreen{
-        position:absolute!important;
-        inset:0!important;
-        width:100vw!important;
-        height:100svh!important;
-        overflow:hidden!important;
-        background:#07101f!important;
-        color:#fff!important;
-      }
+      #battleScreen{position:absolute!important;inset:0!important;width:100vw!important;height:100svh!important;overflow:hidden!important;background:#07101f!important;color:#fff!important}
       #battleScreen.active{display:block!important}
-      #battleCanvas{
-        position:absolute!important;
-        inset:0!important;
-        width:100%!important;
-        height:100%!important;
-        touch-action:none!important;
-        z-index:1!important;
-      }
-      .battle-overlay{
-        position:absolute!important;
-        inset:0!important;
-        z-index:50!important;
-        pointer-events:none!important;
-        font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
-      }
-      .battle-menu{
-        position:absolute!important;
-        inset:0!important;
-        display:flex!important;
-        align-items:center!important;
-        justify-content:center!important;
-        padding:18px!important;
-        background:rgba(0,0,0,.62)!important;
-        pointer-events:auto!important;
-      }
-      .battle-card{
-        width:min(92vw,460px)!important;
-        max-height:88svh!important;
-        overflow:auto!important;
-        border-radius:28px!important;
-        padding:20px!important;
-        text-align:center!important;
-        background:linear-gradient(180deg,rgba(35,28,78,.98),rgba(5,8,22,.98))!important;
-        border:3px solid rgba(255,255,255,.35)!important;
-        box-shadow:0 18px 48px rgba(0,0,0,.7)!important;
-      }
-      .battle-title{
-        margin:0 0 10px!important;
-        font-size:32px!important;
-        font-weight:1000!important;
-        color:#ffe66b!important;
-        text-shadow:0 5px 0 #000!important;
-        line-height:1.05!important;
-      }
-      .battle-help{
-        margin:0 0 16px!important;
-        color:#dfe8ff!important;
-        font-size:13px!important;
-        font-weight:900!important;
-        line-height:1.55!important;
-      }
-      .battle-diff-grid{
-        display:grid!important;
-        grid-template-columns:1fr!important;
-        gap:10px!important;
-        margin-bottom:12px!important;
-      }
-      .battle-diff-btn{
-        display:grid!important;
-        grid-template-columns:58px 1fr 76px!important;
-        gap:10px!important;
-        align-items:center!important;
-        width:100%!important;
-        border:2px solid rgba(255,255,255,.26)!important;
-        border-radius:18px!important;
-        padding:10px!important;
-        background:linear-gradient(135deg,rgba(50,68,105,.96),rgba(13,22,40,.96))!important;
-        color:#fff!important;
-        font-weight:1000!important;
-        text-align:left!important;
-        box-shadow:0 6px 0 rgba(0,0,0,.28)!important;
-      }
-      .battle-diff-btn img{
-        width:54px!important;
-        height:54px!important;
-        object-fit:contain!important;
-      }
-      .battle-diff-name{
-        font-size:18px!important;
-        color:#ffe66b!important;
-      }
-      .battle-diff-sub{
-        margin-top:3px!important;
-        font-size:11px!important;
-        color:#dfe8ff!important;
-        line-height:1.35!important;
-      }
-      .battle-diff-reward{
-        font-size:11px!important;
-        color:#9dff73!important;
-        text-align:right!important;
-        line-height:1.35!important;
-      }
-      .battle-btn{
-        border:0!important;
-        border-radius:999px!important;
-        padding:14px 12px!important;
-        font-size:18px!important;
-        font-weight:1000!important;
-        color:#201100!important;
-        background:linear-gradient(#ffe66b,#ffb423)!important;
-        box-shadow:0 5px 0 rgba(0,0,0,.36)!important;
-      }
-      .battle-btn.blue{
-        color:#fff!important;
-        background:linear-gradient(#60d9ff,#1774ee)!important;
-      }
-      .battle-btn.green{
-        color:#07370f!important;
-        background:linear-gradient(#9dff73,#26b63e)!important;
-      }
-      .battle-btn.red{
-        color:#fff!important;
-        background:linear-gradient(#ff6b6b,#c51d1d)!important;
-      }
+      #battleCanvas{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;touch-action:none!important;z-index:1!important}
+      .battle-overlay{position:absolute!important;inset:0!important;z-index:50!important;pointer-events:none!important;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+      .battle-menu{position:absolute!important;inset:0!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:18px!important;background:rgba(0,0,0,.62)!important;pointer-events:auto!important}
+      .battle-card{width:min(92vw,460px)!important;max-height:88svh!important;overflow:auto!important;border-radius:28px!important;padding:20px!important;text-align:center!important;background:linear-gradient(180deg,rgba(35,28,78,.98),rgba(5,8,22,.98))!important;border:3px solid rgba(255,255,255,.35)!important;box-shadow:0 18px 48px rgba(0,0,0,.7)!important}
+      .battle-title{margin:0 0 10px!important;font-size:32px!important;font-weight:1000!important;color:#ffe66b!important;text-shadow:0 5px 0 #000!important;line-height:1.05!important}
+      .battle-help{margin:0 0 16px!important;color:#dfe8ff!important;font-size:13px!important;font-weight:900!important;line-height:1.55!important}
+      .battle-diff-grid{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;margin-bottom:12px!important}
+      .battle-diff-btn{display:grid!important;grid-template-columns:58px 1fr 76px!important;gap:10px!important;align-items:center!important;width:100%!important;border:2px solid rgba(255,255,255,.26)!important;border-radius:18px!important;padding:10px!important;background:linear-gradient(135deg,rgba(50,68,105,.96),rgba(13,22,40,.96))!important;color:#fff!important;font-weight:1000!important;text-align:left!important;box-shadow:0 6px 0 rgba(0,0,0,.28)!important}
+      .battle-diff-btn img{width:54px!important;height:54px!important;object-fit:contain!important}
+      .battle-diff-name{font-size:18px!important;color:#ffe66b!important}
+      .battle-diff-sub{margin-top:3px!important;font-size:11px!important;color:#dfe8ff!important;line-height:1.35!important}
+      .battle-diff-reward{font-size:11px!important;color:#9dff73!important;text-align:right!important;line-height:1.35!important}
+      .battle-btn{border:0!important;border-radius:999px!important;padding:14px 12px!important;font-size:18px!important;font-weight:1000!important;color:#201100!important;background:linear-gradient(#ffe66b,#ffb423)!important;box-shadow:0 5px 0 rgba(0,0,0,.36)!important}
+      .battle-btn.blue{color:#fff!important;background:linear-gradient(#60d9ff,#1774ee)!important}
+      .battle-btn.green{color:#07370f!important;background:linear-gradient(#9dff73,#26b63e)!important}
     `;
     document.head.appendChild(style);
   }
@@ -374,7 +156,6 @@
     if (!canvas) return;
 
     ctx = canvas.getContext('2d');
-
     resize();
 
     window.removeEventListener('resize', resize);
@@ -396,15 +177,14 @@
     canvas.height = Math.floor(H * DPR);
     ctx.setTransform(DPR,0,0,DPR,0,0);
 
-    layoutPets();
     layoutBosses();
+    assignPetFormationTargets();
   }
 
   function open(){
     initCanvas();
 
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-
     const screen = $('battleScreen');
     if (screen) screen.classList.add('active');
 
@@ -433,7 +213,6 @@
     }
 
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-
     const main = $('mainScreen') || $('mainView');
     if (main) main.classList.add('active');
   }
@@ -555,17 +334,18 @@
 
     list.forEach((pet, index) => {
       const lv = Math.max(1, Math.min(50, Number(pet.level || 1)));
+      const hp = getPetMaxHp(lv, pet);
 
       state.pets.push({
         key:pet.key,
         name:pet.name || 'PET',
-        image:pet.frontImage || pet.backImage || '',
+        image:pet.backImage || pet.frontImage || '',
         atkImage:pet.atkImage || '',
         htmlBullet:pet.htmlBullet || '',
         role:pet.role || '',
         level:lv,
-        maxHp:getPetMaxHp(lv, pet),
-        hp:getPetMaxHp(lv, pet),
+        maxHp:hp,
+        hp,
         power:getPetPower(lv, pet),
         rapid:getPetRapid(lv, pet),
         skillPower:getPetSkillPower(lv, pet),
@@ -575,15 +355,20 @@
         shootCd:20 + index % 12,
         x:W / 2,
         y:H * 0.72,
+        homeX:W / 2,
+        homeY:H * 0.72,
         targetX:W / 2,
         targetY:H * 0.72,
+        aiCd:intRand(20,90),
+        dodgeCd:0,
+        laneShift:rand(-22,22),
         r:20,
         dead:false,
         bob:Math.random() * Math.PI * 2
       });
     });
 
-    layoutPets();
+    assignPetFormationTargets();
   }
 
   function getPetMaxHp(lv, pet){
@@ -612,14 +397,14 @@
     return Math.max(2, 16 * base * (1 + (lv - 1) * 0.032));
   }
 
-  function layoutPets(){
+  function assignPetFormationTargets(){
     const alive = state.pets.filter(p => !p.dead);
     if (!alive.length) return;
 
     const cols = Math.min(5, Math.ceil(Math.sqrt(alive.length)));
     const spacingX = Math.min(72, W / (cols + 1));
     const spacingY = 54;
-    const startY = H * 0.68;
+    const startY = H * 0.67;
 
     alive.forEach((p, i) => {
       const row = Math.floor(i / cols);
@@ -627,8 +412,8 @@
       const countInRow = Math.min(cols, alive.length - row * cols);
       const rowW = (countInRow - 1) * spacingX;
 
-      p.targetX = W / 2 - rowW / 2 + col * spacingX;
-      p.targetY = startY + row * spacingY;
+      p.homeX = W / 2 - rowW / 2 + col * spacingX;
+      p.homeY = startY + row * spacingY;
     });
   }
 
@@ -714,12 +499,39 @@
     const alive = state.pets.filter(p => !p.dead);
     if (!alive.length) return;
 
-    layoutPets();
+    assignPetFormationTargets();
 
-    alive.forEach(p => {
-      p.x += (p.targetX - p.x) * 0.08;
-      p.y += (p.targetY - p.y) * 0.08;
+    alive.forEach((p, index) => {
       p.bob += 0.08;
+      p.aiCd--;
+      p.dodgeCd = Math.max(0, p.dodgeCd - 1);
+
+      const danger = findNearestDanger(p);
+
+      if (danger && danger.dist < 82) {
+        p.dodgeCd = 22;
+        const dir = danger.x < p.x ? 1 : -1;
+        p.targetX = clamp(p.x + dir * rand(42, 76), W * 0.08, W * 0.92);
+        p.targetY = clamp(p.y + rand(-16, 22), H * 0.56, H * 0.92);
+      } else if (p.aiCd <= 0) {
+        const boss = findBossTarget(p);
+        const toward = boss ? clamp(boss.x - p.homeX, -36, 36) * 0.35 : 0;
+
+        p.laneShift = rand(-42, 42) + toward;
+        p.targetX = clamp(p.homeX + p.laneShift, W * 0.08, W * 0.92);
+        p.targetY = clamp(p.homeY + rand(-16, 18), H * 0.56, H * 0.93);
+        p.aiCd = intRand(38, 95);
+      }
+
+      if (p.dodgeCd <= 0) {
+        p.targetX += Math.sin(state.frame * 0.025 + index) * 0.9;
+      }
+
+      p.x += (p.targetX - p.x) * 0.075;
+      p.y += (p.targetY - p.y) * 0.075;
+
+      p.x = clamp(p.x, W * 0.07, W * 0.93);
+      p.y = clamp(p.y, H * 0.54, H * 0.94);
 
       p.shootCd--;
       if (p.shootCd <= 0) {
@@ -733,6 +545,26 @@
         usePetSkill(p);
       }
     });
+  }
+
+  function findNearestDanger(p){
+    let best = null;
+    let bestDist = Infinity;
+
+    state.bossBullets.forEach(b => {
+      if (b.dead) return;
+
+      const dx = b.x - p.x;
+      const dy = b.y - p.y;
+      const d = Math.hypot(dx, dy);
+
+      if (d < bestDist) {
+        bestDist = d;
+        best = b;
+      }
+    });
+
+    return best ? { x:best.x, y:best.y, dist:bestDist } : null;
   }
 
   function findBossTarget(p){
@@ -898,23 +730,13 @@
     const alivePets = state.pets.filter(p => !p.dead);
     if (!alivePets.length) return;
 
-    if (b.pattern === 'spread') {
-      fireBossSpread(b, 4);
-    } else if (b.pattern === 'aim') {
-      fireBossAim(b, 2);
-    } else if (b.pattern === 'heavy') {
-      fireBossSpread(b, 5);
-      fireBossAim(b, 1);
-    } else if (b.pattern === 'random') {
-      fireBossRandom(b, 5);
-    } else if (b.pattern === 'rose') {
-      fireBossSpread(b, 6);
-    } else if (b.pattern === 'maoh') {
-      fireBossSpread(b, 7);
-      fireBossAim(b, 2);
-    } else {
-      fireBossAim(b, 1);
-    }
+    if (b.pattern === 'spread') fireBossSpread(b, 4);
+    else if (b.pattern === 'aim') fireBossAim(b, 2);
+    else if (b.pattern === 'heavy') { fireBossSpread(b, 5); fireBossAim(b, 1); }
+    else if (b.pattern === 'random') fireBossRandom(b, 5);
+    else if (b.pattern === 'rose') fireBossSpread(b, 6);
+    else if (b.pattern === 'maoh') { fireBossSpread(b, 7); fireBossAim(b, 2); }
+    else fireBossAim(b, 1);
   }
 
   function fireBossAim(b, count){
@@ -1010,9 +832,7 @@
         addText('-' + Math.ceil(b.damage), target.x, target.y - 35, b.color);
         burst(target.x, target.y, b.color, b.type === 'skill' ? 12 : 5);
 
-        if (target.hp <= 0) {
-          killBoss(target);
-        }
+        if (target.hp <= 0) killBoss(target);
       }
 
       if (b.life <= 0 || b.x < -80 || b.x > W + 80 || b.y < -80 || b.y > H + 80) {
@@ -1057,9 +877,7 @@
           addText('-' + damage, p.x, p.y - 30, '#ff6b6b');
           burst(p.x, p.y, '#ff6b6b', 8);
 
-          if (p.hp <= 0) {
-            killPet(p);
-          }
+          if (p.hp <= 0) killPet(p);
         }
       });
 
@@ -1152,10 +970,7 @@
       </div>
     `;
 
-    $('mobRushRetryBtn').onclick = function(){
-      beginRush(diff);
-    };
-
+    $('mobRushRetryBtn').onclick = function(){ beginRush(diff); };
     $('mobRushMainBtn').onclick = close;
   }
 
@@ -1164,7 +979,6 @@
       const raw = localStorage.getItem(SAVE_KEY);
       const save = raw ? JSON.parse(raw) : {};
       const old = save[diffKey] || {};
-
       const newDamage = Math.ceil(stats.damage || 0);
       const oldDamage = Number(old.damage || 0);
 
@@ -1190,17 +1004,9 @@
       save.coin = Number(save.coin || 0) + Number(amount || 0);
       window.MobShotStorage.save(save);
     } else {
-      try {
-        save = JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
-      } catch(e) {
-        save = {};
-      }
-
+      try { save = JSON.parse(localStorage.getItem('mobshot_split_v1')) || {}; } catch(e) { save = {}; }
       save.coin = Number(save.coin || 0) + Number(amount || 0);
-
-      try {
-        localStorage.setItem('mobshot_split_v1', JSON.stringify(save));
-      } catch(e) {}
+      try { localStorage.setItem('mobshot_split_v1', JSON.stringify(save)); } catch(e) {}
     }
 
     refreshMainHud();
@@ -1214,17 +1020,9 @@
       save.diamond = Number(save.diamond || 0) + Number(amount || 0);
       window.MobShotStorage.save(save);
     } else {
-      try {
-        save = JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
-      } catch(e) {
-        save = {};
-      }
-
+      try { save = JSON.parse(localStorage.getItem('mobshot_split_v1')) || {}; } catch(e) { save = {}; }
       save.diamond = Number(save.diamond || 0) + Number(amount || 0);
-
-      try {
-        localStorage.setItem('mobshot_split_v1', JSON.stringify(save));
-      } catch(e) {}
+      try { localStorage.setItem('mobshot_split_v1', JSON.stringify(save)); } catch(e) {}
     }
 
     refreshMainHud();
@@ -1244,13 +1042,7 @@
   }
 
   function addText(text, x, y, color){
-    state.texts.push({
-      text,
-      x,
-      y,
-      color:color || '#fff',
-      life:50
-    });
+    state.texts.push({ text, x, y, color:color || '#fff', life:50 });
   }
 
   function updateTexts(){
@@ -1265,8 +1057,7 @@
   function burst(x,y,color,n){
     for (let i = 0; i < n; i++) {
       state.particles.push({
-        x,
-        y,
+        x,y,
         vx:rand(-3,3),
         vy:rand(-3,3),
         color,
@@ -1319,9 +1110,8 @@
   function drawBackground(){
     const bg = img(FALLBACK_ASSET.bg);
 
-    if (imageReady(bg)) {
-      ctx.drawImage(bg, 0, 0, W, H);
-    } else {
+    if (imageReady(bg)) ctx.drawImage(bg, 0, 0, W, H);
+    else {
       ctx.fillStyle = '#d89b45';
       ctx.fillRect(0,0,W,H);
     }
@@ -1371,13 +1161,12 @@
       if (b.dead) return;
 
       const image = img(b.image);
-      const size = 100;
+      const maxW = 108;
+      const maxH = 108;
 
       ctx.save();
 
-      if (imageReady(image)) {
-        ctx.drawImage(image, b.x - size / 2, b.y - size / 2, size, size);
-      } else {
+      if (!drawImageContain(ctx, image, b.x, b.y, maxW, maxH)) {
         ctx.fillStyle = '#bd5bff';
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
@@ -1404,7 +1193,6 @@
 
       const image = img(p.image);
       const y = p.y + Math.sin(p.bob) * 3;
-      const size = 42;
 
       ctx.save();
 
@@ -1413,9 +1201,7 @@
       ctx.ellipse(p.x, y + 20, 18, 6, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      if (imageReady(image)) {
-        ctx.drawImage(image, p.x - size / 2, y - size / 2, size, size);
-      } else {
+      if (!drawImageContain(ctx, image, p.x, y, 42, 42)) {
         ctx.fillStyle = '#fff';
         ctx.strokeStyle = '#111';
         ctx.lineWidth = 3;
@@ -1460,8 +1246,7 @@
       ctx.save();
 
       if (imageReady(image)) {
-        const size = b.type === 'skill' ? b.r * 3.3 : b.r * 2.8;
-        ctx.drawImage(image, b.x - size / 2, b.y - size / 2, size, size);
+        drawImageContain(ctx, image, b.x, b.y, b.type === 'skill' ? b.r * 3.3 : b.r * 2.8, b.type === 'skill' ? b.r * 3.3 : b.r * 2.8);
       } else {
         ctx.fillStyle = b.color;
         ctx.strokeStyle = '#111';
@@ -1492,9 +1277,7 @@
 
       ctx.save();
 
-      if (imageReady(image)) {
-        ctx.drawImage(image, b.x - size / 2, b.y - size / 2, size, size);
-      } else {
+      if (!drawImageContain(ctx, image, b.x, b.y, size, size)) {
         ctx.fillStyle = '#ff5b5b';
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = 2;
@@ -1617,10 +1400,7 @@
     }
   }
 
-  window.MobShotBattle = {
-    open,
-    close
-  };
+  window.MobShotBattle = { open, close };
 
   document.addEventListener('DOMContentLoaded', bindMainButton);
   window.addEventListener('load', bindMainButton);
