@@ -304,63 +304,55 @@
 
   const DIFFICULTY_KEY = ['easy', 'hard', 'veryHard', 'inferno', 'legend'];
 
-  /*
-    ステージ倍率テーブル。
-    ここだけ見れば、どのステージがどれくらい強いか分かる形。
-
-    注意：
-    元の敵HPはエリアごとに違うため、同じ倍率でも魔王城の敵は草原より硬い。
-    今回はAI・当たり判定・戦闘処理には触らず、全カテゴリへ同じ倍率を掛ける安全寄りの調整。
-  */
   const STAGE_SCALE_TABLE = {
     easy: {
-      grass:  [1.00, 1.08, 1.16],
-      desert: [1.22, 1.30, 1.38],
-      town:   [1.45, 1.54, 1.63],
-      neon:   [1.72, 1.82, 1.92],
-      magma:  [2.02, 2.13, 2.24],
-      castle: [1.18, 1.26, 1.34]
+      grass:  [1.00, 1.12, 1.25],
+      desert: [1.35, 1.48, 1.62],
+      town:   [1.65, 1.82, 2.00],
+      neon:   [2.05, 2.25, 2.48],
+      magma:  [2.45, 2.70, 2.95],
+      castle: [2.05, 2.25, 2.45]
     },
 
     hard: {
-      grass:  [4.90, 5.15, 5.40],
-      desert: [4.35, 4.55, 4.75],
-      town:   [3.80, 4.00, 4.20],
-      neon:   [3.25, 3.45, 3.65],
-      magma:  [2.75, 2.95, 3.15],
-      castle: [2.10, 2.30, 2.50]
+      grass:  [10.00, 10.60, 11.20],
+      desert: [7.25, 7.80, 8.40],
+      town:   [6.15, 6.65, 7.20],
+      neon:   [5.45, 5.95, 6.50],
+      magma:  [4.95, 5.45, 6.00],
+      castle: [4.45, 4.95, 5.50]
     },
 
     veryHard: {
-      grass:  [6.20, 6.50, 6.80],
-      desert: [6.00, 6.30, 6.60],
-      town:   [5.80, 6.10, 6.40],
-      neon:   [5.60, 5.90, 6.20],
-      magma:  [5.40, 5.70, 6.00],
-      castle: [4.90, 5.20, 5.50]
+      grass:  [16.00, 17.00, 18.00],
+      desert: [12.80, 13.80, 14.80],
+      town:   [10.80, 11.80, 12.80],
+      neon:   [9.50, 10.50, 11.50],
+      magma:  [8.20, 9.20, 10.20],
+      castle: [7.20, 8.20, 9.20]
     },
 
     inferno: {
-      grass:  [8.00, 8.35, 8.70],
-      desert: [8.10, 8.45, 8.80],
-      town:   [8.20, 8.60, 9.00],
-      neon:   [8.50, 8.95, 9.40],
-      magma:  [8.90, 9.35, 9.80],
-      castle: [9.20, 9.70, 10.20]
+      grass:  [24.00, 26.00, 28.00],
+      desert: [18.50, 20.50, 22.50],
+      town:   [15.20, 17.00, 18.80],
+      neon:   [13.00, 14.80, 16.60],
+      magma:  [11.20, 13.00, 14.80],
+      castle: [10.00, 11.80, 13.60]
     },
 
     legend: {
-      prison:      [10.80, 11.30, 11.80],
-      matrix:      [12.20, 12.80, 13.40],
-      seaRail:     [13.70, 14.30, 14.90],
-      neonHighway: [15.20, 15.90, 16.60],
-      makai:       [17.20, 18.00, 18.80],
-      last:        [19.50, 20.40, 21.30]
+      prison:      [8.00, 8.50, 9.00],
+      matrix:      [7.00, 7.60, 8.20],
+      seaRail:     [6.50, 7.10, 7.70],
+      neonHighway: [6.20, 6.80, 7.40],
+      makai:       [6.00, 6.80, 7.60],
+      last:        [5.20, 6.00, 6.80]
     }
   };
 
-  const DIFFICULTY_BASE_SCALE = [1.00, 2.35, 4.10, 6.30, 8.80];
-  const DIFFICULTY_MAX_SCALE = [2.20, 4.00, 6.20, 8.80, 12.00];
+  const DIFFICULTY_BASE_SCALE = [1.00, 10.00, 16.00, 24.00, 8.00];
+  const DIFFICULTY_MAX_SCALE = [2.95, 11.20, 18.00, 28.00, 9.00];
 
   function getStageInfo(){
     if (window.MobShotStorage && window.MobShotStorage.getCurrentStage) {
@@ -389,9 +381,9 @@
 
     const chapter = Number(info && info.chapter || 1);
 
-    if (chapter >= 14) return 4;
-    if (chapter >= 11) return 3;
-    if (chapter >= 7) return 2;
+    if (chapter >= 9) return 4;
+    if (chapter >= 7) return 3;
+    if (chapter >= 5) return 2;
     if (chapter >= 3) return 1;
 
     return 0;
@@ -465,9 +457,6 @@
       scale = curveScale(info);
     }
 
-    if (info.isStrongBoss) scale += 0.18;
-    if (info.isLegend) scale += 0.35;
-
     return Math.max(1, scale);
   }
 
@@ -492,9 +481,9 @@
   function scaleBossDef(def, scale, strong){
     const copy = fixDef(def);
 
-    copy.hp = Math.ceil(Number(copy.hp || 1) * scale * (strong ? 1.15 : 1));
-    copy.score = Math.ceil(Number(copy.score || 0) * scale * (strong ? 1.15 : 1));
-    copy.coin = Math.ceil(Number(copy.coin || 0) * scale * (strong ? 1.15 : 1));
+    copy.hp = Math.ceil(Number(copy.hp || 1) * scale);
+    copy.score = Math.ceil(Number(copy.score || 0) * scale);
+    copy.coin = Math.ceil(Number(copy.coin || 0) * scale);
     copy.strong = !!strong;
 
     return copy;
