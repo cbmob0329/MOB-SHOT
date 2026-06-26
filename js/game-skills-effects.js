@@ -1328,7 +1328,7 @@
       hero.y += hero.vy;
 
       getBreakableEnemyBullets().forEach(e => {
-        const hit = Math.hypot(hero.x - e.x, hero.y - e.y) <= enemyBulletBreakRadius(e) + 38;
+        const hit = Math.hypot(hero.x - e.x, hero.y - e.y) <= enemyBulletBreakRadius(e) + 58;
         if (!hit) return;
 
         const key = entityHitKey(e);
@@ -1346,7 +1346,7 @@
         if (!hit) return;
 
         const key = entityHitKey(e);
-        const interval = Math.floor(Number(hero.skill.heroHitInterval || 2.4) * 60);
+        const interval = Math.floor(Number(hero.skill.heroHitInterval || 2.0) * 60);
 
         if (canIntervalHit(hero.hitMap, key, interval)) {
           damageEntity(e, playerPower() * Number((hero.skill.powerRate && hero.skill.powerRate.hero) || 2.65) + plusDamage(hero.skill));
