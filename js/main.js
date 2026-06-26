@@ -130,6 +130,7 @@
     style.textContent = `
       .player-showcase{isolation:isolate}
       .main-stone-display-layer{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:visible}
+      .main-soul-orbit-layer{position:absolute;inset:0;z-index:7;pointer-events:none;overflow:visible}
       #mainPlayer{z-index:5}
       #mainPetFloatLayer,.main-pet-float-layer{z-index:6;pointer-events:none}
 
@@ -143,6 +144,76 @@
       .main-stone-display-item img{width:92px;height:116px;object-fit:contain}
 
       @keyframes mobStoneFloat{0%{margin-top:8px}50%{margin-top:-10px}100%{margin-top:8px}}
+
+      .main-soul-orbit{
+        position:absolute;
+        left:50%;
+        top:48%;
+        width:178px;
+        height:178px;
+        margin-left:-89px;
+        margin-top:-89px;
+        border-radius:50%;
+        animation:mobSoulOrbitSpin 8s linear infinite;
+        transform-origin:center center;
+      }
+      .main-soul-orbit.reverse{
+        animation-direction:reverse;
+        animation-duration:10s;
+      }
+      .main-soul-orbit.slow{
+        animation-duration:12s;
+      }
+      .main-soul-orbit-item{
+        position:absolute;
+        left:50%;
+        top:-8px;
+        width:54px;
+        height:54px;
+        margin-left:-27px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:50%;
+        background:radial-gradient(circle,rgba(255,157,240,.22),rgba(117,75,255,.10) 58%,transparent 70%);
+        filter:drop-shadow(0 7px 0 rgba(0,0,0,.25)) drop-shadow(0 0 10px rgba(255,157,240,.38));
+        animation:mobSoulItemFloat 2.2s ease-in-out infinite;
+      }
+      .main-soul-orbit-item img{
+        width:46px;
+        height:46px;
+        object-fit:contain;
+        animation:mobSoulImageCounter 8s linear infinite reverse;
+      }
+      .main-soul-orbit.reverse .main-soul-orbit-item img{
+        animation-name:mobSoulImageCounterReverse;
+        animation-duration:10s;
+      }
+      .main-soul-orbit.slow .main-soul-orbit-item img{
+        animation-duration:12s;
+      }
+      .main-soul-orbit:nth-child(2){transform:rotate(120deg)}
+      .main-soul-orbit:nth-child(3){transform:rotate(240deg)}
+      .main-soul-orbit:nth-child(2) .main-soul-orbit-item{animation-delay:-.7s}
+      .main-soul-orbit:nth-child(3) .main-soul-orbit-item{animation-delay:-1.4s}
+
+      @keyframes mobSoulOrbitSpin{
+        0%{transform:rotate(0deg)}
+        100%{transform:rotate(360deg)}
+      }
+      @keyframes mobSoulItemFloat{
+        0%{margin-top:0;transform:scale(1)}
+        50%{margin-top:-8px;transform:scale(1.08)}
+        100%{margin-top:0;transform:scale(1)}
+      }
+      @keyframes mobSoulImageCounter{
+        0%{transform:rotate(0deg)}
+        100%{transform:rotate(-360deg)}
+      }
+      @keyframes mobSoulImageCounterReverse{
+        0%{transform:rotate(0deg)}
+        100%{transform:rotate(360deg)}
+      }
 
       .main-rank-next-badge{
         position:absolute;left:3vw;right:32vw;top:auto;bottom:calc(11.8svh + 108px);z-index:21;
@@ -220,6 +291,9 @@
         .pet-slot-name{font-size:9px!important}
         .main-float-pet{width:50px!important;height:50px!important;font-size:24px!important}
         .main-float-pet img{width:36px!important;height:36px!important}
+        .main-soul-orbit{width:146px;height:146px;margin-left:-73px;margin-top:-73px}
+        .main-soul-orbit-item{width:46px;height:46px;margin-left:-23px}
+        .main-soul-orbit-item img{width:38px;height:38px}
       }
 
       .mob-rankup-modal,.mob-game-confirm,.mob-admin-pass-modal{
@@ -681,6 +755,11 @@
     applyAdminModeVisuals();
   }
 
+  function getShowcase(){
+    if (!mainScreen) return null;
+    return mainScreen.querySelector('.player-showcase') || mainScreen;
+  }
+
   function ensureMainStoneLayer(){
     injectMainStyle();
 
@@ -693,10 +772,33 @@
     layer.id = 'mainStoneDisplayLayer';
     layer.className = 'main-stone-display-layer';
 
-    const showcase = mainScreen.querySelector('.player-showcase');
+    const showcase = getShowcase();
 
     if (showcase) {
       showcase.insertBefore(layer, showcase.firstChild);
+    } else {
+      mainScreen.appendChild(layer);
+    }
+
+    return layer;
+  }
+
+  function ensureMainSoulLayer(){
+    injectMainStyle();
+
+    if (!mainScreen) return null;
+
+    let layer = $('mainSoulOrbitLayer');
+    if (layer) return layer;
+
+    layer = document.createElement('div');
+    layer.id = 'mainSoulOrbitLayer';
+    layer.className = 'main-soul-orbit-layer';
+
+    const showcase = getShowcase();
+
+    if (showcase) {
+      showcase.appendChild(layer);
     } else {
       mainScreen.appendChild(layer);
     }
@@ -713,12 +815,29 @@
     return display.filter(no => no).map(no => ({ no, image:`co/co${no}.png` }));
   }
 
+  function fallbackDisplaySouls(){
+    if (!window.MobShotCollection || !window.MobShotCollection.loadDisplayState) return [];
+
+    const state = window.MobShotCollection.loadDisplayState();
+    const display = Array.isArray(state.soulDisplay) ? state.soulDisplay : [];
+
+    return display.filter(no => no).map(no => ({ no, image:`soul/${no}.png` }));
+  }
+
   function getMainDisplayStones(){
     if (window.MobShotCollection && window.MobShotCollection.getDisplayStones) {
       return window.MobShotCollection.getDisplayStones();
     }
 
     return fallbackDisplayStones();
+  }
+
+  function getMainDisplaySouls(){
+    if (window.MobShotCollection && window.MobShotCollection.getDisplaySouls) {
+      return window.MobShotCollection.getDisplaySouls();
+    }
+
+    return fallbackDisplaySouls();
   }
 
   function refreshMainStoneDisplay(){
@@ -744,8 +863,34 @@
     `).join('');
   }
 
+  function refreshMainSoulDisplay(){
+    const layer = ensureMainSoulLayer();
+    if (!layer) return;
+
+    const souls = getMainDisplaySouls();
+
+    if (!souls.length) {
+      layer.innerHTML = '';
+      layer.style.display = 'none';
+      return;
+    }
+
+    layer.style.display = 'block';
+
+    const classes = ['', 'reverse', 'slow'];
+
+    layer.innerHTML = souls.slice(0, 3).map((soul, index) => `
+      <div class="main-soul-orbit ${classes[index] || ''}" style="animation-delay:${index * -2.2}s">
+        <div class="main-soul-orbit-item">
+          <img src="${soul.image}" alt="SOUL" onerror="this.style.display='none'">
+        </div>
+      </div>
+    `).join('');
+  }
+
   function refreshMainVisuals(){
     refreshMainStoneDisplay();
+    refreshMainSoulDisplay();
 
     if (window.MobShotEquip && window.MobShotEquip.updateMainPlayerImage) window.MobShotEquip.updateMainPlayerImage();
     if (window.MobShotPets && window.MobShotPets.renderAll) window.MobShotPets.renderAll();
@@ -1047,6 +1192,15 @@
 
     window.addEventListener('mobshot:collectionDisplayUpdated', function(){
       refreshMainStoneDisplay();
+      refreshMainSoulDisplay();
+    });
+
+    window.addEventListener('mobshot:soulDisplayUpdated', function(){
+      refreshMainSoulDisplay();
+    });
+
+    window.addEventListener('mobshot:soulUpdated', function(){
+      refreshMainSoulDisplay();
     });
 
     window.addEventListener('mobshot:adminModeChanged', function(){
@@ -1069,6 +1223,7 @@
     refreshMainHud,
     refreshMainVisuals,
     refreshMainStoneDisplay,
+    refreshMainSoulDisplay,
     goMain,
     goGame,
     goBattle,
