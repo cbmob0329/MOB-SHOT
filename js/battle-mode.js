@@ -217,7 +217,7 @@
     if (!src) return null;
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260626_pet_modes_ruby_gacha_link';
+      image.src = src + '?v=20260626_pet_modes_retry_fix_patterns';
       images.set(src, image);
     }
     return images.get(src);
@@ -645,6 +645,7 @@
   function clearBattleObjectsOnly(){
     state.enemies.length = 0;
     state.bosses.length = 0;
+    state.pets.length = 0;
     state.petBullets.length = 0;
     state.enemyBullets.length = 0;
     state.particles.length = 0;
@@ -686,7 +687,8 @@
         skillPower:getPetSkillPower(lv, pet, plus),
         skillName:pet.skillName || 'PET SKILL',
         skillCt:Math.max(180, Math.floor(getPetSkillCt(lv, pet, plus) * 60)),
-        skillCd:Math.max(90, Math.floor(Number(pet.firstCt || 8) * 60) + index * 10),
+        skillCd:Math.max(90, Math.floor(Number(pet.firstCt || 8) * 60) + index * 10,
+        ),
         shootCd:20 + index % 12,
         x:W / 2,
         y:H * 0.72,
@@ -828,6 +830,7 @@
       moveCd:intRand(40,120),
       shotCd:intRand(80,160),
       shotMax:type === 'zako' ? 150 : type === 'midBoss' ? 115 : 90,
+      attackIndex:0,
       dead:false,
       bob:Math.random() * Math.PI * 2
     };
@@ -1087,18 +1090,26 @@
       e.moveCd--;
 
       if (e.moveCd <= 0) {
-        const range = e.type === 'zako' ? 42 : 78;
+        const range = e.type === 'zako' ? 58 : e.type === 'midBoss' ? 92 : 118;
         e.targetX = clamp(e.targetX + rand(-range, range), W * 0.12, W * 0.88);
-        e.moveCd = intRand(70, 150);
+        e.targetY = clamp(e.targetY + rand(-18, 18), H * 0.11, H * 0.32);
+        e.moveCd = intRand(e.type === 'zako' ? 58 : 48, e.type === 'zako' ? 130 : 105);
       }
 
-      e.x += (e.targetX - e.x) * (e.type === 'zako' ? 0.025 : 0.018);
-      e.y += (e.targetY + Math.sin(e.bob) * 5 - e.y) * 0.04;
+      e.x += (e.targetX - e.x) * (e.type === 'zako' ? 0.035 : 0.026);
+      e.y += (e.targetY + Math.sin(state.frame * 0.035 + e.bob) * (e.type === 'zako' ? 10 : 14) - e.y) * 0.05;
+
+      if (e.type !== 'zako') {
+        e.x += Math.sin(state.frame * 0.018 + e.bob) * 0.45;
+      }
+
+      e.x = clamp(e.x, W * 0.08, W * 0.92);
+      e.y = clamp(e.y, H * 0.08, H * 0.36);
 
       e.shotCd--;
 
       if (e.shotCd <= 0) {
-        e.shotCd = Math.max(42, e.shotMax - (state.difficulty && state.difficulty.legend ? 16 : 0));
+        e.shotCd = Math.max(38, e.shotMax - (state.difficulty && state.difficulty.legend ? 16 : 0));
         fireEnemy(e, index);
       }
     });
@@ -1108,22 +1119,60 @@
     const alivePets = state.pets.filter(p => !p.dead);
     if (!alivePets.length) return;
 
+    e.attackIndex = Number(e.attackIndex || 0) + 1;
+    const n = e.attackIndex;
+
     if (e.type === 'zako') {
-      fireEnemyAim(e, 1, 2.5);
+      if (n % 4 === 0) fireEnemySpread(e, 3, 2.3);
+      else if (n % 6 === 0) fireEnemyRain(e, 3);
+      else fireEnemyAim(e, 1, 2.6);
+      return;
+    }
+
+    if (e.type === 'midBoss') {
+      if (n % 5 === 0) fireEnemyRing(e, 8, 2.4);
+      else if (n % 3 === 0) fireEnemyRandom(e, 4);
+      else if (n % 2 === 0) fireEnemySpread(e, 5, 2.7);
+      else fireEnemyAim(e, 2, 3.0);
       return;
     }
 
     const pattern = e.pattern || 'boss';
 
-    if (pattern === 'hawk' || pattern === 'hawk2') fireEnemySpread(e, pattern === 'hawk2' ? 5 : 4, 2.8);
-    else if (pattern === 'mira' || pattern === 'mira2') { fireEnemyAim(e, 2, 3.2); fireEnemySlow(e); }
-    else if (pattern === 'guardian' || pattern === 'guardian2') fireEnemyFan(e, pattern === 'guardian2' ? 5 : 3);
-    else if (pattern === 'neon' || pattern === 'neon2') fireEnemyRandom(e, pattern === 'neon2' ? 6 : 4);
-    else if (pattern === 'dragon' || pattern === 'dragon2') { fireEnemySpread(e, pattern === 'dragon2' ? 6 : 4, 3.0); fireEnemyAim(e, 1, 3.5); }
-    else if (pattern === 'lilith') { fireEnemySpread(e, 5, 2.9); fireEnemyRandom(e, 3); }
-    else if (pattern === 'maoh') { fireEnemySpread(e, 7, 3.1); fireEnemyAim(e, 2, 3.4); }
-    else if (pattern === 'mid') { fireEnemySpread(e, 3, 2.7); fireEnemyAim(e, 1, 2.8); }
-    else fireEnemyAim(e, 1, 3.0);
+    if (n % 7 === 0) {
+      fireEnemyRing(e, pattern === 'maoh' || pattern === 'dragon2' ? 14 : 10, 2.5);
+      return;
+    }
+
+    if (n % 5 === 0) {
+      fireEnemyRain(e, pattern === 'neon2' || pattern === 'lilith' ? 8 : 5);
+      return;
+    }
+
+    if (pattern === 'hawk' || pattern === 'hawk2') {
+      if (n % 3 === 0) fireEnemyCross(e, 3.0);
+      else fireEnemySpread(e, pattern === 'hawk2' ? 6 : 4, 3.0);
+    } else if (pattern === 'mira' || pattern === 'mira2') {
+      if (n % 3 === 0) fireEnemyRandom(e, 6);
+      else { fireEnemyAim(e, 2, 3.3); fireEnemySlow(e); }
+    } else if (pattern === 'guardian' || pattern === 'guardian2') {
+      if (n % 3 === 0) fireEnemyWall(e, pattern === 'guardian2' ? 6 : 4);
+      else fireEnemyFan(e, pattern === 'guardian2' ? 6 : 4);
+    } else if (pattern === 'neon' || pattern === 'neon2') {
+      if (n % 3 === 0) fireEnemyRain(e, pattern === 'neon2' ? 9 : 6);
+      else fireEnemyRandom(e, pattern === 'neon2' ? 7 : 5);
+    } else if (pattern === 'dragon' || pattern === 'dragon2') {
+      if (n % 3 === 0) fireEnemyCross(e, 3.4);
+      else { fireEnemySpread(e, pattern === 'dragon2' ? 7 : 5, 3.1); fireEnemyAim(e, 1, 3.7); }
+    } else if (pattern === 'lilith') {
+      if (n % 3 === 0) fireEnemyRain(e, 8);
+      else { fireEnemySpread(e, 7, 2.9); fireEnemyRandom(e, 4); }
+    } else if (pattern === 'maoh') {
+      if (n % 3 === 0) fireEnemyRing(e, 16, 2.7);
+      else { fireEnemySpread(e, 9, 3.2); fireEnemyAim(e, 3, 3.5); }
+    } else {
+      fireEnemyAim(e, 2, 3.0);
+    }
   }
 
   function fireEnemyAim(e, count, speed){
@@ -1152,6 +1201,7 @@
 
   function fireEnemyFan(e, count){
     fireEnemySpread(e, count, 2.7);
+
     setTimeout(function(){
       if (!running || state.screen !== 'battle' || e.dead) return;
       fireEnemySpread(e, count, 3.1);
@@ -1172,6 +1222,71 @@
 
   function fireEnemySlow(e){
     pushEnemyBullet(e, 0, 1.8, 20, Math.ceil(e.power * 1.35));
+  }
+
+  function fireEnemyRing(e, count, speed){
+    const total = Math.max(4, Number(count || 8));
+
+    for (let i = 0; i < total; i++) {
+      const a = (Math.PI * 2) * (i / total);
+      pushEnemyBullet(e, Math.cos(a) * speed, Math.sin(a) * speed, 10);
+    }
+  }
+
+  function fireEnemyCross(e, speed){
+    const dirs = [
+      { x:0, y:1 },
+      { x:-0.65, y:0.85 },
+      { x:0.65, y:0.85 },
+      { x:-0.28, y:1 },
+      { x:0.28, y:1 }
+    ];
+
+    dirs.forEach(d => {
+      const len = Math.max(1, Math.hypot(d.x, d.y));
+      pushEnemyBullet(e, d.x / len * speed, d.y / len * speed, 12);
+    });
+  }
+
+  function fireEnemyWall(e, count){
+    const total = Math.max(3, Number(count || 4));
+    const startX = W * 0.16;
+    const endX = W * 0.84;
+
+    for (let i = 0; i < total; i++) {
+      const t = total <= 1 ? 0.5 : i / (total - 1);
+      const x = startX + (endX - startX) * t;
+
+      state.enemyBullets.push({
+        x,
+        y:e.y + 30,
+        vx:0,
+        vy:2.55,
+        r:11,
+        power:Number(e.power || 10),
+        image:e.atkImage || FALLBACK_ASSET.bossBullet,
+        dead:false,
+        life:220
+      });
+    }
+  }
+
+  function fireEnemyRain(e, count){
+    const total = Math.max(3, Number(count || 5));
+
+    for (let i = 0; i < total; i++) {
+      state.enemyBullets.push({
+        x:rand(W * 0.10, W * 0.90),
+        y:rand(H * 0.05, H * 0.22),
+        vx:rand(-0.25, 0.25),
+        vy:rand(2.2, 3.4),
+        r:10,
+        power:Number(e.power || 10),
+        image:e.atkImage || FALLBACK_ASSET.bossBullet,
+        dead:false,
+        life:230
+      });
+    }
   }
 
   function pushEnemyBullet(e, vx, vy, r, power){
@@ -1301,11 +1416,7 @@
       pool = PET_STONES.filter(s => s.rarity === 'SR');
     } else if (diff.key === 'hard') {
       pool = PET_STONES.filter(s => s.rarity === 'SR');
-    } else if (diff.key === 'veryhard') {
-      pool = PET_STONES;
-    } else if (diff.key === 'inferno') {
-      pool = PET_STONES;
-    } else if (diff.key === 'legend') {
+    } else {
       pool = PET_STONES;
     }
 
@@ -1335,14 +1446,14 @@
 
     try {
       const raw = localStorage.getItem(GACHA_SAVE_KEY);
-      const state = raw ? JSON.parse(raw) : { stones:{}, skills:{} };
+      const gachaState = raw ? JSON.parse(raw) : { stones:{}, skills:{} };
 
-      state.stones = state.stones || {};
-      state.skills = state.skills || {};
+      gachaState.stones = gachaState.stones || {};
+      gachaState.skills = gachaState.skills || {};
 
       const key = String(stone.no);
       const max = rarityMax(stone.rarity);
-      const current = state.stones[key] || {
+      const current = gachaState.stones[key] || {
         no:stone.no,
         rarity:stone.rarity,
         plus:0,
@@ -1379,9 +1490,9 @@
         result.plusAfter = current.plus;
       }
 
-      state.stones[key] = current;
+      gachaState.stones[key] = current;
 
-      localStorage.setItem(GACHA_SAVE_KEY, JSON.stringify(state));
+      localStorage.setItem(GACHA_SAVE_KEY, JSON.stringify(gachaState));
       window.dispatchEvent(new CustomEvent('mobshot:gachaUpdated'));
       window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
 
@@ -1955,10 +2066,7 @@
     }
   }
 
-  window.MobShotBattle = {
-    open,
-    close
-  };
+  window.MobShotBattle = { open, close };
 
   document.addEventListener('DOMContentLoaded', bindMainButton);
   window.addEventListener('load', bindMainButton);
