@@ -3,8 +3,6 @@
 (function(){
   let gameState = null;
 
-  const MAX_PET_LEVEL = 50;
-
   const petImages = new Map();
   const battlePets = [];
   const petBullets = [];
@@ -17,7 +15,7 @@
 
     if (!petImages.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260625_pet_battle_lv50_slime_nerf';
+      image.src = src + '?v=20260626_pet_battle_ruby_plus';
       petImages.set(src, image);
     }
 
@@ -28,24 +26,29 @@
     return image && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
   }
 
-  function clamp(v, a, b){
-    return Math.max(a, Math.min(b, v));
+  function level(pet){
+    const cap = Number(pet.data.levelCap || pet.data.maxLevel || 50);
+    return Math.max(1, Math.min(cap, Number(pet.data.level || 1)));
   }
 
-  function level(pet){
-    return Math.max(1, Math.min(MAX_PET_LEVEL, Number(pet.data.level || 1)));
+  function plus(pet){
+    return Math.max(0, Math.min(99, Number(pet.data.plus || pet.data.petRubyPlus || 0)));
+  }
+
+  function plusSkillTier(pet){
+    return Math.floor(plus(pet) / 10);
   }
 
   function normalRate(pet){
-    return Number(pet.data.normalAttackRate || 0.5) * (pet.data.normalLevelRate || 1);
+    return Number(pet.data.normalAttackRate || 0.5) * Number(pet.data.normalLevelRate || 1);
   }
 
   function skillRate(pet, baseRate){
-    return Number(baseRate || 1) * (pet.data.skillLevelRate || 1);
+    return Number(baseRate || 1) * Number(pet.data.skillLevelRate || 1);
   }
 
   function currentSkillCt(pet){
-    return Math.max(5, Number(pet.data.currentSkillCt || pet.data.skillCt || 30));
+    return Math.max(3, Number(pet.data.currentSkillCt || pet.data.skillCt || 30));
   }
 
   function normalWide(pet){
@@ -253,105 +256,141 @@
 
   function getWondaRapidRate(pet){
     const lv = level(pet);
-    if (lv >= 50) return 1.42;
-    if (lv >= 30) return 1.35;
-    if (lv >= 5) return 1.23;
-    return 1.15;
+    const tier = plusSkillTier(pet);
+
+    let rate = 1.15;
+    if (lv >= 5) rate = 1.23;
+    if (lv >= 30) rate = 1.35;
+    if (lv >= 50) rate = 1.42;
+    if (lv >= 100) rate = 1.50;
+
+    return rate + tier * 0.01;
   }
 
   function getWondaPowerRate(pet){
     const lv = level(pet);
-    if (lv >= 50) return 1.18;
-    if (lv >= 25) return 1.12;
-    if (lv >= 15) return 1.08;
-    return 1;
+    const tier = plusSkillTier(pet);
+
+    let rate = 1;
+    if (lv >= 15) rate = 1.08;
+    if (lv >= 25) rate = 1.12;
+    if (lv >= 50) rate = 1.18;
+    if (lv >= 100) rate = 1.25;
+
+    return rate + tier * 0.006;
   }
 
   function getPuniCoinRate(pet){
     const lv = level(pet);
-    if (lv >= 50) return 3.0;
-    if (lv >= 30) return 2.75;
-    if (lv >= 5) return 2.5;
-    return 2.0;
+    const tier = plusSkillTier(pet);
+
+    let rate = 2.0;
+    if (lv >= 5) rate = 2.5;
+    if (lv >= 30) rate = 2.75;
+    if (lv >= 50) rate = 3.0;
+    if (lv >= 100) rate = 3.35;
+
+    return rate + tier * 0.03;
   }
 
   function getSkillCount(pet){
     const lv = level(pet);
     const key = pet.data.key;
+    const tier = plusSkillTier(pet);
     let count = Number(pet.data.skillBaseCount || 1);
 
     if (key === 'mobdrago') {
       if (lv >= 5) count += 1;
       if (lv >= 30) count = 12;
       if (lv >= 50) count = 14;
+      if (lv >= 100) count = 16;
     } else if (key === 'mobfrog') {
       if (lv >= 5) count += 1;
       if (lv >= 30) count = 5;
       if (lv >= 50) count = 6;
+      if (lv >= 100) count = 7;
     } else if (key === 'mobdenden') {
       if (lv >= 5) count += 2;
       if (lv >= 30) count = 16;
       if (lv >= 50) count = 18;
+      if (lv >= 100) count = 20;
     } else if (key === 'mobwolf') {
       if (lv >= 5) count += 1;
       if (lv >= 30) count = 8;
       if (lv >= 50) count = 9;
+      if (lv >= 100) count = 10;
     } else if (key === 'mobslime') {
       if (lv >= 30) count = 5;
-      if (lv >= 50) count = 5;
+      if (lv >= 100) count = 6;
     } else if (key === 'mobchibihawk') {
       if (lv >= 30) count = 2;
       if (lv >= 50) count = 3;
+      if (lv >= 100) count = 4;
     } else if (key === 'punimobpink') {
       if (lv >= 30) count = 10;
       if (lv >= 50) count = 12;
+      if (lv >= 100) count = 14;
     } else if (key === 'minimiramob') {
       if (lv >= 5) count += 2;
       if (lv >= 25) count += 2;
       if (lv >= 30) count = 10;
       if (lv >= 50) count = 12;
+      if (lv >= 100) count = 14;
     } else if (key === 'neonkidmob') {
       if (lv >= 5) count += 1;
       if (lv >= 30) count = 4;
       if (lv >= 50) count = 5;
+      if (lv >= 100) count = 6;
     } else if (key === 'minidramob') {
       if (lv >= 5) count += 1;
       if (lv >= 30) count = 3;
       if (lv >= 50) count = 4;
+      if (lv >= 100) count = 5;
     } else if (key === 'merurumob') {
       if (lv >= 15) count += 2;
       if (lv >= 30) count = 6;
       if (lv >= 50) count = 7;
+      if (lv >= 100) count = 8;
     } else if (key === 'lilmoblilith') {
       if (lv >= 5) count += 2;
       if (lv >= 25) count += 3;
       if (lv >= 30) count = 14;
       if (lv >= 50) count = 16;
+      if (lv >= 100) count = 18;
     } else if (key === 'chibimaohmob') {
       if (lv >= 30) count = 2;
       if (lv >= 50) count = 3;
+      if (lv >= 100) count = 4;
     } else if (key === 'chibimobtetsu') {
       if (lv >= 50) count = 2;
+      if (lv >= 100) count = 3;
     } else if (key === 'chibimobmelt') {
       if (lv >= 5) count += 1;
       if (lv >= 30) count = 3;
       if (lv >= 50) count = 4;
+      if (lv >= 100) count = 5;
     } else if (key === 'wondamob') {
       if (lv >= 50) count = 2;
+      if (lv >= 100) count = 3;
     } else if (key === 'lilmobnep') {
       if (lv >= 5) count += 1;
       if (lv >= 30) count = 5;
       if (lv >= 50) count = 6;
+      if (lv >= 100) count = 7;
     } else if (key === 'chibiulmob') {
       if (lv >= 5) count += 2;
       if (lv >= 25) count += 3;
       if (lv >= 30) count = 13;
       if (lv >= 50) count = 15;
+      if (lv >= 100) count = 17;
     } else if (key === 'hero') {
       if (lv >= 5) count += 1;
       if (lv >= 30) count = 4;
       if (lv >= 50) count = 5;
+      if (lv >= 100) count = 6;
     }
+
+    count += Math.floor(tier / 5);
 
     return Math.max(1, count);
   }
@@ -359,6 +398,7 @@
   function getSkillPowerRate(pet, target){
     const lv = level(pet);
     const key = pet.data.key;
+    const tier = plusSkillTier(pet);
     let rate = Number(pet.data.skillPowerRate || 1);
 
     if (target && (target.kind === 'gimmick' || target.kind === 'chest')) {
@@ -374,95 +414,114 @@
     }
 
     if (key === 'mobdrago') {
-      if (lv >= 50) rate = 1.9;
+      if (lv >= 100) rate = 2.25;
+      else if (lv >= 50) rate = 1.9;
       else if (lv >= 30) rate = 1.7;
     }
 
     if (key === 'mobfrog') {
-      if (lv >= 50) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 4.5 : 3.0;
+      if (lv >= 100) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 5.2 : 3.5;
+      else if (lv >= 50) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 4.5 : 3.0;
       else if (lv >= 30) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 4.0 : 2.7;
     }
 
     if (key === 'mobdenden') {
-      if (lv >= 50) rate = 1.12;
+      if (lv >= 100) rate = 1.28;
+      else if (lv >= 50) rate = 1.12;
       else if (lv >= 30) rate = 1.0;
     }
 
     if (key === 'mobwolf') {
-      if (lv >= 50) rate = target && (target.kind === 'boss' || target.kind === 'midBoss') ? 4.1 : 2.6;
+      if (lv >= 100) rate = target && (target.kind === 'boss' || target.kind === 'midBoss') ? 4.8 : 3.0;
+      else if (lv >= 50) rate = target && (target.kind === 'boss' || target.kind === 'midBoss') ? 4.1 : 2.6;
       else if (lv >= 30) rate = target && (target.kind === 'boss' || target.kind === 'midBoss') ? 3.6 : 2.3;
     }
 
     if (key === 'mobslime') {
-      if (lv >= 50) rate = 1.45;
+      if (lv >= 100) rate = 1.7;
+      else if (lv >= 50) rate = 1.45;
       else if (lv >= 30) rate = 1.25;
     }
 
     if (key === 'mobchibihawk') {
-      rate = lv >= 50 ? 6.6 : lv >= 30 ? 6.0 : lv >= 5 ? 3.5 : 3.0;
+      rate = lv >= 100 ? 7.4 : lv >= 50 ? 6.6 : lv >= 30 ? 6.0 : lv >= 5 ? 3.5 : 3.0;
     }
 
     if (key === 'punimobpink') {
-      if (lv >= 50) rate = 1.55;
+      if (lv >= 100) rate = 1.85;
+      else if (lv >= 50) rate = 1.55;
       else if (lv >= 30) rate = 1.35;
     }
 
     if (key === 'minimiramob') {
-      if (lv >= 50) rate = 2.0;
+      if (lv >= 100) rate = 2.35;
+      else if (lv >= 50) rate = 2.0;
       else if (lv >= 30) rate = 1.75;
     }
 
     if (key === 'neonkidmob') {
-      if (lv >= 50) rate = 2.6;
+      if (lv >= 100) rate = 3.0;
+      else if (lv >= 50) rate = 2.6;
       else if (lv >= 30) rate = 2.3;
     }
 
     if (key === 'minidramob') {
-      if (lv >= 50) rate = 6.6;
+      if (lv >= 100) rate = 7.6;
+      else if (lv >= 50) rate = 6.6;
       else if (lv >= 30) rate = 6.0;
     }
 
     if (key === 'merurumob') {
-      if (lv >= 50) rate = 3.0;
+      if (lv >= 100) rate = 3.5;
+      else if (lv >= 50) rate = 3.0;
       else if (lv >= 30) rate = 2.7;
     }
 
     if (key === 'lilmoblilith') {
-      if (lv >= 50) rate = 2.1;
+      if (lv >= 100) rate = 2.45;
+      else if (lv >= 50) rate = 2.1;
       else if (lv >= 30) rate = 1.9;
     }
 
     if (key === 'chibimaohmob') {
-      rate = lv >= 50 ? 8.8 : lv >= 30 ? 8.0 : lv >= 5 ? 5.5 : 4.8;
+      rate = lv >= 100 ? 10.0 : lv >= 50 ? 8.8 : lv >= 30 ? 8.0 : lv >= 5 ? 5.5 : 4.8;
     }
 
     if (key === 'chibimobtetsu') {
-      if (lv >= 50) rate = 1.2;
+      if (lv >= 100) rate = 1.55;
+      else if (lv >= 50) rate = 1.2;
     }
 
     if (key === 'chibimobmelt') {
-      if (lv >= 50) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 7.8 : 5.6;
+      if (lv >= 100) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 9.0 : 6.5;
+      else if (lv >= 50) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 7.8 : 5.6;
       else if (lv >= 30) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 7.0 : 5.0;
     }
 
     if (key === 'wondamob') {
-      if (lv >= 50) rate = 1.2;
+      if (lv >= 100) rate = 1.55;
+      else if (lv >= 50) rate = 1.2;
     }
 
     if (key === 'lilmobnep') {
-      if (lv >= 50) rate = 4.0;
+      if (lv >= 100) rate = 4.6;
+      else if (lv >= 50) rate = 4.0;
       else if (lv >= 30) rate = 3.6;
     }
 
     if (key === 'chibiulmob') {
-      if (lv >= 50) rate = 3.0;
+      if (lv >= 100) rate = 3.5;
+      else if (lv >= 50) rate = 3.0;
       else if (lv >= 30) rate = 2.7;
     }
 
     if (key === 'hero') {
-      if (lv >= 50) rate = 7.8;
+      if (lv >= 100) rate = 8.8;
+      else if (lv >= 50) rate = 7.8;
       else if (lv >= 30) rate = 7.0;
     }
+
+    rate *= 1 + tier * 0.015;
 
     return skillRate(pet, rate);
   }
@@ -501,8 +560,8 @@
       if (pet.data.key === 'mobchibihawk' && lv >= 25) speed *= 1.35;
       if (pet.data.key === 'lilmobnep' && lv >= 25) speed *= 1.18;
       if (pet.data.key === 'neonkidmob' && lv >= 25) speed *= 1.15;
-
       if (lv >= 50) speed *= 1.08;
+      if (lv >= 100) speed *= 1.08;
     }
 
     return speed;
@@ -518,8 +577,8 @@
     if (pet.data.key === 'lilmobnep' && type === 'skill' && lv >= 15) r *= 1.25;
     if (pet.data.key === 'hero' && type === 'skill' && lv >= 25) r *= 1.35;
     if (pet.data.key === 'chibimobmelt' && type === 'skill' && lv >= 25) r *= 1.25;
-
     if (type === 'skill' && lv >= 50) r *= 1.08;
+    if (type === 'skill' && lv >= 100) r *= 1.12;
 
     return r;
   }
@@ -575,15 +634,11 @@
         b.dead = true;
       }
 
-      if (b.life <= 0) {
-        b.dead = true;
-      }
+      if (b.life <= 0) b.dead = true;
     }
 
     for (let i = petBullets.length - 1; i >= 0; i--) {
-      if (petBullets[i].dead) {
-        petBullets.splice(i, 1);
-      }
+      if (petBullets[i].dead) petBullets.splice(i, 1);
     }
   }
 
@@ -627,7 +682,7 @@
     });
 
     if (bullet && bullet.petKey === 'merurumob') {
-      vampHeal(damage, levelFromKey('merurumob'));
+      vampHeal(damage, levelFromKey('merurumob'), plusFromKey('merurumob'));
     }
 
     if (target.hp <= 0) {
@@ -644,15 +699,24 @@
     return pet ? level(pet) : 1;
   }
 
+  function plusFromKey(key){
+    const pet = battlePets.find(p => p.data.key === key);
+    return pet ? plus(pet) : 0;
+  }
+
   function healPlayer(pet){
     if (!gameState) return;
 
     const lv = level(pet);
+    const tier = plusSkillTier(pet);
     let heal = 15;
 
+    if (lv >= 5) heal = 20;
+    if (lv >= 30) heal = 45;
     if (lv >= 50) heal = 60;
-    else if (lv >= 30) heal = 45;
-    else if (lv >= 5) heal = 20;
+    if (lv >= 100) heal = 85;
+
+    heal += tier * 2;
 
     gameState.hp = Math.min(gameState.maxHp || gameState.hp, gameState.hp + heal);
 
@@ -664,15 +728,23 @@
       color:'#9dff73'
     });
 
-    if (lv >= 25) {
-      addShield(pet);
-    }
+    if (lv >= 25 || plus(pet) >= 30) addShield(pet);
   }
 
-  function vampHeal(damage, lv){
+  function vampHeal(damage, lv, plusValue){
     if (!gameState) return;
 
-    const rate = lv >= 50 ? 0.12 : lv >= 30 ? 0.10 : lv >= 25 ? 0.07 : lv >= 5 ? 0.02 : 0;
+    const tier = Math.floor(Number(plusValue || 0) / 10);
+    let rate = 0;
+
+    if (lv >= 5) rate = 0.02;
+    if (lv >= 25) rate = 0.07;
+    if (lv >= 30) rate = 0.10;
+    if (lv >= 50) rate = 0.12;
+    if (lv >= 100) rate = 0.15;
+
+    rate += tier * 0.002;
+
     if (rate <= 0) return;
 
     const heal = Math.max(1, Math.floor(Number(damage || 0) * rate));
@@ -681,7 +753,16 @@
 
   function addShield(pet){
     const lv = level(pet);
-    const duration = lv >= 50 ? 7 : lv >= 30 ? 6 : lv >= 25 ? 5 : lv >= 5 ? 4 : 3;
+    const tier = plusSkillTier(pet);
+    let duration = 3;
+
+    if (lv >= 5) duration = 4;
+    if (lv >= 25) duration = 5;
+    if (lv >= 30) duration = 6;
+    if (lv >= 50) duration = 7;
+    if (lv >= 100) duration = 8;
+
+    duration += Math.floor(tier / 5);
 
     addSupport('shield', 1, duration * 60);
 
@@ -695,22 +776,14 @@
   }
 
   function addSupport(type, value, frames){
-    supportEffects.push({
-      type,
-      value,
-      frames
-    });
+    supportEffects.push({ type, value, frames });
   }
 
   function updateSupportEffects(){
-    for (const e of supportEffects) {
-      e.frames--;
-    }
+    for (const e of supportEffects) e.frames--;
 
     for (let i = supportEffects.length - 1; i >= 0; i--) {
-      if (supportEffects[i].frames <= 0) {
-        supportEffects.splice(i, 1);
-      }
+      if (supportEffects[i].frames <= 0) supportEffects.splice(i, 1);
     }
   }
 
@@ -751,15 +824,15 @@
     }
 
     for (let i = petTexts.length - 1; i >= 0; i--) {
-      if (petTexts[i].life <= 0) {
-        petTexts.splice(i, 1);
-      }
+      if (petTexts[i].life <= 0) petTexts.splice(i, 1);
     }
   }
 
   function showCutin(pet){
+    const plusText = plus(pet) > 0 ? ` +${plus(pet)}` : '';
+
     cutins.push({
-      name:pet.data.name,
+      name:pet.data.name + plusText,
       skill:pet.data.skillName || 'PET SKILL',
       image:pet.data.frontImage || pet.data.backImage,
       life:58,
@@ -768,14 +841,10 @@
   }
 
   function updateCutins(){
-    for (const c of cutins) {
-      c.life--;
-    }
+    for (const c of cutins) c.life--;
 
     for (let i = cutins.length - 1; i >= 0; i--) {
-      if (cutins[i].life <= 0) {
-        cutins.splice(i, 1);
-      }
+      if (cutins[i].life <= 0) cutins.splice(i, 1);
     }
   }
 
@@ -809,6 +878,16 @@
         ctx.arc(pet.x, y, 16, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
+      }
+
+      if (plus(pet) > 0) {
+        ctx.font = '900 10px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ff7dff';
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 3;
+        ctx.strokeText('+' + plus(pet), pet.x, y - 30);
+        ctx.fillText('+' + plus(pet), pet.x, y - 30);
       }
 
       ctx.restore();
@@ -922,9 +1001,7 @@
       ctx.fillStyle = 'rgba(0,0,0,.62)';
       ctx.fillRect(0, y - 44, ctx.canvas.width, 88);
 
-      if (imageReady(image)) {
-        ctx.drawImage(image, 18, y - 38, 76, 76);
-      }
+      if (imageReady(image)) ctx.drawImage(image, 18, y - 38, 76, 76);
 
       ctx.textAlign = 'left';
       ctx.font = '900 15px system-ui';
