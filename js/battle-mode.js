@@ -2,7 +2,7 @@
 
 (function(){
   const SAVE_KEY = 'mobshot_pet_mode_clear_v1';
-  const DROP_SAVE_KEY = 'mobshot_pet_stone_drop_v1';
+  const GACHA_SAVE_KEY = 'mobshot_gacha_state_v1';
 
   const FALLBACK_ASSET = {
     bg:'sta/backsabaku.png',
@@ -22,6 +22,17 @@
     { key:'veryhard', name:'ベリーハード', icon:'mt/game3.png', hpRate:1.65, atkRate:1.45, dropRate:0.18, rewardCoin:6000, rewardDiamond:2 },
     { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', hpRate:2.45, atkRate:2.10, dropRate:0.28, rewardCoin:12000, rewardDiamond:4 },
     { key:'legend', name:'レジェンド', icon:'mt/game5.png', hpRate:3.60, atkRate:3.00, dropRate:0.45, rewardCoin:25000, rewardDiamond:8, legend:true }
+  ];
+
+  const PET_STONES = [
+    { no:56, name:'モブドラゴン', image:'co/co56.png', rarity:'SR', category:'MOB PET' },
+    { no:57, name:'モブイルカエル', image:'co/co57.png', rarity:'SR', category:'MOB PET' },
+    { no:58, name:'モブデンデン', image:'co/co58.png', rarity:'SR', category:'MOB PET' },
+    { no:86, name:'モブウルフ', image:'co/co86.png', rarity:'SR', category:'MOB PET' },
+    { no:87, name:'ミニミラモブ', image:'co/co87.png', rarity:'SR', category:'MOB PET' },
+    { no:88, name:'ミニネオンモブ', image:'co/co88.png', rarity:'SR', category:'MOB PET' },
+    { no:89, name:'ミニあのヒーロー', image:'co/co89.png', rarity:'SR', category:'MOB PET' },
+    { no:90, name:'ミニミラモブ カラー', image:'co/co90.png', rarity:'SSR', category:'MOB PET' }
   ];
 
   const STAGES_NORMAL = [
@@ -162,17 +173,6 @@
     }
   ];
 
-  const PET_STONES = [
-    { no:101, name:'モブドラゴン', image:'co/pet101.png', rarity:'R', category:'MOB PET' },
-    { no:102, name:'モブイルカエル', image:'co/pet102.png', rarity:'R', category:'MOB PET' },
-    { no:103, name:'モブデンデン', image:'co/pet103.png', rarity:'R', category:'MOB PET' },
-    { no:104, name:'モブウルフ', image:'co/pet104.png', rarity:'R', category:'MOB PET' },
-    { no:105, name:'モブスラっち', image:'co/pet105.png', rarity:'SR', category:'MOB PET' },
-    { no:106, name:'モブチビホーク', image:'co/pet106.png', rarity:'SR', category:'MOB PET' },
-    { no:107, name:'リルモブリリス', image:'co/pet107.png', rarity:'SSR', category:'MOB PET' },
-    { no:108, name:'あのヒーロー', image:'co/pet108.png', rarity:'UR', category:'MOB PET' }
-  ];
-
   let canvas = null;
   let ctx = null;
   let W = 0;
@@ -198,12 +198,13 @@
     enemyBullets:[],
     particles:[],
     texts:[],
+    dropCards:[],
     message:'',
     messageTimer:0,
     resultShown:false,
     rewardDone:false,
     support:{ rapid:1, power:1, shield:0, coin:1 },
-    stats:{ damage:0, petLost:0, enemyKilled:0, bossKilled:0, clear:false, drops:[] }
+    stats:{ damage:0, petLost:0, enemyKilled:0, bossKilled:0, clear:false, drops:[], rubyReward:0 }
   };
 
   function $(id){ return document.getElementById(id); }
@@ -216,7 +217,7 @@
     if (!src) return null;
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260626_pet_modes_full_fixed';
+      image.src = src + '?v=20260626_pet_modes_ruby_gacha_link';
       images.set(src, image);
     }
     return images.get(src);
@@ -309,6 +310,11 @@
       .battle-btn.blue{color:#fff!important;background:linear-gradient(#60d9ff,#1774ee)!important}
       .battle-btn.green{color:#07370f!important;background:linear-gradient(#9dff73,#26b63e)!important}
       .battle-row{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;margin-top:10px!important}
+      .battle-drop-grid{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:8px!important;margin:10px 0!important}
+      .battle-drop-card{border-radius:14px!important;padding:6px!important;background:rgba(255,255,255,.12)!important;border:2px solid rgba(255,255,255,.25)!important;text-align:center!important}
+      .battle-drop-card img{width:52px!important;height:52px!important;object-fit:contain!important;display:block!important;margin:0 auto 3px!important}
+      .battle-drop-name{font-size:9px!important;font-weight:1000!important;color:#fff!important;line-height:1.2!important}
+      .battle-drop-rarity{font-size:10px!important;font-weight:1000!important;color:#ffe66b!important}
     `;
     document.head.appendChild(style);
   }
@@ -433,13 +439,16 @@
             <h1 class="battle-title">${state.mode.name}</h1>
             <p class="battle-help">${lockedLegend ? 'インフェルノで草原〜魔王城を全クリアするとレジェンド解放。' : 'レジェンド解放済み。'}</p>
             <div class="battle-grid">
-              ${list.map(d => `
-                <button class="battle-diff-btn" type="button" data-diff="${d.key}">
-                  <img src="${d.icon}" alt="">
-                  <div><div class="battle-name">${d.name}</div><div class="battle-sub">HP x${d.hpRate} / 攻撃 x${d.atkRate} / 石板Drop ${Math.round(d.dropRate * 100)}%</div></div>
-                  <div class="battle-right">${d.rewardCoin.toLocaleString()} COIN<br>💎 +${d.rewardDiamond}</div>
-                </button>
-              `).join('')}
+              ${list.map(d => {
+                const r = rubyRewardRange(d.key);
+                return `
+                  <button class="battle-diff-btn" type="button" data-diff="${d.key}">
+                    <img src="${d.icon}" alt="">
+                    <div><div class="battle-name">${d.name}</div><div class="battle-sub">HP x${d.hpRate} / 攻撃 x${d.atkRate} / 石板Drop ${Math.round(d.dropRate * 100)}%</div></div>
+                    <div class="battle-right">${d.rewardCoin.toLocaleString()} COIN<br>💎 +${d.rewardDiamond}<br>♦ ${r[0]}〜${r[1]}</div>
+                  </button>
+                `;
+              }).join('')}
             </div>
             <div class="battle-row">
               <button id="mobBackTitleBtn" class="battle-btn blue" type="button">戻る</button>
@@ -528,7 +537,7 @@
               ${state.availablePets.map(p => `
                 <button class="battle-pet-btn ${state.selectedPetKeys.includes(p.key) ? 'selected' : ''}" type="button" data-pet="${p.key}">
                   <img src="${p.backImage || p.frontImage || ''}" alt="">
-                  <div><div class="battle-name">${p.name}</div><div class="battle-sub">${p.role || ''} / Lv${p.level}</div></div>
+                  <div><div class="battle-name">${p.name}</div><div class="battle-sub">${p.role || ''} / Lv${p.level} +${p.plus || 0}</div></div>
                   <div class="battle-right">${state.selectedPetKeys.includes(p.key) ? '選択中' : '選択'}</div>
                 </button>
               `).join('')}
@@ -586,10 +595,14 @@
         if (!owned) return;
 
         const lv = window.MobShotPets.getLevel ? window.MobShotPets.getLevel(master.key) : 1;
+        const plus = window.MobShotPets.getPlus ? window.MobShotPets.getPlus(master.key) : 0;
         const full = window.MobShotPets.getPet ? window.MobShotPets.getPet(master.key) : master;
+        const cap = window.MobShotPets.levelCapByPlus ? window.MobShotPets.levelCapByPlus(plus) : 50;
 
         list.push(Object.assign({}, full || master, {
-          level:Math.max(1, Math.min(50, Number(lv || 1)))
+          level:Math.max(1, Math.min(cap, Number(lv || 1))),
+          plus:Math.max(0, Math.min(99, Number(plus || 0))),
+          levelCap:cap
         }));
       });
     }
@@ -602,7 +615,7 @@
     state.frame = 0;
     state.resultShown = false;
     state.rewardDone = false;
-    state.stats = { damage:0, petLost:0, enemyKilled:0, bossKilled:0, clear:false, drops:[] };
+    state.stats = { damage:0, petLost:0, enemyKilled:0, bossKilled:0, clear:false, drops:[], rubyReward:0 };
 
     clearBattleObjectsOnly();
     resetSupport();
@@ -626,6 +639,7 @@
     state.enemyBullets.length = 0;
     state.particles.length = 0;
     state.texts.length = 0;
+    state.dropCards.length = 0;
   }
 
   function clearBattleObjectsOnly(){
@@ -635,6 +649,7 @@
     state.enemyBullets.length = 0;
     state.particles.length = 0;
     state.texts.length = 0;
+    state.dropCards.length = 0;
   }
 
   function resetSupport(){
@@ -651,8 +666,9 @@
       : owned.slice(0, Number(state.mode.maxPets || 4));
 
     selected.forEach((pet, index) => {
-      const lv = Math.max(1, Math.min(50, Number(pet.level || 1)));
-      const hp = getPetMaxHp(lv, pet);
+      const lv = Math.max(1, Math.min(Number(pet.levelCap || 50), Number(pet.level || 1)));
+      const plus = Math.max(0, Math.min(99, Number(pet.plus || 0)));
+      const hp = getPetMaxHp(lv, pet, plus);
 
       state.pets.push({
         key:pet.key,
@@ -662,13 +678,14 @@
         htmlBullet:pet.htmlBullet || '',
         role:pet.role || '',
         level:lv,
+        plus,
         maxHp:hp,
         hp,
-        power:getPetPower(lv, pet),
+        power:getPetPower(lv, pet, plus),
         rapid:getPetRapid(lv, pet),
-        skillPower:getPetSkillPower(lv, pet),
+        skillPower:getPetSkillPower(lv, pet, plus),
         skillName:pet.skillName || 'PET SKILL',
-        skillCt:Math.max(240, Math.floor(Number(pet.currentSkillCt || pet.skillCt || 30) * 60)),
+        skillCt:Math.max(180, Math.floor(getPetSkillCt(lv, pet, plus) * 60)),
         skillCd:Math.max(90, Math.floor(Number(pet.firstCt || 8) * 60) + index * 10),
         shootCd:20 + index % 12,
         x:W / 2,
@@ -689,18 +706,22 @@
     assignPetFormationTargets();
   }
 
-  function getPetMaxHp(lv, pet){
+  function getPetMaxHp(lv, pet, plus){
     let hp = 90 + lv * 14 + Math.floor(lv * lv * 0.22);
+
     if (pet.role && pet.role.includes('防御')) hp *= 1.25;
     if (pet.key === 'chibimobtetsu') hp *= 1.35;
     if (pet.key === 'hero') hp *= 1.20;
     if (pet.key === 'mobslime') hp *= 0.95;
+
+    hp *= 1 + Number(plus || 0) * 0.001;
+
     return Math.ceil(hp);
   }
 
-  function getPetPower(lv, pet){
+  function getPetPower(lv, pet, plus){
     const base = Number(pet.normalAttackRate || 0.5);
-    return Math.max(1, 5 * base * (1 + (lv - 1) * 0.025));
+    return Math.max(1, 5 * base * (1 + (lv - 1) * 0.025) * (1 + Number(plus || 0) * 0.001));
   }
 
   function getPetRapid(lv, pet){
@@ -708,9 +729,16 @@
     return Math.max(0.35, base * (1 + (lv - 1) * 0.006));
   }
 
-  function getPetSkillPower(lv, pet){
+  function getPetSkillPower(lv, pet, plus){
     const base = Number(pet.skillPowerRate || 1);
-    return Math.max(2, 16 * base * (1 + (lv - 1) * 0.032));
+    const tier = Math.floor(Number(plus || 0) / 10);
+    return Math.max(2, 16 * base * (1 + (lv - 1) * 0.032) * (1 + tier * 0.015));
+  }
+
+  function getPetSkillCt(lv, pet, plus){
+    const base = Number(pet.skillCt || 30) - ((lv - 1) * 0.1);
+    const plusBonus = Math.floor(Number(plus || 0) / 5) * 0.1;
+    return Math.max(3, base - plusBonus);
   }
 
   function assignPetFormationTargets(){
@@ -821,6 +849,7 @@
 
     updateTexts();
     updateParticles();
+    updateDropCards();
 
     if (state.screen !== 'battle') return;
 
@@ -937,18 +966,18 @@
     }
 
     if (p.key === 'chibimobtetsu') {
-      state.support.shield = Math.max(state.support.shield, (p.level >= 50 ? 7 : p.level >= 30 ? 6 : 4) * 60);
+      state.support.shield = Math.max(state.support.shield, (p.level >= 100 ? 8 : p.level >= 50 ? 7 : p.level >= 30 ? 6 : 4) * 60);
       addText('ALL SHIELD', p.x, p.y - 32, '#dfe8ff');
     }
 
     if (p.key === 'wondamob') {
-      state.support.rapid = Math.max(state.support.rapid, p.level >= 50 ? 1.42 : p.level >= 30 ? 1.35 : 1.20);
-      state.support.power = Math.max(state.support.power, p.level >= 50 ? 1.18 : p.level >= 25 ? 1.12 : 1.05);
+      state.support.rapid = Math.max(state.support.rapid, p.level >= 100 ? 1.5 : p.level >= 50 ? 1.42 : p.level >= 30 ? 1.35 : 1.20);
+      state.support.power = Math.max(state.support.power, p.level >= 100 ? 1.25 : p.level >= 50 ? 1.18 : p.level >= 25 ? 1.12 : 1.05);
       addText('ALL BOOST', p.x, p.y - 32, '#9deeff');
     }
 
     if (p.key === 'punimobpink') {
-      state.support.coin = Math.max(state.support.coin, p.level >= 50 ? 3.0 : p.level >= 30 ? 2.75 : p.level >= 5 ? 2.5 : 2.0);
+      state.support.coin = Math.max(state.support.coin, p.level >= 100 ? 3.35 : p.level >= 50 ? 3.0 : p.level >= 30 ? 2.75 : p.level >= 5 ? 2.5 : 2.0);
       addText('COIN UP', p.x, p.y - 32, '#ffe66b');
     }
 
@@ -968,28 +997,32 @@
   }
 
   function getPetSkillCount(p){
-    let count = 1;
     const lv = p.level;
+    const tier = Math.floor(Number(p.plus || 0) / 10);
     const key = p.key;
+    let count = 1;
 
-    if (key === 'mobdrago') count = lv >= 50 ? 14 : lv >= 30 ? 12 : lv >= 5 ? 6 : 5;
-    else if (key === 'mobfrog') count = lv >= 50 ? 6 : lv >= 30 ? 5 : lv >= 5 ? 4 : 3;
-    else if (key === 'mobdenden') count = lv >= 50 ? 18 : lv >= 30 ? 16 : lv >= 5 ? 11 : 9;
-    else if (key === 'mobwolf') count = lv >= 50 ? 9 : lv >= 30 ? 8 : lv >= 5 ? 6 : 5;
-    else if (key === 'mobchibihawk') count = lv >= 50 ? 3 : lv >= 30 ? 2 : 1;
-    else if (key === 'punimobpink') count = lv >= 50 ? 12 : lv >= 30 ? 10 : 6;
-    else if (key === 'minimiramob') count = lv >= 50 ? 12 : lv >= 30 ? 10 : lv >= 25 ? 10 : lv >= 5 ? 8 : 6;
-    else if (key === 'neonkidmob') count = lv >= 50 ? 5 : lv >= 30 ? 4 : lv >= 5 ? 4 : 3;
-    else if (key === 'minidramob') count = lv >= 50 ? 4 : lv >= 30 ? 3 : lv >= 5 ? 3 : 2;
-    else if (key === 'merurumob') count = lv >= 50 ? 7 : lv >= 30 ? 6 : lv >= 15 ? 7 : 5;
-    else if (key === 'lilmoblilith') count = lv >= 50 ? 16 : lv >= 30 ? 14 : lv >= 25 ? 14 : lv >= 5 ? 11 : 9;
-    else if (key === 'chibimaohmob') count = lv >= 50 ? 3 : lv >= 30 ? 2 : 1;
-    else if (key === 'chibimobtetsu') count = lv >= 50 ? 2 : 1;
-    else if (key === 'chibimobmelt') count = lv >= 50 ? 4 : lv >= 30 ? 3 : lv >= 5 ? 3 : 2;
-    else if (key === 'wondamob') count = lv >= 50 ? 2 : 1;
-    else if (key === 'lilmobnep') count = lv >= 50 ? 6 : lv >= 30 ? 5 : lv >= 5 ? 5 : 4;
-    else if (key === 'chibiulmob') count = lv >= 50 ? 15 : lv >= 30 ? 13 : lv >= 25 ? 14 : lv >= 5 ? 11 : 9;
-    else if (key === 'hero') count = lv >= 50 ? 5 : lv >= 30 ? 4 : lv >= 5 ? 4 : 3;
+    if (key === 'mobdrago') count = lv >= 100 ? 16 : lv >= 50 ? 14 : lv >= 30 ? 12 : lv >= 5 ? 6 : 5;
+    else if (key === 'mobfrog') count = lv >= 100 ? 7 : lv >= 50 ? 6 : lv >= 30 ? 5 : lv >= 5 ? 4 : 3;
+    else if (key === 'mobdenden') count = lv >= 100 ? 20 : lv >= 50 ? 18 : lv >= 30 ? 16 : lv >= 5 ? 11 : 9;
+    else if (key === 'mobwolf') count = lv >= 100 ? 10 : lv >= 50 ? 9 : lv >= 30 ? 8 : lv >= 5 ? 6 : 5;
+    else if (key === 'mobslime') count = lv >= 100 ? 6 : lv >= 30 ? 5 : 3;
+    else if (key === 'mobchibihawk') count = lv >= 100 ? 4 : lv >= 50 ? 3 : lv >= 30 ? 2 : 1;
+    else if (key === 'punimobpink') count = lv >= 100 ? 14 : lv >= 50 ? 12 : lv >= 30 ? 10 : 6;
+    else if (key === 'minimiramob') count = lv >= 100 ? 14 : lv >= 50 ? 12 : lv >= 30 ? 10 : lv >= 25 ? 10 : lv >= 5 ? 8 : 6;
+    else if (key === 'neonkidmob') count = lv >= 100 ? 6 : lv >= 50 ? 5 : lv >= 30 ? 4 : lv >= 5 ? 4 : 3;
+    else if (key === 'minidramob') count = lv >= 100 ? 5 : lv >= 50 ? 4 : lv >= 30 ? 3 : lv >= 5 ? 3 : 2;
+    else if (key === 'merurumob') count = lv >= 100 ? 8 : lv >= 50 ? 7 : lv >= 30 ? 6 : lv >= 15 ? 7 : 5;
+    else if (key === 'lilmoblilith') count = lv >= 100 ? 18 : lv >= 50 ? 16 : lv >= 30 ? 14 : lv >= 25 ? 14 : lv >= 5 ? 11 : 9;
+    else if (key === 'chibimaohmob') count = lv >= 100 ? 4 : lv >= 50 ? 3 : lv >= 30 ? 2 : 1;
+    else if (key === 'chibimobtetsu') count = lv >= 100 ? 3 : lv >= 50 ? 2 : 1;
+    else if (key === 'chibimobmelt') count = lv >= 100 ? 5 : lv >= 50 ? 4 : lv >= 30 ? 3 : lv >= 5 ? 3 : 2;
+    else if (key === 'wondamob') count = lv >= 100 ? 3 : lv >= 50 ? 2 : 1;
+    else if (key === 'lilmobnep') count = lv >= 100 ? 7 : lv >= 50 ? 6 : lv >= 30 ? 5 : lv >= 5 ? 5 : 4;
+    else if (key === 'chibiulmob') count = lv >= 100 ? 17 : lv >= 50 ? 15 : lv >= 30 ? 13 : lv >= 25 ? 14 : lv >= 5 ? 11 : 9;
+    else if (key === 'hero') count = lv >= 100 ? 6 : lv >= 50 ? 5 : lv >= 30 ? 4 : lv >= 5 ? 4 : 3;
+
+    count += Math.floor(tier / 5);
 
     return Math.max(1, count);
   }
@@ -1025,16 +1058,22 @@
     alive.sort((a,b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
 
     const target = alive[0];
+    const tier = Math.floor(Number(p.plus || 0) / 10);
     let heal = 15;
 
+    if (p.level >= 5) heal = 20;
+    if (p.level >= 30) heal = 45;
     if (p.level >= 50) heal = 60;
-    else if (p.level >= 30) heal = 45;
-    else if (p.level >= 5) heal = 20;
+    if (p.level >= 100) heal = 85;
+
+    heal += tier * 2;
 
     target.hp = Math.min(target.maxHp, target.hp + heal);
     addText('HP +' + heal, target.x, target.y - 34, '#9dff73');
 
-    if (p.level >= 25) state.support.shield = Math.max(state.support.shield, 180);
+    if (p.level >= 25 || p.plus >= 30) {
+      state.support.shield = Math.max(state.support.shield, 180);
+    }
   }
 
   function updateEnemies(){
@@ -1256,39 +1295,133 @@
 
     if (Math.random() > rate) return;
 
-    let rarityPool = PET_STONES;
+    let pool = PET_STONES;
 
-    if (diff.key === 'easy') rarityPool = PET_STONES.filter(s => s.rarity === 'R');
-    else if (diff.key === 'hard') rarityPool = PET_STONES.filter(s => s.rarity === 'R' || s.rarity === 'SR');
-    else if (diff.key === 'veryhard') rarityPool = PET_STONES.filter(s => s.rarity !== 'UR');
-    else rarityPool = PET_STONES;
+    if (diff.key === 'easy') {
+      pool = PET_STONES.filter(s => s.rarity === 'SR');
+    } else if (diff.key === 'hard') {
+      pool = PET_STONES.filter(s => s.rarity === 'SR');
+    } else if (diff.key === 'veryhard') {
+      pool = PET_STONES;
+    } else if (diff.key === 'inferno') {
+      pool = PET_STONES;
+    } else if (diff.key === 'legend') {
+      pool = PET_STONES;
+    }
 
-    const stone = Object.assign({}, pick(rarityPool.length ? rarityPool : PET_STONES));
-    state.stats.drops.push(stone);
-    savePetStone(stone);
+    const stone = Object.assign({}, pick(pool.length ? pool : PET_STONES));
+
+    const result = addGachaStone(stone);
+    const savedStone = Object.assign({}, stone, result || {});
+
+    state.stats.drops.push(savedStone);
+
+    state.dropCards.push({
+      stone:savedStone,
+      x:enemy.x,
+      y:enemy.y - 38,
+      life:130,
+      maxLife:130
+    });
+
     addText(`${stone.rarity} ${stone.name}`, enemy.x, enemy.y - 55, '#9dff73');
   }
 
-  function savePetStone(stone){
-    if (window.MobShotCollection && window.MobShotCollection.addStone) {
-      window.MobShotCollection.addStone(stone);
-      return;
-    }
-
-    if (window.MobShotGacha && window.MobShotGacha.addStone) {
-      window.MobShotGacha.addStone(stone);
-      return;
+  function addGachaStone(stone){
+    if (window.MobShotGacha && window.MobShotGacha.addStoneByNo) {
+      const results = window.MobShotGacha.addStoneByNo(stone.no, 1);
+      return Array.isArray(results) && results[0] ? results[0] : null;
     }
 
     try {
-      const raw = localStorage.getItem(DROP_SAVE_KEY);
-      const save = raw ? JSON.parse(raw) : {};
+      const raw = localStorage.getItem(GACHA_SAVE_KEY);
+      const state = raw ? JSON.parse(raw) : { stones:{}, skills:{} };
+
+      state.stones = state.stones || {};
+      state.skills = state.skills || {};
+
       const key = String(stone.no);
-      save[key] = save[key] || Object.assign({}, stone, { count:0, plus:0 });
-      save[key].count = Number(save[key].count || 0) + 1;
-      save[key].plus = Number(save[key].plus || 0) + 1;
-      localStorage.setItem(DROP_SAVE_KEY, JSON.stringify(save));
-    } catch(e) {}
+      const max = rarityMax(stone.rarity);
+      const current = state.stones[key] || {
+        no:stone.no,
+        rarity:stone.rarity,
+        plus:0,
+        owned:false
+      };
+
+      const wasOwned = !!current.owned;
+      let result = {
+        type:'stone',
+        no:stone.no,
+        name:stone.name,
+        image:stone.image,
+        rarity:stone.rarity,
+        category:stone.category,
+        isNew:false,
+        converted:false,
+        plusAfter:Number(current.plus || 0),
+        maxPlus:max
+      };
+
+      current.owned = true;
+      current.rarity = stone.rarity;
+
+      if (!wasOwned) {
+        current.plus = 0;
+        result.isNew = true;
+        result.plusAfter = 0;
+      } else if (Number(current.plus || 0) >= max) {
+        result.converted = true;
+        result.plusAfter = max;
+        addCoin(rarityCoin(stone.rarity));
+      } else {
+        current.plus = Math.min(max, Number(current.plus || 0) + 1);
+        result.plusAfter = current.plus;
+      }
+
+      state.stones[key] = current;
+
+      localStorage.setItem(GACHA_SAVE_KEY, JSON.stringify(state));
+      window.dispatchEvent(new CustomEvent('mobshot:gachaUpdated'));
+      window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
+
+      return result;
+    } catch(e) {
+      return null;
+    }
+  }
+
+  function rarityMax(rarity){
+    if (rarity === 'UR') return 10;
+    if (rarity === 'SSR') return 30;
+    if (rarity === 'SR') return 50;
+    return 99;
+  }
+
+  function rarityCoin(rarity){
+    if (rarity === 'UR') return 10000;
+    if (rarity === 'SSR') return 5000;
+    if (rarity === 'SR') return 3000;
+    return 500;
+  }
+
+  function rubyRewardRange(diffKey){
+    if (diffKey === 'easy') return [5, 10];
+    if (diffKey === 'hard') return [10, 18];
+    if (diffKey === 'veryhard') return [18, 30];
+    if (diffKey === 'inferno') return [30, 50];
+    if (diffKey === 'legend') return [55, 90];
+    return [5, 10];
+  }
+
+  function calcRubyReward(diff, mode){
+    const range = rubyRewardRange(diff.key);
+    let ruby = intRand(range[0], range[1]);
+
+    if (mode.key === 'boss') ruby = Math.ceil(ruby * 1.25);
+    if (mode.key === 'ragnarok') ruby = Math.ceil(ruby * 1.6);
+
+    return ruby;
   }
 
   function showResult(clear, reason){
@@ -1302,10 +1435,12 @@
 
     let rewardCoin = 0;
     let rewardDiamond = 0;
+    let rubyReward = 0;
 
     if (clear) {
       rewardCoin = Math.ceil(diff.rewardCoin * state.support.coin);
       rewardDiamond = diff.rewardDiamond;
+      rubyReward = calcRubyReward(diff, state.mode);
 
       if (state.mode.key === 'boss') rewardCoin = Math.ceil(rewardCoin * 1.4);
       if (state.mode.key === 'ragnarok') rewardCoin = Math.ceil(rewardCoin * 2.0);
@@ -1314,9 +1449,12 @@
         state.rewardDone = true;
         addCoin(rewardCoin);
         addDiamond(rewardDiamond);
+        addPetRuby(rubyReward);
         saveClear(state.mode.key, diff.key, state.stage.key);
       }
     }
+
+    state.stats.rubyReward = rubyReward;
 
     const overlay = $('battleOverlay');
     if (!overlay) return;
@@ -1333,9 +1471,22 @@
             撃破: ${Number(state.stats.enemyKilled || 0)} / BOSS ${Number(state.stats.bossKilled || 0)}<br>
             ペットDOWN: ${Number(state.stats.petLost || 0)}<br>
             合計ダメージ: ${Math.ceil(state.stats.damage || 0).toLocaleString()}<br>
-            石板Drop: ${state.stats.drops.length ? state.stats.drops.map(d => `${d.rarity} ${d.name}`).join(' / ') : 'なし'}<br><br>
-            ${clear ? `報酬: ${rewardCoin.toLocaleString()} COIN / 💎 +${rewardDiamond}` : 'クリア報酬なし'}
+            石板Drop: ${state.stats.drops.length ? state.stats.drops.map(d => `${d.rarity} ${d.name}${d.isNew ? ' NEW' : d.converted ? ' MAX変換' : d.plusAfter != null ? ' +' + d.plusAfter : ''}`).join(' / ') : 'なし'}<br><br>
+            ${clear ? `報酬: ${rewardCoin.toLocaleString()} COIN / 💎 +${rewardDiamond} / ペットルビー ♦ +${rubyReward}` : 'クリア報酬なし'}
           </p>
+
+          ${state.stats.drops.length ? `
+            <div class="battle-drop-grid">
+              ${state.stats.drops.map(d => `
+                <div class="battle-drop-card">
+                  <img src="${d.image}" alt="${d.name}">
+                  <div class="battle-drop-rarity">${d.rarity}</div>
+                  <div class="battle-drop-name">${d.name}</div>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
           <button id="mobRetryBtn" class="battle-btn green" type="button" style="width:100%">もう一度</button>
           <button id="mobBackModeBtn" class="battle-btn" type="button" style="width:100%;margin-top:10px">モード選択へ</button>
           <button id="mobResultMainBtn" class="battle-btn blue" type="button" style="width:100%;margin-top:10px">メインへ戻る</button>
@@ -1380,6 +1531,27 @@
     refreshMainHud();
   }
 
+  function addPetRuby(amount){
+    if (window.MobShotPets && window.MobShotPets.addRuby) {
+      window.MobShotPets.addRuby(amount);
+      return;
+    }
+
+    let save = null;
+
+    if (window.MobShotStorage && window.MobShotStorage.load) {
+      save = window.MobShotStorage.load();
+      save.petRuby = Number(save.petRuby || 0) + Number(amount || 0);
+      window.MobShotStorage.save(save);
+    } else {
+      try { save = JSON.parse(localStorage.getItem('mobshot_split_v1')) || {}; } catch(e) { save = {}; }
+      save.petRuby = Number(save.petRuby || 0) + Number(amount || 0);
+      try { localStorage.setItem('mobshot_split_v1', JSON.stringify(save)); } catch(e) {}
+    }
+
+    refreshMainHud();
+  }
+
   function refreshMainHud(){
     if (window.MobShotMain && window.MobShotMain.refreshMainHud) window.MobShotMain.refreshMainHud();
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
@@ -1395,11 +1567,19 @@
   }
 
   function updateTexts(){
-    state.texts.forEach(t => {
+    for (const t of state.texts) {
       t.y -= 0.65;
       t.life--;
-    });
+    }
     state.texts = state.texts.filter(t => t.life > 0);
+  }
+
+  function updateDropCards(){
+    for (const card of state.dropCards) {
+      card.y -= 0.35;
+      card.life--;
+    }
+    state.dropCards = state.dropCards.filter(card => card.life > 0);
   }
 
   function burst(x,y,color,n){
@@ -1449,6 +1629,7 @@
     drawEnemyBullets();
     drawParticles();
     drawTexts();
+    drawDropCards();
     drawMessage();
   }
 
@@ -1555,8 +1736,8 @@
       ctx.fillStyle = '#fff';
       ctx.strokeStyle = '#000';
       ctx.lineWidth = 3;
-      ctx.strokeText('Lv' + p.level, p.x, y - 25);
-      ctx.fillText('Lv' + p.level, p.x, y - 25);
+      ctx.strokeText('Lv' + p.level + (p.plus ? ' +' + p.plus : ''), p.x, y - 25);
+      ctx.fillText('Lv' + p.level + (p.plus ? ' +' + p.plus : ''), p.x, y - 25);
 
       ctx.restore();
     });
@@ -1648,6 +1829,48 @@
       ctx.lineWidth = 4;
       ctx.strokeText(t.text, t.x, t.y);
       ctx.fillText(t.text, t.x, t.y);
+      ctx.restore();
+    });
+  }
+
+  function drawDropCards(){
+    state.dropCards.forEach(card => {
+      const stone = card.stone;
+      const image = img(stone.image);
+      const alpha = Math.min(1, card.life / 20);
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+
+      ctx.fillStyle = 'rgba(0,0,0,.72)';
+      roundRect(card.x - 46, card.y - 56, 92, 92, 18);
+      ctx.fill();
+
+      ctx.strokeStyle = stone.rarity === 'SSR' ? '#ffd83d' : '#58dfff';
+      ctx.lineWidth = 3;
+      roundRect(card.x - 46, card.y - 56, 92, 92, 18);
+      ctx.stroke();
+
+      if (!drawImageContain(ctx, image, card.x, card.y - 18, 48, 48)) {
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(card.x, card.y - 18, 22, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.font = '900 10px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffe66b';
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 3;
+      ctx.strokeText(stone.rarity, card.x, card.y + 14);
+      ctx.fillText(stone.rarity, card.x, card.y + 14);
+
+      ctx.font = '900 8px system-ui';
+      ctx.fillStyle = '#fff';
+      ctx.strokeText(stone.name, card.x, card.y + 27);
+      ctx.fillText(stone.name, card.x, card.y + 27);
+
       ctx.restore();
     });
   }
