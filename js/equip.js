@@ -35,7 +35,7 @@
       key: 'fireball',
       name: '火の玉',
       rank: 1,
-      price: 1000,
+      price: 8000,
       power: 1,
       rapid: 0,
       hp: 0,
@@ -45,7 +45,7 @@
       key: 'recordfire',
       name: 'レコードファイア',
       rank: 3,
-      price: 3000,
+      price: 18000,
       power: 2,
       rapid: 0,
       hp: 0,
@@ -55,7 +55,7 @@
       key: 'rainbowfire',
       name: 'レインボーファイア',
       rank: 5,
-      price: 3000,
+      price: 32000,
       power: 2,
       rapid: 0,
       hp: 0,
@@ -65,7 +65,7 @@
       key: 'wataame',
       name: 'WATAAME!!',
       rank: 10,
-      price: 0,
+      price: 55000,
       power: 2,
       rapid: 0.2,
       hp: 0,
@@ -75,7 +75,7 @@
       key: 'garagara',
       name: 'ガラガラの旅',
       rank: 10,
-      price: 0,
+      price: 70000,
       power: 3,
       rapid: 0.2,
       hp: 0,
@@ -85,7 +85,7 @@
       key: 'book',
       name: '読みかけの本',
       rank: 10,
-      price: 0,
+      price: 85000,
       power: 3,
       rapid: 0.1,
       hp: 50,
@@ -95,7 +95,7 @@
       key: 'mobrpg',
       name: 'MOB RPG',
       rank: 10,
-      price: 0,
+      price: 100000,
       power: 4,
       rapid: 0,
       hp: 0,
@@ -105,7 +105,7 @@
       key: 'iyonokuni',
       name: '伊予ノ国',
       rank: 20,
-      price: 0,
+      price: 140000,
       power: 2,
       rapid: 0,
       hp: 150,
@@ -115,7 +115,7 @@
       key: 'realize',
       name: 'Realize',
       rank: 20,
-      price: 0,
+      price: 175000,
       power: 4,
       rapid: 0,
       hp: 0,
@@ -125,7 +125,7 @@
       key: 'portal',
       name: 'Portal',
       rank: 20,
-      price: 0,
+      price: 220000,
       power: 1,
       rapid: 0.4,
       hp: 0,
@@ -135,7 +135,7 @@
       key: 'pb2',
       name: 'PB2',
       rank: 20,
-      price: 0,
+      price: 300000,
       power: 2,
       rapid: 0.3,
       hp: 100,
@@ -331,24 +331,76 @@
     return `Lv${data.level} / +${data.plus} / CT${data.cooldown}秒`;
   }
 
+  function isDarkPowerSkill(skillKey){
+    const key = String(skillKey || '').toLowerCase();
+    return (
+      key === 'darkoblivion' ||
+      key === 'dark_oblivion' ||
+      key === 'darkpower' ||
+      key === 'dark_power' ||
+      key === 'darkthunder' ||
+      key === 'dark_thunder'
+    );
+  }
+
+  function getSkillUpgradeCostAt(skillKey, level){
+    const lv = Math.max(1, Number(level || 1));
+
+    if (window.MobShotSkills && window.MobShotSkills.upgradeCostAt) {
+      const direct = Number(window.MobShotSkills.upgradeCostAt(skillKey, lv));
+      if (Number.isFinite(direct) && direct > 0) return direct;
+    }
+
+    if (window.MobShotSkills && window.MobShotSkills.upgradeCost) {
+      const withLv = Number(window.MobShotSkills.upgradeCost(skillKey, lv));
+      const now = Number(window.MobShotSkills.upgradeCost(skillKey));
+
+      if (
+        Number.isFinite(withLv) &&
+        withLv > 0 &&
+        (
+          !Number.isFinite(now) ||
+          now <= 0 ||
+          withLv !== now ||
+          arguments.length >= 2
+        )
+      ) {
+        return withLv;
+      }
+    }
+
+    if (isDarkPowerSkill(skillKey)) {
+      return 3000 + (lv - 1) * 1500;
+    }
+
+    return 1000 + (lv - 1) * 500;
+  }
+
   function getSkillUpgradeCost(skillKey){
-    if (!window.MobShotSkills || !window.MobShotSkills.upgradeCost) {
+    if (!window.MobShotSkills || !window.MobShotSkills.loadState) {
       return 999999999;
     }
 
-    return Number(window.MobShotSkills.upgradeCost(skillKey) || 999999999);
+    const state = window.MobShotSkills.loadState();
+    const item = state.skills && state.skills[skillKey];
+
+    if (!item || !item.owned) {
+      return 999999999;
+    }
+
+    return getSkillUpgradeCostAt(skillKey, Number(item.level || 1));
   }
 
-  function calcSkillUpgradeBatch(skillKey, limit){
+  function calcSkillUpgradePlan(skillKey, limit, useCoinLimit){
     if (!window.MobShotSkills || !window.MobShotSkills.loadState) {
-      return { count:0, cost:0 };
+      return { count:0, cost:0, finalLv:1 };
     }
 
     const state = window.MobShotSkills.loadState();
-    const item = state.skills[skillKey];
+    const item = state.skills && state.skills[skillKey];
 
     if (!item || !item.owned) {
-      return { count:0, cost:0 };
+      return { count:0, cost:0, finalLv:1 };
     }
 
     const save = getSave();
@@ -359,15 +411,13 @@
     let costTotal = 0;
 
     while (count < limit && lv < 99) {
-      let cost = 999999999;
+      const cost = getSkillUpgradeCostAt(skillKey, lv);
 
-      if (window.MobShotSkills.upgradeCost) {
-        cost = Number(window.MobShotSkills.upgradeCost(skillKey, lv) || window.MobShotSkills.upgradeCost(skillKey) || 999999999);
-      }
+      if (!Number.isFinite(cost) || cost <= 0) break;
+      if (useCoinLimit && coin < cost) break;
 
-      if (coin < cost) break;
+      if (useCoinLimit) coin -= cost;
 
-      coin -= cost;
       costTotal += cost;
       lv += 1;
       count += 1;
@@ -375,8 +425,17 @@
 
     return {
       count,
-      cost: costTotal
+      cost: costTotal,
+      finalLv: lv
     };
+  }
+
+  function calcSkillUpgradeBatch(skillKey, limit){
+    return calcSkillUpgradePlan(skillKey, limit, true);
+  }
+
+  function calcSkillUpgradeToMax(skillKey){
+    return calcSkillUpgradePlan(skillKey, 999, false);
   }
 
   function upgradeSkillBatch(skillKey, limit){
@@ -506,7 +565,7 @@
         <div class="equip-card-body">
           <div class="equip-card-name">${item.name}</div>
           <div class="equip-card-desc">弾画像: ${item.bulletImage || '通常弾'}</div>
-          <div class="equip-card-price">${rankOk ? '所持アイテム' : `Rank${item.rank}で解放`}</div>
+          <div class="equip-card-price">${rankOk ? `購入価格: ${Number(item.price || 0).toLocaleString()} COIN` : `Rank${item.rank}で解放`}</div>
           <div class="equip-card-spec">${specs.join(' / ')}</div>
           <div class="equip-card-spec">${owned ? '所持中' : '未所持'} ${equipped ? '/ 装備中' : ''}</div>
         </div>
@@ -544,6 +603,8 @@
       return;
     }
 
+    const save = getSave();
+    const coin = Number(save.coin || 0);
     const state = window.MobShotSkills.loadState();
     const equipped = state.equipped || [];
 
@@ -554,9 +615,12 @@
       const runtime = window.MobShotSkills.getSkillRuntimeData(skill.key);
       const cost = owned ? getSkillUpgradeCost(skill.key) : 0;
       const batch10 = owned ? calcSkillUpgradeBatch(skill.key, 10) : { count:0, cost:0 };
-      const batchMax = owned ? calcSkillUpgradeBatch(skill.key, 999) : { count:0, cost:0 };
+      const batchMaxAffordable = owned ? calcSkillUpgradeBatch(skill.key, 999) : { count:0, cost:0 };
+      const toMax = owned ? calcSkillUpgradeToMax(skill.key) : { count:0, cost:0 };
       const lv = Number(item.level || 1);
       const maxed = owned && lv >= 99;
+      const canUpgradeOne = owned && !maxed && coin >= cost;
+      const canMaxNow = owned && !maxed && batchMaxAffordable.count > 0;
 
       const card = document.createElement('div');
 
@@ -578,12 +642,17 @@
           <div class="equip-card-spec">${isEquipped ? '装備中' : owned ? '所持中' : '未所持'}</div>
           <div class="equip-card-spec">${
             owned && !maxed
-              ? `10回: ${batch10.count > 0 ? `${batch10.count}Lv / ${batch10.cost.toLocaleString()} COIN` : '不可'}`
+              ? `次: ${cost.toLocaleString()} COIN`
+              : maxed ? 'Lv MAX' : ''
+          }</div>
+          <div class="equip-card-spec">${
+            owned && !maxed
+              ? `10回: ${batch10.count > 0 ? `${batch10.count}Lv / ${batch10.cost.toLocaleString()} COIN` : 'COIN不足'}`
               : ''
           }</div>
           <div class="equip-card-spec">${
             owned && !maxed
-              ? `MAX: ${batchMax.count > 0 ? `${batchMax.count}Lv / ${batchMax.cost.toLocaleString()} COIN` : '不可'}`
+              ? `Lv99まで: ${toMax.count}Lv / ${toMax.cost.toLocaleString()} COIN`
               : ''
           }</div>
         </div>
@@ -593,7 +662,7 @@
             ${isEquipped ? '外す' : owned ? '装備' : 'LOCK'}
           </button>
 
-          <button type="button" class="pet-upgrade-btn skill-up-one" ${!owned || maxed ? 'disabled' : ''}>
+          <button type="button" class="pet-upgrade-btn skill-up-one" ${!canUpgradeOne ? 'disabled' : ''}>
             1回<br>${owned && !maxed ? cost.toLocaleString() : 'MAX'}
           </button>
 
@@ -601,8 +670,8 @@
             10回<br>${batch10.count > 0 ? batch10.cost.toLocaleString() : '不可'}
           </button>
 
-          <button type="button" class="pet-upgrade-btn skill-up-max" ${!owned || maxed || batchMax.count <= 0 ? 'disabled' : ''}>
-            MAX<br>${batchMax.count > 0 ? batchMax.cost.toLocaleString() : '不可'}
+          <button type="button" class="pet-upgrade-btn skill-up-max" ${!canMaxNow ? 'disabled' : ''}>
+            MAX<br>${batchMaxAffordable.count > 0 ? batchMaxAffordable.cost.toLocaleString() : '不可'}
           </button>
         </div>
       `;
@@ -620,7 +689,7 @@
         });
       }
 
-      if (upgradeOneBtn && owned && !maxed) {
+      if (upgradeOneBtn && canUpgradeOne) {
         upgradeOneBtn.addEventListener('click', function(){
           upgradeSkillBatch(skill.key, 1);
         });
@@ -632,7 +701,7 @@
         });
       }
 
-      if (upgradeMaxBtn && owned && !maxed && batchMax.count > 0) {
+      if (upgradeMaxBtn && canMaxNow) {
         upgradeMaxBtn.addEventListener('click', function(){
           upgradeSkillBatch(skill.key, 999);
         });
@@ -789,6 +858,7 @@
     loadEquipState,
     saveEquipState,
     calcSkillUpgradeBatch,
+    calcSkillUpgradeToMax,
     upgradeSkillBatch
   };
 })();
