@@ -36,21 +36,13 @@
   function $(id){ return document.getElementById(id); }
 
   function allStones(){
-    if (window.MobShotGacha && window.MobShotGacha.allStones) {
-      return window.MobShotGacha.allStones();
-    }
+    if (window.MobShotGacha && window.MobShotGacha.allStones) return window.MobShotGacha.allStones();
     return [];
   }
 
   function allSouls(){
-    if (window.MobShotGacha && window.MobShotGacha.allSouls) {
-      return window.MobShotGacha.allSouls();
-    }
-
-    if (window.MobShotSoul && window.MobShotSoul.allSouls) {
-      return window.MobShotSoul.allSouls();
-    }
-
+    if (window.MobShotGacha && window.MobShotGacha.allSouls) return window.MobShotGacha.allSouls();
+    if (window.MobShotSoul && window.MobShotSoul.allSouls) return window.MobShotSoul.allSouls();
     return [];
   }
 
@@ -59,26 +51,17 @@
   }
 
   function rarityImage(rarity){
-    if (window.MobShotGacha && window.MobShotGacha.rarityImage) {
-      return window.MobShotGacha.rarityImage(rarity);
-    }
-
+    if (window.MobShotGacha && window.MobShotGacha.rarityImage) return window.MobShotGacha.rarityImage(rarity);
     return RARITY[rarity] ? RARITY[rarity].image : RARITY.R.image;
   }
 
   function rarityMax(rarity){
-    if (window.MobShotGacha && window.MobShotGacha.rarityMax) {
-      return window.MobShotGacha.rarityMax(rarity);
-    }
-
+    if (window.MobShotGacha && window.MobShotGacha.rarityMax) return window.MobShotGacha.rarityMax(rarity);
     return RARITY[rarity] ? RARITY[rarity].max : 99;
   }
 
   function rarityClass(rarity){
-    if (window.MobShotGacha && window.MobShotGacha.rarityClass) {
-      return window.MobShotGacha.rarityClass(rarity);
-    }
-
+    if (window.MobShotGacha && window.MobShotGacha.rarityClass) return window.MobShotGacha.rarityClass(rarity);
     if (rarity === 'UR') return 'rarity-frame-ur';
     if (rarity === 'SSR') return 'rarity-frame-ssr';
     if (rarity === 'SR') return 'rarity-frame-sr';
@@ -87,29 +70,21 @@
 
   function categoryKey(stone){
     if (!stone || !stone.category) return 'enemy';
-
     if (stone.category === 'MOB SHOT MID BOSS') return 'mid';
     if (stone.category === 'MOB SHOT BOSS') return 'boss';
     if (stone.category === 'MOB ARTIST') return 'artist';
     if (stone.category === 'MOB SHOT BOSS SP') return 'sp';
     if (stone.category === 'MOB PET') return 'pet';
     if (stone.category === 'MOB EVENT') return 'event';
-
     return 'enemy';
   }
 
   function defaultGachaState(){
-    return {
-      stones:{},
-      skills:{},
-      souls:{}
-    };
+    return { stones:{}, skills:{}, souls:{} };
   }
 
   function loadGachaState(){
-    if (window.MobShotGacha && window.MobShotGacha.loadState) {
-      return window.MobShotGacha.loadState();
-    }
+    if (window.MobShotGacha && window.MobShotGacha.loadState) return window.MobShotGacha.loadState();
 
     let state = defaultGachaState();
 
@@ -128,10 +103,7 @@
   }
 
   function defaultDisplayState(){
-    return {
-      display:[null, null, null],
-      soulDisplay:[null, null, null]
-    };
+    return { display:[null, null, null], soulDisplay:[null, null, null] };
   }
 
   function loadDisplayState(){
@@ -139,19 +111,11 @@
 
     try {
       const raw = localStorage.getItem(COLLECTION_SAVE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) || {};
-        state = Object.assign(state, parsed);
-      }
+      if (raw) state = Object.assign(state, JSON.parse(raw) || {});
     } catch(e) {}
 
-    state.display = Array.isArray(state.display)
-      ? state.display.slice(0, 3)
-      : [null, null, null];
-
-    state.soulDisplay = Array.isArray(state.soulDisplay)
-      ? state.soulDisplay.slice(0, 3)
-      : [null, null, null];
+    state.display = Array.isArray(state.display) ? state.display.slice(0, 3) : [null, null, null];
+    state.soulDisplay = Array.isArray(state.soulDisplay) ? state.soulDisplay.slice(0, 3) : [null, null, null];
 
     while (state.display.length < 3) state.display.push(null);
     while (state.soulDisplay.length < 3) state.soulDisplay.push(null);
@@ -172,13 +136,8 @@
   function saveDisplayState(state){
     const fixed = Object.assign(defaultDisplayState(), state || {});
 
-    fixed.display = Array.isArray(fixed.display)
-      ? fixed.display.slice(0, 3)
-      : [null, null, null];
-
-    fixed.soulDisplay = Array.isArray(fixed.soulDisplay)
-      ? fixed.soulDisplay.slice(0, 3)
-      : [null, null, null];
+    fixed.display = Array.isArray(fixed.display) ? fixed.display.slice(0, 3) : [null, null, null];
+    fixed.soulDisplay = Array.isArray(fixed.soulDisplay) ? fixed.soulDisplay.slice(0, 3) : [null, null, null];
 
     while (fixed.display.length < 3) fixed.display.push(null);
     while (fixed.soulDisplay.length < 3) fixed.soulDisplay.push(null);
@@ -190,10 +149,6 @@
     window.dispatchEvent(new CustomEvent('mobshot:collectionDisplayUpdated'));
     window.dispatchEvent(new CustomEvent('mobshot:soulDisplayUpdated'));
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
-  }
-
-  function bucketName(){
-    return currentMode === 'soul' ? 'souls' : 'stones';
   }
 
   function ownedData(no, mode){
@@ -209,9 +164,8 @@
 
   function ownedCount(mode){
     const targetMode = mode || currentMode;
-    let count = 0;
-
     const list = targetMode === 'soul' ? allSouls() : allStones();
+    let count = 0;
 
     list.forEach(item => {
       if (isOwned(item.no, targetMode)) count++;
@@ -222,9 +176,7 @@
 
   function totalPlus(mode){
     const state = loadGachaState();
-    const targetMode = mode || currentMode;
-    const bucket = targetMode === 'soul' ? state.souls : state.stones;
-
+    const bucket = mode === 'soul' ? state.souls : state.stones;
     let total = 0;
 
     Object.keys(bucket || {}).forEach(key => {
@@ -235,13 +187,11 @@
   }
 
   function rarityOwnedCount(rarity, mode){
-    const targetMode = mode || currentMode;
-    const list = targetMode === 'soul' ? allSouls() : allStones();
-
+    const list = mode === 'soul' ? allSouls() : allStones();
     let count = 0;
 
     list.forEach(item => {
-      if (item.rarity === rarity && isOwned(item.no, targetMode)) count++;
+      if (item.rarity === rarity && isOwned(item.no, mode)) count++;
     });
 
     return count;
@@ -296,20 +246,13 @@
       }
 
       if (key === 'artist') {
-        const value = rarity === 'UR'
-          ? 0.04 + plus * 0.012
-          : 0.02 + plus * 0.005;
-
+        const value = rarity === 'UR' ? 0.04 + plus * 0.012 : 0.02 + plus * 0.005;
         bonus.score += value;
         bonus.coin += value;
       }
 
       if (key === 'sp') {
-        if (rarity === 'UR') {
-          bonus.power += 2 + plus * 0.3;
-        } else {
-          bonus.power += 0.5 + plus * 0.1;
-        }
+        bonus.power += rarity === 'UR' ? 2 + plus * 0.3 : 0.5 + plus * 0.1;
       }
 
       if (key === 'pet') {
@@ -364,7 +307,7 @@
 
   function displayHelp(){
     return currentMode === 'soul'
-      ? '飾ったモブソウルはメイン画面でアバター周辺をクルクル周回します。'
+      ? '飾ったモブソウルはメイン画面でアバター周辺を向きそのままで周回します。'
       : '飾った石板はメイン画面のプレイヤー背面に横スクロール表示されます。';
   }
 
@@ -416,10 +359,7 @@
 
     if (!isOwned(no, currentMode)) return;
 
-    state[key] = state[key].map(v =>
-      Number(v) === Number(no) ? null : v
-    );
-
+    state[key] = state[key].map(v => Number(v) === Number(no) ? null : v);
     state[key][slotIndex] = Number(no);
 
     saveDisplayState(state);
@@ -501,8 +441,7 @@
       .collection-display.soul .collection-display-slot.active{border-color:#ff9df0;box-shadow:0 0 14px rgba(255,157,240,.55)}
       .collection-display-slot img.display-rarity{position:absolute;left:4px;top:-10px;width:54px;height:28px;object-fit:contain;z-index:6;filter:drop-shadow(0 3px 0 rgba(0,0,0,.55));animation:collectionRarityFloat 1.9s ease-in-out infinite}
       .collection-display-slot img.display-stone{width:86px;height:86px;object-fit:contain;animation:collectionStoneFloat 3.2s ease-in-out infinite}
-      .collection-display-slot img.display-soul{width:78px;height:78px;object-fit:contain;animation:collectionSoulSpin 4.2s linear infinite}
-      @keyframes collectionSoulSpin{0%{transform:rotate(0deg) scale(1)}50%{transform:rotate(180deg) scale(1.08)}100%{transform:rotate(360deg) scale(1)}}
+      .collection-display-slot img.display-soul{width:78px;height:78px;object-fit:contain;animation:collectionSoulFloat 2.8s ease-in-out infinite}
       .collection-display-empty{font-size:12px;font-weight:1000;color:#dfe8ff}
       .collection-display-remove{position:absolute;right:4px;top:4px;width:24px;height:24px;border:0;border-radius:50%;background:linear-gradient(#ff8b8b,#d72424);color:#fff;font-weight:1000;box-shadow:0 2px 0 rgba(0,0,0,.35);z-index:9}
       .collection-select-bar{display:none;margin:0 0 10px;padding:10px;border-radius:16px;background:rgba(107,230,255,.12);border:2px solid rgba(107,230,255,.35);color:#dff8ff;font-size:13px;font-weight:1000;text-align:center}
@@ -523,7 +462,7 @@
       .stone-img{width:64px;height:64px;object-fit:contain;animation:collectionStoneFloat 3.2s ease-in-out infinite}
       .soul-img{width:60px;height:60px;object-fit:contain;animation:collectionSoulFloat 2.8s ease-in-out infinite}
       @keyframes collectionStoneFloat{0%{transform:translateY(0)}50%{transform:translateY(-5px)}100%{transform:translateY(0)}}
-      @keyframes collectionSoulFloat{0%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-6px) rotate(5deg)}100%{transform:translateY(0) rotate(-5deg)}}
+      @keyframes collectionSoulFloat{0%{transform:translateY(0) scale(1)}50%{transform:translateY(-6px) scale(1.05)}100%{transform:translateY(0) scale(1)}}
       .stone-lock{width:46px;height:46px;border-radius:14px;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:1000}
       .stone-no{font-size:10px;color:#9deeff;font-weight:1000}
       .stone-name{font-size:10px;color:#fff;font-weight:1000;line-height:1.2;min-height:26px}
