@@ -333,41 +333,32 @@
 
   function isDarkPowerSkill(skillKey){
     const key = String(skillKey || '').toLowerCase();
+    const name = getSkillName(skillKey).toLowerCase();
+
     return (
       key === 'darkoblivion' ||
       key === 'dark_oblivion' ||
       key === 'darkpower' ||
       key === 'dark_power' ||
       key === 'darkthunder' ||
-      key === 'dark_thunder'
+      key === 'dark_thunder' ||
+      key.includes('dark') ||
+      name.includes('闇') ||
+      name.includes('ダーク')
     );
+  }
+
+  function getSkillName(skillKey){
+    if (!window.MobShotSkills || !Array.isArray(window.MobShotSkills.SKILL_MASTER)) {
+      return '';
+    }
+
+    const skill = window.MobShotSkills.SKILL_MASTER.find(item => item.key === skillKey);
+    return skill ? String(skill.name || '') : '';
   }
 
   function getSkillUpgradeCostAt(skillKey, level){
     const lv = Math.max(1, Number(level || 1));
-
-    if (window.MobShotSkills && window.MobShotSkills.upgradeCostAt) {
-      const direct = Number(window.MobShotSkills.upgradeCostAt(skillKey, lv));
-      if (Number.isFinite(direct) && direct > 0) return direct;
-    }
-
-    if (window.MobShotSkills && window.MobShotSkills.upgradeCost) {
-      const withLv = Number(window.MobShotSkills.upgradeCost(skillKey, lv));
-      const now = Number(window.MobShotSkills.upgradeCost(skillKey));
-
-      if (
-        Number.isFinite(withLv) &&
-        withLv > 0 &&
-        (
-          !Number.isFinite(now) ||
-          now <= 0 ||
-          withLv !== now ||
-          arguments.length >= 2
-        )
-      ) {
-        return withLv;
-      }
-    }
 
     if (isDarkPowerSkill(skillKey)) {
       return 3000 + (lv - 1) * 1500;
