@@ -217,7 +217,7 @@
     if (!src) return null;
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260626_pet_modes_retry_fix_patterns';
+      image.src = src + '?v=20260626_pet_mode_training_boss_big_fix';
       images.set(src, image);
     }
     return images.get(src);
@@ -537,7 +537,7 @@
               ${state.availablePets.map(p => `
                 <button class="battle-pet-btn ${state.selectedPetKeys.includes(p.key) ? 'selected' : ''}" type="button" data-pet="${p.key}">
                   <img src="${p.backImage || p.frontImage || ''}" alt="">
-                  <div><div class="battle-name">${p.name}</div><div class="battle-sub">${p.role || ''} / Lv${p.level} +${p.plus || 0}</div></div>
+                  <div><div class="battle-name">${p.name}</div><div class="battle-sub">${p.role || ''} / Lv${p.level} +${p.plus || 0} / 専用Lv${petModeTotalLevel(p.petMode || {})}</div></div>
                   <div class="battle-right">${state.selectedPetKeys.includes(p.key) ? '選択中' : '選択'}</div>
                 </button>
               `).join('')}
@@ -569,6 +569,11 @@
     overlay.innerHTML = '';
   }
 
+  function petModeTotalLevel(mode){
+    mode = mode || {};
+    return Number(mode.hp || 0) + Number(mode.power || 0) + Number(mode.rapid || 0) + Number(mode.skill || 0) + Number(mode.dodge || 0);
+  }
+
   function getStageDescByMode(modeKey, stage){
     if (modeKey === 'arena') return `雑魚3体 + 中ボス: ${stage.mid.name}`;
     if (modeKey === 'boss') return `ボス: ${stage.boss.name}`;
@@ -596,13 +601,20 @@
 
         const lv = window.MobShotPets.getLevel ? window.MobShotPets.getLevel(master.key) : 1;
         const plus = window.MobShotPets.getPlus ? window.MobShotPets.getPlus(master.key) : 0;
+        const petMode = window.MobShotPets.getPetMode ? window.MobShotPets.getPetMode(master.key) : {};
         const full = window.MobShotPets.getPet ? window.MobShotPets.getPet(master.key) : master;
         const cap = window.MobShotPets.levelCapByPlus ? window.MobShotPets.levelCapByPlus(plus) : 50;
 
         list.push(Object.assign({}, full || master, {
           level:Math.max(1, Math.min(cap, Number(lv || 1))),
           plus:Math.max(0, Math.min(99, Number(plus || 0))),
-          levelCap:cap
+          levelCap:cap,
+          petMode:petMode || {},
+          petModeHpRate:window.MobShotPets.petModeHpRate ? window.MobShotPets.petModeHpRate(petMode) : 1,
+          petModePowerRate:window.MobShotPets.petModePowerRate ? window.MobShotPets.petModePowerRate(petMode) : 1,
+          petModeRapidRate:window.MobShotPets.petModeRapidRate ? window.MobShotPets.petModeRapidRate(petMode) : 1,
+          petModeSkillRate:window.MobShotPets.petModeSkillRate ? window.MobShotPets.petModeSkillRate(petMode) : 1,
+          petModeDodgeRate:window.MobShotPets.petModeDodgeRate ? window.MobShotPets.petModeDodgeRate(petMode) : 1
         }));
       });
     }
@@ -669,7 +681,14 @@
     selected.forEach((pet, index) => {
       const lv = Math.max(1, Math.min(Number(pet.levelCap || 50), Number(pet.level || 1)));
       const plus = Math.max(0, Math.min(99, Number(pet.plus || 0)));
-      const hp = getPetMaxHp(lv, pet, plus);
+
+      const modeHp = Number(pet.petModeHpRate || 1);
+      const modePower = Number(pet.petModePowerRate || 1);
+      const modeRapid = Number(pet.petModeRapidRate || 1);
+      const modeSkill = Number(pet.petModeSkillRate || 1);
+      const modeDodge = Number(pet.petModeDodgeRate || 1);
+
+      const hp = Math.ceil(getPetMaxHp(lv, pet, plus) * modeHp);
 
       state.pets.push({
         key:pet.key,
@@ -680,15 +699,20 @@
         role:pet.role || '',
         level:lv,
         plus,
+        petMode:pet.petMode || {},
+        petModeHpRate:modeHp,
+        petModePowerRate:modePower,
+        petModeRapidRate:modeRapid,
+        petModeSkillRate:modeSkill,
+        petModeDodgeRate:modeDodge,
         maxHp:hp,
         hp,
-        power:getPetPower(lv, pet, plus),
-        rapid:getPetRapid(lv, pet),
-        skillPower:getPetSkillPower(lv, pet, plus),
+        power:getPetPower(lv, pet, plus) * modePower,
+        rapid:getPetRapid(lv, pet) * modeRapid,
+        skillPower:getPetSkillPower(lv, pet, plus) * modeSkill,
         skillName:pet.skillName || 'PET SKILL',
         skillCt:Math.max(180, Math.floor(getPetSkillCt(lv, pet, plus) * 60)),
-        skillCd:Math.max(90, Math.floor(Number(pet.firstCt || 8) * 60) + index * 10,
-        ),
+        skillCd:Math.max(90, Math.floor(Number(pet.firstCt || 8) * 60) + index * 10),
         shootCd:20 + index % 12,
         x:W / 2,
         y:H * 0.72,
@@ -696,9 +720,9 @@
         homeY:H * 0.72,
         targetX:W / 2,
         targetY:H * 0.72,
-        aiCd:intRand(20,90),
+        aiCd:intRand(45,120),
         dodgeCd:0,
-        laneShift:rand(-22,22),
+        laneShift:rand(-18,18),
         r:20,
         dead:false,
         bob:Math.random() * Math.PI * 2
@@ -770,16 +794,19 @@
       if (e.dead) return;
 
       if (e.type === 'zako') {
-        e.targetX = W * (0.25 + i * 0.25);
-        e.targetY = H * 0.22;
+        e.baseX = e.baseX || W * (0.25 + i * 0.25);
+        e.baseY = e.baseY || H * 0.22;
       } else if (state.bosses.length >= 2) {
         const bossIndex = state.bosses.indexOf(e);
-        e.targetX = bossIndex === 0 ? W * 0.32 : W * 0.68;
-        e.targetY = H * 0.18;
+        e.baseX = e.baseX || (bossIndex === 0 ? W * 0.32 : W * 0.68);
+        e.baseY = e.baseY || H * 0.18;
       } else {
-        e.targetX = W / 2;
-        e.targetY = H * 0.18;
+        e.baseX = e.baseX || W / 2;
+        e.baseY = e.baseY || H * 0.18;
       }
+
+      if (!e.targetX) e.targetX = e.baseX;
+      if (!e.targetY) e.targetY = e.baseY;
     });
   }
 
@@ -824,6 +851,8 @@
       power,
       x:W / 2,
       y:type === 'zako' ? H * 0.25 : H * 0.18,
+      baseX:0,
+      baseY:0,
       targetX:W / 2,
       targetY:type === 'zako' ? H * 0.25 : H * 0.18,
       r:type === 'zako' ? 28 : type === 'midBoss' ? 42 : 50,
@@ -880,37 +909,38 @@
     assignPetFormationTargets();
 
     alive.forEach((p, index) => {
-      p.bob += 0.08;
+      p.bob += 0.055;
       p.aiCd--;
       p.dodgeCd = Math.max(0, p.dodgeCd - 1);
 
       const danger = findNearestDanger(p);
+      const dodgeRate = Number(p.petModeDodgeRate || 1);
+      const dangerRange = 74 * dodgeRate;
 
-      if (danger && danger.dist < 82) {
-        p.dodgeCd = 22;
+      if (danger && danger.dist < dangerRange && p.dodgeCd <= 0) {
+        p.dodgeCd = Math.max(14, Math.floor(34 / dodgeRate));
         const dir = danger.x < p.x ? 1 : -1;
-        p.targetX = clamp(p.x + dir * rand(42, 76), W * 0.08, W * 0.92);
-        p.targetY = clamp(p.y + rand(-16, 22), H * 0.50, H * 0.92);
+        p.targetX = clamp(p.x + dir * rand(54, 92) * dodgeRate, W * 0.08, W * 0.92);
+        p.targetY = clamp(p.y + rand(-22, 28), H * 0.50, H * 0.92);
+        p.aiCd = intRand(35, 68);
       } else if (p.aiCd <= 0) {
         const enemy = findEnemyTarget(p);
-        const toward = enemy ? clamp(enemy.x - p.homeX, -36, 36) * 0.35 : 0;
+        const toward = enemy ? clamp(enemy.x - p.homeX, -44, 44) * 0.28 : 0;
 
-        p.laneShift = rand(-42, 42) + toward;
+        p.laneShift = rand(-34, 34) + toward;
         p.targetX = clamp(p.homeX + p.laneShift, W * 0.08, W * 0.92);
-        p.targetY = clamp(p.homeY + rand(-16, 18), H * 0.50, H * 0.93);
-        p.aiCd = intRand(38, 95);
+        p.targetY = clamp(p.homeY + rand(-14, 14), H * 0.50, H * 0.93);
+        p.aiCd = intRand(70, 145);
       }
 
-      if (p.dodgeCd <= 0) p.targetX += Math.sin(state.frame * 0.025 + index) * 0.9;
-
-      p.x += (p.targetX - p.x) * 0.075;
-      p.y += (p.targetY - p.y) * 0.075;
+      p.x += (p.targetX - p.x) * 0.055;
+      p.y += (p.targetY - p.y) * 0.055;
       p.x = clamp(p.x, W * 0.07, W * 0.93);
       p.y = clamp(p.y, H * 0.48, H * 0.94);
 
       p.shootCd--;
       if (p.shootCd <= 0) {
-        p.shootCd = Math.max(10, Math.floor(44 / Math.max(0.15, p.rapid * state.support.rapid)));
+        p.shootCd = Math.max(8, Math.floor(44 / Math.max(0.15, p.rapid * state.support.rapid)));
         firePetNormal(p);
       }
 
@@ -928,7 +958,12 @@
 
     state.enemyBullets.forEach(b => {
       if (b.dead) return;
-      const d = Math.hypot(b.x - p.x, b.y - p.y);
+      if (b.vy < -0.1) return;
+
+      const futureX = b.x + b.vx * 12;
+      const futureY = b.y + b.vy * 12;
+      const d = Math.hypot(futureX - p.x, futureY - p.y);
+
       if (d < bestDist) {
         bestDist = d;
         best = b;
@@ -1070,6 +1105,7 @@
     if (p.level >= 100) heal = 85;
 
     heal += tier * 2;
+    heal = Math.ceil(heal * Number(p.petModeSkillRate || 1));
 
     target.hp = Math.min(target.maxHp, target.hp + heal);
     addText('HP +' + heal, target.x, target.y - 34, '#9dff73');
@@ -1086,22 +1122,18 @@
     all.forEach((e, index) => {
       if (e.dead) return;
 
-      e.bob += 0.04;
+      e.bob += 0.035;
       e.moveCd--;
 
       if (e.moveCd <= 0) {
         const range = e.type === 'zako' ? 58 : e.type === 'midBoss' ? 92 : 118;
-        e.targetX = clamp(e.targetX + rand(-range, range), W * 0.12, W * 0.88);
-        e.targetY = clamp(e.targetY + rand(-18, 18), H * 0.11, H * 0.32);
-        e.moveCd = intRand(e.type === 'zako' ? 58 : 48, e.type === 'zako' ? 130 : 105);
+        e.targetX = clamp(e.baseX + rand(-range, range), W * 0.12, W * 0.88);
+        e.targetY = clamp(e.baseY + rand(-22, 22), H * 0.10, H * 0.34);
+        e.moveCd = intRand(e.type === 'zako' ? 70 : 58, e.type === 'zako' ? 145 : 120);
       }
 
-      e.x += (e.targetX - e.x) * (e.type === 'zako' ? 0.035 : 0.026);
-      e.y += (e.targetY + Math.sin(state.frame * 0.035 + e.bob) * (e.type === 'zako' ? 10 : 14) - e.y) * 0.05;
-
-      if (e.type !== 'zako') {
-        e.x += Math.sin(state.frame * 0.018 + e.bob) * 0.45;
-      }
+      e.x += (e.targetX - e.x) * (e.type === 'zako' ? 0.025 : 0.020);
+      e.y += (e.targetY + Math.sin(state.frame * 0.025 + e.bob) * (e.type === 'zako' ? 6 : 9) - e.y) * 0.035;
 
       e.x = clamp(e.x, W * 0.08, W * 0.92);
       e.y = clamp(e.y, H * 0.08, H * 0.36);
@@ -1123,59 +1155,88 @@
     const n = e.attackIndex;
 
     if (e.type === 'zako') {
-      if (n % 4 === 0) fireEnemySpread(e, 3, 2.3);
-      else if (n % 6 === 0) fireEnemyRain(e, 3);
-      else fireEnemyAim(e, 1, 2.6);
+      if (n % 4 === 0) fireEnemySpread(e, 3, 2.3, 12);
+      else if (n % 6 === 0) fireEnemyRain(e, 3, 13);
+      else fireEnemyAim(e, 1, 2.6, 12);
       return;
     }
 
     if (e.type === 'midBoss') {
-      if (n % 5 === 0) fireEnemyRing(e, 8, 2.4);
-      else if (n % 3 === 0) fireEnemyRandom(e, 4);
-      else if (n % 2 === 0) fireEnemySpread(e, 5, 2.7);
-      else fireEnemyAim(e, 2, 3.0);
+      if (n % 5 === 0) fireEnemyRing(e, 8, 2.4, 15);
+      else if (n % 3 === 0) fireEnemyRandom(e, 4, 15);
+      else if (n % 2 === 0) fireEnemySpread(e, 5, 2.7, 14);
+      else fireEnemyAim(e, 2, 3.0, 14);
       return;
     }
 
     const pattern = e.pattern || 'boss';
 
-    if (n % 7 === 0) {
-      fireEnemyRing(e, pattern === 'maoh' || pattern === 'dragon2' ? 14 : 10, 2.5);
-      return;
-    }
-
-    if (n % 5 === 0) {
-      fireEnemyRain(e, pattern === 'neon2' || pattern === 'lilith' ? 8 : 5);
-      return;
-    }
-
     if (pattern === 'hawk' || pattern === 'hawk2') {
-      if (n % 3 === 0) fireEnemyCross(e, 3.0);
-      else fireEnemySpread(e, pattern === 'hawk2' ? 6 : 4, 3.0);
-    } else if (pattern === 'mira' || pattern === 'mira2') {
-      if (n % 3 === 0) fireEnemyRandom(e, 6);
-      else { fireEnemyAim(e, 2, 3.3); fireEnemySlow(e); }
-    } else if (pattern === 'guardian' || pattern === 'guardian2') {
-      if (n % 3 === 0) fireEnemyWall(e, pattern === 'guardian2' ? 6 : 4);
-      else fireEnemyFan(e, pattern === 'guardian2' ? 6 : 4);
-    } else if (pattern === 'neon' || pattern === 'neon2') {
-      if (n % 3 === 0) fireEnemyRain(e, pattern === 'neon2' ? 9 : 6);
-      else fireEnemyRandom(e, pattern === 'neon2' ? 7 : 5);
-    } else if (pattern === 'dragon' || pattern === 'dragon2') {
-      if (n % 3 === 0) fireEnemyCross(e, 3.4);
-      else { fireEnemySpread(e, pattern === 'dragon2' ? 7 : 5, 3.1); fireEnemyAim(e, 1, 3.7); }
-    } else if (pattern === 'lilith') {
-      if (n % 3 === 0) fireEnemyRain(e, 8);
-      else { fireEnemySpread(e, 7, 2.9); fireEnemyRandom(e, 4); }
-    } else if (pattern === 'maoh') {
-      if (n % 3 === 0) fireEnemyRing(e, 16, 2.7);
-      else { fireEnemySpread(e, 9, 3.2); fireEnemyAim(e, 3, 3.5); }
-    } else {
-      fireEnemyAim(e, 2, 3.0);
+      if (n % 5 === 0) fireEnemyRapid(e, pattern === 'hawk2' ? 10 : 7, 3.5, 11);
+      else if (n % 3 === 0) fireEnemyCross(e, 3.1, 14);
+      else fireEnemySpread(e, pattern === 'hawk2' ? 7 : 5, 3.0, 13);
+      return;
     }
+
+    if (pattern === 'mira' || pattern === 'mira2') {
+      if (n % 5 === 0) fireEnemySlow(e, pattern === 'mira2' ? 30 : 24);
+      else if (n % 3 === 0) fireEnemyRandom(e, pattern === 'mira2' ? 7 : 5, 15);
+      else fireEnemyAim(e, 2, 3.3, 14);
+      return;
+    }
+
+    if (pattern === 'guardian' || pattern === 'guardian2') {
+      if (n % 5 === 0) fireEnemyWall(e, pattern === 'guardian2' ? 7 : 5, 16);
+      else if (n % 3 === 0) fireEnemyGiant(e, pattern === 'guardian2' ? 42 : 34, 2.05);
+      else fireEnemyFan(e, pattern === 'guardian2' ? 6 : 4, 15);
+      return;
+    }
+
+    if (pattern === 'neon' || pattern === 'neon2') {
+      if (n % 4 === 0) fireEnemyRain(e, pattern === 'neon2' ? 10 : 7, 14);
+      else if (n % 3 === 0) fireEnemyRapid(e, pattern === 'neon2' ? 9 : 6, 3.2, 11);
+      else fireEnemyRandom(e, pattern === 'neon2' ? 8 : 5, 13);
+      return;
+    }
+
+    if (pattern === 'dragon' || pattern === 'dragon2') {
+      if (n % 5 === 0) fireEnemyGiant(e, pattern === 'dragon2' ? 52 : 42, 2.1);
+      else if (n % 3 === 0) fireEnemyCross(e, 3.4, 16);
+      else { fireEnemySpread(e, pattern === 'dragon2' ? 8 : 6, 3.1, 15); fireEnemyAim(e, 1, 3.7, 14); }
+      return;
+    }
+
+    if (pattern === 'lilith') {
+      if (n % 5 === 0) fireEnemyRain(e, 10, 13);
+      else if (n % 3 === 0) fireEnemyRing(e, 14, 2.45, 13);
+      else { fireEnemySpread(e, 8, 2.9, 13); fireEnemyRandom(e, 5, 12); }
+      return;
+    }
+
+    if (pattern === 'maoh') {
+      if (n % 6 === 0) fireEnemyGiant(e, 64, 1.75);
+      else if (n % 4 === 0) fireEnemyRing(e, 18, 2.7, 14);
+      else { fireEnemySpread(e, 10, 3.2, 15); fireEnemyAim(e, 3, 3.5, 14); }
+      return;
+    }
+
+    if (pattern === 'nep') {
+      if (n % 4 === 0) fireEnemyWave(e, 5, 3.0, 16);
+      else fireEnemySpread(e, 7, 2.9, 14);
+      return;
+    }
+
+    if (pattern === 'smith' || pattern === 'mail') {
+      if (n % 4 === 0) fireEnemyWall(e, 7, 16);
+      else if (n % 3 === 0) fireEnemyGiant(e, 38, 2.0);
+      else fireEnemyAim(e, 2, 3.0, 14);
+      return;
+    }
+
+    fireEnemyAim(e, 2, 3.0, 14);
   }
 
-  function fireEnemyAim(e, count, speed){
+  function fireEnemyAim(e, count, speed, radius){
     const alivePets = state.pets.filter(p => !p.dead);
     if (!alivePets.length) return;
 
@@ -1184,31 +1245,31 @@
       const dx = p.x - e.x;
       const dy = p.y - e.y;
       const len = Math.max(1, Math.hypot(dx, dy));
-      pushEnemyBullet(e, dx / len * speed, dy / len * speed, 12);
+      pushEnemyBullet(e, dx / len * speed, dy / len * speed, radius || 12);
     }
   }
 
-  function fireEnemySpread(e, count, speed){
-    const min = -0.60;
-    const max = 0.60;
+  function fireEnemySpread(e, count, speed, radius){
+    const min = -0.65;
+    const max = 0.65;
 
     for (let i = 0; i < count; i++) {
       const t = count <= 1 ? 0.5 : i / (count - 1);
       const a = min + (max - min) * t;
-      pushEnemyBullet(e, Math.sin(a) * speed, Math.cos(a) * speed, 12);
+      pushEnemyBullet(e, Math.sin(a) * speed, Math.cos(a) * speed, radius || 12);
     }
   }
 
-  function fireEnemyFan(e, count){
-    fireEnemySpread(e, count, 2.7);
+  function fireEnemyFan(e, count, radius){
+    fireEnemySpread(e, count, 2.7, radius || 14);
 
     setTimeout(function(){
       if (!running || state.screen !== 'battle' || e.dead) return;
-      fireEnemySpread(e, count, 3.1);
+      fireEnemySpread(e, count, 3.1, radius || 14);
     }, 280);
   }
 
-  function fireEnemyRandom(e, count){
+  function fireEnemyRandom(e, count, radius){
     for (let i = 0; i < count; i++) {
       const tx = rand(W * 0.10, W * 0.90);
       const ty = rand(H * 0.54, H * 0.93);
@@ -1216,24 +1277,35 @@
       const dy = ty - e.y;
       const len = Math.max(1, Math.hypot(dx, dy));
       const speed = rand(2.4, 3.6);
-      pushEnemyBullet(e, dx / len * speed, dy / len * speed, 11);
+      pushEnemyBullet(e, dx / len * speed, dy / len * speed, radius || 12);
     }
   }
 
-  function fireEnemySlow(e){
-    pushEnemyBullet(e, 0, 1.8, 20, Math.ceil(e.power * 1.35));
+  function fireEnemySlow(e, radius){
+    pushEnemyBullet(e, 0, 1.65, radius || 26, Math.ceil(e.power * 1.45));
   }
 
-  function fireEnemyRing(e, count, speed){
+  function fireEnemyGiant(e, radius, speed){
+    const alivePets = state.pets.filter(p => !p.dead);
+    const target = alivePets.length ? pick(alivePets) : { x:W / 2, y:H * 0.75 };
+    const dx = target.x - e.x;
+    const dy = target.y - e.y;
+    const len = Math.max(1, Math.hypot(dx, dy));
+
+    pushEnemyBullet(e, dx / len * Number(speed || 1.9), dy / len * Number(speed || 1.9), radius || 44, Math.ceil(e.power * 1.8));
+    addText('GIANT!', e.x, e.y + 52, '#ff5b5b');
+  }
+
+  function fireEnemyRing(e, count, speed, radius){
     const total = Math.max(4, Number(count || 8));
 
     for (let i = 0; i < total; i++) {
       const a = (Math.PI * 2) * (i / total);
-      pushEnemyBullet(e, Math.cos(a) * speed, Math.sin(a) * speed, 10);
+      pushEnemyBullet(e, Math.cos(a) * speed, Math.sin(a) * speed, radius || 12);
     }
   }
 
-  function fireEnemyCross(e, speed){
+  function fireEnemyCross(e, speed, radius){
     const dirs = [
       { x:0, y:1 },
       { x:-0.65, y:0.85 },
@@ -1244,14 +1316,14 @@
 
     dirs.forEach(d => {
       const len = Math.max(1, Math.hypot(d.x, d.y));
-      pushEnemyBullet(e, d.x / len * speed, d.y / len * speed, 12);
+      pushEnemyBullet(e, d.x / len * speed, d.y / len * speed, radius || 14);
     });
   }
 
-  function fireEnemyWall(e, count){
+  function fireEnemyWall(e, count, radius){
     const total = Math.max(3, Number(count || 4));
-    const startX = W * 0.16;
-    const endX = W * 0.84;
+    const startX = W * 0.14;
+    const endX = W * 0.86;
 
     for (let i = 0; i < total; i++) {
       const t = total <= 1 ? 0.5 : i / (total - 1);
@@ -1259,19 +1331,19 @@
 
       state.enemyBullets.push({
         x,
-        y:e.y + 30,
+        y:e.y + 34,
         vx:0,
-        vy:2.55,
-        r:11,
+        vy:2.35,
+        r:radius || 14,
         power:Number(e.power || 10),
         image:e.atkImage || FALLBACK_ASSET.bossBullet,
         dead:false,
-        life:220
+        life:230
       });
     }
   }
 
-  function fireEnemyRain(e, count){
+  function fireEnemyRain(e, count, radius){
     const total = Math.max(3, Number(count || 5));
 
     for (let i = 0; i < total; i++) {
@@ -1279,12 +1351,44 @@
         x:rand(W * 0.10, W * 0.90),
         y:rand(H * 0.05, H * 0.22),
         vx:rand(-0.25, 0.25),
-        vy:rand(2.2, 3.4),
-        r:10,
+        vy:rand(2.1, 3.3),
+        r:radius || 12,
         power:Number(e.power || 10),
         image:e.atkImage || FALLBACK_ASSET.bossBullet,
         dead:false,
-        life:230
+        life:240
+      });
+    }
+  }
+
+  function fireEnemyRapid(e, count, speed, radius){
+    const total = Math.max(3, Number(count || 6));
+
+    for (let i = 0; i < total; i++) {
+      setTimeout(function(){
+        if (!running || state.screen !== 'battle' || e.dead) return;
+        fireEnemyAim(e, 1, speed || 3.4, radius || 11);
+      }, i * 85);
+    }
+  }
+
+  function fireEnemyWave(e, count, speed, radius){
+    const total = Math.max(3, Number(count || 5));
+
+    for (let i = 0; i < total; i++) {
+      const offset = (i - (total - 1) / 2) * 34;
+      state.enemyBullets.push({
+        x:clamp(e.x + offset, W * 0.08, W * 0.92),
+        y:e.y + 38,
+        vx:Math.sin(i * 0.8) * 0.55,
+        vy:speed || 2.8,
+        r:radius || 14,
+        power:Number(e.power || 10),
+        image:e.atkImage || FALLBACK_ASSET.bossBullet,
+        dead:false,
+        life:230,
+        wave:true,
+        phase:i
       });
     }
   }
@@ -1299,7 +1403,7 @@
       power:Number(power || e.power || 10),
       image:e.atkImage || FALLBACK_ASSET.bossBullet,
       dead:false,
-      life:210
+      life:230
     });
   }
 
@@ -1353,6 +1457,11 @@
     state.enemyBullets.forEach(b => {
       if (b.dead) return;
 
+      if (b.wave) {
+        b.phase = Number(b.phase || 0) + 0.08;
+        b.x += Math.sin(b.phase) * 1.6;
+      }
+
       b.x += b.vx;
       b.y += b.vy;
       b.life--;
@@ -1374,7 +1483,7 @@
         }
       });
 
-      if (b.life <= 0 || b.x < -80 || b.x > W + 80 || b.y < -80 || b.y > H + 80) b.dead = true;
+      if (b.life <= 0 || b.x < -100 || b.x > W + 100 || b.y < -100 || b.y > H + 100) b.dead = true;
     });
 
     state.enemyBullets = state.enemyBullets.filter(b => !b.dead);
@@ -1821,7 +1930,7 @@
       if (p.dead) return;
 
       const image = img(p.image);
-      const y = p.y + Math.sin(p.bob) * 3;
+      const y = p.y + Math.sin(p.bob) * 2.2;
 
       ctx.save();
 
@@ -1899,18 +2008,25 @@
   function drawEnemyBullets(){
     state.enemyBullets.forEach(b => {
       const image = img(b.image || FALLBACK_ASSET.bossBullet);
-      const size = b.r * 3.1;
+      const size = b.r * 3.0;
 
       ctx.save();
 
       if (!drawImageContain(ctx, image, b.x, b.y, size, size)) {
         ctx.fillStyle = '#ff5b5b';
         ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = b.r >= 30 ? 4 : 2;
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
+
+        if (b.r >= 30) {
+          ctx.globalAlpha = 0.25;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r + 12, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       ctx.restore();
