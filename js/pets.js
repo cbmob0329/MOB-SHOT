@@ -2,7 +2,10 @@
 
 (function(){
   const PET_SAVE_KEY = 'mobshot_pet_state_v4';
-  const MAX_LEVEL = 50;
+  const RUBY_SAVE_FIELD = 'petRuby';
+  const BASE_MAX_LEVEL = 50;
+  const PLUS_UNLOCK_MAX_LEVEL = 120;
+  const MAX_PLUS = 99;
   const MAX_EQUIPPED_PETS = 4;
 
   const PET_MASTER = [
@@ -30,9 +33,9 @@
       skillBreakPower:150,
       skillCt:30,
       firstCt:10,
-      skillWideAt:[30,50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv30スキルワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[30,50,80,110],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'mobfrog',
@@ -58,9 +61,9 @@
       skillBreakPower:250,
       skillCt:25,
       firstCt:5,
-      skillWideAt:[50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'mobdenden',
@@ -86,9 +89,9 @@
       skillBreakPower:80,
       skillCt:35,
       firstCt:15,
-      skillWideAt:[50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'mobwolf',
@@ -114,9 +117,9 @@
       skillBreakPower:300,
       skillCt:30,
       firstCt:20,
-      skillWideAt:[50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'mobslime',
@@ -142,14 +145,14 @@
       skillBreakPower:80,
       skillCt:42,
       firstCt:20,
-      skillWideAt:[],
-      normalWideAt:[15,30,45],
+      skillWideAt:[80],
+      normalWideAt:[15,30,45,75,105],
       healBase:15,
       healLv5:20,
       healLv30:45,
       healLv50:60,
       barrierAt:25,
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv1 HP15回復、Lv5 HP20回復、Lv15通常ワイド+1、Lv25小バリア、Lv30 HP45回復、Lv45通常ワイド+1、Lv50 HP60回復'
+      growthText:'回復支援。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'mobchibihawk',
@@ -175,9 +178,9 @@
       skillBreakPower:600,
       skillCt:28,
       firstCt:8,
-      skillWideAt:[50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'連射型。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'punimobpink',
@@ -203,9 +206,9 @@
       skillBreakPower:120,
       skillCt:40,
       firstCt:12,
-      skillWideAt:[25,50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv25スキルワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[25,50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'コイン特化。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'minimiramob',
@@ -231,9 +234,9 @@
       skillBreakPower:150,
       skillCt:35,
       firstCt:12,
-      skillWideAt:[50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'分身型。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'neonkidmob',
@@ -259,9 +262,9 @@
       skillBreakPower:200,
       skillCt:30,
       firstCt:10,
-      skillWideAt:[50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'連射型。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'minidramob',
@@ -287,9 +290,9 @@
       skillBreakPower:1000,
       skillCt:38,
       firstCt:18,
-      skillWideAt:[50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'重砲型。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'merurumob',
@@ -315,9 +318,9 @@
       skillBreakPower:250,
       skillCt:36,
       firstCt:14,
-      skillWideAt:[50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'吸血型。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'lilmoblilith',
@@ -343,9 +346,9 @@
       skillBreakPower:300,
       skillCt:42,
       firstCt:16,
-      skillWideAt:[50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'弾幕型。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'chibimaohmob',
@@ -371,9 +374,9 @@
       skillBreakPower:800,
       skillCt:45,
       firstCt:20,
-      skillWideAt:[50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'超火力。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'chibimobtetsu',
@@ -399,9 +402,9 @@
       skillBreakPower:400,
       skillCt:40,
       firstCt:15,
-      skillWideAt:[50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'防御補助。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'chibimobmelt',
@@ -427,9 +430,9 @@
       skillBreakPower:600,
       skillCt:38,
       firstCt:14,
-      skillWideAt:[50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'障害物破壊。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'wondamob',
@@ -455,9 +458,9 @@
       skillBreakPower:250,
       skillCt:50,
       firstCt:20,
-      skillWideAt:[50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'支援型。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'lilmobnep',
@@ -483,9 +486,9 @@
       skillBreakPower:600,
       skillCt:42,
       firstCt:16,
-      skillWideAt:[50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'範囲殲滅。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'chibiulmob',
@@ -511,9 +514,9 @@
       skillBreakPower:800,
       skillCt:45,
       firstCt:18,
-      skillWideAt:[50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'最終弾幕。+50で通常ワイド+1、+99でLv120解放'
     },
     {
       key:'hero',
@@ -539,26 +542,18 @@
       skillBreakPower:3000,
       skillCt:50,
       firstCt:20,
-      skillWideAt:[50],
-      normalWideAt:[10,20,40],
-      growthText:'Lv毎: 通常+1% / スキル+1.3% / CT-0.1秒。Lv10通常ワイド+1、Lv20通常ワイド+1、Lv40通常ワイド+1、Lv50スキルワイド+1'
+      skillWideAt:[50,90],
+      normalWideAt:[10,20,40,70,100],
+      growthText:'最強万能。+50で通常ワイド+1、+99でLv120解放'
     }
   ];
 
   function defaultState(){
     const pets = {};
-
     PET_MASTER.forEach(pet => {
-      pets[pet.key] = {
-        owned:false,
-        level:1
-      };
+      pets[pet.key] = { owned:false, level:1, plus:0 };
     });
-
-    return {
-      equipped:[],
-      pets
-    };
+    return { equipped:[], pets };
   }
 
   function loadState(){
@@ -566,7 +561,6 @@
 
     try {
       const raw = localStorage.getItem(PET_SAVE_KEY);
-
       if (raw) {
         const parsed = JSON.parse(raw);
         state = Object.assign(state, parsed || {});
@@ -578,30 +572,17 @@
 
     state.equipped = state.equipped.filter((key, index, arr) => {
       const pet = getPet(key);
-
-      return (
-        arr.indexOf(key) === index &&
-        pet &&
-        pet.implemented &&
-        state.pets[key] &&
-        state.pets[key].owned
-      );
+      return arr.indexOf(key) === index && pet && pet.implemented && state.pets[key] && state.pets[key].owned;
     });
 
     PET_MASTER.forEach(pet => {
-      if (!state.pets[pet.key]) {
-        state.pets[pet.key] = {
-          owned:false,
-          level:1
-        };
-      }
-
-      state.pets[pet.key].level = Math.max(
-        1,
-        Math.min(MAX_LEVEL, Number(state.pets[pet.key].level || 1))
-      );
+      if (!state.pets[pet.key]) state.pets[pet.key] = { owned:false, level:1, plus:0 };
 
       state.pets[pet.key].owned = !!state.pets[pet.key].owned;
+      state.pets[pet.key].plus = Math.max(0, Math.min(MAX_PLUS, Number(state.pets[pet.key].plus || 0)));
+
+      const cap = levelCapByPlus(state.pets[pet.key].plus);
+      state.pets[pet.key].level = Math.max(1, Math.min(cap, Number(state.pets[pet.key].level || 1)));
     });
 
     return state;
@@ -609,31 +590,12 @@
 
   function saveState(state){
     state.equipped = Array.isArray(state.equipped) ? state.equipped.slice(0, MAX_EQUIPPED_PETS) : [];
-
-    try {
-      localStorage.setItem(PET_SAVE_KEY, JSON.stringify(state));
-    } catch(e) {}
-  }
-
-  function getPet(key){
-    return PET_MASTER.find(pet => pet.key === key) || null;
+    try { localStorage.setItem(PET_SAVE_KEY, JSON.stringify(state)); } catch(e) {}
   }
 
   function getSave(){
-    if (window.MobShotStorage && window.MobShotStorage.load) {
-      return window.MobShotStorage.load();
-    }
-
-    return {
-      coin:0,
-      rank:1,
-      score:0,
-      diamond:0,
-      stageProgress:{
-        highestStageIndex:-1,
-        clearedStageIds:{}
-      }
-    };
+    if (window.MobShotStorage && window.MobShotStorage.load) return window.MobShotStorage.load();
+    try { return JSON.parse(localStorage.getItem('mobshot_split_v1')) || {}; } catch(e) { return { coin:0, rank:1, diamond:0, petRuby:0, stageProgress:{ highestStageIndex:-1, clearedStageIds:{} } }; }
   }
 
   function saveMainData(save){
@@ -641,7 +603,6 @@
       window.MobShotStorage.save(save);
       return true;
     }
-
     try {
       localStorage.setItem('mobshot_split_v1', JSON.stringify(save));
       return true;
@@ -650,28 +611,61 @@
     }
   }
 
-  function refreshMainHud(){
-    if (window.MobShotMain && window.MobShotMain.refreshMainHud) {
-      window.MobShotMain.refreshMainHud();
-    }
-
-    window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
+  function getRuby(){
+    const save = getSave();
+    return Number(save[RUBY_SAVE_FIELD] || 0);
   }
 
-  function stageList(){
-    if (window.MobShotStorage && window.MobShotStorage.STAGE_LIST) {
-      return window.MobShotStorage.STAGE_LIST;
-    }
+  function addRuby(amount){
+    const save = getSave();
+    save[RUBY_SAVE_FIELD] = Number(save[RUBY_SAVE_FIELD] || 0) + Number(amount || 0);
+    saveMainData(save);
+    refreshMainHud();
+    return Number(save[RUBY_SAVE_FIELD] || 0);
+  }
 
+  function spendRuby(amount){
+    const save = getSave();
+    const have = Number(save[RUBY_SAVE_FIELD] || 0);
+    const cost = Number(amount || 0);
+    if (have < cost) return false;
+    save[RUBY_SAVE_FIELD] = have - cost;
+    saveMainData(save);
+    refreshMainHud();
+    return true;
+  }
+
+  function refreshMainHud(){
+    if (window.MobShotMain && window.MobShotMain.refreshMainHud) window.MobShotMain.refreshMainHud();
+    window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
+    window.dispatchEvent(new CustomEvent('mobshot:petRubyUpdated'));
+  }
+
+  function getPet(key){ return PET_MASTER.find(pet => pet.key === key) || null; }
+
+  function petPlusCost(currentPlus){
+    const next = Math.max(1, Number(currentPlus || 0) + 1);
+    if (next === 1) return 1;
+    if (next === 2) return 3;
+    if (next === 3) return 5;
+    if (next === 4) return 7;
+    if (next === 5) return 10;
+    return 10 + Math.ceil((next - 5) * 1.6);
+  }
+
+  function plusPowerRate(plus){ return 1 + Math.max(0, Number(plus || 0)) * 0.001; }
+  function plusCtBonus(plus){ return Math.floor(Math.max(0, Number(plus || 0)) / 5) * 0.1; }
+  function plusSkillTier(plus){ return Math.floor(Math.max(0, Number(plus || 0)) / 10); }
+  function plusNormalWideBonus(plus){ return Number(plus || 0) >= 50 ? 1 : 0; }
+  function levelCapByPlus(plus){ return Number(plus || 0) >= 99 ? PLUS_UNLOCK_MAX_LEVEL : BASE_MAX_LEVEL; }
+
+  function stageList(){
+    if (window.MobShotStorage && window.MobShotStorage.STAGE_LIST) return window.MobShotStorage.STAGE_LIST;
     return [];
   }
 
   function clearedStageIndex(save){
-    return Number(
-      save.stageProgress && save.stageProgress.highestStageIndex != null
-        ? save.stageProgress.highestStageIndex
-        : -1
-    );
+    return Number(save.stageProgress && save.stageProgress.highestStageIndex != null ? save.stageProgress.highestStageIndex : -1);
   }
 
   function stageIndexById(id){
@@ -680,16 +674,9 @@
   }
 
   function hasClearedStageId(save, id){
-    if (save.stageProgress && save.stageProgress.clearedStageIds && save.stageProgress.clearedStageIds[id]) {
-      return true;
-    }
-
+    if (save.stageProgress && save.stageProgress.clearedStageIds && save.stageProgress.clearedStageIds[id]) return true;
     const targetIndex = stageIndexById(id);
-
-    if (targetIndex >= 0) {
-      return clearedStageIndex(save) >= targetIndex;
-    }
-
+    if (targetIndex >= 0) return clearedStageIndex(save) >= targetIndex;
     return false;
   }
 
@@ -720,15 +707,20 @@
     return state.equipped.includes(key);
   }
 
+  function getPlus(key){
+    const state = loadState();
+    return Math.max(0, Math.min(MAX_PLUS, Number(state.pets[key]?.plus || 0)));
+  }
+
   function getLevel(key){
     const state = loadState();
-    return Math.max(1, Math.min(MAX_LEVEL, Number(state.pets[key]?.level || 1)));
+    const plus = Number(state.pets[key]?.plus || 0);
+    return Math.max(1, Math.min(levelCapByPlus(plus), Number(state.pets[key]?.level || 1)));
   }
 
   function upgradeCost(level){
     const lv = Math.max(1, Number(level || 1));
-
-    if (lv >= MAX_LEVEL) return 0;
+    if (lv >= PLUS_UNLOCK_MAX_LEVEL) return 0;
     if (lv === 1) return 500;
     if (lv === 2) return 700;
     if (lv === 3) return 900;
@@ -737,7 +729,8 @@
     if (lv < 20) return 4000 + ((lv - 10) * 1000);
     if (lv < 30) return 14000 + ((lv - 20) * 2000);
     if (lv < 40) return 34000 + ((lv - 30) * 3000);
-    return 64000 + ((lv - 40) * 5000);
+    if (lv < 50) return 64000 + ((lv - 40) * 5000);
+    return 120000 + ((lv - 50) * 8500);
   }
 
   function normalLevelRate(level){
@@ -748,14 +741,15 @@
     return 1 + ((Math.max(1, Number(level || 1)) - 1) * 0.013);
   }
 
-  function skillCooldown(pet, level){
-    return Math.max(5, Number(pet.skillCt || 30) - ((Math.max(1, Number(level || 1)) - 1) * 0.1));
+  function skillCooldown(pet, level, plus){
+    const lvCt = Number(pet.skillCt || 30) - ((Math.max(1, Number(level || 1)) - 1) * 0.1);
+    return Math.max(3, lvCt - plusCtBonus(plus));
   }
 
-  function normalWideBonus(level, pet){
+  function normalWideBonus(level, pet, plus){
     const lv = Number(level || 1);
     const list = pet.normalWideAt || [];
-    return list.filter(n => lv >= n).length;
+    return list.filter(n => lv >= n).length + plusNormalWideBonus(plus);
   }
 
   function skillWideBonus(level, pet){
@@ -791,10 +785,7 @@
     save.coin = coin - Number(pet.price || 0);
     saveMainData(save);
 
-    state.pets[key] = {
-      owned:true,
-      level:1
-    };
+    state.pets[key] = { owned:true, level:1, plus:0 };
 
     saveState(state);
     refreshMainHud();
@@ -840,10 +831,12 @@
       return;
     }
 
+    const plus = Number(state.pets[key].plus || 0);
+    const cap = levelCapByPlus(plus);
     const currentLevel = getLevel(key);
 
-    if (currentLevel >= MAX_LEVEL) {
-      alert('最大Lvです。');
+    if (currentLevel >= cap) {
+      alert(`最大Lvです。\n+99でLv120まで解放されます。`);
       return;
     }
 
@@ -866,17 +859,46 @@
     renderAll();
   }
 
+  function upgradePetPlus(key){
+    const pet = getPet(key);
+    if (!pet || !pet.implemented) return;
+
+    const state = loadState();
+
+    if (!state.pets[key]?.owned) {
+      alert('先に購入してください。');
+      return;
+    }
+
+    const plus = Math.max(0, Math.min(MAX_PLUS, Number(state.pets[key].plus || 0)));
+
+    if (plus >= MAX_PLUS) {
+      alert('+値は最大です。');
+      return;
+    }
+
+    const cost = petPlusCost(plus);
+
+    if (!spendRuby(cost)) {
+      alert(`ペットルビーが足りません。\n必要ルビー: ${cost}\n所持ルビー: ${getRuby()}`);
+      return;
+    }
+
+    state.pets[key].plus = plus + 1;
+    saveState(state);
+    refreshMainHud();
+    renderAll();
+  }
+
   function petImageHtml(pet, mode, locked){
     const isLocked = !!locked || !pet.implemented;
     const src = mode === 'back' ? pet.backImage : pet.frontImage;
 
-    if (!src) {
-      return `<span class="pet-img-fallback">?</span>`;
-    }
+    if (!src) return `<span class="pet-img-fallback">?</span>`;
 
     return `
       <img
-        src="${src}?v=20260625_pet50"
+        src="${src}?v=20260626_pet_ruby"
         alt="${isLocked ? 'LOCK' : pet.name}"
         style="${isLocked ? 'filter:brightness(0) opacity(.75);' : ''}"
         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
@@ -911,10 +933,7 @@
           equipPet(pet.key);
         });
       } else {
-        slot.innerHTML = `
-          <span class="pet-slot-num">${i + 1}</span>
-          <span class="pet-slot-name">EMPTY</span>
-        `;
+        slot.innerHTML = `<span class="pet-slot-num">${i + 1}</span><span class="pet-slot-name">EMPTY</span>`;
       }
 
       wrap.appendChild(slot);
@@ -950,8 +969,11 @@
       const unlockOk = canUnlock(pet);
       const owned = !!state.pets[pet.key]?.owned;
       const equipped = state.equipped.includes(pet.key);
+      const plus = getPlus(pet.key);
+      const cap = levelCapByPlus(plus);
       const level = getLevel(pet.key);
-      const nextCost = level >= MAX_LEVEL ? 0 : upgradeCost(level);
+      const nextCost = level >= cap ? 0 : upgradeCost(level);
+      const plusCost = plus >= MAX_PLUS ? 0 : petPlusCost(plus);
       const lockedView = !unlockOk || !pet.implemented;
 
       const card = document.createElement('div');
@@ -985,13 +1007,13 @@
         <div class="pet-card-body">
           <div class="pet-card-name">
             ${displayName}
-            <span>${lockedView ? '' : `Lv${level}/${MAX_LEVEL}`}</span>
+            <span>${lockedView ? '' : `Lv${level}/${cap} +${plus}`}</span>
           </div>
 
           <div class="pet-card-desc">${displayRole} / ${displayUnlock}</div>
 
           <div class="pet-card-price">
-            ${lockedView ? `条件: ${displayUnlock}` : `購入 ${Number(pet.price || 0).toLocaleString()} COIN`}
+            ${lockedView ? `条件: ${displayUnlock}` : `購入 ${Number(pet.price || 0).toLocaleString()} COIN / 所持ルビー ${getRuby().toLocaleString()}`}
           </div>
 
           <div class="pet-card-spec">
@@ -999,15 +1021,15 @@
           </div>
 
           <div class="pet-card-spec">
-            ${lockedView ? '？？？' : `通常攻撃 ${Math.round(pet.normalAttackRate * normalLevelRate(level) * 100)}% / 連射 ${Math.round(pet.normalRateRate * 100)}% / 通常ワイド+${normalWideBonus(level, pet)}`}
+            ${lockedView ? '？？？' : `通常 ${Math.round(pet.normalAttackRate * normalLevelRate(level) * plusPowerRate(plus) * 100)}% / 連射 ${Math.round(pet.normalRateRate * 100)}% / 通常ワイド+${normalWideBonus(level, pet, plus)}`}
           </div>
 
           <div class="pet-card-spec">
-            ${lockedView ? '？？？' : `スキル: ${pet.skillName} / 威力倍率${Math.round(skillLevelRate(level) * 100)}% / CT${Math.round(skillCooldown(pet, level) * 10) / 10}秒 / 初回${pet.firstCt}秒 / スキルワイド+${skillWideBonus(level, pet)}`}
+            ${lockedView ? '？？？' : `スキル: ${pet.skillName} / CT${Math.round(skillCooldown(pet, level, plus) * 10) / 10}秒 / スキルワイド+${skillWideBonus(level, pet)} / +強化Tier${plusSkillTier(plus)}`}
           </div>
 
           <div class="pet-card-spec">
-            ${lockedView ? '解放後に性能表示' : pet.growthText}
+            ${lockedView ? '解放後に性能表示' : `+効果: +1毎パワー+0.1% / +5毎CT-0.1秒 / +10毎スキル強化 / +50通常ワイド+1 / +99 Lv120解放`}
           </div>
         </div>
 
@@ -1016,28 +1038,36 @@
             ${mainButtonText}
           </button>
 
-          <button type="button" class="pet-upgrade-btn" ${(!owned || level >= MAX_LEVEL || !pet.implemented || !unlockOk) ? 'disabled' : ''}>
-            強化<br>${level >= MAX_LEVEL ? 'MAX' : nextCost.toLocaleString()}
+          <button type="button" class="pet-upgrade-btn" ${(!owned || level >= cap || !pet.implemented || !unlockOk) ? 'disabled' : ''}>
+            Lv強化<br>${level >= cap ? 'MAX' : nextCost.toLocaleString()}
+          </button>
+
+          <button type="button" class="pet-upgrade-btn pet-plus-btn" ${(!owned || plus >= MAX_PLUS || !pet.implemented || !unlockOk) ? 'disabled' : ''}>
+            +強化<br>${plus >= MAX_PLUS ? 'MAX' : '♦' + plusCost}
           </button>
         </div>
       `;
 
       const mainBtn = card.querySelector('.pet-card-btn');
-      const upgradeBtn = card.querySelector('.pet-upgrade-btn');
+      const upgradeBtn = card.querySelector('.pet-upgrade-btn:not(.pet-plus-btn)');
+      const plusBtn = card.querySelector('.pet-plus-btn');
 
       if (mainBtn && !mainButtonDisabled) {
         mainBtn.addEventListener('click', function(){
-          if (!owned) {
-            buyPet(pet.key);
-          } else {
-            equipPet(pet.key);
-          }
+          if (!owned) buyPet(pet.key);
+          else equipPet(pet.key);
         });
       }
 
-      if (upgradeBtn && owned && level < MAX_LEVEL && pet.implemented && unlockOk) {
+      if (upgradeBtn && owned && level < cap && pet.implemented && unlockOk) {
         upgradeBtn.addEventListener('click', function(){
           upgradePet(pet.key);
+        });
+      }
+
+      if (plusBtn && owned && plus < MAX_PLUS && pet.implemented && unlockOk) {
+        plusBtn.addEventListener('click', function(){
+          upgradePetPlus(pet.key);
         });
       }
 
@@ -1048,7 +1078,6 @@
   function openModal(){
     const modal = document.getElementById('petEquipModal');
     if (!modal) return;
-
     renderAll();
     modal.classList.remove('hidden');
   }
@@ -1056,7 +1085,6 @@
   function closeModal(){
     const modal = document.getElementById('petEquipModal');
     if (!modal) return;
-
     modal.classList.add('hidden');
   }
 
@@ -1095,11 +1123,8 @@
 
     if (modal && !modal.__mobPetBgBound) {
       modal.__mobPetBgBound = true;
-
       modal.addEventListener('click', function(e){
-        if (e.target === modal) {
-          closeModal();
-        }
+        if (e.target === modal) closeModal();
       });
     }
   }
@@ -1124,17 +1149,26 @@
         const pet = getPet(key);
         if (!pet || !pet.implemented) return null;
 
+        const plus = getPlus(key);
         const level = getLevel(key);
 
         return Object.assign({}, pet, {
           slotIndex:index,
           level,
-          maxLevel:MAX_LEVEL,
-          normalLevelRate:normalLevelRate(level),
-          skillLevelRate:skillLevelRate(level),
-          currentSkillCt:skillCooldown(pet, level),
-          normalWideBonus:normalWideBonus(level, pet),
-          skillWideBonus:skillWideBonus(level, pet)
+          plus,
+          petRubyPlus:plus,
+          maxPlus:MAX_PLUS,
+          maxLevel:levelCapByPlus(plus),
+          levelCap:levelCapByPlus(plus),
+          normalLevelRate:normalLevelRate(level) * plusPowerRate(plus),
+          skillLevelRate:skillLevelRate(level) * (1 + plusSkillTier(plus) * 0.015),
+          currentSkillCt:skillCooldown(pet, level, plus),
+          normalWideBonus:normalWideBonus(level, pet, plus),
+          skillWideBonus:skillWideBonus(level, pet),
+          plusPowerRate:plusPowerRate(plus),
+          plusCtBonus:plusCtBonus(plus),
+          plusSkillTier:plusSkillTier(plus),
+          plusNormalWideBonus:plusNormalWideBonus(plus)
         });
       })
       .filter(Boolean);
@@ -1150,15 +1184,31 @@
     buyPet,
     equipPet,
     upgradePet,
+    upgradePetPlus,
     getEquippedPets,
     getPet,
     getLevel,
+    getPlus,
+    getRuby,
+    addRuby,
+    spendRuby,
+    petPlusCost,
+    plusPowerRate,
+    plusCtBonus,
+    plusSkillTier,
+    plusNormalWideBonus,
+    levelCapByPlus,
     upgradeCost,
     canUnlock,
     isOwned,
     isEquipped,
+    loadState,
+    saveState,
     PET_MASTER,
-    MAX_LEVEL,
+    BASE_MAX_LEVEL,
+    PLUS_UNLOCK_MAX_LEVEL,
+    MAX_LEVEL:BASE_MAX_LEVEL,
+    MAX_PLUS,
     MAX_EQUIPPED_PETS
   };
 })();
