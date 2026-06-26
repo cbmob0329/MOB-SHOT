@@ -1308,14 +1308,14 @@
 
     if (!hero.target || hero.target.dead || hero.retargetCd <= 0) {
       hero.target = findStrongestTarget();
-      hero.retargetCd = 34;
+      hero.retargetCd = 20;
     }
 
     if (hero.target) {
       const dx = hero.target.x - hero.x;
       const dy = hero.target.y - hero.y;
       const d = Math.max(1, Math.hypot(dx, dy));
-      const speed = 7.4;
+      const speed = 9.4;
 
       hero.vx += (dx / d) * 0.78;
       hero.vy += (dy / d) * 0.78;
@@ -1332,24 +1332,24 @@
         if (!hit) return;
 
         const key = entityHitKey(e);
-        const interval = Math.floor(Number(hero.skill.heroHitInterval || 2.4) * 60);
+        const interval = Math.floor(Number(hero.skill.heroHitInterval || 2.0) * 60);
 
         if (canIntervalHit(hero.hitMap, key, interval)) {
-          damageEnemyBullet(e, playerPower() * Number((hero.skill.powerRate && hero.skill.powerRate.hero) || 1.65) + plusDamage(hero.skill), e.x, e.y, '#ffcf5b');
+          damageEnemyBullet(e, playerPower() * Number((hero.skill.powerRate && hero.skill.powerRate.hero) || 2.65) + plusDamage(hero.skill), e.x, e.y, '#ffcf5b');
           effects().push({ type:'bookHeroHit', x:e.x, y:e.y, timer:18 });
           hero.retargetCd = 0;
         }
       });
 
       getTargets().forEach(e => {
-        const hit = Math.hypot(hero.x - e.x, hero.y - e.y) <= (e.r || 28) + 38;
+        const hit = Math.hypot(hero.x - e.x, hero.y - e.y) <= (e.r || 28) + 58;
         if (!hit) return;
 
         const key = entityHitKey(e);
         const interval = Math.floor(Number(hero.skill.heroHitInterval || 2.4) * 60);
 
         if (canIntervalHit(hero.hitMap, key, interval)) {
-          damageEntity(e, playerPower() * Number((hero.skill.powerRate && hero.skill.powerRate.hero) || 1.65) + plusDamage(hero.skill));
+          damageEntity(e, playerPower() * Number((hero.skill.powerRate && hero.skill.powerRate.hero) || 2.65) + plusDamage(hero.skill));
           effects().push({ type:'bookHeroHit', x:e.x, y:e.y, timer:18 });
           hero.retargetCd = 0;
         }
