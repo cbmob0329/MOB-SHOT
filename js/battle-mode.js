@@ -11,27 +11,9 @@
   };
 
   const MODE_MASTER = [
-    {
-      key:'arena',
-      name:'アリーナ',
-      icon:'mt/are.png',
-      desc:'選んだペット最大4体で、雑魚3体＋中ボス1体に挑戦！',
-      maxPets:4
-    },
-    {
-      key:'boss',
-      name:'ボス降臨',
-      icon:'mt/petboss.png',
-      desc:'選んだペット最大6体で、ステージボス1体に挑戦！',
-      maxPets:6
-    },
-    {
-      key:'ragnarok',
-      name:'ラグナロク',
-      icon:'mt/rag.png',
-      desc:'所持ペット全員で、通常ボス＋強力ボスの2体に挑戦！',
-      maxPets:999
-    }
+    { key:'arena', name:'アリーナ', icon:'mt/are.png', desc:'選んだペット最大4体で、雑魚3体＋中ボス1体に挑戦！', maxPets:4 },
+    { key:'boss', name:'ボス降臨', icon:'mt/petboss.png', desc:'選んだペット最大6体で、ステージボス1体に挑戦！', maxPets:6 },
+    { key:'ragnarok', name:'ラグナロク', icon:'mt/rag.png', desc:'所持ペット全員で、通常ボス＋強力ボスの2体に挑戦！', maxPets:999 }
   ];
 
   const DIFFICULTIES = [
@@ -44,80 +26,68 @@
 
   const STAGES_NORMAL = [
     {
-      key:'grass',
-      name:'草原',
-      bg:'sta/backsougen.png',
+      key:'grass', name:'草原', bg:'sta/backsougen.png',
       arenaZako:[
         { name:'スラモブ', image:'en/sra.png', hp:180, power:8 },
         { name:'モブロック', image:'en/eniwa.png', hp:220, power:10 },
         { name:'スラモブ', image:'en/sra.png', hp:200, power:9 }
       ],
-      mid:{ name:'モブプテラ', image:'en/enpte.png', hp:700, power:14, atkImage:'atk/hawkatk.png' },
+      mid:{ name:'モブプテラ', image:'en/enpte.png', hp:700, power:14, atkImage:'atk/hawkatk.png', pattern:'mid' },
       boss:{ name:'ホークモブ', image:'boss/hawks.png', hp:1200, power:18, atkImage:'atk/hawkatk.png', pattern:'hawk' },
       strongBoss:{ name:'ホークモブⅡ', image:'boss/hawks2.png', hp:1900, power:25, atkImage:'atk/hawkatk.png', pattern:'hawk2' }
     },
     {
-      key:'desert',
-      name:'砂漠',
-      bg:'sta/backsabaku.png',
+      key:'desert', name:'砂漠', bg:'sta/backsabaku.png',
       arenaZako:[
         { name:'モブ盗賊', image:'en/entozok.png', hp:240, power:10 },
         { name:'モブドワーフ', image:'en/endowa.png', hp:280, power:12 },
         { name:'モブ盗賊', image:'en/entozok.png', hp:260, power:11 }
       ],
-      mid:{ name:'モブデュアル', image:'en/sabadual.png', hp:850, power:17, atkImage:'atk/miraatk.png' },
+      mid:{ name:'モブデュアル', image:'en/sabadual.png', hp:850, power:17, atkImage:'atk/miraatk.png', pattern:'mid' },
       boss:{ name:'ミラモブ', image:'boss/miraboss.png', hp:1350, power:20, atkImage:'atk/miraatk.png', pattern:'mira' },
       strongBoss:{ name:'ミラモブⅡ', image:'boss/bossmira2.png', hp:2100, power:28, atkImage:'atk/miraatk.png', pattern:'mira2' }
     },
     {
-      key:'town',
-      name:'田舎町',
-      bg:'sta/backumi.png',
+      key:'town', name:'田舎町', bg:'sta/backumi.png',
       arenaZako:[
         { name:'モブバード', image:'en/enwasi.png', hp:300, power:12 },
         { name:'モブファル', image:'en/iwakofal.png', hp:330, power:14 },
         { name:'モブバード', image:'en/enwasi.png', hp:310, power:13 }
       ],
-      mid:{ name:'モブピー', image:'en/enmobpi.png', hp:1000, power:20, atkImage:'atk/hinotama.png' },
+      mid:{ name:'モブピー', image:'en/enmobpi.png', hp:1000, power:20, atkImage:'atk/hinotama.png', pattern:'mid' },
       boss:{ name:'モブガーディアン', image:'boss/bossban.png', hp:1550, power:23, atkImage:'atk/hinotama.png', pattern:'guardian' },
       strongBoss:{ name:'モブガーディアンⅡ', image:'boss/bossban2.png', hp:2350, power:31, atkImage:'atk/hinotama.png', pattern:'guardian2' }
     },
     {
-      key:'neon',
-      name:'ネオン街',
-      bg:'sta/backneon.png',
+      key:'neon', name:'ネオン街', bg:'sta/backneon.png',
       arenaZako:[
         { name:'ナーガモブ', image:'en/ennarga.png', hp:360, power:15 },
         { name:'モブグリズリー', image:'en/enguri.png', hp:430, power:17 },
         { name:'ナーガモブ', image:'en/ennarga.png', hp:390, power:16 }
       ],
-      mid:{ name:'モブギドラ', image:'en/neongidra.png', hp:1200, power:23, atkImage:'atk/kaminari.png' },
+      mid:{ name:'モブギドラ', image:'en/neongidra.png', hp:1200, power:23, atkImage:'atk/kaminari.png', pattern:'mid' },
       boss:{ name:'ネオンモブ', image:'boss/bossneon.png', hp:1750, power:26, atkImage:'atk/kaminari.png', pattern:'neon' },
       strongBoss:{ name:'ネオンモブⅡ', image:'boss/bossneon2.png', hp:2600, power:36, atkImage:'atk/kaminari.png', pattern:'neon2' }
     },
     {
-      key:'magma',
-      name:'マグマ',
-      bg:'sta/backmagma.png',
+      key:'magma', name:'マグマ', bg:'sta/backmagma.png',
       arenaZako:[
         { name:'モブマグトカゲ', image:'en/enmagtokage.png', hp:430, power:18 },
         { name:'モブマグプテラ', image:'en/enmagpte.png', hp:480, power:20 },
         { name:'モブマグトカゲ', image:'en/enmagtokage.png', hp:450, power:19 }
       ],
-      mid:{ name:'マグモブレム', image:'en/enmaggolem.png', hp:1450, power:27, atkImage:'atk/dragon.png' },
+      mid:{ name:'マグモブレム', image:'en/enmaggolem.png', hp:1450, power:27, atkImage:'atk/dragon.png', pattern:'mid' },
       boss:{ name:'ドラゴンモブ', image:'boss/bossdragoon.png', hp:2100, power:32, atkImage:'atk/dragon.png', pattern:'dragon' },
       strongBoss:{ name:'ドラゴンモブⅡ', image:'boss/bossdragoon2.png', hp:3100, power:43, atkImage:'atk/dragon.png', pattern:'dragon2' }
     },
     {
-      key:'castle',
-      name:'魔王城',
-      bg:'sta/backmao.png',
+      key:'castle', name:'魔王城', bg:'sta/backmao.png',
       arenaZako:[
         { name:'ダークゴブモブ', image:'en/enmaogob.png', hp:520, power:22 },
         { name:'モブアサシン', image:'en/enasa.png', hp:560, power:24 },
         { name:'ダークゴブモブ', image:'en/enmaogob.png', hp:540, power:23 }
       ],
-      mid:{ name:'グラディモブ', image:'en/mobgra.png', hp:1700, power:31, atkImage:'atk/atkriri.png' },
+      mid:{ name:'グラディモブ', image:'en/mobgra.png', hp:1700, power:31, atkImage:'atk/atkriri.png', pattern:'mid' },
       boss:{ name:'モブリリス', image:'boss/bossriris.png', hp:2600, power:40, atkImage:'atk/atkriri.png', pattern:'lilith' },
       strongBoss:{ name:'モブ魔王', image:'boss/bossmaoh.png', hp:3800, power:54, atkImage:'atk/atkmaoh.png', pattern:'maoh' }
     }
@@ -125,82 +95,70 @@
 
   const STAGES_LEGEND = [
     {
-      key:'prison',
-      name:'監獄',
-      bg:'sta/stkan.png',
+      key:'prison', name:'監獄', bg:'sta/stkan.png',
       arenaZako:[
         { name:'モブテツ', image:'en/mobtetu.png', hp:700, power:28 },
         { name:'マルモブ', image:'en/marumob.png', hp:760, power:30 },
         { name:'モブテツ', image:'en/mobtetu.png', hp:730, power:29 }
       ],
-      mid:{ name:'モブニコ', image:'en/mobnico.png', hp:2200, power:38, atkImage:'atk/atkmeiru.png' },
+      mid:{ name:'モブニコ', image:'en/mobnico.png', hp:2200, power:38, atkImage:'atk/atkmeiru.png', pattern:'mid' },
       boss:{ name:'モブメイル', image:'boss/bossmeiru.png', hp:4200, power:60, atkImage:'atk/atkmeiru.png', pattern:'mail' },
-      strongBoss:{ name:'モブメイルⅡ', image:'boss/bossmeiru.png', hp:5600, power:72, atkImage:'atk/atkmeiru.png', pattern:'mail2' }
+      strongBoss:{ name:'モブスミス', image:'boss/bosssmith.png', hp:5600, power:72, atkImage:'atk/matrix.png', pattern:'smith' }
     },
     {
-      key:'matrix',
-      name:'マトリックス',
-      bg:'sta/stmatrix.png',
+      key:'matrix', name:'マトリックス', bg:'sta/stmatrix.png',
       arenaZako:[
         { name:'モブサラ', image:'en/mobsara.png', hp:760, power:31 },
         { name:'モブシノ', image:'en/mobsino.png', hp:820, power:34 },
         { name:'モブサラ', image:'en/mobsara.png', hp:790, power:32 }
       ],
-      mid:{ name:'ガトリモブ', image:'en/gatorimob.png', hp:2500, power:42, atkImage:'atk/matrix.png' },
+      mid:{ name:'ガトリモブ', image:'en/gatorimob.png', hp:2500, power:42, atkImage:'atk/matrix.png', pattern:'mid' },
       boss:{ name:'モブスミス', image:'boss/bosssmith.png', hp:4600, power:64, atkImage:'atk/matrix.png', pattern:'smith' },
-      strongBoss:{ name:'モブスミスⅡ', image:'boss/bosssmith.png', hp:6000, power:78, atkImage:'atk/matrix.png', pattern:'smith2' }
+      strongBoss:{ name:'モブネプ', image:'boss/bossmobnep.png', hp:6000, power:78, atkImage:'atk/atknep.png', pattern:'nep' }
     },
     {
-      key:'sea',
-      name:'海の線路',
-      bg:'sta/umisenro.png',
+      key:'sea', name:'海の線路', bg:'sta/umisenro.png',
       arenaZako:[
         { name:'ウミシモブ', image:'en/umisimob.png', hp:820, power:34 },
         { name:'バブモブ', image:'en/babumob.png', hp:900, power:37 },
         { name:'ウミシモブ', image:'en/umisimob.png', hp:850, power:35 }
       ],
-      mid:{ name:'モブサメ', image:'en/mobsame.png', hp:2750, power:45, atkImage:'atk/atknep.png' },
+      mid:{ name:'モブサメ', image:'en/mobsame.png', hp:2750, power:45, atkImage:'atk/atknep.png', pattern:'mid' },
       boss:{ name:'モブネプ', image:'boss/bossmobnep.png', hp:5000, power:68, atkImage:'atk/atknep.png', pattern:'nep' },
-      strongBoss:{ name:'モブネプⅡ', image:'boss/bossmobnep.png', hp:6600, power:82, atkImage:'atk/atknep.png', pattern:'nep2' }
+      strongBoss:{ name:'ホークモブⅡ', image:'boss/hawks2.png', hp:6600, power:82, atkImage:'atk/hawkatk.png', pattern:'hawk2' }
     },
     {
-      key:'neonroad',
-      name:'ネオン高速',
-      bg:'sta/neonlord.png',
+      key:'neonroad', name:'ネオン高速', bg:'sta/neonlord.png',
       arenaZako:[
         { name:'ネオスラモブ', image:'en/neosura.png', hp:880, power:37 },
         { name:'モブネオレム', image:'en/neorem.png', hp:980, power:40 },
         { name:'ネオスラモブ', image:'en/neosura.png', hp:910, power:38 }
       ],
-      mid:{ name:'モブコード', image:'en/mobcode.png', hp:3000, power:49, atkImage:'atk/kaminari.png' },
-      boss:{ name:'ブルネオモブ', image:'boss/bossneonblue.png', hp:5400, power:72, atkImage:'atk/kaminari.png', pattern:'blueneon' },
-      strongBoss:{ name:'パルネオモブ', image:'boss/bossneonp.png', hp:7000, power:86, atkImage:'atk/kaminari.png', pattern:'purneon' }
+      mid:{ name:'モブコード', image:'en/mobcode.png', hp:3000, power:49, atkImage:'atk/kaminari.png', pattern:'mid' },
+      boss:{ name:'ブルネオモブ', image:'boss/bossneonblue.png', hp:5400, power:72, atkImage:'atk/kaminari.png', pattern:'neon2' },
+      strongBoss:{ name:'パルネオモブ', image:'boss/bossneonp.png', hp:7000, power:86, atkImage:'atk/kaminari.png', pattern:'neon2' }
     },
     {
-      key:'makai',
-      name:'魔界',
-      bg:'sta/makai.png',
+      key:'makai', name:'魔界', bg:'sta/makai.png',
       arenaZako:[
         { name:'モブデビブルー', image:'en/mobdebib.png', hp:960, power:41 },
         { name:'モブデビピンク', image:'en/mobdebipink.png', hp:1020, power:44 },
         { name:'モブデビパープル', image:'en/mobdebip.png', hp:1050, power:45 }
       ],
-      mid:{ name:'モブマグシャー', image:'en/mobmagsya.png', hp:3300, power:54, atkImage:'atk/atkmaoh.png' },
-      boss:{ name:'モブエース', image:'boss/bossace.png', hp:6200, power:80, atkImage:'atk/atkmaoh.png', pattern:'ace' },
-      strongBoss:{ name:'モブエースⅡ', image:'boss/bossace.png', hp:8000, power:96, atkImage:'atk/atkmaoh.png', pattern:'ace2' }
+      mid:{ name:'モブマグシャー', image:'en/mobmagsya.png', hp:3300, power:54, atkImage:'atk/atkmaoh.png', pattern:'mid' },
+      boss:{ name:'モブエース', image:'boss/bossace.png', hp:6200, power:80, atkImage:'atk/atkmaoh.png', pattern:'maoh' },
+      strongBoss:{ name:'モブ魔王', image:'boss/bossmaoh.png', hp:8000, power:96, atkImage:'atk/atkmaoh.png', pattern:'maoh' }
     },
     {
-      key:'last',
-      name:'魔王の間',
-      bg:'sta/makailast.png',
+      key:'last', name:'魔王の間', bg:'sta/makailast.png',
       arenaZako:[
         { name:'モブデビイエロー', image:'en/mobdebiy.png', hp:1100, power:47 },
         { name:'モブデーモンレッド', image:'en/mobdemonr.png', hp:1180, power:51 },
         { name:'モブデーモンパープル', image:'en/mobdemonp.png', hp:1220, power:52 }
       ],
-      mid:{ name:'モブリリス', image:'boss/bossriris.png', hp:4000, power:62, atkImage:'atk/atkriri.png' },
-      boss:{ name:'閻魔モブ', image:'boss/enmamob.png', hp:7600, power:92, atkImage:'atk/atkmaoh.png', pattern:'enma' },
-      strongBoss:{ name:'ウルモブリリス', image:'boss/bossulmob.png', hp:9200, power:108, atkImage:'atk/atkriri.png', pattern:'ulriri' }
+      mid:{ name:'モブリリス', image:'boss/bossriris.png', hp:4000, power:62, atkImage:'atk/atkriri.png', pattern:'lilith' },
+      boss:{ name:'閻魔モブ', image:'boss/enmamob.png', hp:7600, power:92, atkImage:'atk/atkmaoh.png', pattern:'maoh' },
+      strongBoss:{ name:'ウルモブリリス', image:'boss/bossulmob.png', hp:9200, power:108, atkImage:'atk/atkriri.png', pattern:'lilith' }
     }
   ];
 
@@ -244,7 +202,6 @@
     messageTimer:0,
     resultShown:false,
     rewardDone:false,
-    phaseIndex:0,
     support:{ rapid:1, power:1, shield:0, coin:1 },
     stats:{ damage:0, petLost:0, enemyKilled:0, bossKilled:0, clear:false, drops:[] }
   };
@@ -259,7 +216,7 @@
     if (!src) return null;
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260626_pet_modes_v1';
+      image.src = src + '?v=20260626_pet_modes_full_fixed';
       images.set(src, image);
     }
     return images.get(src);
@@ -271,23 +228,17 @@
 
   function drawImageContain(ctx, image, cx, cy, maxW, maxH){
     if (!imageReady(image)) return false;
-
     const iw = image.naturalWidth || image.width;
     const ih = image.naturalHeight || image.height;
     const scale = Math.min(maxW / iw, maxH / ih);
     const w = iw * scale;
     const h = ih * scale;
-
     ctx.drawImage(image, cx - w / 2, cy - h / 2, w, h);
     return true;
   }
 
   function loadClearSave(){
-    try {
-      return JSON.parse(localStorage.getItem(SAVE_KEY)) || {};
-    } catch(e) {
-      return {};
-    }
+    try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch(e) { return {}; }
   }
 
   function saveClear(modeKey, diffKey, stageKey){
@@ -304,7 +255,6 @@
     const save = loadClearSave();
     const modeSave = save[modeKey] || {};
     const inferno = modeSave.inferno || {};
-
     return STAGES_NORMAL.every(stage => !!inferno[stage.key]);
   }
 
@@ -329,11 +279,7 @@
       app.appendChild(screen);
     }
 
-    screen.innerHTML = `
-      <canvas id="battleCanvas"></canvas>
-      <div id="battleOverlay" class="battle-overlay"></div>
-    `;
-
+    screen.innerHTML = '<canvas id="battleCanvas"></canvas><div id="battleOverlay" class="battle-overlay"></div>';
     return screen;
   }
 
@@ -452,10 +398,7 @@
               ${MODE_MASTER.map(m => `
                 <button class="battle-mode-btn" type="button" data-mode="${m.key}">
                   <img src="${m.icon}" alt="">
-                  <div>
-                    <div class="battle-name">${m.name}</div>
-                    <div class="battle-sub">${m.desc}</div>
-                  </div>
+                  <div><div class="battle-name">${m.name}</div><div class="battle-sub">${m.desc}</div></div>
                   <div class="battle-right">最大${m.maxPets >= 999 ? '全員' : m.maxPets + '体'}</div>
                 </button>
               `).join('')}
@@ -488,18 +431,12 @@
         <div class="battle-menu">
           <div class="battle-card">
             <h1 class="battle-title">${state.mode.name}</h1>
-            <p class="battle-help">
-              難易度を選択してください。<br>
-              ${lockedLegend ? 'インフェルノで草原〜魔王城を全クリアするとレジェンド解放。' : 'レジェンド解放済み。'}
-            </p>
+            <p class="battle-help">${lockedLegend ? 'インフェルノで草原〜魔王城を全クリアするとレジェンド解放。' : 'レジェンド解放済み。'}</p>
             <div class="battle-grid">
               ${list.map(d => `
                 <button class="battle-diff-btn" type="button" data-diff="${d.key}">
                   <img src="${d.icon}" alt="">
-                  <div>
-                    <div class="battle-name">${d.name}</div>
-                    <div class="battle-sub">HP x${d.hpRate} / 攻撃 x${d.atkRate} / 石板Drop ${Math.round(d.dropRate * 100)}%</div>
-                  </div>
+                  <div><div class="battle-name">${d.name}</div><div class="battle-sub">HP x${d.hpRate} / 攻撃 x${d.atkRate} / 石板Drop ${Math.round(d.dropRate * 100)}%</div></div>
                   <div class="battle-right">${d.rewardCoin.toLocaleString()} COIN<br>💎 +${d.rewardDiamond}</div>
                 </button>
               `).join('')}
@@ -540,10 +477,7 @@
               ${stages.map(stage => `
                 <button class="battle-stage-btn" type="button" data-stage="${stage.key}">
                   <img class="battle-stage-thumb" src="${stage.bg}" alt="">
-                  <div>
-                    <div class="battle-name">${stage.name}</div>
-                    <div class="battle-sub">${getStageDescByMode(state.mode.key, stage)}</div>
-                  </div>
+                  <div><div class="battle-name">${stage.name}</div><div class="battle-sub">${getStageDescByMode(state.mode.key, stage)}</div></div>
                   <div class="battle-right">SELECT</div>
                 </button>
               `).join('')}
@@ -561,6 +495,7 @@
           const key = this.getAttribute('data-stage');
           const stage = stages.find(s => s.key === key);
           if (!stage) return;
+
           state.stage = stage;
 
           if (state.mode.key === 'ragnarok') {
@@ -588,18 +523,12 @@
         <div class="battle-menu">
           <div class="battle-card">
             <h1 class="battle-title">ペット選択</h1>
-            <p class="battle-help">
-              ${state.mode.name} / ${state.stage.name} / ${state.difficulty.name}<br>
-              最大${max}体まで選択できます。足りなくても出撃可能。
-            </p>
+            <p class="battle-help">${state.mode.name} / ${state.stage.name} / ${state.difficulty.name}<br>最大${max}体まで。足りなくても出撃可能。</p>
             <div class="battle-grid">
               ${state.availablePets.map(p => `
                 <button class="battle-pet-btn ${state.selectedPetKeys.includes(p.key) ? 'selected' : ''}" type="button" data-pet="${p.key}">
                   <img src="${p.backImage || p.frontImage || ''}" alt="">
-                  <div>
-                    <div class="battle-name">${p.name}</div>
-                    <div class="battle-sub">${p.role || ''} / Lv${p.level}</div>
-                  </div>
+                  <div><div class="battle-name">${p.name}</div><div class="battle-sub">${p.role || ''} / Lv${p.level}</div></div>
                   <div class="battle-right">${state.selectedPetKeys.includes(p.key) ? '選択中' : '選択'}</div>
                 </button>
               `).join('')}
@@ -622,7 +551,7 @@
       });
 
       $('mobBackStageBtn').onclick = function(){ state.screen = 'stage'; renderOverlay(); };
-      $('mobStartPetModeBtn').onclick = function(){ beginGame(); };
+      $('mobStartPetModeBtn').onclick = beginGame;
       return;
     }
 
@@ -642,7 +571,6 @@
       state.selectedPetKeys = state.selectedPetKeys.filter(k => k !== key);
       return;
     }
-
     if (state.selectedPetKeys.length >= max) return;
     state.selectedPetKeys.push(key);
   }
@@ -674,7 +602,6 @@
     state.frame = 0;
     state.resultShown = false;
     state.rewardDone = false;
-    state.phaseIndex = 0;
     state.stats = { damage:0, petLost:0, enemyKilled:0, bossKilled:0, clear:false, drops:[] };
 
     clearBattleObjectsOnly();
@@ -715,9 +642,9 @@
     state.support.power = 1;
     state.support.shield = 0;
     state.support.coin = 1;
-    
   }
-    function buildPetUnits(){
+
+  function buildPetUnits(){
     const owned = getOwnedPetList();
     const selected = state.selectedPetKeys.length
       ? owned.filter(p => state.selectedPetKeys.includes(p.key))
@@ -764,12 +691,10 @@
 
   function getPetMaxHp(lv, pet){
     let hp = 90 + lv * 14 + Math.floor(lv * lv * 0.22);
-
     if (pet.role && pet.role.includes('防御')) hp *= 1.25;
     if (pet.key === 'chibimobtetsu') hp *= 1.35;
     if (pet.key === 'hero') hp *= 1.20;
     if (pet.key === 'mobslime') hp *= 0.95;
-
     return Math.ceil(hp);
   }
 
@@ -838,10 +763,7 @@
     state.enemyBullets.length = 0;
 
     if (state.mode.key === 'arena') {
-      stage.arenaZako.forEach((src, i) => {
-        spawnEnemy(src, 'zako', i, diff);
-      });
-
+      stage.arenaZako.forEach((src, i) => spawnEnemy(src, 'zako', i, diff));
       spawnEnemy(stage.mid, 'midBoss', 3, diff);
     }
 
@@ -861,14 +783,6 @@
     const hp = Math.ceil(Number(src.hp || 1000) * Number(diff.hpRate || 1));
     const power = Math.ceil(Number(src.power || 10) * Number(diff.atkRate || 1));
 
-    const targetX = type === 'zako'
-      ? W * (0.22 + index * 0.20)
-      : state.mode.key === 'ragnarok'
-        ? (index === 0 ? W * 0.32 : W * 0.68)
-        : W / 2;
-
-    const targetY = type === 'zako' ? H * 0.25 : H * 0.18;
-
     const enemy = {
       type,
       name:src.name || 'ENEMY',
@@ -878,10 +792,10 @@
       hp,
       maxHp:hp,
       power,
-      x:targetX,
-      y:targetY,
-      targetX,
-      targetY,
+      x:W / 2,
+      y:type === 'zako' ? H * 0.25 : H * 0.18,
+      targetX:W / 2,
+      targetY:type === 'zako' ? H * 0.25 : H * 0.18,
       r:type === 'zako' ? 28 : type === 'midBoss' ? 42 : 50,
       moveCd:intRand(40,120),
       shotCd:intRand(80,160),
@@ -903,7 +817,6 @@
 
   function update(){
     state.frame++;
-
     if (state.messageTimer > 0) state.messageTimer--;
 
     updateTexts();
@@ -956,25 +869,20 @@
         p.aiCd = intRand(38, 95);
       }
 
-      if (p.dodgeCd <= 0) {
-        p.targetX += Math.sin(state.frame * 0.025 + index) * 0.9;
-      }
+      if (p.dodgeCd <= 0) p.targetX += Math.sin(state.frame * 0.025 + index) * 0.9;
 
       p.x += (p.targetX - p.x) * 0.075;
       p.y += (p.targetY - p.y) * 0.075;
-
       p.x = clamp(p.x, W * 0.07, W * 0.93);
       p.y = clamp(p.y, H * 0.48, H * 0.94);
 
       p.shootCd--;
-
       if (p.shootCd <= 0) {
         p.shootCd = Math.max(10, Math.floor(44 / Math.max(0.15, p.rapid * state.support.rapid)));
         firePetNormal(p);
       }
 
       p.skillCd--;
-
       if (p.skillCd <= 0) {
         p.skillCd = p.skillCt;
         usePetSkill(p);
@@ -988,9 +896,7 @@
 
     state.enemyBullets.forEach(b => {
       if (b.dead) return;
-
       const d = Math.hypot(b.x - p.x, b.y - p.y);
-
       if (d < bestDist) {
         bestDist = d;
         best = b;
@@ -1009,7 +915,6 @@
 
     aliveEnemies.forEach(e => {
       const d = Math.hypot(e.x - p.x, e.y - p.y);
-
       if (d < bestD) {
         bestD = d;
         best = e;
@@ -1022,7 +927,6 @@
   function firePetNormal(p){
     const target = findEnemyTarget(p);
     if (!target) return;
-
     pushPetBullet(p, target, p.power * state.support.power, 'normal', 7);
   }
 
@@ -1128,10 +1032,718 @@
     else if (p.level >= 5) heal = 20;
 
     target.hp = Math.min(target.maxHp, target.hp + heal);
-
     addText('HP +' + heal, target.x, target.y - 34, '#9dff73');
 
-    if (p.level >= 25) {
-      state.support.shield = Math.max(state.support.shield, 180);
+    if (p.level >= 25) state.support.shield = Math.max(state.support.shield, 180);
+  }
+
+  function updateEnemies(){
+    const all = state.enemies.concat(state.bosses);
+    layoutEnemies();
+
+    all.forEach((e, index) => {
+      if (e.dead) return;
+
+      e.bob += 0.04;
+      e.moveCd--;
+
+      if (e.moveCd <= 0) {
+        const range = e.type === 'zako' ? 42 : 78;
+        e.targetX = clamp(e.targetX + rand(-range, range), W * 0.12, W * 0.88);
+        e.moveCd = intRand(70, 150);
+      }
+
+      e.x += (e.targetX - e.x) * (e.type === 'zako' ? 0.025 : 0.018);
+      e.y += (e.targetY + Math.sin(e.bob) * 5 - e.y) * 0.04;
+
+      e.shotCd--;
+
+      if (e.shotCd <= 0) {
+        e.shotCd = Math.max(42, e.shotMax - (state.difficulty && state.difficulty.legend ? 16 : 0));
+        fireEnemy(e, index);
+      }
+    });
+  }
+
+  function fireEnemy(e, index){
+    const alivePets = state.pets.filter(p => !p.dead);
+    if (!alivePets.length) return;
+
+    if (e.type === 'zako') {
+      fireEnemyAim(e, 1, 2.5);
+      return;
+    }
+
+    const pattern = e.pattern || 'boss';
+
+    if (pattern === 'hawk' || pattern === 'hawk2') fireEnemySpread(e, pattern === 'hawk2' ? 5 : 4, 2.8);
+    else if (pattern === 'mira' || pattern === 'mira2') { fireEnemyAim(e, 2, 3.2); fireEnemySlow(e); }
+    else if (pattern === 'guardian' || pattern === 'guardian2') fireEnemyFan(e, pattern === 'guardian2' ? 5 : 3);
+    else if (pattern === 'neon' || pattern === 'neon2') fireEnemyRandom(e, pattern === 'neon2' ? 6 : 4);
+    else if (pattern === 'dragon' || pattern === 'dragon2') { fireEnemySpread(e, pattern === 'dragon2' ? 6 : 4, 3.0); fireEnemyAim(e, 1, 3.5); }
+    else if (pattern === 'lilith') { fireEnemySpread(e, 5, 2.9); fireEnemyRandom(e, 3); }
+    else if (pattern === 'maoh') { fireEnemySpread(e, 7, 3.1); fireEnemyAim(e, 2, 3.4); }
+    else if (pattern === 'mid') { fireEnemySpread(e, 3, 2.7); fireEnemyAim(e, 1, 2.8); }
+    else fireEnemyAim(e, 1, 3.0);
+  }
+
+  function fireEnemyAim(e, count, speed){
+    const alivePets = state.pets.filter(p => !p.dead);
+    if (!alivePets.length) return;
+
+    for (let i = 0; i < count; i++) {
+      const p = pick(alivePets);
+      const dx = p.x - e.x;
+      const dy = p.y - e.y;
+      const len = Math.max(1, Math.hypot(dx, dy));
+      pushEnemyBullet(e, dx / len * speed, dy / len * speed, 12);
     }
   }
+
+  function fireEnemySpread(e, count, speed){
+    const min = -0.60;
+    const max = 0.60;
+
+    for (let i = 0; i < count; i++) {
+      const t = count <= 1 ? 0.5 : i / (count - 1);
+      const a = min + (max - min) * t;
+      pushEnemyBullet(e, Math.sin(a) * speed, Math.cos(a) * speed, 12);
+    }
+  }
+
+  function fireEnemyFan(e, count){
+    fireEnemySpread(e, count, 2.7);
+    setTimeout(function(){
+      if (!running || state.screen !== 'battle' || e.dead) return;
+      fireEnemySpread(e, count, 3.1);
+    }, 280);
+  }
+
+  function fireEnemyRandom(e, count){
+    for (let i = 0; i < count; i++) {
+      const tx = rand(W * 0.10, W * 0.90);
+      const ty = rand(H * 0.54, H * 0.93);
+      const dx = tx - e.x;
+      const dy = ty - e.y;
+      const len = Math.max(1, Math.hypot(dx, dy));
+      const speed = rand(2.4, 3.6);
+      pushEnemyBullet(e, dx / len * speed, dy / len * speed, 11);
+    }
+  }
+
+  function fireEnemySlow(e){
+    pushEnemyBullet(e, 0, 1.8, 20, Math.ceil(e.power * 1.35));
+  }
+
+  function pushEnemyBullet(e, vx, vy, r, power){
+    state.enemyBullets.push({
+      x:e.x,
+      y:e.y + 34,
+      vx,
+      vy,
+      r,
+      power:Number(power || e.power || 10),
+      image:e.atkImage || FALLBACK_ASSET.bossBullet,
+      dead:false,
+      life:210
+    });
+  }
+
+  function updatePetBullets(){
+    state.petBullets.forEach(b => {
+      if (b.dead) return;
+
+      b.x += b.vx;
+      b.y += b.vy;
+      b.life--;
+
+      const target = b.target;
+
+      if (!target || target.dead) {
+        b.dead = true;
+        return;
+      }
+
+      if (Math.hypot(b.x - target.x, b.y - target.y) < b.r + target.r) {
+        target.hp -= b.damage;
+        state.stats.damage += b.damage;
+        b.dead = true;
+
+        addText('-' + Math.ceil(b.damage), target.x, target.y - 35, b.color);
+        burst(target.x, target.y, b.color, b.type === 'skill' ? 12 : 5);
+
+        if (target.hp <= 0) killEnemy(target);
+      }
+
+      if (b.life <= 0 || b.x < -80 || b.x > W + 80 || b.y < -80 || b.y > H + 80) b.dead = true;
+    });
+
+    state.petBullets = state.petBullets.filter(b => !b.dead);
+  }
+
+  function killEnemy(e){
+    if (!e || e.dead) return;
+
+    e.dead = true;
+
+    if (e.type === 'zako') state.stats.enemyKilled++;
+    else state.stats.bossKilled++;
+
+    rollStoneDrop(e);
+
+    addText(e.type === 'zako' ? 'K.O.' : 'BOSS DOWN!', e.x, e.y, '#ffe66b');
+    burst(e.x, e.y, '#ffe66b', e.type === 'zako' ? 18 : 36);
+  }
+
+  function updateEnemyBullets(){
+    state.enemyBullets.forEach(b => {
+      if (b.dead) return;
+
+      b.x += b.vx;
+      b.y += b.vy;
+      b.life--;
+
+      state.pets.forEach(p => {
+        if (p.dead || b.dead) return;
+
+        if (Math.hypot(b.x - p.x, b.y - p.y) < b.r + p.r) {
+          let damage = b.power;
+          if (state.support.shield > 0) damage = Math.ceil(damage * 0.45);
+
+          p.hp -= damage;
+          b.dead = true;
+
+          addText('-' + damage, p.x, p.y - 30, '#ff6b6b');
+          burst(p.x, p.y, '#ff6b6b', 8);
+
+          if (p.hp <= 0) killPet(p);
+        }
+      });
+
+      if (b.life <= 0 || b.x < -80 || b.x > W + 80 || b.y < -80 || b.y > H + 80) b.dead = true;
+    });
+
+    state.enemyBullets = state.enemyBullets.filter(b => !b.dead);
+  }
+
+  function killPet(p){
+    if (!p || p.dead) return;
+
+    p.dead = true;
+    p.hp = 0;
+    state.stats.petLost++;
+
+    addText('DOWN', p.x, p.y - 28, '#ff6b6b');
+    burst(p.x, p.y, '#ff6b6b', 15);
+  }
+
+  function checkBattleEnd(){
+    const alivePets = state.pets.some(p => !p.dead);
+    if (!alivePets) {
+      showResult(false, 'ペット全滅');
+      return;
+    }
+
+    const aliveEnemies = state.enemies.concat(state.bosses).some(e => !e.dead);
+    if (!aliveEnemies) {
+      showResult(true, 'CLEAR!');
+    }
+  }
+
+  function rollStoneDrop(enemy){
+    const diff = state.difficulty || DIFFICULTIES[0];
+    const rate = Number(diff.dropRate || 0);
+
+    if (Math.random() > rate) return;
+
+    let rarityPool = PET_STONES;
+
+    if (diff.key === 'easy') rarityPool = PET_STONES.filter(s => s.rarity === 'R');
+    else if (diff.key === 'hard') rarityPool = PET_STONES.filter(s => s.rarity === 'R' || s.rarity === 'SR');
+    else if (diff.key === 'veryhard') rarityPool = PET_STONES.filter(s => s.rarity !== 'UR');
+    else rarityPool = PET_STONES;
+
+    const stone = Object.assign({}, pick(rarityPool.length ? rarityPool : PET_STONES));
+    state.stats.drops.push(stone);
+    savePetStone(stone);
+    addText(`${stone.rarity} ${stone.name}`, enemy.x, enemy.y - 55, '#9dff73');
+  }
+
+  function savePetStone(stone){
+    if (window.MobShotCollection && window.MobShotCollection.addStone) {
+      window.MobShotCollection.addStone(stone);
+      return;
+    }
+
+    if (window.MobShotGacha && window.MobShotGacha.addStone) {
+      window.MobShotGacha.addStone(stone);
+      return;
+    }
+
+    try {
+      const raw = localStorage.getItem(DROP_SAVE_KEY);
+      const save = raw ? JSON.parse(raw) : {};
+      const key = String(stone.no);
+      save[key] = save[key] || Object.assign({}, stone, { count:0, plus:0 });
+      save[key].count = Number(save[key].count || 0) + 1;
+      save[key].plus = Number(save[key].plus || 0) + 1;
+      localStorage.setItem(DROP_SAVE_KEY, JSON.stringify(save));
+    } catch(e) {}
+  }
+
+  function showResult(clear, reason){
+    if (state.resultShown) return;
+
+    state.resultShown = true;
+    state.screen = 'result';
+    state.stats.clear = !!clear;
+
+    const diff = state.difficulty || DIFFICULTIES[0];
+
+    let rewardCoin = 0;
+    let rewardDiamond = 0;
+
+    if (clear) {
+      rewardCoin = Math.ceil(diff.rewardCoin * state.support.coin);
+      rewardDiamond = diff.rewardDiamond;
+
+      if (state.mode.key === 'boss') rewardCoin = Math.ceil(rewardCoin * 1.4);
+      if (state.mode.key === 'ragnarok') rewardCoin = Math.ceil(rewardCoin * 2.0);
+
+      if (!state.rewardDone) {
+        state.rewardDone = true;
+        addCoin(rewardCoin);
+        addDiamond(rewardDiamond);
+        saveClear(state.mode.key, diff.key, state.stage.key);
+      }
+    }
+
+    const overlay = $('battleOverlay');
+    if (!overlay) return;
+
+    overlay.innerHTML = `
+      <div class="battle-menu">
+        <div class="battle-card">
+          <h1 class="battle-title">${clear ? 'CLEAR!' : 'FAILED'}</h1>
+          <p class="battle-help">
+            ${reason || ''}<br><br>
+            モード: ${state.mode.name}<br>
+            難易度: ${diff.name}<br>
+            ステージ: ${state.stage.name}<br>
+            撃破: ${Number(state.stats.enemyKilled || 0)} / BOSS ${Number(state.stats.bossKilled || 0)}<br>
+            ペットDOWN: ${Number(state.stats.petLost || 0)}<br>
+            合計ダメージ: ${Math.ceil(state.stats.damage || 0).toLocaleString()}<br>
+            石板Drop: ${state.stats.drops.length ? state.stats.drops.map(d => `${d.rarity} ${d.name}`).join(' / ') : 'なし'}<br><br>
+            ${clear ? `報酬: ${rewardCoin.toLocaleString()} COIN / 💎 +${rewardDiamond}` : 'クリア報酬なし'}
+          </p>
+          <button id="mobRetryBtn" class="battle-btn green" type="button" style="width:100%">もう一度</button>
+          <button id="mobBackModeBtn" class="battle-btn" type="button" style="width:100%;margin-top:10px">モード選択へ</button>
+          <button id="mobResultMainBtn" class="battle-btn blue" type="button" style="width:100%;margin-top:10px">メインへ戻る</button>
+        </div>
+      </div>
+    `;
+
+    $('mobRetryBtn').onclick = beginGame;
+    $('mobBackModeBtn').onclick = function(){ state.screen = 'title'; renderOverlay(); };
+    $('mobResultMainBtn').onclick = close;
+  }
+
+  function addCoin(amount){
+    let save = null;
+
+    if (window.MobShotStorage && window.MobShotStorage.load) {
+      save = window.MobShotStorage.load();
+      save.coin = Number(save.coin || 0) + Number(amount || 0);
+      window.MobShotStorage.save(save);
+    } else {
+      try { save = JSON.parse(localStorage.getItem('mobshot_split_v1')) || {}; } catch(e) { save = {}; }
+      save.coin = Number(save.coin || 0) + Number(amount || 0);
+      try { localStorage.setItem('mobshot_split_v1', JSON.stringify(save)); } catch(e) {}
+    }
+
+    refreshMainHud();
+  }
+
+  function addDiamond(amount){
+    let save = null;
+
+    if (window.MobShotStorage && window.MobShotStorage.load) {
+      save = window.MobShotStorage.load();
+      save.diamond = Number(save.diamond || 0) + Number(amount || 0);
+      window.MobShotStorage.save(save);
+    } else {
+      try { save = JSON.parse(localStorage.getItem('mobshot_split_v1')) || {}; } catch(e) { save = {}; }
+      save.diamond = Number(save.diamond || 0) + Number(amount || 0);
+      try { localStorage.setItem('mobshot_split_v1', JSON.stringify(save)); } catch(e) {}
+    }
+
+    refreshMainHud();
+  }
+
+  function refreshMainHud(){
+    if (window.MobShotMain && window.MobShotMain.refreshMainHud) window.MobShotMain.refreshMainHud();
+    window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
+  }
+
+  function showMessage(text){
+    state.message = text;
+    state.messageTimer = 110;
+  }
+
+  function addText(text, x, y, color){
+    state.texts.push({ text, x, y, color:color || '#fff', life:50 });
+  }
+
+  function updateTexts(){
+    state.texts.forEach(t => {
+      t.y -= 0.65;
+      t.life--;
+    });
+    state.texts = state.texts.filter(t => t.life > 0);
+  }
+
+  function burst(x,y,color,n){
+    for (let i = 0; i < n; i++) {
+      state.particles.push({
+        x,y,
+        vx:rand(-3,3),
+        vy:rand(-3,3),
+        color,
+        life:intRand(18,34)
+      });
+    }
+  }
+
+  function updateParticles(){
+    state.particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.06;
+      p.life--;
+    });
+    state.particles = state.particles.filter(p => p.life > 0);
+  }
+
+  function bulletColor(p){
+    const key = p.key || '';
+    if (p.htmlBullet === 'fire') return '#ff6530';
+    if (p.htmlBullet === 'water') return '#4bd8ff';
+    if (p.htmlBullet === 'thunder') return '#ffe84a';
+    if (p.htmlBullet === 'gray') return '#d8f1ff';
+    if (key.includes('riri') || key.includes('lilith') || key.includes('ul') || key === 'merurumob') return '#ff73c9';
+    if (key.includes('neon')) return '#5ffcff';
+    if (key.includes('maoh')) return '#bd5bff';
+    if (key.includes('nep')) return '#55d6ff';
+    if (key === 'hero') return '#ffe66b';
+    return '#dfe8ff';
+  }
+
+  function draw(){
+    if (!ctx) return;
+
+    drawBackground();
+    drawHud();
+    drawEnemies();
+    drawPets();
+    drawPetBullets();
+    drawEnemyBullets();
+    drawParticles();
+    drawTexts();
+    drawMessage();
+  }
+
+  function drawBackground(){
+    const bg = img((state.stage && state.stage.bg) || FALLBACK_ASSET.bg);
+
+    if (imageReady(bg)) ctx.drawImage(bg, 0, 0, W, H);
+    else {
+      ctx.fillStyle = '#d89b45';
+      ctx.fillRect(0,0,W,H);
+    }
+
+    ctx.fillStyle = 'rgba(0,0,0,.22)';
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function drawHud(){
+    if (state.screen !== 'battle' && state.screen !== 'result') return;
+
+    const diff = state.difficulty || DIFFICULTIES[0];
+    const alive = state.pets.filter(p => !p.dead).length;
+    const total = state.pets.length;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,.58)';
+    roundRect(10, 10, W - 20, 62, 18);
+    ctx.fill();
+
+    ctx.font = '900 13px system-ui';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#ffe66b';
+    ctx.fillText(`${state.mode ? state.mode.name : 'PET MODE'} / ${diff.name}`, 22, 32);
+
+    ctx.fillStyle = '#fff';
+    ctx.fillText(`${state.stage ? state.stage.name : ''}  PET ${alive}/${total}  撃破 ${state.stats.enemyKilled + state.stats.bossKilled}`, 22, 55);
+
+    if (state.support.shield > 0) {
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#9deeff';
+      ctx.fillText(`SHIELD ${Math.ceil(state.support.shield / 60)}`, W - 22, 32);
+    }
+
+    ctx.restore();
+  }
+
+  function drawEnemies(){
+    state.enemies.concat(state.bosses).forEach(e => {
+      if (e.dead) return;
+
+      const image = img(e.image);
+      const max = e.type === 'zako' ? 58 : e.type === 'midBoss' ? 86 : 112;
+
+      ctx.save();
+
+      if (!drawImageContain(ctx, image, e.x, e.y, max, max)) {
+        ctx.fillStyle = e.type === 'zako' ? '#ff7ab8' : '#bd5bff';
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      drawHpBar(e.x - max / 2, e.y - max / 2 - 12, max, 8, e.hp / e.maxHp, '#ff4b4b');
+
+      ctx.font = '900 11px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 4;
+      ctx.strokeText(e.name, e.x, e.y + max / 2 + 14);
+      ctx.fillText(e.name, e.x, e.y + max / 2 + 14);
+
+      ctx.restore();
+    });
+  }
+
+  function drawPets(){
+    state.pets.forEach(p => {
+      if (p.dead) return;
+
+      const image = img(p.image);
+      const y = p.y + Math.sin(p.bob) * 3;
+
+      ctx.save();
+
+      ctx.fillStyle = 'rgba(0,0,0,.26)';
+      ctx.beginPath();
+      ctx.ellipse(p.x, y + 20, 18, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (!drawImageContain(ctx, image, p.x, y, 42, 42)) {
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = '#111';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(p.x, y, 17, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      drawHpBar(p.x - 22, y + 24, 44, 5, p.hp / p.maxHp, '#9dff73');
+
+      ctx.font = '900 9px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 3;
+      ctx.strokeText('Lv' + p.level, p.x, y - 25);
+      ctx.fillText('Lv' + p.level, p.x, y - 25);
+
+      ctx.restore();
+    });
+
+    if (state.support.shield > 0) {
+      state.pets.filter(p => !p.dead).forEach(p => {
+        ctx.save();
+        ctx.globalAlpha = 0.28;
+        ctx.strokeStyle = '#dfe8ff';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 28, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      });
+    }
+  }
+
+  function drawPetBullets(){
+    state.petBullets.forEach(b => {
+      const image = img(b.image);
+
+      ctx.save();
+
+      if (!drawImageContain(ctx, image, b.x, b.y, b.type === 'skill' ? b.r * 3.3 : b.r * 2.8, b.type === 'skill' ? b.r * 3.3 : b.r * 2.8)) {
+        ctx.fillStyle = b.color;
+        ctx.strokeStyle = '#111';
+        ctx.lineWidth = b.type === 'skill' ? 3 : 2;
+
+        if (b.type === 'skill') {
+          ctx.globalAlpha = 0.30;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r + 8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    });
+  }
+
+  function drawEnemyBullets(){
+    state.enemyBullets.forEach(b => {
+      const image = img(b.image || FALLBACK_ASSET.bossBullet);
+      const size = b.r * 3.1;
+
+      ctx.save();
+
+      if (!drawImageContain(ctx, image, b.x, b.y, size, size)) {
+        ctx.fillStyle = '#ff5b5b';
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    });
+  }
+
+  function drawParticles(){
+    state.particles.forEach(p => {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.life / 34);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  function drawTexts(){
+    state.texts.forEach(t => {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, t.life / 50);
+      ctx.font = '900 13px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = t.color;
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 4;
+      ctx.strokeText(t.text, t.x, t.y);
+      ctx.fillText(t.text, t.x, t.y);
+      ctx.restore();
+    });
+  }
+
+  function drawMessage(){
+    if (state.messageTimer <= 0) return;
+
+    const alpha = Math.min(1, state.messageTimer / 30);
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font = '1000 30px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffe66b';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 7;
+    ctx.strokeText(state.message, W / 2, H * 0.47);
+    ctx.fillText(state.message, W / 2, H * 0.47);
+    ctx.restore();
+  }
+
+  function drawHpBar(x,y,w,h,rate,color){
+    rate = clamp(Number(rate || 0), 0, 1);
+
+    ctx.fillStyle = 'rgba(0,0,0,.65)';
+    roundRect(x, y, w, h, 999);
+    ctx.fill();
+
+    ctx.fillStyle = color;
+    roundRect(x, y, w * rate, h, 999);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255,255,255,.45)';
+    ctx.lineWidth = 1;
+    roundRect(x, y, w, h, 999);
+    ctx.stroke();
+  }
+
+  function roundRect(x,y,w,h,r){
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(x,y,w,h,r);
+      return;
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function bindMainButton(){
+    const btn = $('openBattleBtn');
+    if (!btn) return;
+
+    btn.disabled = false;
+    btn.classList.remove('disabled-btn');
+
+    const handler = function(e){
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+      }
+
+      open();
+      return false;
+    };
+
+    btn.onclick = handler;
+    btn.onpointerup = handler;
+    btn.ontouchend = handler;
+
+    if (!btn.__mobBattleCaptureBound) {
+      btn.__mobBattleCaptureBound = true;
+      btn.addEventListener('click', handler, true);
+      btn.addEventListener('pointerup', handler, { capture:true, passive:false });
+      btn.addEventListener('touchend', handler, { capture:true, passive:false });
+    }
+  }
+
+  window.MobShotBattle = {
+    open,
+    close
+  };
+
+  document.addEventListener('DOMContentLoaded', bindMainButton);
+  window.addEventListener('load', bindMainButton);
+
+  setTimeout(bindMainButton, 100);
+  setTimeout(bindMainButton, 500);
+  setTimeout(bindMainButton, 1000);
+  setTimeout(bindMainButton, 1500);
+
+  bindMainButton();
+})();
