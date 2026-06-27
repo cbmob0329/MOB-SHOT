@@ -1,6 +1,8 @@
 'use strict';
 
 (function(){
+  const TEST_BOSS_SAVE_KEY = 'mobshot_test_boss_v1';
+
   function fixBossName(name){
     if (name === '番人') return 'モブガーディアン';
     if (name === '番人Ⅱ') return 'モブガーディアンⅡ';
@@ -16,6 +18,46 @@
     const copy = clone(def);
     copy.name = fixBossName(copy.name);
     return copy;
+  }
+
+  function getTestBoss(){
+    if (window.MobShotTestStage && window.MobShotTestStage.getBoss) {
+      const boss = window.MobShotTestStage.getBoss();
+      if (boss) return boss;
+    }
+
+    try {
+      const raw = localStorage.getItem(TEST_BOSS_SAVE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch(e) {
+      return null;
+    }
+  }
+
+  function testBossAreaKey(boss){
+    const area = String(boss && boss.area || '');
+
+    if (area === '草原') return 'grass';
+    if (area === '砂漠') return 'desert';
+    if (area === '田舎町') return 'town';
+    if (area === 'ネオン街') return 'neon';
+    if (area === 'マグマ') return 'magma';
+    if (area === '魔王城') return 'castle';
+    if (area === '監獄') return 'prison';
+    if (area === 'マトリックス') return 'matrix';
+    if (area === '海の線路') return 'seaRail';
+    if (area === 'ネオン高速') return 'neonHighway';
+    if (area === '魔界') return 'makai';
+    if (area === '魔王の間') return 'last';
+
+    return 'grass';
+  }
+
+  function testBossBackground(boss){
+    const key = testBossAreaKey(boss);
+    const area = AREA_DATA[key] || AREA_DATA.grass;
+    return area.background;
   }
 
   const AREA_DATA = {
@@ -313,7 +355,6 @@
       magma:  [2.45, 2.70, 2.95],
       castle: [2.05, 2.25, 2.45]
     },
-
     hard: {
       grass:  [10.00, 10.60, 11.20],
       desert: [7.25, 7.80, 8.40],
@@ -322,7 +363,6 @@
       magma:  [4.95, 5.45, 6.00],
       castle: [4.45, 4.95, 5.50]
     },
-
     veryHard: {
       grass:  [16.00, 17.00, 18.00],
       desert: [12.80, 13.80, 14.80],
@@ -331,7 +371,6 @@
       magma:  [8.20, 9.20, 10.20],
       castle: [7.20, 8.20, 9.20]
     },
-
     inferno: {
       grass:  [24.00, 26.00, 28.00],
       desert: [18.50, 20.50, 22.50],
@@ -340,7 +379,6 @@
       magma:  [11.20, 13.00, 14.80],
       castle: [10.00, 11.80, 13.60]
     },
-
     legend: {
       prison:      [8.00, 8.50, 9.00],
       matrix:      [7.00, 7.60, 8.20],
@@ -531,7 +569,86 @@
     return copy;
   }
 
+  function applyTestBossToData(testBoss){
+    const D = window.MOBSHOT_DATA;
+    if (!D || !testBoss) return null;
+
+    const areaKey = testBossAreaKey(testBoss);
+    const area = AREA_DATA[areaKey] || AREA_DATA.grass;
+    const legend = testBoss.group === 'レジェンド' || !!testBoss.isLegendBoss;
+    const strong = !!testBoss.strong || !!testBoss.isStrongBoss || legend;
+
+    const baseHp = Number(testBoss.hp || 0) || (strong ? 2200 : 1000);
+
+    D.stage = Object.assign(D.stage || {}, {
+      id: 'TEST-BOSS',
+      chapter: 0,
+      stageNo: 0,
+      areaKey,
+      areaName: testBoss.area || area.name || 'テスト',
+      areaType: testBoss.area || area.name || 'テスト',
+      areaNo: 0,
+      difficulty: 'テスト',
+      background: testBoss.background || area.background,
+      isStrongBoss: strong,
+      isLegend: legend,
+      isTest: true,
+      isTestBoss: true,
+      stagePowerScale: 1,
+      doubleBoss: false
+    });
+
+    D.enemies = D.enemies || {};
+    D.enemies.zako = [];
+    D.enemies.midBoss = [];
+    D.enemies.boss = {
+      name: fixBossName(testBoss.name),
+      image: testBoss.image,
+      hp: baseHp,
+      score: 0,
+      coin: 0,
+      strong,
+      isStrongBoss: strong,
+      isLegendBoss: legend,
+      isTestBoss: true,
+      area: testBoss.area || area.name || ''
+    };
+    D.enemies.bosses = [clone(D.enemies.boss)];
+
+    delete D.enemies.bossA;
+    delete D.enemies.bossB;
+
+    D.gimmicks = [];
+    D.obstacles = [];
+    D.enemies.obstacles = [];
+    D.chests = [];
+
+    return D.stage;
+  }
+
   function applyStageToData(){
+    const testBoss = getTestBoss();
+
+    if (testBoss) {
+      applyTestBossToData(testBoss);
+
+      return {
+        index: -1,
+        id: 'TEST-BOSS',
+        chapter: 0,
+        stageNo: 0,
+        areaKey: testBossAreaKey(testBoss),
+        areaName: testBoss.area || 'テスト',
+        difficulty: 'テスト',
+        isStrongBoss: !!testBoss.strong || !!testBoss.isStrongBoss,
+        isLegend: testBoss.group === 'レジェンド' || !!testBoss.isLegendBoss,
+        areaSlot: 3,
+        isTest: true,
+        isTestBoss: true,
+        testBoss
+      };
+    }
+
     const D = window.MOBSHOT_DATA;
 
     if (!D) return getStageInfo();
@@ -600,6 +717,22 @@
 
   MobShotStageFlow.prototype.start = function(){
     this.reset();
+
+    if (this.stageInfo && this.stageInfo.isTestBoss) {
+      this.phase = 'boss';
+      this.phaseFrame = 0;
+      this.area = 3;
+      this.gate = 3;
+      this.boss = 1;
+      this.midBoss = 0;
+      this.finished = false;
+
+      return {
+        type: 'bossStart',
+        text: `TEST BOSS：${this.stageInfo.testBoss ? this.stageInfo.testBoss.name : 'BOSS'}`
+      };
+    }
+
     this.phase = 'area';
     this.phaseFrame = 0;
     this.area = 1;
@@ -633,6 +766,16 @@
   };
 
   MobShotStageFlow.prototype.completeArea = function(){
+    if (this.stageInfo && this.stageInfo.isTestBoss) {
+      this.boss = 1;
+      this.setPhase('boss');
+
+      return {
+        type: 'bossStart',
+        text: `TEST BOSS：${this.stageInfo.testBoss ? this.stageInfo.testBoss.name : 'BOSS'}`
+      };
+    }
+
     this.gate = Number(this.gate || 0) + 1;
     this.setPhase('gate');
 
@@ -643,6 +786,16 @@
   };
 
   MobShotStageFlow.prototype.completeGate = function(){
+    if (this.stageInfo && this.stageInfo.isTestBoss) {
+      this.boss = 1;
+      this.setPhase('boss');
+
+      return {
+        type: 'bossStart',
+        text: `TEST BOSS：${this.stageInfo.testBoss ? this.stageInfo.testBoss.name : 'BOSS'}`
+      };
+    }
+
     if (this.gate === 2 || this.gate === 3) {
       this.midBoss++;
       this.setPhase('midBoss');
@@ -674,6 +827,16 @@
   };
 
   MobShotStageFlow.prototype.completeMidBoss = function(){
+    if (this.stageInfo && this.stageInfo.isTestBoss) {
+      this.boss = 1;
+      this.setPhase('boss');
+
+      return {
+        type: 'bossStart',
+        text: `TEST BOSS：${this.stageInfo.testBoss ? this.stageInfo.testBoss.name : 'BOSS'}`
+      };
+    }
+
     this.area++;
 
     if (this.area > 3) {
