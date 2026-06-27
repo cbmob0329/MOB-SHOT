@@ -4,10 +4,7 @@
   const DEFAULT_FIREBALL_IMAGE = 'atk/hinotama.png';
 
   function specOf(e){
-    if (
-      window.MobShotBossData &&
-      window.MobShotBossData.getAttackSpec
-    ) {
+    if (window.MobShotBossData && window.MobShotBossData.getAttackSpec) {
       const spec = window.MobShotBossData.getAttackSpec(e.name) || {};
 
       return Object.assign({
@@ -36,14 +33,60 @@
     };
   }
 
+  function normalizeDifficultyKey(key){
+    const raw = String(key || '').trim();
+
+    if (raw === 'イージー') return 'easy';
+    if (raw === 'ハード') return 'hard';
+    if (raw === 'ベリーハード') return 'veryHard';
+    if (raw === 'インフェルノ') return 'inferno';
+    if (raw === 'レジェンド') return 'legend';
+
+    if (raw === 'easy') return 'easy';
+    if (raw === 'hard') return 'hard';
+    if (raw === 'veryHard') return 'veryHard';
+    if (raw === 'veryhard') return 'veryHard';
+    if (raw === 'inferno') return 'inferno';
+    if (raw === 'legend') return 'legend';
+
+    return raw || 'easy';
+  }
+
+  function difficultyBalance(e){
+    const key = normalizeDifficultyKey(
+      e.eventDifficulty ||
+      e.__doubleDifficulty ||
+      e.difficulty ||
+      ''
+    );
+
+    if (key === 'hard') {
+      return { speed:1.10, dmg:1.35, hp:1.15 };
+    }
+
+    if (key === 'veryHard') {
+      return { speed:1.20, dmg:1.80, hp:1.35 };
+    }
+
+    if (key === 'inferno') {
+      return { speed:1.32, dmg:2.55, hp:1.65 };
+    }
+
+    if (key === 'legend') {
+      return { speed:1.45, dmg:3.50, hp:2.05 };
+    }
+
+    return { speed:1, dmg:1, hp:1 };
+  }
+
   function sizeOf(spec, sizeType){
     const raw = Number(spec[sizeType] || spec.normal || 28);
 
     if (sizeType === 'small') return Math.max(18, raw);
     if (sizeType === 'normal') return Math.max(26, raw);
-    if (sizeType === 'big') return Math.max(38, raw);
-    if (sizeType === 'huge') return Math.max(54, raw);
-    if (sizeType === 'super') return Math.max(72, raw);
+    if (sizeType === 'big') return Math.max(40, raw);
+    if (sizeType === 'huge') return Math.max(58, raw);
+    if (sizeType === 'super') return Math.max(76, raw);
 
     return Math.max(26, raw);
   }
@@ -93,10 +136,7 @@
   }
 
   function specialHpMul(e){
-    if (
-      window.MobShotBossData &&
-      window.MobShotBossData.getSpecialHpMultiplier
-    ) {
+    if (window.MobShotBossData && window.MobShotBossData.getSpecialHpMultiplier) {
       return Number(window.MobShotBossData.getSpecialHpMultiplier(e.name) || 1.65);
     }
 
@@ -111,11 +151,15 @@
     let hp = Number(opt.hp || 0);
 
     if (!hp && opt.breakable === true) {
-      hp = sizeType === 'small' ? 4 :
-        sizeType === 'normal' ? 7 :
-        sizeType === 'big' ? 12 :
-        sizeType === 'huge' ? 18 :
-        sizeType === 'super' ? 26 : 7;
+      hp = sizeType === 'small' ? 5 :
+        sizeType === 'normal' ? 8 :
+        sizeType === 'big' ? 14 :
+        sizeType === 'huge' ? 20 :
+        sizeType === 'super' ? 30 : 8;
+    }
+
+    if (hp > 0) {
+      hp = Math.ceil(hp * difficultyBalance(e).hp);
     }
 
     if (
@@ -136,14 +180,37 @@
     return hp;
   }
 
+  function damageOf(e, opt, sizeType, r){
+    const bal = difficultyBalance(e);
+
+    if (opt.dmg != null) {
+      return Math.max(1, Math.ceil(Number(opt.dmg) * bal.dmg));
+    }
+
+    let base = Math.ceil(r * 0.42);
+
+    if (sizeType === 'small') base = Math.ceil(r * 0.38);
+    if (sizeType === 'normal') base = Math.ceil(r * 0.44);
+    if (sizeType === 'big') base = Math.ceil(r * 0.54);
+    if (sizeType === 'huge') base = Math.ceil(r * 0.72);
+    if (sizeType === 'super') base = Math.ceil(r * 0.95);
+
+    if (opt.bossSpecial || opt.special || opt.slowBig || opt.trident) {
+      base = Math.ceil(base * 1.25);
+    }
+
+    return Math.max(8, Math.ceil(base * bal.dmg));
+  }
+
   function makeBulletBase(e, tools, opt){
     opt = opt || {};
 
     const spec = specOf(e);
+    const bal = difficultyBalance(e);
     const sizeType = opt.sizeType || 'normal';
     const r = Number(opt.r || sizeOf(spec, sizeType));
     const hp = normalizedHp(e, opt, sizeType);
-    const speed = Number(opt.speed || 1.8);
+    const speed = Number(opt.speed || 1.8) * bal.speed;
     const angle = Number(opt.angle || Math.PI / 2);
     const sx = opt.x != null ? opt.x : e.x;
     const sy = opt.y != null ? opt.y : e.y + 58;
@@ -160,7 +227,7 @@
       visualR: Math.ceil(r * Number(opt.visualRate || 1.08)),
       hitR: Math.ceil(r * Number(opt.hitRate || 0.82)),
 
-      dmg: Number(opt.dmg || Math.max(5, Math.ceil(r * 0.34))),
+      dmg: damageOf(e, opt, sizeType, r),
       hp,
       maxHp: hp,
       breakable: isBreakable,
@@ -227,8 +294,8 @@
       image: DEFAULT_FIREBALL_IMAGE,
       flipY: true,
       sizeType: 'big',
-      speed: 1.45,
-      hp: 16,
+      speed: 1.58,
+      hp: 18,
       color: '#ff7a35',
       breakable: true,
       hitRate: 0.78
@@ -240,9 +307,9 @@
       image: DEFAULT_FIREBALL_IMAGE,
       flipY: true,
       sizeType: 'huge',
-      speed: 1.05,
-      hp: 38,
-      dmg: 18,
+      speed: 1.14,
+      hp: 42,
+      dmg: 42,
       color: '#ff5b35',
       breakable: true,
       slowBig: true,
@@ -256,9 +323,9 @@
   function pushGiantStrongBall(e, tools, opt){
     return pushEnemyBullet(e, tools, Object.assign({
       sizeType: 'super',
-      speed: 0.76,
-      hp: 34,
-      dmg: 34,
+      speed: 0.84,
+      hp: 40,
+      dmg: 56,
       color: '#6be6ff',
       breakable: true,
       bossSpecial: true,
@@ -273,9 +340,9 @@
   function pushTrident(e, tools, opt){
     return pushEnemyBullet(e, tools, Object.assign({
       sizeType: 'super',
-      speed: 0.56,
-      hp: 36,
-      dmg: 38,
+      speed: 0.64,
+      hp: 42,
+      dmg: 68,
       color: '#6be6ff',
       breakable: true,
       bossSpecial: true,
@@ -302,9 +369,9 @@
 
   function fireSlowAimed(e, tools, opt){
     return fireAimed(e, tools, Object.assign({
-      speed: 1.55,
+      speed: 1.68,
       sizeType: 'normal',
-      hp: 8,
+      hp: 9,
       image: DEFAULT_FIREBALL_IMAGE,
       flipY: true,
       breakable: true
@@ -313,7 +380,7 @@
 
   function fireUnbreakableAimed(e, tools, opt){
     return fireAimed(e, tools, Object.assign({
-      speed: 1.85,
+      speed: 2.02,
       sizeType: 'normal',
       hp: 0,
       breakable: false,
@@ -346,9 +413,9 @@
 
   function fireSlowSpread(e, tools, count, spread, opt){
     return fireSpread(e, tools, count, spread, Object.assign({
-      speed: 1.65,
+      speed: 1.82,
       sizeType: 'normal',
-      hp: 8,
+      hp: 9,
       image: DEFAULT_FIREBALL_IMAGE,
       flipY: true,
       breakable: true
@@ -357,7 +424,7 @@
 
   function fireUnbreakableSpread(e, tools, count, spread, opt){
     return fireSpread(e, tools, count, spread, Object.assign({
-      speed: 1.75,
+      speed: 1.95,
       sizeType: 'normal',
       hp: 0,
       breakable: false,
@@ -384,9 +451,9 @@
 
   function fireSafeFanDown(e, tools, count, opt){
     return fireFanDown(e, tools, count, Object.assign({
-      speed: 1.65,
+      speed: 1.82,
       sizeType: 'normal',
-      hp: 6,
+      hp: 7,
       safeCenter: true,
       image: DEFAULT_FIREBALL_IMAGE,
       flipY: true,
@@ -426,12 +493,12 @@
         x: sx,
         y: sy,
         angle,
-        speed: opt.speed || 1.45,
+        speed: opt.speed || 1.58,
         homing: true,
-        homingPower: opt.homingPower || 0.0032,
-        homingSpeed: opt.homingSpeed || 1.55,
-        homingDelay: opt.homingDelay || 20,
-        life: opt.life || 280
+        homingPower: opt.homingPower || 0.0034,
+        homingSpeed: opt.homingSpeed || 1.70,
+        homingDelay: opt.homingDelay || 18,
+        life: opt.life || 300
       })));
     }
 
@@ -441,14 +508,14 @@
   function fireBreakableHoming(e, tools, count, opt){
     return fireWeakHoming(e, tools, count, Object.assign({
       sizeType: 'normal',
-      speed: 1.45,
-      hp: 10,
+      speed: 1.58,
+      hp: 11,
       breakable: true,
       image: DEFAULT_FIREBALL_IMAGE,
       flipY: true,
       color: '#ff9b4a',
-      homingPower: 0.0032,
-      life: 300
+      homingPower: 0.0034,
+      life: 320
     }, opt || {}));
   }
 
@@ -467,7 +534,7 @@
         y: baseY,
         angle: Math.PI / 2 + offsetAngle,
         sizeType: opt.sizeType || 'normal',
-        speed: opt.speed || 1.65,
+        speed: opt.speed || 1.82,
         wave: opt.wave !== false,
         waveAmp: opt.waveAmp || 18,
         waveSpeed: opt.waveSpeed || 0.038
@@ -504,7 +571,7 @@
     const result = [];
 
     for (let i = 0; i < count; i++) {
-      const delay = Number(opt.delay || 45) * i;
+      const delay = Number(opt.delay || 38) * i;
       fireDelayedAimed(e, delay, Object.assign({}, opt, {
         x:e.x + rand(tools, -Number(opt.xJitter || 18), Number(opt.xJitter || 18)),
         y:e.y + Number(opt.offsetY || 58)
@@ -519,11 +586,11 @@
       x: e.x,
       y: e.y + 66,
       angle: Math.PI / 2,
-      speed: 0.82,
+      speed: 0.90,
       sizeType: 'super',
-      r: 74,
-      hp: 44,
-      dmg: 22,
+      r: 78,
+      hp: 48,
+      dmg: 64,
       image: DEFAULT_FIREBALL_IMAGE,
       flipY: true,
       color: '#ff5b35',
@@ -617,12 +684,12 @@
     }
 
     for (let i = 0; i < count; i++) {
-      fireDelayedAimed(e, 50 + i * Number(opt.gap || 30), Object.assign({}, opt, {
+      fireDelayedAimed(e, 46 + i * Number(opt.gap || 26), Object.assign({}, opt, {
         image: opt.image || undefined,
         flipY: opt.flipY,
         sizeType: opt.sizeType || 'big',
-        hp: opt.hp != null ? opt.hp : 16,
-        speed: opt.speed || 1.55,
+        hp: opt.hp != null ? opt.hp : 18,
+        speed: opt.speed || 1.70,
         breakable: opt.breakable !== false
       }));
     }
@@ -635,12 +702,12 @@
       tools.addText(text, e.x, e.y - 88, opt.textColor || '#ffe66b');
     }
 
-    fireDelayedLine(e, Number(opt.delay || 54), count, Object.assign({}, opt, {
+    fireDelayedLine(e, Number(opt.delay || 50), count, Object.assign({}, opt, {
       image: opt.image || undefined,
       flipY: opt.flipY,
       sizeType: opt.sizeType || 'big',
-      hp: opt.hp != null ? opt.hp : 14,
-      speed: opt.speed || 1.7,
+      hp: opt.hp != null ? opt.hp : 16,
+      speed: opt.speed || 1.86,
       breakable: opt.breakable !== false
     }));
   }
@@ -653,13 +720,13 @@
     }
 
     for (let i = 0; i < count; i++) {
-      fireDelayedHoming(e, 42 + i * Number(opt.gap || 26), 1, Object.assign({}, opt, {
+      fireDelayedHoming(e, 40 + i * Number(opt.gap || 24), 1, Object.assign({}, opt, {
         image: opt.image || undefined,
         flipY: opt.flipY,
         sizeType: opt.sizeType || 'normal',
-        hp: opt.hp != null ? opt.hp : 8,
-        speed: opt.speed || 1.45,
-        homingPower: opt.homingPower || 0.0032,
+        hp: opt.hp != null ? opt.hp : 9,
+        speed: opt.speed || 1.58,
+        homingPower: opt.homingPower || 0.0034,
         breakable: opt.breakable !== false
       }));
     }
@@ -672,7 +739,7 @@
       tools.addText(text || 'ビッグ火の玉！', e.x, e.y - 92, opt.textColor || '#ffcf5b');
     }
 
-    fireDelayedBigSway(e, Number(opt.delay || 76), Object.assign({}, opt, {
+    fireDelayedBigSway(e, Number(opt.delay || 70), Object.assign({}, opt, {
       x: opt.x != null ? opt.x : e.x,
       y: opt.y != null ? opt.y : e.y + 70,
       image: opt.image || DEFAULT_FIREBALL_IMAGE,
@@ -690,11 +757,11 @@
       tools.addText(text || '巨大玉！', e.x, e.y - 92, opt.textColor || '#6be6ff');
     }
 
-    fireDelayedAimed(e, Number(opt.delay || 72), Object.assign({
+    fireDelayedAimed(e, Number(opt.delay || 66), Object.assign({
       sizeType: 'super',
-      speed: 0.76,
-      hp: 34,
-      dmg: 34,
+      speed: 0.84,
+      hp: 40,
+      dmg: 56,
       color: '#6be6ff',
       bossSpecial: true,
       special: true,
@@ -721,11 +788,11 @@
       tools.addText(text || '巨大トライデント！', e.x, e.y - 92, opt.textColor || '#6be6ff');
     }
 
-    fireDelayedTrident(e, Number(opt.delay || 78), Object.assign({
+    fireDelayedTrident(e, Number(opt.delay || 72), Object.assign({
       sizeType: 'super',
-      speed: 0.56,
-      hp: 36,
-      dmg: 38,
+      speed: 0.64,
+      hp: 42,
+      dmg: 68,
       color: '#6be6ff',
       bossSpecial: true,
       special: true,
