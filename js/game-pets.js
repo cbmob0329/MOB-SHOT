@@ -15,7 +15,7 @@
 
     if (!petImages.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260626_pet_battle_ruby_plus';
+      image.src = src + '?v=20260627_pet_second_skill_battle';
       petImages.set(src, image);
     }
 
@@ -51,6 +51,11 @@
     return Math.max(3, Number(pet.data.currentSkillCt || pet.data.skillCt || 30));
   }
 
+  function currentSecondSkillCt(pet){
+    const second = pet.data.secondSkill;
+    return Math.max(18, Number(pet.data.currentSecondSkillCt || second?.currentCt || second?.ct || 60));
+  }
+
   function normalWide(pet){
     return 1 + Number(pet.data.normalWideBonus || 0);
   }
@@ -80,6 +85,9 @@
         targetY:state.player.y,
         shootCd:18 + index * 9,
         skillCd:Math.max(1, pet.firstCt || 10) * 60,
+        secondSkillCd:pet.secondSkillUnlocked && pet.secondSkill
+          ? Math.max(18, Number(pet.secondSkill.firstCt || 25)) * 60
+          : 99999999,
         slotIndex:index,
         bob:Math.random() * Math.PI * 2
       });
@@ -128,6 +136,15 @@
       if (pet.skillCd <= 0) {
         pet.skillCd = currentSkillCt(pet) * 60;
         skillShot(pet);
+      }
+
+      if (pet.data.secondSkillUnlocked && pet.data.secondSkill) {
+        pet.secondSkillCd--;
+
+        if (pet.secondSkillCd <= 0) {
+          pet.secondSkillCd = currentSecondSkillCt(pet) * 60;
+          secondSkillShot(pet);
+        }
       }
     });
 
@@ -201,17 +218,12 @@
   function skillShot(pet){
     if (!gameState) return;
 
-    showCutin(pet);
+    showCutin(pet, false);
 
     const key = pet.data.key;
 
-    if (key === 'mobslime') {
-      healPlayer(pet);
-    }
-
-    if (key === 'chibimobtetsu') {
-      addShield(pet);
-    }
+    if (key === 'mobslime') healPlayer(pet);
+    if (key === 'chibimobtetsu') addShield(pet);
 
     if (key === 'wondamob') {
       addSupport('rapid', getWondaRapidRate(pet), 8 * 60);
@@ -254,6 +266,265 @@
     }
   }
 
+  function secondSkillShot(pet){
+    if (!gameState || !pet.data.secondSkillUnlocked || !pet.data.secondSkill) return;
+
+    const second = pet.data.secondSkill;
+    const targets = getFrontTargets();
+
+    showCutin(pet, true);
+
+    if (second.heal) {
+      gameState.hp = Math.min(gameState.maxHp || gameState.hp, gameState.hp + Number(second.heal || 0));
+      petTexts.push({
+        text:'HP +' + Number(second.heal || 0),
+        x:gameState.player.x,
+        y:gameState.player.y - 68,
+        life:55,
+        color:'#9dff73'
+      });
+    }
+
+    if (second.barrierSec) addSupport('shield', 1, Number(second.barrierSec || 3) * 60);
+
+    if (second.petRapidBuffSec) {
+      addSupport('rapid', Number(second.petRapidBuffRate || 1.15), Number(second.petRapidBuffSec || 8) * 60);
+    }
+
+    if (second.coinBonusRate) {
+      addSupport('coin', 1 + Number(second.coinBonusRate || 0), 10 * 60);
+    }
+
+    if (!targets.length && !second.heal && !second.barrierSec && !second.petRapidBuffSec) return;
+
+    const count = Math.max(1, Number(second.count || 1));
+    const pattern = second.pattern || 'burst';
+
+    if (pattern === 'support' || pattern === 'shield' || pattern === 'buff') {
+      supportSecondBullets(pet, targets, second, count);
+    } else if (pattern === 'meteor' || pattern === 'rain') {
+      rainSecondBullets(pet, targets, second, count);
+    } else if (pattern === 'wide' || pattern === 'fan') {
+      fanSecondBullets(pet, targets, second, count);
+    } else if (pattern === 'circle') {
+      circleSecondBullets(pet, targets, second, count);
+    } else if (pattern === 'side') {
+      sideSecondBullets(pet, targets, second, count);
+    } else if (pattern === 'bigshot' || pattern === 'crush') {
+      bigSecondBullets(pet, targets, second, count);
+    } else if (pattern === 'homing' || pattern === 'drain' || pattern === 'hero' || pattern === 'rapid' || pattern === 'bubble') {
+      homingSecondBullets(pet, targets, second, count);
+    } else {
+      homingSecondBullets(pet, targets, second, count);
+    }
+
+    petTexts.push({
+      text:second.name || 'SECOND SKILL',
+      x:pet.x,
+      y:pet.y - 44,
+      life:60,
+      color:bulletColorForSecond(pet, second)
+    });
+
+    if (window.MobShotMission && window.MobShotMission.onSkillUsed) {
+      window.MobShotMission.onSkillUsed();
+    }
+  }
+
+  function supportSecondBullets(pet, targets, second, count){
+    if (!targets.length) return;
+
+    for (let i = 0; i < count; i++) {
+      const target = targets[i % targets.length];
+      const offset = (i - (count - 1) / 2) * 18;
+      pushSecondBullet(pet, target, second, offset, { speed:6.0 });
+    }
+  }
+
+  function rainSecondBullets(pet, targets, second, count){
+    if (!targets.length) return;
+
+    for (let i = 0; i < count; i++) {
+      const target = targets[i % targets.length];
+      const startX = target.x + random(-90, 90);
+      const startY = Math.min(-40, target.y - random(180, 320));
+
+      pushSecondBullet(pet, target, second, 0, {
+        x:startX,
+        y:startY,
+        speed:random(4.8, 6.4)
+      });
+    }
+  }
+
+  function fanSecondBullets(pet, targets, second, count){
+    if (!targets.length) return;
+
+    const center = targets[0];
+
+    for (let i = 0; i < count; i++) {
+      const offset = (i - (count - 1) / 2) * 28;
+      const target = targets[i % targets.length] || center;
+      pushSecondBullet(pet, target, second, offset, {
+        aimOffsetX:offset * 1.4,
+        speed:5.4
+      });
+    }
+  }
+
+  function circleSecondBullets(pet, targets, second, count){
+    if (!targets.length) return;
+
+    const cx = pet.x;
+    const cy = pet.y - 18;
+
+    for (let i = 0; i < count; i++) {
+      const target = targets[i % targets.length];
+      const angle = (Math.PI * 2 / count) * i;
+      const sx = cx + Math.cos(angle) * 34;
+      const sy = cy + Math.sin(angle) * 34;
+
+      pushSecondBullet(pet, target, second, 0, {
+        x:sx,
+        y:sy,
+        speed:5.7
+      });
+    }
+  }
+
+  function sideSecondBullets(pet, targets, second, count){
+    if (!targets.length) return;
+
+    const W = gameState.width || gameState.w || window.innerWidth || 390;
+
+    for (let i = 0; i < count; i++) {
+      const target = targets[i % targets.length];
+      const left = i % 2 === 0;
+      const sx = left ? 18 : W - 18;
+      const sy = target.y + random(-120, 40);
+
+      pushSecondBullet(pet, target, second, 0, {
+        x:sx,
+        y:sy,
+        speed:6.2
+      });
+    }
+  }
+
+  function bigSecondBullets(pet, targets, second, count){
+    if (!targets.length) return;
+
+    for (let i = 0; i < count; i++) {
+      const target = targets[i % targets.length];
+      const offset = (i - (count - 1) / 2) * 42;
+      pushSecondBullet(pet, target, second, offset, {
+        speed:4.3,
+        radiusBoost:1.35
+      });
+    }
+  }
+
+  function homingSecondBullets(pet, targets, second, count){
+    if (!targets.length) return;
+
+    for (let i = 0; i < count; i++) {
+      const target = targets[i % targets.length];
+      const offset = (i - (count - 1) / 2) * 20;
+      pushSecondBullet(pet, target, second, offset, {
+        speed:second.pattern === 'rapid' ? 7.4 : 5.8
+      });
+    }
+
+    if (second.pattern === 'hero') {
+      for (let i = 0; i < 5; i++) {
+        const target = targets[i % targets.length];
+        pushSecondBullet(pet, target, second, random(-40, 40), {
+          speed:7.0,
+          radiusBoost:0.65,
+          damageRate:0.55
+        });
+      }
+    }
+  }
+
+  function pushSecondBullet(pet, target, second, offset, opt){
+    if (!target) return;
+
+    opt = opt || {};
+
+    const sx = opt.x != null ? opt.x : pet.x + Number(offset || 0);
+    const sy = opt.y != null ? opt.y : pet.y - 12;
+    const tx = target.x + Number(opt.aimOffsetX || 0);
+    const ty = target.y;
+
+    const dx = tx - sx;
+    const dy = ty - sy;
+    const len = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+    const speed = Number(opt.speed || 5.6);
+
+    const rate = secondPowerRate(pet, second, target) * Number(opt.damageRate || 1);
+    const dmg = gameState.power * rate * getSupportPowerRate();
+    const radius = secondRadius(second) * Number(opt.radiusBoost || 1);
+
+    petBullets.push({
+      x:sx,
+      y:sy,
+      vx:dx / len * speed,
+      vy:dy / len * speed,
+      r:radius,
+      damage:dmg,
+      target,
+      type:'second',
+      life:150,
+      color:bulletColorForSecond(pet, second),
+      image:second.atkImage || pet.data.atkImage || '',
+      htmlBullet:second.htmlBullet || pet.data.htmlBullet || '',
+      petKey:pet.data.key,
+      second:true,
+      drainRate:Number(second.drainRate || 0)
+    });
+  }
+
+  function secondPowerRate(pet, second, target){
+    let rate = Number(second.powerRate || 1);
+
+    if (target && (target.kind === 'gimmick' || target.kind === 'chest')) {
+      rate = Number(second.obstacleRate || rate);
+    }
+
+    if (target && (target.kind === 'boss' || target.kind === 'midBoss')) {
+      rate = Number(second.bossRate || rate);
+    }
+
+    if (target && target.kind === 'enemyBullet') {
+      rate = Number(second.bulletRate || rate);
+    }
+
+    const lv = level(pet);
+    const tier = plusSkillTier(pet);
+
+    rate *= Number(second.levelRate || 1);
+    rate *= 1 + Math.max(0, lv - 50) * 0.004;
+    rate *= 1 + tier * 0.01;
+
+    return skillRate(pet, rate);
+  }
+
+  function secondRadius(second){
+    const size = second.size || 'normal';
+
+    if (size === 'small') return 10;
+    if (size === 'normal') return 16;
+    if (size === 'big') return 24;
+    if (size === 'huge') return 36;
+
+    return 16;
+  }
+
+  function random(a, b){
+    return a + Math.random() * (b - a);
+  }
+
   function getWondaRapidRate(pet){
     const lv = level(pet);
     const tier = plusSkillTier(pet);
@@ -262,7 +533,6 @@
     if (lv >= 5) rate = 1.23;
     if (lv >= 30) rate = 1.35;
     if (lv >= 50) rate = 1.42;
-    if (lv >= 100) rate = 1.50;
 
     return rate + tier * 0.01;
   }
@@ -275,7 +545,6 @@
     if (lv >= 15) rate = 1.08;
     if (lv >= 25) rate = 1.12;
     if (lv >= 50) rate = 1.18;
-    if (lv >= 100) rate = 1.25;
 
     return rate + tier * 0.006;
   }
@@ -288,7 +557,6 @@
     if (lv >= 5) rate = 2.5;
     if (lv >= 30) rate = 2.75;
     if (lv >= 50) rate = 3.0;
-    if (lv >= 100) rate = 3.35;
 
     return rate + tier * 0.03;
   }
@@ -301,93 +569,74 @@
 
     if (key === 'mobdrago') {
       if (lv >= 5) count += 1;
-      if (lv >= 30) count = 12;
-      if (lv >= 50) count = 14;
-      if (lv >= 100) count = 16;
+      if (lv >= 30) count = 10;
+      if (lv >= 50) count = 12;
     } else if (key === 'mobfrog') {
       if (lv >= 5) count += 1;
       if (lv >= 30) count = 5;
       if (lv >= 50) count = 6;
-      if (lv >= 100) count = 7;
     } else if (key === 'mobdenden') {
       if (lv >= 5) count += 2;
-      if (lv >= 30) count = 16;
-      if (lv >= 50) count = 18;
-      if (lv >= 100) count = 20;
+      if (lv >= 30) count = 14;
+      if (lv >= 50) count = 16;
     } else if (key === 'mobwolf') {
       if (lv >= 5) count += 1;
       if (lv >= 30) count = 8;
       if (lv >= 50) count = 9;
-      if (lv >= 100) count = 10;
     } else if (key === 'mobslime') {
       if (lv >= 30) count = 5;
-      if (lv >= 100) count = 6;
     } else if (key === 'mobchibihawk') {
       if (lv >= 30) count = 2;
       if (lv >= 50) count = 3;
-      if (lv >= 100) count = 4;
     } else if (key === 'punimobpink') {
       if (lv >= 30) count = 10;
       if (lv >= 50) count = 12;
-      if (lv >= 100) count = 14;
     } else if (key === 'minimiramob') {
       if (lv >= 5) count += 2;
       if (lv >= 25) count += 2;
       if (lv >= 30) count = 10;
       if (lv >= 50) count = 12;
-      if (lv >= 100) count = 14;
     } else if (key === 'neonkidmob') {
       if (lv >= 5) count += 1;
       if (lv >= 30) count = 4;
       if (lv >= 50) count = 5;
-      if (lv >= 100) count = 6;
     } else if (key === 'minidramob') {
       if (lv >= 5) count += 1;
       if (lv >= 30) count = 3;
       if (lv >= 50) count = 4;
-      if (lv >= 100) count = 5;
     } else if (key === 'merurumob') {
       if (lv >= 15) count += 2;
       if (lv >= 30) count = 6;
       if (lv >= 50) count = 7;
-      if (lv >= 100) count = 8;
     } else if (key === 'lilmoblilith') {
       if (lv >= 5) count += 2;
       if (lv >= 25) count += 3;
       if (lv >= 30) count = 14;
       if (lv >= 50) count = 16;
-      if (lv >= 100) count = 18;
     } else if (key === 'chibimaohmob') {
       if (lv >= 30) count = 2;
       if (lv >= 50) count = 3;
-      if (lv >= 100) count = 4;
     } else if (key === 'chibimobtetsu') {
       if (lv >= 50) count = 2;
-      if (lv >= 100) count = 3;
     } else if (key === 'chibimobmelt') {
       if (lv >= 5) count += 1;
       if (lv >= 30) count = 3;
       if (lv >= 50) count = 4;
-      if (lv >= 100) count = 5;
     } else if (key === 'wondamob') {
       if (lv >= 50) count = 2;
-      if (lv >= 100) count = 3;
     } else if (key === 'lilmobnep') {
       if (lv >= 5) count += 1;
       if (lv >= 30) count = 5;
       if (lv >= 50) count = 6;
-      if (lv >= 100) count = 7;
     } else if (key === 'chibiulmob') {
       if (lv >= 5) count += 2;
       if (lv >= 25) count += 3;
       if (lv >= 30) count = 13;
       if (lv >= 50) count = 15;
-      if (lv >= 100) count = 17;
     } else if (key === 'hero') {
       if (lv >= 5) count += 1;
       if (lv >= 30) count = 4;
       if (lv >= 50) count = 5;
-      if (lv >= 100) count = 6;
     }
 
     count += Math.floor(tier / 5);
@@ -414,111 +663,94 @@
     }
 
     if (key === 'mobdrago') {
-      if (lv >= 100) rate = 2.25;
-      else if (lv >= 50) rate = 1.9;
-      else if (lv >= 30) rate = 1.7;
+      if (lv >= 50) rate = 1.75;
+      else if (lv >= 30) rate = 1.55;
     }
 
     if (key === 'mobfrog') {
-      if (lv >= 100) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 5.2 : 3.5;
-      else if (lv >= 50) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 4.5 : 3.0;
-      else if (lv >= 30) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 4.0 : 2.7;
+      if (lv >= 50) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 4.1 : 2.75;
+      else if (lv >= 30) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 3.6 : 2.45;
     }
 
     if (key === 'mobdenden') {
-      if (lv >= 100) rate = 1.28;
-      else if (lv >= 50) rate = 1.12;
-      else if (lv >= 30) rate = 1.0;
+      if (lv >= 50) rate = 1.02;
+      else if (lv >= 30) rate = 0.92;
     }
 
     if (key === 'mobwolf') {
-      if (lv >= 100) rate = target && (target.kind === 'boss' || target.kind === 'midBoss') ? 4.8 : 3.0;
-      else if (lv >= 50) rate = target && (target.kind === 'boss' || target.kind === 'midBoss') ? 4.1 : 2.6;
-      else if (lv >= 30) rate = target && (target.kind === 'boss' || target.kind === 'midBoss') ? 3.6 : 2.3;
+      if (lv >= 50) rate = target && (target.kind === 'boss' || target.kind === 'midBoss') ? 3.75 : 2.4;
+      else if (lv >= 30) rate = target && (target.kind === 'boss' || target.kind === 'midBoss') ? 3.25 : 2.1;
     }
 
     if (key === 'mobslime') {
-      if (lv >= 100) rate = 1.7;
-      else if (lv >= 50) rate = 1.45;
-      else if (lv >= 30) rate = 1.25;
+      if (lv >= 50) rate = 1.35;
+      else if (lv >= 30) rate = 1.15;
     }
 
     if (key === 'mobchibihawk') {
-      rate = lv >= 100 ? 7.4 : lv >= 50 ? 6.6 : lv >= 30 ? 6.0 : lv >= 5 ? 3.5 : 3.0;
+      rate = lv >= 50 ? 6.2 : lv >= 30 ? 5.6 : lv >= 5 ? 3.4 : 3.0;
     }
 
     if (key === 'punimobpink') {
-      if (lv >= 100) rate = 1.85;
-      else if (lv >= 50) rate = 1.55;
-      else if (lv >= 30) rate = 1.35;
+      if (lv >= 50) rate = 1.45;
+      else if (lv >= 30) rate = 1.25;
     }
 
     if (key === 'minimiramob') {
-      if (lv >= 100) rate = 2.35;
-      else if (lv >= 50) rate = 2.0;
-      else if (lv >= 30) rate = 1.75;
+      if (lv >= 50) rate = 1.85;
+      else if (lv >= 30) rate = 1.60;
     }
 
     if (key === 'neonkidmob') {
-      if (lv >= 100) rate = 3.0;
-      else if (lv >= 50) rate = 2.6;
-      else if (lv >= 30) rate = 2.3;
+      if (lv >= 50) rate = 2.35;
+      else if (lv >= 30) rate = 2.10;
     }
 
     if (key === 'minidramob') {
-      if (lv >= 100) rate = 7.6;
-      else if (lv >= 50) rate = 6.6;
-      else if (lv >= 30) rate = 6.0;
+      if (lv >= 50) rate = 6.2;
+      else if (lv >= 30) rate = 5.5;
     }
 
     if (key === 'merurumob') {
-      if (lv >= 100) rate = 3.5;
-      else if (lv >= 50) rate = 3.0;
-      else if (lv >= 30) rate = 2.7;
+      if (lv >= 50) rate = 2.75;
+      else if (lv >= 30) rate = 2.45;
     }
 
     if (key === 'lilmoblilith') {
-      if (lv >= 100) rate = 2.45;
-      else if (lv >= 50) rate = 2.1;
-      else if (lv >= 30) rate = 1.9;
+      if (lv >= 50) rate = 1.95;
+      else if (lv >= 30) rate = 1.75;
     }
 
     if (key === 'chibimaohmob') {
-      rate = lv >= 100 ? 10.0 : lv >= 50 ? 8.8 : lv >= 30 ? 8.0 : lv >= 5 ? 5.5 : 4.8;
+      rate = lv >= 50 ? 8.1 : lv >= 30 ? 7.3 : lv >= 5 ? 5.2 : 4.8;
     }
 
     if (key === 'chibimobtetsu') {
-      if (lv >= 100) rate = 1.55;
-      else if (lv >= 50) rate = 1.2;
+      if (lv >= 50) rate = 1.1;
     }
 
     if (key === 'chibimobmelt') {
-      if (lv >= 100) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 9.0 : 6.5;
-      else if (lv >= 50) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 7.8 : 5.6;
-      else if (lv >= 30) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 7.0 : 5.0;
+      if (lv >= 50) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 7.2 : 5.2;
+      else if (lv >= 30) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 6.4 : 4.7;
     }
 
     if (key === 'wondamob') {
-      if (lv >= 100) rate = 1.55;
-      else if (lv >= 50) rate = 1.2;
+      if (lv >= 50) rate = 1.12;
     }
 
     if (key === 'lilmobnep') {
-      if (lv >= 100) rate = 4.6;
-      else if (lv >= 50) rate = 4.0;
-      else if (lv >= 30) rate = 3.6;
+      if (lv >= 50) rate = 3.7;
+      else if (lv >= 30) rate = 3.3;
     }
 
     if (key === 'chibiulmob') {
-      if (lv >= 100) rate = 3.5;
-      else if (lv >= 50) rate = 3.0;
-      else if (lv >= 30) rate = 2.7;
+      if (lv >= 50) rate = 2.8;
+      else if (lv >= 30) rate = 2.5;
     }
 
     if (key === 'hero') {
-      if (lv >= 100) rate = 8.8;
-      else if (lv >= 50) rate = 7.8;
-      else if (lv >= 30) rate = 7.0;
+      if (lv >= 50) rate = 7.2;
+      else if (lv >= 30) rate = 6.4;
     }
 
     rate *= 1 + tier * 0.015;
@@ -560,8 +792,7 @@
       if (pet.data.key === 'mobchibihawk' && lv >= 25) speed *= 1.35;
       if (pet.data.key === 'lilmobnep' && lv >= 25) speed *= 1.18;
       if (pet.data.key === 'neonkidmob' && lv >= 25) speed *= 1.15;
-      if (lv >= 50) speed *= 1.08;
-      if (lv >= 100) speed *= 1.08;
+      if (lv >= 50) speed *= 1.06;
     }
 
     return speed;
@@ -577,8 +808,7 @@
     if (pet.data.key === 'lilmobnep' && type === 'skill' && lv >= 15) r *= 1.25;
     if (pet.data.key === 'hero' && type === 'skill' && lv >= 25) r *= 1.35;
     if (pet.data.key === 'chibimobmelt' && type === 'skill' && lv >= 25) r *= 1.25;
-    if (type === 'skill' && lv >= 50) r *= 1.08;
-    if (type === 'skill' && lv >= 100) r *= 1.12;
+    if (type === 'skill' && lv >= 50) r *= 1.06;
 
     return r;
   }
@@ -598,6 +828,15 @@
     if (key === 'hero') return '#ffe66b';
 
     return type === 'skill' ? '#ffffff' : '#dfe8ff';
+  }
+
+  function bulletColorForSecond(pet, second){
+    if (second.htmlBullet === 'fire') return '#ff6530';
+    if (second.htmlBullet === 'water') return '#4bd8ff';
+    if (second.htmlBullet === 'thunder') return '#ffe84a';
+    if (second.htmlBullet === 'gray') return '#d8f1ff';
+
+    return bulletColor(pet.data, 'skill');
   }
 
   function updateBullets(){
@@ -685,6 +924,11 @@
       vampHeal(damage, levelFromKey('merurumob'), plusFromKey('merurumob'));
     }
 
+    if (bullet && bullet.drainRate) {
+      const heal = Math.max(1, Math.floor(Number(damage || 0) * Number(bullet.drainRate || 0)));
+      gameState.hp = Math.min(gameState.maxHp || gameState.hp, gameState.hp + heal);
+    }
+
     if (target.hp <= 0) {
       if (window.MobShotGameCore && window.MobShotGameCore.killEntity) {
         window.MobShotGameCore.killEntity(target);
@@ -714,7 +958,6 @@
     if (lv >= 5) heal = 20;
     if (lv >= 30) heal = 45;
     if (lv >= 50) heal = 60;
-    if (lv >= 100) heal = 85;
 
     heal += tier * 2;
 
@@ -741,7 +984,6 @@
     if (lv >= 25) rate = 0.07;
     if (lv >= 30) rate = 0.10;
     if (lv >= 50) rate = 0.12;
-    if (lv >= 100) rate = 0.15;
 
     rate += tier * 0.002;
 
@@ -760,7 +1002,6 @@
     if (lv >= 25) duration = 5;
     if (lv >= 30) duration = 6;
     if (lv >= 50) duration = 7;
-    if (lv >= 100) duration = 8;
 
     duration += Math.floor(tier / 5);
 
@@ -828,15 +1069,17 @@
     }
   }
 
-  function showCutin(pet){
+  function showCutin(pet, isSecond){
     const plusText = plus(pet) > 0 ? ` +${plus(pet)}` : '';
+    const second = pet.data.secondSkill;
 
     cutins.push({
       name:pet.data.name + plusText,
-      skill:pet.data.skillName || 'PET SKILL',
+      skill:isSecond && second ? second.name : (pet.data.skillName || 'PET SKILL'),
       image:pet.data.frontImage || pet.data.backImage,
-      life:58,
-      maxLife:58
+      life:isSecond ? 72 : 58,
+      maxLife:isSecond ? 72 : 58,
+      second:!!isSecond
     });
   }
 
@@ -890,6 +1133,16 @@
         ctx.fillText('+' + plus(pet), pet.x, y - 30);
       }
 
+      if (pet.data.secondSkillUnlocked) {
+        ctx.font = '900 9px system-ui';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ffe66b';
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 3;
+        ctx.strokeText('Ⅱ', pet.x + 18, y - 24);
+        ctx.fillText('Ⅱ', pet.x + 18, y - 24);
+      }
+
       ctx.restore();
     });
   }
@@ -901,7 +1154,7 @@
       const image = img(b.image);
 
       if (imageReady(image)) {
-        const size = b.type === 'skill' ? b.r * 3.5 : b.r * 2.8;
+        const size = b.type === 'second' ? b.r * 4.2 : (b.type === 'skill' ? b.r * 3.5 : b.r * 2.8);
         ctx.drawImage(image, b.x - size / 2, b.y - size / 2, size, size);
       } else {
         drawHtmlBullet(ctx, b);
@@ -914,10 +1167,18 @@
   function drawHtmlBullet(ctx, b){
     ctx.fillStyle = b.color;
     ctx.strokeStyle = '#111';
-    ctx.lineWidth = b.type === 'skill' ? 3 : 2;
+    ctx.lineWidth = b.type === 'second' ? 4 : (b.type === 'skill' ? 3 : 2);
+
+    if (b.type === 'second') {
+      ctx.globalAlpha = 0.22;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r + 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
 
     if (b.htmlBullet === 'fire') {
-      ctx.fillStyle = b.type === 'skill' ? '#ff6530' : '#ffb347';
+      ctx.fillStyle = b.type === 'second' ? '#ff4a1d' : (b.type === 'skill' ? '#ff6530' : '#ffb347');
       ctx.beginPath();
       ctx.arc(b.x, b.y, b.r + 3, 0, Math.PI * 2);
       ctx.fill();
@@ -928,13 +1189,13 @@
       ctx.arc(b.x - 2, b.y - 2, b.r * 0.45, 0, Math.PI * 2);
       ctx.fill();
     } else if (b.htmlBullet === 'water') {
-      ctx.fillStyle = b.type === 'skill' ? '#4bd8ff' : '#69dfff';
+      ctx.fillStyle = b.type === 'second' ? '#20cfff' : (b.type === 'skill' ? '#4bd8ff' : '#69dfff');
       ctx.beginPath();
       ctx.arc(b.x, b.y, b.r + 2, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
-      if (b.type === 'skill') {
+      if (b.type !== 'normal') {
         ctx.globalAlpha = 0.35;
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r + 8, 0, Math.PI * 2);
@@ -954,7 +1215,7 @@
       ctx.fill();
       ctx.stroke();
     } else {
-      if (b.type === 'skill') {
+      if (b.type !== 'normal') {
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r + 7, 0, Math.PI * 2);
         ctx.globalAlpha = 0.28;
@@ -996,9 +1257,9 @@
       ctx.save();
       ctx.globalAlpha = alpha;
 
-      const y = 88 - (1 - rate) * 14;
+      const y = c.second ? 100 - (1 - rate) * 18 : 88 - (1 - rate) * 14;
 
-      ctx.fillStyle = 'rgba(0,0,0,.62)';
+      ctx.fillStyle = c.second ? 'rgba(25,10,45,.78)' : 'rgba(0,0,0,.62)';
       ctx.fillRect(0, y - 44, ctx.canvas.width, 88);
 
       if (imageReady(image)) ctx.drawImage(image, 18, y - 38, 76, 76);
@@ -1011,10 +1272,10 @@
       ctx.strokeText(c.name, 105, y - 8);
       ctx.fillText(c.name, 105, y - 8);
 
-      ctx.font = '1000 24px system-ui';
-      ctx.fillStyle = '#ffe66b';
-      ctx.strokeText(c.skill + '!!', 105, y + 24);
-      ctx.fillText(c.skill + '!!', 105, y + 24);
+      ctx.font = c.second ? '1000 26px system-ui' : '1000 24px system-ui';
+      ctx.fillStyle = c.second ? '#ffdf35' : '#ffe66b';
+      ctx.strokeText((c.second ? 'SECOND ' : '') + c.skill + '!!', 105, y + 24);
+      ctx.fillText((c.second ? 'SECOND ' : '') + c.skill + '!!', 105, y + 24);
 
       ctx.restore();
     });
