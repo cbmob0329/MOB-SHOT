@@ -1,14 +1,18 @@
 'use strict';
 
 (function(){
-  const PET_SAVE_KEY = 'mobshot_pet_state_v4';
+  const PET_SAVE_KEY = 'mobshot_pet_state_v5';
+  const OLD_PET_SAVE_KEY = 'mobshot_pet_state_v4';
   const RUBY_SAVE_FIELD = 'petRuby';
 
   const BASE_MAX_LEVEL = 50;
-  const PLUS_UNLOCK_MAX_LEVEL = 120;
+  const SECOND_UNLOCK_MAX_LEVEL = 99;
   const MAX_PLUS = 99;
   const MAX_EQUIPPED_PETS = 4;
   const PET_MODE_MAX_LEVEL = 30;
+
+  const SECOND_SKILL_UNLOCK_COIN = 100000;
+  const SECOND_SKILL_UNLOCK_DIAMOND = 50;
 
   const PET_MODE_FIELDS = [
     { key:'hp', name:'HP', rubyBase:2, coinBase:3000 },
@@ -17,6 +21,301 @@
     { key:'skill', name:'スキル', rubyBase:3, coinBase:4500 },
     { key:'dodge', name:'回避AI', rubyBase:4, coinBase:6000 }
   ];
+
+  const SECOND_SKILLS = {
+    mobdrago:{
+      name:'ドラゴメテオ',
+      desc:'大きめの炎弾を上から8発落とす。万能型の派手な追撃。',
+      atkImage:'',
+      htmlBullet:'fire',
+      ct:58,
+      firstCt:24,
+      count:8,
+      size:'big',
+      powerRate:1.15,
+      obstacleRate:1.15,
+      bossRate:1.15,
+      breakPower:180,
+      pattern:'meteor'
+    },
+    mobfrog:{
+      name:'アクアスプラッシュ',
+      desc:'水弾を横広がりで12発放つ。障害物に特に強い。',
+      atkImage:'',
+      htmlBullet:'water',
+      ct:56,
+      firstCt:22,
+      count:12,
+      size:'normal',
+      powerRate:0.95,
+      obstacleRate:2.40,
+      bossRate:1.10,
+      breakPower:280,
+      pattern:'wide'
+    },
+    mobdenden:{
+      name:'サンダーレイン',
+      desc:'小さめの雷弾を18発ばら撒く。雑魚殲滅向き。',
+      atkImage:'',
+      htmlBullet:'thunder',
+      ct:62,
+      firstCt:26,
+      count:18,
+      size:'small',
+      powerRate:0.62,
+      obstacleRate:0.62,
+      bossRate:0.62,
+      breakPower:90,
+      pattern:'rain'
+    },
+    mobwolf:{
+      name:'ウルフバイトラッシュ',
+      desc:'追尾弾を6発放つ。ボスへの倍率が高い。',
+      atkImage:'',
+      htmlBullet:'gray',
+      ct:64,
+      firstCt:28,
+      count:6,
+      size:'normal',
+      powerRate:1.25,
+      obstacleRate:1.20,
+      bossRate:2.20,
+      breakPower:330,
+      pattern:'homing'
+    },
+    mobslime:{
+      name:'スライムガード',
+      desc:'HPを回復し、短時間バリアを張る。攻撃弾は控えめ。',
+      atkImage:'atk/miraatk.png',
+      htmlBullet:'',
+      ct:68,
+      firstCt:30,
+      count:4,
+      size:'small',
+      powerRate:0.50,
+      obstacleRate:0.50,
+      bossRate:0.50,
+      breakPower:90,
+      heal:35,
+      barrierSec:3,
+      pattern:'support'
+    },
+    mobchibihawk:{
+      name:'ホークストーム',
+      desc:'高速小弾を16発連射する。手数で削る第二スキル。',
+      atkImage:'atk/hawkatk.png',
+      htmlBullet:'',
+      ct:55,
+      firstCt:20,
+      count:16,
+      size:'small',
+      powerRate:0.82,
+      obstacleRate:0.82,
+      bossRate:0.82,
+      breakPower:600,
+      pattern:'rapid'
+    },
+    punimobpink:{
+      name:'コインバブル',
+      desc:'低火力バブルを12発放つ。撃破時コインボーナス付き。',
+      atkImage:'atk/enetama.png',
+      htmlBullet:'',
+      ct:64,
+      firstCt:24,
+      count:12,
+      size:'normal',
+      powerRate:0.70,
+      obstacleRate:0.70,
+      bossRate:0.70,
+      breakPower:130,
+      coinBonusRate:0.08,
+      pattern:'bubble'
+    },
+    minimiramob:{
+      name:'ミラージュコピー',
+      desc:'左右から分身弾を10発放つ。広範囲を安全に削る。',
+      atkImage:'atk/miraatk.png',
+      htmlBullet:'',
+      ct:60,
+      firstCt:24,
+      count:10,
+      size:'normal',
+      powerRate:1.00,
+      obstacleRate:1.00,
+      bossRate:1.00,
+      breakPower:160,
+      pattern:'side'
+    },
+    neonkidmob:{
+      name:'ネオンリングバースト',
+      desc:'リング弾を円形に12発展開する。周囲殲滅型。',
+      atkImage:'atk/neonring.png',
+      htmlBullet:'',
+      ct:60,
+      firstCt:24,
+      count:12,
+      size:'normal',
+      powerRate:1.08,
+      obstacleRate:1.08,
+      bossRate:1.08,
+      breakPower:220,
+      pattern:'circle'
+    },
+    minidramob:{
+      name:'ギガフレア',
+      desc:'超大玉を1発放つ。遅いが高火力。',
+      atkImage:'atk/hinotama.png',
+      htmlBullet:'',
+      ct:78,
+      firstCt:34,
+      count:1,
+      size:'huge',
+      powerRate:5.20,
+      obstacleRate:5.20,
+      bossRate:5.20,
+      breakPower:1200,
+      pattern:'bigshot'
+    },
+    merurumob:{
+      name:'ブラッドドレイン',
+      desc:'弾8発を放ち、与えたダメージの一部をHP回復に変える。',
+      atkImage:'atk/atkriri.png',
+      htmlBullet:'',
+      ct:66,
+      firstCt:28,
+      count:8,
+      size:'normal',
+      powerRate:1.30,
+      obstacleRate:1.30,
+      bossRate:1.30,
+      breakPower:270,
+      drainRate:0.05,
+      pattern:'drain'
+    },
+    lilmoblilith:{
+      name:'ローズヘル',
+      desc:'大きめの弾を扇状に15発放つ。弾幕型の主力。',
+      atkImage:'atk/atkriri.png',
+      htmlBullet:'',
+      ct:72,
+      firstCt:30,
+      count:15,
+      size:'big',
+      powerRate:0.95,
+      obstacleRate:0.95,
+      bossRate:0.95,
+      breakPower:320,
+      pattern:'fan'
+    },
+    chibimaohmob:{
+      name:'魔王カノン改',
+      desc:'超大玉を2発放つ。CTは長いが一撃が重い。',
+      atkImage:'atk/atkmaoh.png',
+      htmlBullet:'',
+      ct:84,
+      firstCt:36,
+      count:2,
+      size:'huge',
+      powerRate:4.30,
+      obstacleRate:4.30,
+      bossRate:4.30,
+      breakPower:900,
+      pattern:'bigshot'
+    },
+    chibimobtetsu:{
+      name:'アイアンシールド',
+      desc:'防御バリアを張りつつ小弾を6発放つ。',
+      atkImage:'atk/atkmeiru.png',
+      htmlBullet:'',
+      ct:70,
+      firstCt:28,
+      count:6,
+      size:'small',
+      powerRate:0.70,
+      obstacleRate:0.70,
+      bossRate:0.70,
+      breakPower:420,
+      barrierSec:4,
+      pattern:'shield'
+    },
+    chibimobmelt:{
+      name:'メルトクラッシュ',
+      desc:'障害物特攻の大弾を4発放つ。',
+      atkImage:'atk/atkmeiru.png',
+      htmlBullet:'',
+      ct:68,
+      firstCt:26,
+      count:4,
+      size:'big',
+      powerRate:2.10,
+      obstacleRate:4.60,
+      bossRate:2.10,
+      breakPower:700,
+      pattern:'crush'
+    },
+    wondamob:{
+      name:'BBOYサポート',
+      desc:'10秒間、装備ペット全員の連射を少し上げる。',
+      atkImage:'atk/book.png',
+      htmlBullet:'',
+      ct:76,
+      firstCt:30,
+      count:5,
+      size:'small',
+      powerRate:0.55,
+      obstacleRate:0.55,
+      bossRate:0.55,
+      breakPower:260,
+      petRapidBuffSec:10,
+      petRapidBuffRate:1.18,
+      pattern:'buff'
+    },
+    lilmobnep:{
+      name:'ネプチューンリング',
+      desc:'大きめの水弾を円形に16発放つ。範囲殲滅型。',
+      atkImage:'atk/atknep.png',
+      htmlBullet:'',
+      ct:74,
+      firstCt:30,
+      count:16,
+      size:'big',
+      powerRate:1.35,
+      obstacleRate:1.35,
+      bossRate:1.35,
+      breakPower:650,
+      pattern:'circle'
+    },
+    chibiulmob:{
+      name:'ダークローズフォール',
+      desc:'闇弾を20発降らせる。広範囲だが単発は控えめ。',
+      atkImage:'atk/atkriri.png',
+      htmlBullet:'',
+      ct:82,
+      firstCt:34,
+      count:20,
+      size:'normal',
+      powerRate:1.05,
+      obstacleRate:1.05,
+      bossRate:1.05,
+      breakPower:850,
+      pattern:'rain'
+    },
+    hero:{
+      name:'ヒーローバースト',
+      desc:'大弾5発と追尾小弾5発を放つ。最終万能スキル。',
+      atkImage:'atk/book.png',
+      htmlBullet:'',
+      ct:88,
+      firstCt:36,
+      count:10,
+      size:'big',
+      powerRate:2.30,
+      obstacleRate:2.30,
+      bossRate:2.30,
+      breakPower:3200,
+      pattern:'hero'
+    }
+  };
 
   const PET_MASTER = [
     {
@@ -43,9 +342,9 @@
       skillBreakPower:150,
       skillCt:30,
       firstCt:10,
-      skillWideAt:[30,50,80,110],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'万能型。+50で通常ワイド+1、+99でLv120解放'
+      skillWideAt:[30,50,80],
+      normalWideAt:[10,20,40,70],
+      growthText:'万能型。Lv50で第二スキル解放可能'
     },
     {
       key:'mobfrog',
@@ -72,8 +371,8 @@
       skillCt:25,
       firstCt:5,
       skillWideAt:[50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'障害物特化。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'障害物特化。Lv50で第二スキル解放可能'
     },
     {
       key:'mobdenden',
@@ -100,8 +399,8 @@
       skillCt:35,
       firstCt:15,
       skillWideAt:[50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'雑魚殲滅。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'雑魚殲滅。Lv50で第二スキル解放可能'
     },
     {
       key:'mobwolf',
@@ -128,8 +427,8 @@
       skillCt:30,
       firstCt:20,
       skillWideAt:[50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'ボス特化。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'ボス特化。Lv50で第二スキル解放可能'
     },
     {
       key:'mobslime',
@@ -156,13 +455,13 @@
       skillCt:42,
       firstCt:20,
       skillWideAt:[80],
-      normalWideAt:[15,30,45,75,105],
+      normalWideAt:[15,30,45,75],
       healBase:15,
       healLv5:20,
       healLv30:45,
       healLv50:60,
       barrierAt:25,
-      growthText:'回復支援。+50で通常ワイド+1、+99でLv120解放'
+      growthText:'回復支援。Lv50で第二スキル解放可能'
     },
     {
       key:'mobchibihawk',
@@ -189,8 +488,8 @@
       skillCt:28,
       firstCt:8,
       skillWideAt:[50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'連射型。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'連射型。Lv50で第二スキル解放可能'
     },
     {
       key:'punimobpink',
@@ -217,8 +516,8 @@
       skillCt:40,
       firstCt:12,
       skillWideAt:[25,50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'コイン特化。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'コイン特化。Lv50で第二スキル解放可能'
     },
     {
       key:'minimiramob',
@@ -245,8 +544,8 @@
       skillCt:35,
       firstCt:12,
       skillWideAt:[50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'分身型。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'分身型。Lv50で第二スキル解放可能'
     },
     {
       key:'neonkidmob',
@@ -273,8 +572,8 @@
       skillCt:30,
       firstCt:10,
       skillWideAt:[50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'連射型。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'連射型。Lv50で第二スキル解放可能'
     },
     {
       key:'minidramob',
@@ -301,8 +600,8 @@
       skillCt:38,
       firstCt:18,
       skillWideAt:[50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'重砲型。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'重砲型。Lv50で第二スキル解放可能'
     },
     {
       key:'merurumob',
@@ -329,8 +628,8 @@
       skillCt:36,
       firstCt:14,
       skillWideAt:[50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'吸血型。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'吸血型。Lv50で第二スキル解放可能'
     },
     {
       key:'lilmoblilith',
@@ -357,8 +656,8 @@
       skillCt:42,
       firstCt:16,
       skillWideAt:[50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'弾幕型。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'弾幕型。Lv50で第二スキル解放可能'
     },
     {
       key:'chibimaohmob',
@@ -385,8 +684,8 @@
       skillCt:45,
       firstCt:20,
       skillWideAt:[50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'超火力。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'超火力。Lv50で第二スキル解放可能'
     },
     {
       key:'chibimobtetsu',
@@ -413,8 +712,8 @@
       skillCt:40,
       firstCt:15,
       skillWideAt:[50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'防御補助。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'防御補助。Lv50で第二スキル解放可能'
     },
     {
       key:'chibimobmelt',
@@ -441,8 +740,8 @@
       skillCt:38,
       firstCt:14,
       skillWideAt:[50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'障害物破壊。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'障害物破壊。Lv50で第二スキル解放可能'
     },
     {
       key:'wondamob',
@@ -469,8 +768,8 @@
       skillCt:50,
       firstCt:20,
       skillWideAt:[50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'支援型。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'支援型。Lv50で第二スキル解放可能'
     },
     {
       key:'lilmobnep',
@@ -497,8 +796,8 @@
       skillCt:42,
       firstCt:16,
       skillWideAt:[50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'範囲殲滅。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'範囲殲滅。Lv50で第二スキル解放可能'
     },
     {
       key:'chibiulmob',
@@ -525,8 +824,8 @@
       skillCt:45,
       firstCt:18,
       skillWideAt:[50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'最終弾幕。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'最終弾幕。Lv50で第二スキル解放可能'
     },
     {
       key:'hero',
@@ -553,10 +852,15 @@
       skillCt:50,
       firstCt:20,
       skillWideAt:[50,90],
-      normalWideAt:[10,20,40,70,100],
-      growthText:'最強万能。+50で通常ワイド+1、+99でLv120解放'
+      normalWideAt:[10,20,40,70],
+      growthText:'最強万能。Lv50で第二スキル解放可能'
     }
   ];
+
+  PET_MASTER.forEach(pet => {
+    pet.secondSkill = SECOND_SKILLS[pet.key] || null;
+    pet.secondSkillName = pet.secondSkill ? pet.secondSkill.name : '';
+  });
 
   function defaultPetMode(){
     return {
@@ -568,18 +872,21 @@
     };
   }
 
+  function defaultPetState(){
+    return {
+      owned:false,
+      level:1,
+      plus:0,
+      secondSkillUnlocked:false,
+      petMode:defaultPetMode()
+    };
+  }
+
   function defaultState(){
     const pets = {};
-
     PET_MASTER.forEach(pet => {
-      pets[pet.key] = {
-        owned:false,
-        level:1,
-        plus:0,
-        petMode:defaultPetMode()
-      };
+      pets[pet.key] = defaultPetState();
     });
-
     return {
       equipped:[],
       pets
@@ -600,60 +907,69 @@
     return base;
   }
 
-  function loadState(){
-    let state = defaultState();
+  function normalizePetState(raw){
+    const base = defaultPetState();
+    raw = Object.assign(base, raw || {});
+    raw.owned = !!raw.owned;
+    raw.plus = Math.max(0, Math.min(MAX_PLUS, Number(raw.plus || 0)));
+    raw.secondSkillUnlocked = !!raw.secondSkillUnlocked;
+    raw.petMode = normalizePetMode(raw.petMode);
 
+    const cap = levelCap(raw);
+    raw.level = Math.max(1, Math.min(cap, Number(raw.level || 1)));
+
+    return raw;
+  }
+
+  function loadRawPetSave(){
     try {
       const raw = localStorage.getItem(PET_SAVE_KEY);
-
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        state = Object.assign(state, parsed || {});
-        state.pets = Object.assign(defaultState().pets, parsed.pets || {});
-      }
+      if (raw) return JSON.parse(raw);
     } catch(e) {}
 
-    state.equipped = Array.isArray(state.equipped) ? state.equipped.slice(0, MAX_EQUIPPED_PETS) : [];
+    try {
+      const oldRaw = localStorage.getItem(OLD_PET_SAVE_KEY);
+      if (oldRaw) return JSON.parse(oldRaw);
+    } catch(e) {}
 
-    state.equipped = state.equipped.filter((key, index, arr) => {
+    return null;
+  }
+
+  function loadState(){
+    const base = defaultState();
+    const parsed = loadRawPetSave();
+
+    if (parsed) {
+      base.equipped = Array.isArray(parsed.equipped) ? parsed.equipped : [];
+      base.pets = Object.assign(base.pets, parsed.pets || {});
+    }
+
+    base.equipped = base.equipped.slice(0, MAX_EQUIPPED_PETS);
+
+    PET_MASTER.forEach(pet => {
+      base.pets[pet.key] = normalizePetState(base.pets[pet.key]);
+    });
+
+    base.equipped = base.equipped.filter((key, index, arr) => {
       const pet = getPet(key);
-
       return (
         arr.indexOf(key) === index &&
         pet &&
         pet.implemented &&
-        state.pets[key] &&
-        state.pets[key].owned
+        base.pets[key] &&
+        base.pets[key].owned
       );
     });
 
-    PET_MASTER.forEach(pet => {
-      if (!state.pets[pet.key]) {
-        state.pets[pet.key] = {
-          owned:false,
-          level:1,
-          plus:0,
-          petMode:defaultPetMode()
-        };
-      }
-
-      state.pets[pet.key].owned = !!state.pets[pet.key].owned;
-      state.pets[pet.key].plus = Math.max(0, Math.min(MAX_PLUS, Number(state.pets[pet.key].plus || 0)));
-      state.pets[pet.key].petMode = normalizePetMode(state.pets[pet.key].petMode);
-
-      const cap = levelCapByPlus(state.pets[pet.key].plus);
-
-      state.pets[pet.key].level = Math.max(
-        1,
-        Math.min(cap, Number(state.pets[pet.key].level || 1))
-      );
-    });
-
-    return state;
+    return base;
   }
 
   function saveState(state){
     state.equipped = Array.isArray(state.equipped) ? state.equipped.slice(0, MAX_EQUIPPED_PETS) : [];
+
+    PET_MASTER.forEach(pet => {
+      state.pets[pet.key] = normalizePetState(state.pets[pet.key]);
+    });
 
     try {
       localStorage.setItem(PET_SAVE_KEY, JSON.stringify(state));
@@ -703,6 +1019,7 @@
 
     window.dispatchEvent(new CustomEvent('mobshot:saveUpdated'));
     window.dispatchEvent(new CustomEvent('mobshot:petRubyUpdated'));
+    window.dispatchEvent(new CustomEvent('mobshot:petUpdated'));
   }
 
   function getRuby(){
@@ -732,6 +1049,25 @@
     return true;
   }
 
+  function getDiamond(){
+    const save = getSave();
+    return Number(save.diamond || 0);
+  }
+
+  function spendDiamond(amount){
+    const save = getSave();
+    const have = Number(save.diamond || 0);
+    const cost = Number(amount || 0);
+
+    if (have < cost) return false;
+
+    save.diamond = have - cost;
+    saveMainData(save);
+    refreshMainHud();
+
+    return true;
+  }
+
   function getCoin(){
     const save = getSave();
     return Number(save.coin || 0);
@@ -745,6 +1081,24 @@
     if (have < cost) return false;
 
     save.coin = have - cost;
+    saveMainData(save);
+    refreshMainHud();
+
+    return true;
+  }
+
+  function spendCoinAndDiamond(coinCost, diamondCost){
+    const save = getSave();
+    const haveCoin = Number(save.coin || 0);
+    const haveDiamond = Number(save.diamond || 0);
+
+    if (haveCoin < coinCost || haveDiamond < diamondCost) {
+      return false;
+    }
+
+    save.coin = haveCoin - coinCost;
+    save.diamond = haveDiamond - diamondCost;
+
     saveMainData(save);
     refreshMainHud();
 
@@ -827,8 +1181,12 @@
     return Number(plus || 0) >= 50 ? 1 : 0;
   }
 
-  function levelCapByPlus(plus){
-    return Number(plus || 0) >= 99 ? PLUS_UNLOCK_MAX_LEVEL : BASE_MAX_LEVEL;
+  function levelCap(petState){
+    return petState && petState.secondSkillUnlocked ? SECOND_UNLOCK_MAX_LEVEL : BASE_MAX_LEVEL;
+  }
+
+  function levelCapBySecondSkill(unlocked){
+    return unlocked ? SECOND_UNLOCK_MAX_LEVEL : BASE_MAX_LEVEL;
   }
 
   function stageList(){
@@ -893,6 +1251,11 @@
     return state.equipped.includes(key);
   }
 
+  function isSecondSkillUnlocked(key){
+    const state = loadState();
+    return !!state.pets[key]?.secondSkillUnlocked;
+  }
+
   function getPlus(key){
     const state = loadState();
     return Math.max(0, Math.min(MAX_PLUS, Number(state.pets[key]?.plus || 0)));
@@ -905,38 +1268,40 @@
 
   function getLevel(key){
     const state = loadState();
-    const plus = Number(state.pets[key]?.plus || 0);
-    return Math.max(1, Math.min(levelCapByPlus(plus), Number(state.pets[key]?.level || 1)));
+    const petState = state.pets[key] || defaultPetState();
+    return Math.max(1, Math.min(levelCap(petState), Number(petState.level || 1)));
   }
 
   function upgradeCost(level){
     const lv = Math.max(1, Number(level || 1));
 
-    if (lv >= PLUS_UNLOCK_MAX_LEVEL) return 0;
-    if (lv === 1) return 500;
-    if (lv === 2) return 700;
-    if (lv === 3) return 900;
-    if (lv === 4) return 1200;
-    if (lv < 10) return 1500 + ((lv - 5) * 500);
-    if (lv < 20) return 4000 + ((lv - 10) * 1000);
-    if (lv < 30) return 14000 + ((lv - 20) * 2000);
-    if (lv < 40) return 34000 + ((lv - 30) * 3000);
-    if (lv < 50) return 64000 + ((lv - 40) * 5000);
+    if (lv >= SECOND_UNLOCK_MAX_LEVEL) return 0;
 
-    return 120000 + ((lv - 50) * 8500);
+    if (lv < 10) return 300 + (lv * 150);
+    if (lv < 25) return 1800 + ((lv - 10) * 400);
+    if (lv < 40) return 8000 + ((lv - 25) * 900);
+    if (lv < 50) return 23000 + ((lv - 40) * 1800);
+
+    return 50000 + ((lv - 50) * 4500);
   }
 
   function normalLevelRate(level){
-    return 1 + ((Math.max(1, Number(level || 1)) - 1) * 0.01);
+    return 1 + ((Math.max(1, Number(level || 1)) - 1) * 0.007);
   }
 
   function skillLevelRate(level){
-    return 1 + ((Math.max(1, Number(level || 1)) - 1) * 0.013);
+    return 1 + ((Math.max(1, Number(level || 1)) - 1) * 0.009);
   }
 
   function skillCooldown(pet, level, plus){
-    const lvCt = Number(pet.skillCt || 30) - ((Math.max(1, Number(level || 1)) - 1) * 0.1);
-    return Math.max(3, lvCt - plusCtBonus(plus));
+    const lvCt = Number(pet.skillCt || 30) - ((Math.max(1, Number(level || 1)) - 1) * 0.07);
+    return Math.max(4, lvCt - plusCtBonus(plus));
+  }
+
+  function secondSkillCooldown(secondSkill, level, plus){
+    if (!secondSkill) return 0;
+    const lvCt = Number(secondSkill.ct || 60) - ((Math.max(1, Number(level || 1)) - 50) * 0.04);
+    return Math.max(18, lvCt - plusCtBonus(plus) * 0.5);
   }
 
   function normalWideBonus(level, pet, plus){
@@ -982,6 +1347,7 @@
       owned:true,
       level:1,
       plus:0,
+      secondSkillUnlocked:false,
       petMode:defaultPetMode()
     };
 
@@ -1029,12 +1395,16 @@
       return;
     }
 
-    const plus = Number(state.pets[key].plus || 0);
-    const cap = levelCapByPlus(plus);
+    const petState = state.pets[key];
+    const cap = levelCap(petState);
     const currentLevel = getLevel(key);
 
     if (currentLevel >= cap) {
-      alert(`最大Lvです。\n+99でLv120まで解放されます。`);
+      if (!petState.secondSkillUnlocked) {
+        alert(`現在の最大Lvです。\nLv99まで育成するには、第二スキル解放が必要です。\n必要: ${SECOND_SKILL_UNLOCK_COIN.toLocaleString()}COIN + ${SECOND_SKILL_UNLOCK_DIAMOND}ダイヤ`);
+      } else {
+        alert('最大Lvです。');
+      }
       return;
     }
 
@@ -1045,11 +1415,60 @@
       return;
     }
 
-    state.pets[key].level = currentLevel + 1;
+    petState.level = currentLevel + 1;
 
     saveState(state);
     refreshMainHud();
     renderAll();
+  }
+
+  function unlockSecondSkill(key){
+    const pet = getPet(key);
+    if (!pet || !pet.implemented) return;
+
+    const state = loadState();
+    const petState = state.pets[key];
+
+    if (!petState || !petState.owned) {
+      alert('先に購入してください。');
+      return;
+    }
+
+    if (petState.secondSkillUnlocked) {
+      alert('すでに第二スキル解放済みです。');
+      return;
+    }
+
+    if (Number(petState.level || 1) < BASE_MAX_LEVEL) {
+      alert(`第二スキル解放にはLv${BASE_MAX_LEVEL}が必要です。`);
+      return;
+    }
+
+    const coin = getCoin();
+    const diamond = getDiamond();
+
+    if (coin < SECOND_SKILL_UNLOCK_COIN || diamond < SECOND_SKILL_UNLOCK_DIAMOND) {
+      alert(
+        `素材が足りません。\n` +
+        `必要: ${SECOND_SKILL_UNLOCK_COIN.toLocaleString()}COIN + ${SECOND_SKILL_UNLOCK_DIAMOND}ダイヤ\n` +
+        `所持: ${coin.toLocaleString()}COIN + ${diamond}ダイヤ`
+      );
+      return;
+    }
+
+    if (!spendCoinAndDiamond(SECOND_SKILL_UNLOCK_COIN, SECOND_SKILL_UNLOCK_DIAMOND)) {
+      alert('素材が足りません。');
+      return;
+    }
+
+    petState.secondSkillUnlocked = true;
+    petState.level = Math.max(BASE_MAX_LEVEL, Number(petState.level || BASE_MAX_LEVEL));
+
+    saveState(state);
+    refreshMainHud();
+    renderAll();
+
+    alert(`${pet.name}\n第二スキル「${pet.secondSkillName}」解放！\nLv99まで強化可能になりました！`);
   }
 
   function upgradePetPlus(key){
@@ -1139,7 +1558,7 @@
 
     return `
       <img
-        src="${src}?v=20260626_pet_mode_training"
+        src="${src}?v=20260627_pet_second_skill"
         alt="${isLocked ? 'LOCK' : pet.name}"
         style="${isLocked ? 'filter:brightness(0) opacity(.75);' : ''}"
         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
@@ -1239,6 +1658,39 @@
     `;
   }
 
+  function secondSkillHtml(pet, owned, level, unlocked, lockedView){
+    if (lockedView) {
+      return `<div class="pet-card-spec">第二スキル: ？？？</div>`;
+    }
+
+    const second = pet.secondSkill;
+
+    if (!second) {
+      return `<div class="pet-card-spec">第二スキル: なし</div>`;
+    }
+
+    if (!owned) {
+      return `<div class="pet-card-spec">第二スキル: 購入後、Lv50で解放可能</div>`;
+    }
+
+    if (unlocked) {
+      return `
+        <div class="pet-card-spec" style="border-color:rgba(255,230,107,.55);background:rgba(255,230,107,.08)">
+          <b>第二スキル解放済み</b><br>
+          ${second.name} / CT${second.ct}秒 / ${second.desc}
+        </div>
+      `;
+    }
+
+    return `
+      <div class="pet-card-spec" style="border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.05)">
+        <b>第二スキル未解放</b><br>
+        ${second.name} / ${second.desc}<br>
+        条件: Lv50 + ${SECOND_SKILL_UNLOCK_COIN.toLocaleString()}COIN + ${SECOND_SKILL_UNLOCK_DIAMOND}ダイヤ
+      </div>
+    `;
+  }
+
   function renderOwnedList(){
     const list = document.getElementById('petOwnedList');
     if (!list) return;
@@ -1251,18 +1703,22 @@
       const owned = !!state.pets[pet.key]?.owned;
       const equipped = state.equipped.includes(pet.key);
       const plus = getPlus(pet.key);
-      const cap = levelCapByPlus(plus);
+      const petState = state.pets[pet.key] || defaultPetState();
+      const secondUnlocked = !!petState.secondSkillUnlocked;
+      const cap = levelCap(petState);
       const level = getLevel(pet.key);
       const mode = getPetMode(pet.key);
       const nextCost = level >= cap ? 0 : upgradeCost(level);
       const plusCost = plus >= MAX_PLUS ? 0 : petPlusCost(plus);
       const lockedView = !unlockOk || !pet.implemented;
+      const canSecondUnlock = owned && !secondUnlocked && level >= BASE_MAX_LEVEL && pet.secondSkill;
 
       const card = document.createElement('div');
       card.className =
         'pet-card' +
         (equipped ? ' equipped' : '') +
-        (lockedView ? ' locked rank-locked' : '');
+        (lockedView ? ' locked rank-locked' : '') +
+        (secondUnlocked ? ' second-skill-unlocked' : '');
 
       let mainButtonText = '購入';
       let mainButtonDisabled = false;
@@ -1295,7 +1751,7 @@
           <div class="pet-card-desc">${displayRole} / ${displayUnlock}</div>
 
           <div class="pet-card-price">
-            ${lockedView ? `条件: ${displayUnlock}` : `購入 ${Number(pet.price || 0).toLocaleString()} COIN / COIN ${getCoin().toLocaleString()} / ルビー ♦${getRuby().toLocaleString()}`}
+            ${lockedView ? `条件: ${displayUnlock}` : `購入 ${Number(pet.price || 0).toLocaleString()} COIN / COIN ${getCoin().toLocaleString()} / ダイヤ ${getDiamond().toLocaleString()} / ルビー ♦${getRuby().toLocaleString()}`}
           </div>
 
           <div class="pet-card-spec">
@@ -1307,11 +1763,13 @@
           </div>
 
           <div class="pet-card-spec">
-            ${lockedView ? '？？？' : `スキル: ${pet.skillName} / CT${Math.round(skillCooldown(pet, level, plus) * 10) / 10}秒 / スキルワイド+${skillWideBonus(level, pet)} / +強化Tier${plusSkillTier(plus)}`}
+            ${lockedView ? '？？？' : `第一スキル: ${pet.skillName} / CT${Math.round(skillCooldown(pet, level, plus) * 10) / 10}秒 / スキルワイド+${skillWideBonus(level, pet)} / +強化Tier${plusSkillTier(plus)}`}
           </div>
 
+          ${secondSkillHtml(pet, owned, level, secondUnlocked, lockedView)}
+
           <div class="pet-card-spec">
-            ${lockedView ? '解放後に性能表示' : `+効果: +1毎パワー+0.1% / +5毎CT-0.1秒 / +10毎スキル強化 / +50通常ワイド+1 / +99 Lv120解放`}
+            ${lockedView ? '解放後に性能表示' : `+効果: +1毎パワー+0.1% / +5毎CT-0.1秒 / +10毎スキル強化 / +50通常ワイド+1`}
           </div>
 
           ${petModeHtml(pet, mode, owned, lockedView)}
@@ -1326,6 +1784,10 @@
             Lv強化<br>${level >= cap ? 'MAX' : nextCost.toLocaleString()}
           </button>
 
+          <button type="button" class="pet-upgrade-btn pet-second-btn" ${(!canSecondUnlock || !pet.implemented || !unlockOk) ? 'disabled' : ''}>
+            第二解放<br>${secondUnlocked ? '解放済' : '100000C+50D'}
+          </button>
+
           <button type="button" class="pet-upgrade-btn pet-plus-btn" ${(!owned || plus >= MAX_PLUS || !pet.implemented || !unlockOk) ? 'disabled' : ''}>
             +強化<br>${plus >= MAX_PLUS ? 'MAX' : '♦' + plusCost}
           </button>
@@ -1333,7 +1795,8 @@
       `;
 
       const mainBtn = card.querySelector('.pet-card-btn');
-      const upgradeBtn = card.querySelector('.pet-upgrade-btn:not(.pet-plus-btn)');
+      const upgradeBtn = card.querySelector('.pet-upgrade-btn:not(.pet-plus-btn):not(.pet-second-btn)');
+      const secondBtn = card.querySelector('.pet-second-btn');
       const plusBtn = card.querySelector('.pet-plus-btn');
 
       if (mainBtn && !mainButtonDisabled) {
@@ -1346,6 +1809,12 @@
       if (upgradeBtn && owned && level < cap && pet.implemented && unlockOk) {
         upgradeBtn.addEventListener('click', function(){
           upgradePet(pet.key);
+        });
+      }
+
+      if (secondBtn && canSecondUnlock && pet.implemented && unlockOk) {
+        secondBtn.addEventListener('click', function(){
+          unlockSecondSkill(pet.key);
         });
       }
 
@@ -1437,6 +1906,11 @@
     renderAll();
   }
 
+  function getSecondSkill(key){
+    const pet = getPet(key);
+    return pet ? pet.secondSkill : null;
+  }
+
   function getEquippedPets(){
     const state = loadState();
 
@@ -1446,9 +1920,18 @@
         const pet = getPet(key);
         if (!pet || !pet.implemented) return null;
 
+        const petState = state.pets[key] || defaultPetState();
         const plus = getPlus(key);
         const level = getLevel(key);
         const mode = getPetMode(key);
+        const secondUnlocked = !!petState.secondSkillUnlocked;
+        const secondSkill = secondUnlocked && pet.secondSkill
+          ? Object.assign({}, pet.secondSkill, {
+              currentCt:secondSkillCooldown(pet.secondSkill, level, plus),
+              levelRate:skillLevelRate(level) * petModeSkillRate(mode),
+              plusTier:plusSkillTier(plus)
+            })
+          : null;
 
         return Object.assign({}, pet, {
           slotIndex:index,
@@ -1456,12 +1939,15 @@
           plus,
           petRubyPlus:plus,
           petMode:mode,
+          secondSkillUnlocked:secondUnlocked,
+          secondSkill,
           maxPlus:MAX_PLUS,
-          maxLevel:levelCapByPlus(plus),
-          levelCap:levelCapByPlus(plus),
+          maxLevel:levelCap(petState),
+          levelCap:levelCap(petState),
           normalLevelRate:normalLevelRate(level) * plusPowerRate(plus),
           skillLevelRate:skillLevelRate(level) * (1 + plusSkillTier(plus) * 0.015),
           currentSkillCt:skillCooldown(pet, level, plus),
+          currentSecondSkillCt:secondSkill ? secondSkill.currentCt : 0,
           normalWideBonus:normalWideBonus(level, pet, plus),
           skillWideBonus:skillWideBonus(level, pet),
           plusPowerRate:plusPowerRate(plus),
@@ -1489,18 +1975,23 @@
     buyPet,
     equipPet,
     upgradePet,
+    unlockSecondSkill,
     upgradePetPlus,
     upgradePetMode,
 
     getEquippedPets,
     getPet,
+    getSecondSkill,
     getLevel,
     getPlus,
     getPetMode,
+    isSecondSkillUnlocked,
 
     getRuby,
     addRuby,
     spendRuby,
+    getDiamond,
+    spendDiamond,
     getCoin,
 
     petPlusCost,
@@ -1517,9 +2008,14 @@
     plusCtBonus,
     plusSkillTier,
     plusNormalWideBonus,
-    levelCapByPlus,
+    levelCap,
+    levelCapBySecondSkill,
 
     upgradeCost,
+    normalLevelRate,
+    skillLevelRate,
+    skillCooldown,
+    secondSkillCooldown,
     canUnlock,
     isOwned,
     isEquipped,
@@ -1527,12 +2023,16 @@
     saveState,
 
     PET_MASTER,
+    SECOND_SKILLS,
     PET_MODE_FIELDS,
     BASE_MAX_LEVEL,
-    PLUS_UNLOCK_MAX_LEVEL,
+    SECOND_UNLOCK_MAX_LEVEL,
+    PLUS_UNLOCK_MAX_LEVEL:SECOND_UNLOCK_MAX_LEVEL,
     MAX_LEVEL:BASE_MAX_LEVEL,
     MAX_PLUS,
     PET_MODE_MAX_LEVEL,
-    MAX_EQUIPPED_PETS
+    MAX_EQUIPPED_PETS,
+    SECOND_SKILL_UNLOCK_COIN,
+    SECOND_SKILL_UNLOCK_DIAMOND
   };
 })();
