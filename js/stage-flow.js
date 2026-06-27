@@ -54,12 +54,6 @@
     return 'grass';
   }
 
-  function testBossBackground(boss){
-    const key = testBossAreaKey(boss);
-    const area = AREA_DATA[key] || AREA_DATA.grass;
-    return area.background;
-  }
-
   const AREA_DATA = {
     grass: {
       name: '草原',
@@ -392,6 +386,67 @@
   const DIFFICULTY_BASE_SCALE = [1.00, 10.00, 16.00, 24.00, 8.00];
   const DIFFICULTY_MAX_SCALE = [2.95, 11.20, 18.00, 28.00, 9.00];
 
+  function testBossScale(testBoss){
+    if (!testBoss) return 1;
+
+    const group = String(testBoss.group || '');
+    const areaKey = testBossAreaKey(testBoss);
+
+    if (group === '通常ボス') {
+      if (areaKey === 'grass') return 10.0;
+      if (areaKey === 'desert') return 12.0;
+      if (areaKey === 'town') return 14.0;
+      if (areaKey === 'neon') return 16.0;
+      if (areaKey === 'magma') return 18.0;
+      if (areaKey === 'castle') return 20.0;
+      return 14.0;
+    }
+
+    if (group === '強力ボス') {
+      if (areaKey === 'grass') return 18.0;
+      if (areaKey === 'desert') return 20.0;
+      if (areaKey === 'town') return 22.0;
+      if (areaKey === 'neon') return 24.0;
+      if (areaKey === 'magma') return 26.0;
+      if (areaKey === 'castle') return 28.0;
+      return 24.0;
+    }
+
+    if (group === 'レジェンド' || testBoss.isLegendBoss) {
+      if (areaKey === 'prison') return 30.0;
+      if (areaKey === 'matrix') return 32.0;
+      if (areaKey === 'seaRail') return 34.0;
+      if (areaKey === 'neonHighway') return 36.0;
+      if (areaKey === 'makai') return 38.0;
+      if (areaKey === 'last') return 40.0;
+      return 34.0;
+    }
+
+    if (testBoss.strong || testBoss.isStrongBoss) return 24.0;
+
+    return 14.0;
+  }
+
+  function findBossBaseDef(testBoss){
+    const areaKey = testBossAreaKey(testBoss);
+    const area = AREA_DATA[areaKey] || AREA_DATA.grass;
+    const name = fixBossName(testBoss && testBoss.name);
+
+    const candidates = [];
+
+    if (area.boss) candidates.push(area.boss);
+    if (area.strongBoss) candidates.push(area.strongBoss);
+    if (Array.isArray(area.doubleBosses)) {
+      area.doubleBosses.forEach(b => candidates.push(b));
+    }
+
+    for (const def of candidates) {
+      if (fixBossName(def.name) === name) return def;
+    }
+
+    return (testBoss && (testBoss.strong || testBoss.isStrongBoss)) ? (area.strongBoss || area.boss) : area.boss;
+  }
+
   function getStageInfo(){
     if (window.MobShotStorage && window.MobShotStorage.getCurrentStage) {
       return window.MobShotStorage.getCurrentStage();
@@ -577,8 +632,10 @@
     const area = AREA_DATA[areaKey] || AREA_DATA.grass;
     const legend = testBoss.group === 'レジェンド' || !!testBoss.isLegendBoss;
     const strong = !!testBoss.strong || !!testBoss.isStrongBoss || legend;
-
-    const baseHp = Number(testBoss.hp || 0) || (strong ? 2200 : 1000);
+    const scale = testBossScale(testBoss);
+    const baseDef = findBossBaseDef(testBoss) || {};
+    const rawHp = Number(testBoss.hp || baseDef.hp || 0) || (strong ? 2200 : 1000);
+    const hp = Math.ceil(rawHp * scale);
 
     D.stage = Object.assign(D.stage || {}, {
       id: 'TEST-BOSS',
@@ -594,7 +651,7 @@
       isLegend: legend,
       isTest: true,
       isTestBoss: true,
-      stagePowerScale: 1,
+      stagePowerScale: scale,
       doubleBoss: false
     });
 
@@ -603,14 +660,16 @@
     D.enemies.midBoss = [];
     D.enemies.boss = {
       name: fixBossName(testBoss.name),
-      image: testBoss.image,
-      hp: baseHp,
+      image: testBoss.image || baseDef.image || '',
+      hp,
       score: 0,
       coin: 0,
       strong,
       isStrongBoss: strong,
       isLegendBoss: legend,
       isTestBoss: true,
+      testScale: scale,
+      baseHp: rawHp,
       area: testBoss.area || area.name || ''
     };
     D.enemies.bosses = [clone(D.enemies.boss)];
