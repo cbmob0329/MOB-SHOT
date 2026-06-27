@@ -35,33 +35,47 @@
     const key = normalizeDifficultyKey(e.eventDifficulty || e.__doubleDifficulty || '');
 
     if (key === 'hard') {
-      return { cd:0.88, speed:1.08, bullet:1.14, move:1.10, zako:1.25 };
+      return { cd:0.84, speed:1.12, bullet:1.22, move:1.12, zako:1.25, shotPlus:0, burstPlus:0 };
     }
 
     if (key === 'veryHard') {
-      return { cd:0.76, speed:1.16, bullet:1.32, move:1.18, zako:1.55 };
+      return { cd:0.72, speed:1.22, bullet:1.45, move:1.20, zako:1.55, shotPlus:1, burstPlus:1 };
     }
 
     if (key === 'inferno') {
-      return { cd:0.64, speed:1.26, bullet:1.62, move:1.26, zako:2.05 };
+      return { cd:0.58, speed:1.36, bullet:1.95, move:1.30, zako:2.05, shotPlus:1, burstPlus:2 };
     }
 
     if (key === 'legend') {
-      return { cd:0.52, speed:1.38, bullet:2.05, move:1.36, zako:2.75 };
+      return { cd:0.48, speed:1.50, bullet:2.55, move:1.42, zako:2.75, shotPlus:2, burstPlus:3 };
     }
 
-    return { cd:1, speed:1, bullet:1, move:1, zako:1 };
+    return { cd:1, speed:1, bullet:1, move:1, zako:1, shotPlus:0, burstPlus:0 };
   }
 
   function frequencyRelax(isBoss){
-    return isBoss ? 1.09 : 1.03;
+    return isBoss ? 1.00 : 0.96;
+  }
+
+  function normalShotCount(e, base, isBoss){
+    const bal = difficultyBalance(e);
+    const plus = Number(bal.shotPlus || 0);
+    const bossPlus = isBoss && plus > 0 ? plus : Math.max(0, plus - 1);
+    return Math.max(1, Number(base || 1) + bossPlus);
+  }
+
+  function burstShotCount(e, base, isBoss){
+    const bal = difficultyBalance(e);
+    const plus = Number(bal.burstPlus || 0);
+    const bossPlus = isBoss ? plus : Math.max(0, plus - 1);
+    return Math.max(1, Number(base || 1) + bossPlus);
   }
 
   function fallbackConfig(isBoss){
     return {
       type: isBoss ? 'hawk' : 'ptera',
-      shootCd: isBoss ? 175 : 165,
-      attackCd: isBoss ? 285 : 245,
+      shootCd: isBoss ? 160 : 148,
+      attackCd: isBoss ? 265 : 225,
       moveSpeed: 1.05,
       patterns: isBoss ? ['threeWayNormal', 'fastFourBurst', 'hugeThreeWay'] : ['unbreakableNormalShot', 'threeWayNormal'],
       spawnWeakEnemies: isBoss,
@@ -133,15 +147,15 @@
   }
 
   function attackRateMul(tools){
-    return isDoubleOrCoop(tools) ? 1.12 : 1;
+    return isDoubleOrCoop(tools) ? 1.08 : 1;
   }
 
   function speedMulByType(type){
-    if (type === 'neon' || type === 'blueNeo' || type === 'purpleNeo' || type === 'smith') return 0.92;
-    if (type === 'hawk' || type === 'mira' || type === 'lilith' || type === 'ultraLilith') return 0.88;
-    if (type === 'guardian' || type === 'mail') return 0.70;
-    if (type === 'dragon' || type === 'maoh' || type === 'enma') return 0.78;
-    return 0.82;
+    if (type === 'neon' || type === 'blueNeo' || type === 'purpleNeo' || type === 'smith') return 0.96;
+    if (type === 'hawk' || type === 'mira' || type === 'lilith' || type === 'ultraLilith') return 0.92;
+    if (type === 'guardian' || type === 'mail') return 0.76;
+    if (type === 'dragon' || type === 'maoh' || type === 'enma') return 0.84;
+    return 0.88;
   }
 
   function moveRange(tools, isBoss){
@@ -163,16 +177,16 @@
     e.aiTimer = 0;
 
     const bal = difficultyBalance(e);
-    const slowMul = isBoss ? 1.10 : 1.05;
+    const slowMul = isBoss ? 1.00 : 0.98;
     const relax = frequencyRelax(isBoss);
 
     e.shootCd = Math.max(
-      isBoss ? 58 : 50,
+      isBoss ? 48 : 44,
       Math.floor(Number(e.shootCd || config.shootCd || 150) * slowMul * relax * bal.cd)
     );
 
     e.attackCd = Math.max(
-      isBoss ? 95 : 82,
+      isBoss ? 84 : 72,
       Math.floor(Number(e.attackCd || config.attackCd || 230) * slowMul * relax * bal.cd)
     );
 
@@ -185,8 +199,8 @@
     e.hitPlayerCd = 0;
     e.summonCount = 0;
 
-    e.stageSummonCd = Math.floor((250 + Math.random() * 120) * bal.cd * relax);
-    e.stageObstacleCd = Math.floor((210 + Math.random() * 110) * bal.cd);
+    e.stageSummonCd = Math.floor((230 + Math.random() * 100) * bal.cd * relax);
+    e.stageObstacleCd = Math.floor((200 + Math.random() * 90) * bal.cd);
 
     e.cloneUsed = false;
     e.sistersUsed = false;
@@ -215,7 +229,7 @@
     e.baseVx = Math.max(0.55, baseSpeed);
     e.vx = e.baseVx * (Math.random() < 0.5 ? -1 : 1);
 
-    e.bigFireballCd = Math.floor((350 + Math.random() * 150) * bal.cd * relax);
+    e.bigFireballCd = Math.floor((330 + Math.random() * 130) * bal.cd * relax);
     e.lastBigFireballFrame = -9999;
   }
 
@@ -263,10 +277,10 @@
   }
 
   function retargetInterval(type, isBoss){
-    if (type === 'neon' || type === 'blueNeo' || type === 'purpleNeo' || type === 'smith') return isBoss ? 55 : 45;
-    if (type === 'guardian' || type === 'mail') return isBoss ? 95 : 75;
-    if (type === 'dragon' || type === 'maoh' || type === 'enma') return isBoss ? 75 : 62;
-    return isBoss ? 65 : 52;
+    if (type === 'neon' || type === 'blueNeo' || type === 'purpleNeo' || type === 'smith') return isBoss ? 52 : 42;
+    if (type === 'guardian' || type === 'mail') return isBoss ? 90 : 70;
+    if (type === 'dragon' || type === 'maoh' || type === 'enma') return isBoss ? 70 : 58;
+    return isBoss ? 60 : 48;
   }
 
   function targetSpread(type, tools, isBoss){
@@ -457,7 +471,7 @@
       fallbackImage:spec.fallbackImage || 'atk/hinotama.png',
       flipY:spec.flipY !== false,
       color:spec.color || '#ff7a35',
-      speed:1.65 * bal.speed,
+      speed:1.82 * bal.speed,
       hp:7,
       breakable:true
     }, extra || {});
@@ -506,7 +520,7 @@
     opt = opt || {};
     const spec = getAttackSpec(e);
 
-    const speed = Number(opt.speed || 1.8);
+    const speed = Number(opt.speed || 1.95);
     const sizeType = opt.sizeType || 'normal';
 
     let r = Number(opt.r || 0);
@@ -530,7 +544,7 @@
       r,
       visualR: Math.ceil(r * 1.08),
       hitR: Math.ceil(r * 0.82),
-      dmg: Number(opt.dmg || Math.max(5, Math.ceil(r * 0.34 * difficultyBalance(e).bullet))),
+      dmg: Number(opt.dmg || Math.max(8, Math.ceil(r * 0.42 * difficultyBalance(e).bullet))),
       hp,
       maxHp: hp,
       breakable: hp > 0,
@@ -584,7 +598,7 @@
     for (let i = 0; i < count; i++) {
       setTimeout(function(){
         if (!e.dead) directBullet(e, tools, base, opt);
-      }, i * 70);
+      }, i * 58);
     }
   }
 
@@ -621,7 +635,7 @@
   function tryBigFireball(e, tools, text, opt){
     if (!canUseBigFireball(e, tools)) return false;
 
-    e.bigFireballCd = Math.floor((isDoubleOrCoop(tools) ? 560 : 455) * difficultyBalance(e).cd);
+    e.bigFireballCd = Math.floor((isDoubleOrCoop(tools) ? 520 : 410) * difficultyBalance(e).cd);
     e.lastBigFireballFrame = tools.frame ? tools.frame() : 0;
 
     const finalOpt = bulletOpt(e, 'super', Object.assign({ special:true, hp:18 }, opt || {}));
@@ -784,7 +798,7 @@
     const allow = config.spawnWeakEnemies !== false;
     if (!allow || e.stageSummonCd > 0) return;
 
-    e.stageSummonCd = Math.floor((330 + Math.random() * 150) * difficultyBalance(e).cd * frequencyRelax(true));
+    e.stageSummonCd = Math.floor((300 + Math.random() * 130) * difficultyBalance(e).cd * frequencyRelax(true));
 
     summonStageEnemy(e, tools, Math.random() < 0.45 ? 2 : 1, 1.15);
   }
@@ -793,7 +807,7 @@
     const allow = config.spawnStageObstacles !== false;
     if (!allow || e.stageObstacleCd > 0) return;
 
-    e.stageObstacleCd = Math.floor((260 + Math.random() * 150) * difficultyBalance(e).cd);
+    e.stageObstacleCd = Math.floor((250 + Math.random() * 130) * difficultyBalance(e).cd);
     spawnStageObstacle(e, tools);
   }
 
@@ -802,106 +816,106 @@
 
     switch(key){
       case 'unbreakableNormalShot':
-        safeFireSpread(e, tools, isBoss ? 3 : 2, 0.20, {
+        safeFireSpread(e, tools, normalShotCount(e, isBoss ? 3 : 2, isBoss), 0.20, {
           sizeType:'small',
-          speed:(isBoss ? 1.95 : 1.72) * bal.speed,
+          speed:(isBoss ? 2.12 : 1.88) * bal.speed,
           hp:0,
           breakable:false
         });
         return true;
 
       case 'fourWayNormal':
-        directRing(e, tools, 4, normalOpt(e, 'normal', { speed:1.55 * bal.speed, hp:7 }));
+        directRing(e, tools, normalShotCount(e, 4, isBoss), normalOpt(e, 'normal', { speed:1.74 * bal.speed, hp:7 }));
         return true;
 
       case 'fiveWayNormal':
-        directRing(e, tools, 5, normalOpt(e, 'normal', { speed:1.55 * bal.speed, hp:7 }));
+        directRing(e, tools, normalShotCount(e, 5, isBoss), normalOpt(e, 'normal', { speed:1.72 * bal.speed, hp:7 }));
         return true;
 
       case 'threeWayNormal':
-        safeFireSpread(e, tools, 3, 0.22, normalOpt(e, 'normal', { speed:1.7 * bal.speed, hp:7 }));
+        safeFireSpread(e, tools, normalShotCount(e, 3, isBoss), 0.20, normalOpt(e, 'normal', { speed:1.88 * bal.speed, hp:7 }));
         return true;
 
       case 'twoWayNormal':
-        safeFireSpread(e, tools, 2, 0.28, normalOpt(e, 'normal', { speed:1.75 * bal.speed, hp:7 }));
+        safeFireSpread(e, tools, normalShotCount(e, 2, isBoss), 0.26, normalOpt(e, 'normal', { speed:1.92 * bal.speed, hp:7 }));
         return true;
 
       case 'oneWayFastNormal':
-        directLine(e, tools, 1, normalOpt(e, 'normal', { speed:2.35 * bal.speed, hp:7 }));
+        directLine(e, tools, normalShotCount(e, 1, isBoss), normalOpt(e, 'normal', { speed:2.58 * bal.speed, hp:7 }));
         return true;
 
       case 'randomThreeNormal':
-        directRing(e, tools, 3, normalOpt(e, 'normal', { speed:1.55 * bal.speed, hp:7 }));
+        directRing(e, tools, normalShotCount(e, 3, isBoss), normalOpt(e, 'normal', { speed:1.74 * bal.speed, hp:7 }));
         return true;
 
       case 'randomFiveNormal':
-        directRing(e, tools, 5, normalOpt(e, 'normal', { speed:1.55 * bal.speed, hp:7 }));
+        directRing(e, tools, normalShotCount(e, 5, isBoss), normalOpt(e, 'normal', { speed:1.74 * bal.speed, hp:7 }));
         return true;
 
       case 'randomSixNormal':
-        directRing(e, tools, 6, normalOpt(e, 'normal', { speed:1.52 * bal.speed, hp:7 }));
+        directRing(e, tools, normalShotCount(e, 6, isBoss), normalOpt(e, 'normal', { speed:1.70 * bal.speed, hp:7 }));
         return true;
 
       case 'fastThreeBurst':
-        directLine(e, tools, 3, normalOpt(e, 'small', { speed:2.35 * bal.speed, hp:5 }));
+        directLine(e, tools, burstShotCount(e, 3, isBoss), normalOpt(e, 'small', { speed:2.58 * bal.speed, hp:5 }));
         return true;
 
       case 'fastFourBurst':
-        directLine(e, tools, 4, normalOpt(e, 'small', { speed:2.25 * bal.speed, hp:5 }));
+        directLine(e, tools, burstShotCount(e, 4, isBoss), normalOpt(e, 'small', { speed:2.48 * bal.speed, hp:5 }));
         return true;
 
       case 'fastSixBurst':
-        directLine(e, tools, 6, normalOpt(e, 'small', { speed:2.18 * bal.speed, hp:5 }));
+        directLine(e, tools, burstShotCount(e, 6, isBoss), normalOpt(e, 'small', { speed:2.38 * bal.speed, hp:5 }));
         return true;
 
       case 'fastEightBurst':
-        directLine(e, tools, 8, normalOpt(e, 'small', { speed:2.10 * bal.speed, hp:5 }));
+        directLine(e, tools, burstShotCount(e, 8, isBoss), normalOpt(e, 'small', { speed:2.30 * bal.speed, hp:5 }));
         return true;
 
       case 'slowHugeThreeWay':
-        safeFireSpread(e, tools, 3, 0.28, { sizeType:'huge', speed:0.95 * bal.speed, hp:14, special:true });
+        safeFireSpread(e, tools, normalShotCount(e, 3, isBoss), 0.26, { sizeType:'huge', speed:1.02 * bal.speed, hp:14, special:true });
         return true;
 
       case 'slowHugeFiveWay':
-        safeFireSpread(e, tools, 5, 0.22, { sizeType:'huge', speed:0.9 * bal.speed, hp:15, special:true });
+        safeFireSpread(e, tools, normalShotCount(e, 5, isBoss), 0.20, { sizeType:'huge', speed:0.98 * bal.speed, hp:15, special:true });
         return true;
 
       case 'hugeTwoWay':
-        safeFireSpread(e, tools, 2, 0.34, { sizeType:'huge', speed:1.08 * bal.speed, hp:15, special:true });
+        safeFireSpread(e, tools, normalShotCount(e, 2, isBoss), 0.32, { sizeType:'huge', speed:1.14 * bal.speed, hp:15, special:true });
         return true;
 
       case 'hugeThreeWay':
-        safeFireSpread(e, tools, 3, 0.28, { sizeType:'huge', speed:1.08 * bal.speed, hp:16, special:true });
+        safeFireSpread(e, tools, normalShotCount(e, 3, isBoss), 0.26, { sizeType:'huge', speed:1.14 * bal.speed, hp:16, special:true });
         return true;
 
       case 'hugeFourWay':
-        directRing(e, tools, 4, bulletOpt(e, 'huge', { speed:1.0 * bal.speed, hp:16, special:true }));
+        directRing(e, tools, normalShotCount(e, 4, isBoss), bulletOpt(e, 'huge', { speed:1.08 * bal.speed, hp:16, special:true }));
         return true;
 
       case 'hugeFiveWay':
-        safeFireSpread(e, tools, 5, 0.22, { sizeType:'huge', speed:1.02 * bal.speed, hp:17, special:true });
+        safeFireSpread(e, tools, normalShotCount(e, 5, isBoss), 0.20, { sizeType:'huge', speed:1.08 * bal.speed, hp:17, special:true });
         return true;
 
       case 'hugeEightWay':
-        directRing(e, tools, 8, bulletOpt(e, 'huge', { speed:0.96 * bal.speed, hp:18, special:true }));
+        directRing(e, tools, normalShotCount(e, 8, isBoss), bulletOpt(e, 'huge', { speed:1.02 * bal.speed, hp:18, special:true }));
         return true;
 
       case 'chargedHugeTriple':
-        return tryBigFireball(e, tools, '巨大3連射！', { hp:20, speed:1.0 * bal.speed, special:true });
+        return tryBigFireball(e, tools, '巨大3連射！', { hp:20, speed:1.04 * bal.speed, special:true });
 
       case 'chargedHugeFive':
-        return tryBigFireball(e, tools, '巨大5連射！', { hp:24, speed:1.0 * bal.speed, special:true });
+        return tryBigFireball(e, tools, '巨大5連射！', { hp:24, speed:1.04 * bal.speed, special:true });
 
       case 'chargedSlowThree':
-        safeFireSpread(e, tools, 3, 0.22, { sizeType:'super', speed:0.72 * bal.speed, hp:20, special:true });
+        safeFireSpread(e, tools, normalShotCount(e, 3, isBoss), 0.20, { sizeType:'super', speed:0.78 * bal.speed, hp:20, special:true });
         return true;
 
       case 'chargedSlowFive':
-        safeFireSpread(e, tools, 5, 0.18, { sizeType:'super', speed:0.68 * bal.speed, hp:22, special:true });
+        safeFireSpread(e, tools, normalShotCount(e, 5, isBoss), 0.17, { sizeType:'super', speed:0.74 * bal.speed, hp:22, special:true });
         return true;
 
       case 'chargedSlowTen':
-        directRing(e, tools, 10, bulletOpt(e, 'super', { speed:0.58 * bal.speed, hp:24, special:true }));
+        directRing(e, tools, normalShotCount(e, 10, isBoss), bulletOpt(e, 'super', { speed:0.62 * bal.speed, hp:24, special:true }));
         return true;
 
       case 'fastDash':
@@ -915,17 +929,17 @@
 
       case 'fastDashBarrage':
         startFastDash(e, tools, '高速突進乱射！');
-        directLine(e, tools, 6, normalOpt(e, 'small', { speed:2.15 * bal.speed, hp:5 }));
+        directLine(e, tools, burstShotCount(e, 6, isBoss), normalOpt(e, 'small', { speed:2.32 * bal.speed, hp:5 }));
         return true;
 
       case 'swayBarrage':
         startSwayDash(e, tools, '左右揺れ乱射！');
-        directRing(e, tools, 12, normalOpt(e, 'small', { speed:1.55 * bal.speed, hp:5 }));
+        directRing(e, tools, normalShotCount(e, 12, isBoss), normalOpt(e, 'small', { speed:1.70 * bal.speed, hp:5 }));
         return true;
 
       case 'stationaryBarrage':
         e.specialMove = '';
-        directRing(e, tools, 16, normalOpt(e, 'small', { speed:1.45 * bal.speed, hp:5 }));
+        directRing(e, tools, normalShotCount(e, 16, isBoss), normalOpt(e, 'small', { speed:1.60 * bal.speed, hp:5 }));
         if (tools.addText) tools.addText('その場乱射！', e.x, e.y - 80, '#b78cff');
         return true;
 
@@ -950,19 +964,19 @@
       case 'giantStrongBall':
         safeFireSpread(e, tools, 1, 0, {
           sizeType:'super',
-          speed:0.78 * bal.speed,
+          speed:0.84 * bal.speed,
           hp:28,
           special:true,
-          dmg:34 * bal.bullet
+          dmg:56 * bal.bullet
         });
         if (tools.addText) tools.addText('巨大玉！', e.x, e.y - 84, '#6be6ff');
         return true;
 
       case 'weakFlameBarrage':
-        directLine(e, tools, 10, bulletOpt(e, 'small', {
-          speed:1.75 * bal.speed,
+        directLine(e, tools, burstShotCount(e, 10, isBoss), bulletOpt(e, 'small', {
+          speed:1.94 * bal.speed,
           hp:4,
-          dmg:6 * bal.bullet,
+          dmg:16 * bal.bullet,
           special:false
         }));
         if (tools.addText) tools.addText('火炎乱射！', e.x, e.y - 84, '#ff5b35');
@@ -971,11 +985,11 @@
       case 'giantSlowTrident':
         safeFireSpread(e, tools, 1, 0, {
           sizeType:'super',
-          speed:0.56 * bal.speed,
+          speed:0.62 * bal.speed,
           hp:30,
           special:true,
           trident:true,
-          dmg:38 * bal.bullet
+          dmg:68 * bal.bullet
         });
         if (tools.addText) tools.addText('巨大トライデント！', e.x, e.y - 88, '#6be6ff');
         return true;
@@ -991,7 +1005,7 @@
           skills().makeClones(e, tools, 3, { moveBoost:Number(config.cloneMoveBoost || 1.8) });
           return true;
         }
-        directRing(e, tools, 10, bulletOpt(e, 'small', { speed:1.45 * bal.speed, hp:5 }));
+        directRing(e, tools, normalShotCount(e, 10, isBoss), bulletOpt(e, 'small', { speed:1.58 * bal.speed, hp:5 }));
         return true;
 
       case 'summonLilithOnce':
@@ -1013,14 +1027,14 @@
       case 'teleportAttack':
         e.x = clamp(tools.rand(tools.W * 0.20, tools.W * 0.80), tools.W * 0.15, tools.W * 0.85);
         e.y = clamp(tools.rand(tools.H * 0.12, tools.H * 0.34), tools.H * 0.10, tools.H * 0.38);
-        directRing(e, tools, 8, normalOpt(e, 'normal', { speed:1.45 * bal.speed, hp:7 }));
+        directRing(e, tools, normalShotCount(e, 8, isBoss), normalOpt(e, 'normal', { speed:1.62 * bal.speed, hp:7 }));
         if (tools.addText) tools.addText('瞬間移動！', e.x, e.y - 84, '#ff4aff');
         return true;
 
       case 'dashInvisibleBarrage':
         startFastDash(e, tools, '透明突進！');
         setGhost(e, tools, 180);
-        directRing(e, tools, 12, normalOpt(e, 'small', { speed:1.65 * bal.speed, hp:5 }));
+        directRing(e, tools, normalShotCount(e, 12, isBoss), normalOpt(e, 'small', { speed:1.82 * bal.speed, hp:5 }));
         return true;
 
       default:
@@ -1060,9 +1074,9 @@
 
     const breakable = shouldNormalBreak(e, 0.65);
 
-    safeFireSpread(e, tools, 2, 0.22, {
+    safeFireSpread(e, tools, normalShotCount(e, 2, false), 0.20, {
       sizeType:'small',
-      speed:1.8 * difficultyBalance(e).speed,
+      speed:1.94 * difficultyBalance(e).speed,
       hp:breakable ? 5 : 0,
       breakable
     });
@@ -1075,9 +1089,9 @@
 
     const breakable = shouldNormalBreak(e, 0.75);
 
-    safeFireSpread(e, tools, 3, 0.20, {
+    safeFireSpread(e, tools, normalShotCount(e, 3, true), 0.18, {
       sizeType:'normal',
-      speed:1.7 * difficultyBalance(e).speed,
+      speed:1.86 * difficultyBalance(e).speed,
       hp:breakable ? 7 : 0,
       breakable
     });
@@ -1108,13 +1122,13 @@
 
   function nextShootCd(e, config, tools, isBoss){
     const bal = difficultyBalance(e);
-    const base = Number(config.shootCd || (isBoss ? 155 : 140));
-    const jitter = isBoss ? 34 : 26;
+    const base = Number(config.shootCd || (isBoss ? 145 : 130));
+    const jitter = isBoss ? 28 : 22;
     const relax = frequencyRelax(isBoss);
 
     return Math.floor(
       Math.max(
-        isBoss ? 58 : 50,
+        isBoss ? 48 : 42,
         (base + Math.random() * jitter) * attackRateMul(tools) * relax * bal.cd
       )
     );
@@ -1122,13 +1136,13 @@
 
   function nextAttackCd(e, config, tools, isBoss){
     const bal = difficultyBalance(e);
-    const base = Number(config.attackCd || (isBoss ? 245 : 205));
-    const jitter = isBoss ? 52 : 40;
+    const base = Number(config.attackCd || (isBoss ? 230 : 190));
+    const jitter = isBoss ? 46 : 34;
     const relax = frequencyRelax(isBoss);
 
     return Math.floor(
       Math.max(
-        isBoss ? 95 : 78,
+        isBoss ? 84 : 70,
         (base + Math.random() * jitter) * attackRateMul(tools) * relax * bal.cd
       )
     );
