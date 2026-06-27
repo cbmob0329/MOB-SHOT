@@ -228,6 +228,7 @@
     const pick = tools.pick;
 
     if (!D || !D.enemies || !Array.isArray(D.enemies.zako)) return;
+    if (D.stage && D.stage.isTestBoss) return;
 
     const def = pick(D.enemies.zako);
     if (!def) return;
@@ -273,6 +274,7 @@
     const pick = tools.pick;
 
     if (!D || !Array.isArray(D.gimmicks)) return;
+    if (D.stage && D.stage.isTestBoss) return;
 
     const def = pick(D.gimmicks);
     if (!def) return;
@@ -309,6 +311,7 @@
     const pick = tools.pick;
 
     if (!D || !Array.isArray(D.chests)) return;
+    if (D.stage && D.stage.isTestBoss) return;
 
     const def = pick(D.chests);
     if (!def) return;
@@ -342,6 +345,7 @@
     const weightedPick = tools.weightedPick;
 
     if (!D || !Array.isArray(D.gates)) return;
+    if (D.stage && D.stage.isTestBoss) return;
 
     let pool;
 
@@ -550,6 +554,7 @@
     const pick = tools.pick;
 
     if (!D || !D.enemies || !Array.isArray(D.enemies.midBoss)) return;
+    if (D.stage && D.stage.isTestBoss) return;
 
     const def = pick(D.enemies.midBoss);
     if (!def) return;
@@ -612,10 +617,10 @@
       profile.shootCd = 88;
     }
 
-    if (name === '番人' || name === '番人Ⅱ') {
+    if (name === '番人' || name === '番人Ⅱ' || name === 'モブガーディアン' || name === 'モブガーディアンⅡ') {
       profile.vx = 1.1;
       profile.r = 112;
-      profile.hpMul = name === '番人Ⅱ' ? 1.2 : 1.1;
+      profile.hpMul = (name === '番人Ⅱ' || name === 'モブガーディアンⅡ') ? 1.2 : 1.1;
     }
 
     if (name === 'ネオンモブ' || name === 'ネオンモブⅡ') {
@@ -711,6 +716,12 @@
     const profile = bossProfile(def.name);
     const hp = Math.ceil(safeNumber(def.hp, 1000) * profile.hpMul);
 
+    const exists = state.entities.some(e => e && !e.dead && e.kind === 'boss');
+
+    if (D.stage && D.stage.isTestBoss && exists) {
+      return;
+    }
+
     state.entities.push({
       kind: 'boss',
       name: def.name,
@@ -732,7 +743,10 @@
       attackStep: 0,
       contactDmg: profile.contactDmg,
       hitPlayerCd: 0,
-      bob: 0
+      bob: 0,
+      isTestBoss: !!(D.stage && D.stage.isTestBoss),
+      isStrongBoss: !!def.isStrongBoss || !!def.strong,
+      isLegendBoss: !!def.isLegendBoss
     });
   }
 
