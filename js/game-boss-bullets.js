@@ -49,34 +49,56 @@
     if (raw === 'inferno') return 'inferno';
     if (raw === 'legend') return 'legend';
 
-    return raw || 'easy';
+    return raw || '';
   }
 
-  function difficultyBalance(e){
+  function stageDifficultyFromTools(tools){
+    const D = (tools && tools.D) || window.MOBSHOT_DATA || {};
+    const st = D.stage || {};
+    const areaKey = String(st.areaKey || '').trim();
+    const diff = normalizeDifficultyKey(st.difficulty || st.difficultyKey || st.diff || '');
+
+    if (
+      st.isLegend ||
+      areaKey === 'prison' ||
+      areaKey === 'matrix' ||
+      areaKey === 'seaRail' ||
+      areaKey === 'neonHighway' ||
+      areaKey === 'makai' ||
+      areaKey === 'last'
+    ) {
+      return 'legend';
+    }
+
+    return diff;
+  }
+
+  function difficultyBalance(e, tools){
     const key = normalizeDifficultyKey(
-      e.eventDifficulty ||
-      e.__doubleDifficulty ||
-      e.difficulty ||
+      (e && e.eventDifficulty) ||
+      (e && e.__doubleDifficulty) ||
+      (e && e.difficulty) ||
+      stageDifficultyFromTools(tools) ||
       ''
     );
 
     if (key === 'hard') {
-      return { speed:1.10, dmg:1.35, hp:1.15 };
+      return { key:'hard', speed:1.10, dmg:1.35, hp:1.15, minBreakHp:15 };
     }
 
     if (key === 'veryHard') {
-      return { speed:1.20, dmg:1.80, hp:1.35 };
+      return { key:'veryHard', speed:1.20, dmg:1.80, hp:1.35, minBreakHp:30 };
     }
 
     if (key === 'inferno') {
-      return { speed:1.32, dmg:2.55, hp:1.65 };
+      return { key:'inferno', speed:1.32, dmg:2.55, hp:1.65, minBreakHp:50 };
     }
 
     if (key === 'legend') {
-      return { speed:1.45, dmg:3.50, hp:2.05 };
+      return { key:'legend', speed:1.45, dmg:3.50, hp:2.05, minBreakHp:80 };
     }
 
-    return { speed:1, dmg:1, hp:1 };
+    return { key:'easy', speed:1, dmg:1, hp:1, minBreakHp:0 };
   }
 
   function sizeOf(spec, sizeType){
@@ -143,10 +165,12 @@
     return 1.65;
   }
 
-  function normalizedHp(e, opt, sizeType){
+  function normalizedHp(e, tools, opt, sizeType){
     opt = opt || {};
 
     if (opt.breakable === false || opt.unbreakable === true) return 0;
+
+    const bal = difficultyBalance(e, tools);
 
     let hp = Number(opt.hp || 0);
 
@@ -159,7 +183,11 @@
     }
 
     if (hp > 0) {
-      hp = Math.ceil(hp * difficultyBalance(e).hp);
+      hp = Math.ceil(hp * bal.hp);
+
+      if (bal.minBreakHp > 0) {
+        hp = Math.max(hp, bal.minBreakHp);
+      }
     }
 
     if (
@@ -180,8 +208,8 @@
     return hp;
   }
 
-  function damageOf(e, opt, sizeType, r){
-    const bal = difficultyBalance(e);
+  function damageOf(e, tools, opt, sizeType, r){
+    const bal = difficultyBalance(e, tools);
 
     if (opt.dmg != null) {
       return Math.max(1, Math.ceil(Number(opt.dmg) * bal.dmg));
@@ -206,10 +234,10 @@
     opt = opt || {};
 
     const spec = specOf(e);
-    const bal = difficultyBalance(e);
+    const bal = difficultyBalance(e, tools);
     const sizeType = opt.sizeType || 'normal';
     const r = Number(opt.r || sizeOf(spec, sizeType));
-    const hp = normalizedHp(e, opt, sizeType);
+    const hp = normalizedHp(e, tools, opt, sizeType);
     const speed = Number(opt.speed || 1.8) * bal.speed;
     const angle = Number(opt.angle || Math.PI / 2);
     const sx = opt.x != null ? opt.x : e.x;
@@ -227,7 +255,7 @@
       visualR: Math.ceil(r * Number(opt.visualRate || 1.08)),
       hitR: Math.ceil(r * Number(opt.hitRate || 0.82)),
 
-      dmg: damageOf(e, opt, sizeType, r),
+      dmg: damageOf(e, tools, opt, sizeType, r),
       hp,
       maxHp: hp,
       breakable: isBreakable,
@@ -568,7 +596,6 @@
 
   function fireBarrage(e, tools, count, opt){
     opt = opt || {};
-    const result = [];
 
     for (let i = 0; i < count; i++) {
       const delay = Number(opt.delay || 38) * i;
@@ -578,7 +605,7 @@
       }));
     }
 
-    return result;
+    return [];
   }
 
   function fireBigSwayFireball(e, tools, opt){
