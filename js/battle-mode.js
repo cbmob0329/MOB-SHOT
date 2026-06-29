@@ -4,6 +4,9 @@
   const SAVE_KEY = 'mobshot_pet_mode_clear_v1';
   const GACHA_SAVE_KEY = 'mobshot_gacha_state_v1';
 
+  const PET_MODE_SKILL_NERF = 0.94;
+  const PET_MODE_SECOND_NERF = 0.92;
+
   const FALLBACK_ASSET = {
     bg:'sta/backsabaku.png',
     petBullet:'mt/atk.png',
@@ -219,7 +222,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260627_pet_mode_new7_final';
+      image.src = src + '?v=20260629_pet_mode_balance_full_v1';
       images.set(src, image);
     }
 
@@ -704,9 +707,11 @@
       const modeRapid = Number(pet.petModeRapidRate || 1);
       const modeSkill = Number(pet.petModeSkillRate || 1);
       const modeDodge = Number(pet.petModeDodgeRate || 1);
-      const second = pet.secondSkillUnlocked && pet.secondSkill ? pet.secondSkill : null;
+      const second = pet.secondSkillUnlocked && pet.secondSkill ? normalizeSecondPattern(pet.secondSkill) : null;
 
       const hp = Math.ceil(getPetMaxHp(lv, pet, plus) * modeHp);
+      const skillCtSec = getPetSkillCt(lv, pet, plus);
+      const secondCtSec = second ? getPetSecondSkillCt(lv, pet, plus, second) : 99999999;
 
       state.pets.push({
         key:pet.key,
@@ -734,11 +739,11 @@
         rapid:getPetRapid(lv, pet) * modeRapid,
         skillPower:getPetSkillPower(lv, pet, plus) * modeSkill,
         skillName:pet.skillName || 'PET SKILL',
-        skillCt:Math.max(180, Math.floor(getPetSkillCt(lv, pet, plus) * 60)),
+        skillCt:Math.max(pet.key === 'mobstone' ? 3300 : 180, Math.floor(skillCtSec * 60)),
         skillCd:Math.max(90, Math.floor(Number(pet.firstCt || 8) * 60) + index * 10),
-        secondSkillCt:second ? Math.max(1080, Math.floor(getPetSecondSkillCt(lv, pet, plus, second) * 60)) : 99999999,
-        secondSkillCd:second ? Math.max(600, Math.floor(Number(second.firstCt || 24) * 60) + index * 18) : 99999999,
-        shootCd:20 + index % 12,
+        secondSkillCt:second ? Math.max(pet.key === 'mobstone' ? 5880 : 1080, Math.floor(secondCtSec * 60)) : 99999999,
+        secondSkillCd:second ? Math.max(pet.key === 'mobstone' ? 2520 : 600, Math.floor(Number(second.firstCt || 24) * 60) + index * 18) : 99999999,
+        shootCd:pet.key === 'mobstone' ? 54 + index * 8 : 20 + index % 12,
         x:W / 2,
         y:H * 0.72,
         homeX:W / 2,
@@ -755,6 +760,15 @@
     });
 
     assignPetFormationTargets();
+  }
+
+  function normalizeSecondPattern(second){
+    const copy = Object.assign({}, second || {});
+
+    if (copy.pattern === 'meteor') copy.pattern = 'bigshot';
+    if (copy.pattern === 'rain') copy.pattern = 'fan';
+
+    return copy;
   }
 
   function getPetMaxHp(lv, pet, plus){
@@ -774,30 +788,52 @@
 
   function getPetPower(lv, pet, plus){
     const base = Number(pet.normalAttackRate || 0.5);
-    return Math.max(1, 5 * base * (1 + (lv - 1) * 0.018) * (1 + Number(plus || 0) * 0.001));
+    let power = Math.max(1, 5 * base * (1 + (lv - 1) * 0.018) * (1 + Number(plus || 0) * 0.001));
+
+    if (pet.key === 'mobstone') power *= 0.95;
+
+    return power;
   }
 
   function getPetRapid(lv, pet){
     const base = Number(pet.normalRateRate || 0.5);
-    return Math.max(0.35, base * (1 + (lv - 1) * 0.0045));
+    let rapid = Math.max(0.35, base * (1 + (lv - 1) * 0.0045));
+
+    if (pet.key === 'mobstone') rapid *= 0.76;
+
+    return rapid;
   }
 
   function getPetSkillPower(lv, pet, plus){
     const base = Number(pet.skillPowerRate || 1);
     const tier = Math.floor(Number(plus || 0) / 10);
-    return Math.max(2, 16 * base * (1 + (lv - 1) * 0.023) * (1 + tier * 0.015));
+    let power = Math.max(2, 16 * base * (1 + (lv - 1) * 0.023) * (1 + tier * 0.015));
+
+    power *= PET_MODE_SKILL_NERF;
+
+    if (pet.key === 'mobstone') power *= 0.92;
+
+    return power;
   }
 
   function getPetSkillCt(lv, pet, plus){
     const base = Number(pet.skillCt || 30) - ((lv - 1) * 0.07);
     const plusBonus = Math.floor(Number(plus || 0) / 5) * 0.1;
-    return Math.max(4, base - plusBonus);
+    let ct = Math.max(4, base - plusBonus);
+
+    if (pet.key === 'mobstone') ct = Math.max(55, ct);
+
+    return ct;
   }
 
   function getPetSecondSkillCt(lv, pet, plus, second){
     const base = Number(second && second.ct || 60) - Math.max(0, lv - 50) * 0.035;
     const plusBonus = Math.floor(Number(plus || 0) / 5) * 0.05;
-    return Math.max(18, base - plusBonus);
+    let ct = Math.max(18, base - plusBonus);
+
+    if (pet.key === 'mobstone') ct = Math.max(98, ct);
+
+    return ct;
   }
 
   function assignPetFormationTargets(){
@@ -976,7 +1012,7 @@
       p.shootCd--;
 
       if (p.shootCd <= 0) {
-        p.shootCd = Math.max(8, Math.floor(44 / Math.max(0.15, p.rapid * state.support.rapid)));
+        p.shootCd = nextPetShootCd(p);
         firePetNormal(p);
       }
 
@@ -996,6 +1032,18 @@
         }
       }
     });
+  }
+
+  function nextPetShootCd(p){
+    const rapid = Math.max(0.15, p.rapid * state.support.rapid);
+    let cd = Math.floor(44 / rapid);
+
+    if (p.key === 'mobstone') {
+      cd = Math.floor(cd * 1.35);
+      return Math.max(44, cd);
+    }
+
+    return Math.max(8, cd);
   }
 
   function findNearestDanger(p){
@@ -1100,7 +1148,7 @@
   }
 
   function skillBulletRadius(p){
-    if (p.key === 'mobstone') return 42;
+    if (p.key === 'mobstone') return 38;
     if (p.key === 'mobshield') return 26;
     if (p.key === 'mobnero') return 18;
     if (p.key === 'mobton') return 34;
@@ -1121,6 +1169,8 @@
 
     if (p.key === 'babymob') return rand(-58, 58);
     if (p.key === 'mobmany') return (i - (count - 1) / 2) * 20;
+    if (p.key === 'mobstone') return (i - (count - 1) / 2) * 26;
+
     return (i - (count - 1) / 2) * 8;
   }
 
@@ -1137,7 +1187,7 @@
   }
 
   function usePetSecondSkill(p){
-    const second = p.secondSkill;
+    const second = normalizeSecondPattern(p.secondSkill);
     if (!second) return;
 
     const targets = getEnemyTargets();
@@ -1174,8 +1224,7 @@
     const count = Math.max(1, Number(second.count || 1));
     const pattern = second.pattern || 'homing';
 
-    if (pattern === 'meteor' || pattern === 'rain') fireSecondRain(p, targets, second, count);
-    else if (pattern === 'wide' || pattern === 'fan') fireSecondFan(p, targets, second, count);
+    if (pattern === 'wide' || pattern === 'fan') fireSecondFan(p, targets, second, count);
     else if (pattern === 'circle') fireSecondCircle(p, targets, second, count);
     else if (pattern === 'side') fireSecondSide(p, targets, second, count);
     else if (pattern === 'bigshot' || pattern === 'crush' || pattern === 'laser') fireSecondBig(p, targets, second, count);
@@ -1185,30 +1234,23 @@
   }
 
   function fireSecondRain(p, targets, second, count){
-    if (!targets.length) return;
-
-    for (let i = 0; i < count; i++) {
-      const target = targets[i % targets.length];
-      pushSecondBullet(p, target, second, {
-        x:target.x + rand(-90, 90),
-        y:Math.min(-40, target.y - rand(160, 300)),
-        speed:rand(4.7, 6.2)
-      });
-    }
+    fireSecondFan(p, targets, normalizeSecondPattern(second), count);
   }
 
   function fireSecondFan(p, targets, second, count){
     if (!targets.length) return;
 
+    const spread = second.pattern === 'wide' ? 30 : 24;
+
     for (let i = 0; i < count; i++) {
       const target = targets[i % targets.length];
-      const offset = (i - (count - 1) / 2) * 22;
+      const offset = (i - (count - 1) / 2) * spread;
 
       pushSecondBullet(p, target, second, {
         x:p.x + offset,
-        y:p.y - 14,
-        aimOffsetX:offset * 1.4,
-        speed:5.5
+        y:p.y - 14 + (i % 3) * -5,
+        aimOffsetX:offset * 1.35,
+        speed:second.pattern === 'wide' ? 5.9 : 5.5
       });
     }
   }
@@ -1248,13 +1290,14 @@
 
     for (let i = 0; i < count; i++) {
       const target = targets[i % targets.length];
-      const offset = (i - (count - 1) / 2) * 38;
+      const offset = (i - (count - 1) / 2) * (p.key === 'mobstone' ? 40 : 38);
 
       pushSecondBullet(p, target, second, {
         x:p.x + offset,
         y:p.y - 14,
-        speed:second.pattern === 'laser' ? 7.0 : 4.2,
-        radiusBoost:second.pattern === 'laser' ? 1.75 : 1.35
+        aimOffsetX:offset * 0.65,
+        speed:second.pattern === 'laser' ? 7.0 : (p.key === 'mobstone' ? 4.0 : 4.2),
+        radiusBoost:second.pattern === 'laser' ? 1.75 : (p.key === 'mobstone' ? 1.22 : 1.35)
       });
     }
   }
@@ -1338,6 +1381,9 @@
 
     rate *= 1 + Math.max(0, p.level - 50) * 0.004;
     rate *= 1 + Math.floor(Number(p.plus || 0) / 10) * 0.01;
+    rate *= PET_MODE_SECOND_NERF;
+
+    if (p.key === 'mobstone') rate *= 0.92;
 
     return p.skillPower * rate * state.support.power;
   }
@@ -1402,7 +1448,7 @@
 
     let speed = type === 'skill' ? 6.2 : 7.8;
 
-    if (opt.slow) speed = type === 'skill' ? 3.1 : 5.2;
+    if (opt.slow) speed = type === 'skill' ? 3.0 : 4.4;
     if (opt.rapid) speed = type === 'skill' ? 8.2 : 7.8;
     if (p.key === 'mobton') speed = type === 'skill' ? 6.9 : 8.2;
     if (p.key === 'mobnero') speed = type === 'skill' ? 6.6 : 7.2;
