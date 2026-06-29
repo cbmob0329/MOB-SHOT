@@ -219,7 +219,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260627_pet_mode_second_skill';
+      image.src = src + '?v=20260627_pet_mode_new7_final';
       images.set(src, image);
     }
 
@@ -240,7 +240,6 @@
     const h = ih * scale;
 
     ctx.drawImage(image, cx - w / 2, cy - h / 2, w, h);
-
     return true;
   }
 
@@ -287,7 +286,6 @@
     }
 
     screen.innerHTML = '<canvas id="battleCanvas"></canvas><div id="battleOverlay" class="battle-overlay"></div>';
-
     return screen;
   }
 
@@ -600,7 +598,6 @@
     }
 
     if (state.selectedPetKeys.length >= max) return;
-
     state.selectedPetKeys.push(key);
   }
 
@@ -718,6 +715,7 @@
         frontImage:pet.frontImage || '',
         backImage:pet.backImage || pet.frontImage || '',
         atkImage:pet.atkImage || '',
+        skillAtkImage:pet.skillAtkImage || '',
         htmlBullet:pet.htmlBullet || '',
         role:pet.role || '',
         level:lv,
@@ -763,9 +761,11 @@
     let hp = 90 + lv * 12 + Math.floor(lv * lv * 0.16);
 
     if (pet.role && pet.role.includes('防御')) hp *= 1.25;
-    if (pet.key === 'chibimobtetsu') hp *= 1.35;
+    if (pet.key === 'chibimobtetsu' || pet.key === 'mobshield') hp *= 1.35;
     if (pet.key === 'hero') hp *= 1.20;
     if (pet.key === 'mobslime') hp *= 0.95;
+    if (pet.key === 'babymob') hp *= 0.82;
+    if (pet.key === 'mobstone') hp *= 1.18;
 
     hp *= 1 + Number(plus || 0) * 0.001;
 
@@ -974,12 +974,14 @@
       p.y = clamp(p.y, H * 0.48, H * 0.94);
 
       p.shootCd--;
+
       if (p.shootCd <= 0) {
         p.shootCd = Math.max(8, Math.floor(44 / Math.max(0.15, p.rapid * state.support.rapid)));
         firePetNormal(p);
       }
 
       p.skillCd--;
+
       if (p.skillCd <= 0) {
         p.skillCd = p.skillCt;
         usePetSkill(p);
@@ -1043,7 +1045,8 @@
     const target = findEnemyTarget(p);
     if (!target) return;
 
-    pushPetBullet(p, target, p.power * state.support.power, 'normal', 7);
+    const opts = petBulletOptions(p, 'normal');
+    pushPetBullet(p, target, p.power * state.support.power, 'normal', normalBulletRadius(p), 0, opts);
   }
 
   function usePetSkill(p){
@@ -1054,8 +1057,9 @@
       return;
     }
 
-    if (p.key === 'chibimobtetsu') {
-      state.support.shield = Math.max(state.support.shield, (p.level >= 50 ? 7 : p.level >= 30 ? 6 : 4) * 60);
+    if (p.key === 'chibimobtetsu' || p.key === 'mobshield') {
+      const sec = p.key === 'mobshield' ? 5 : (p.level >= 50 ? 7 : p.level >= 30 ? 6 : 4);
+      state.support.shield = Math.max(state.support.shield, sec * 60);
       addText('ALL SHIELD', p.x, p.y - 32, '#dfe8ff');
     }
 
@@ -1075,14 +1079,61 @@
 
     const count = getPetSkillCount(p);
     const damage = p.skillPower * state.support.power;
-    const radius = p.key === 'chibimaohmob' || p.key === 'hero' ? 18 : 12;
+    const radius = skillBulletRadius(p);
+    const opts = petBulletOptions(p, 'skill');
 
     for (let i = 0; i < count; i++) {
-      const offset = (i - (count - 1) / 2) * 8;
-      pushPetBullet(p, target, damage, 'skill', radius, offset);
+      const offset = skillOffset(p, i, count);
+      pushPetBullet(p, target, damage, 'skill', radius, offset, opts);
     }
 
     addText(p.skillName, p.x, p.y - 35, bulletColor(p));
+  }
+
+  function normalBulletRadius(p){
+    if (p.key === 'mobstone') return 9;
+    if (p.key === 'mobshield') return 10;
+    if (p.key === 'mobton') return 8;
+    if (p.key === 'mobmany') return 8;
+    if (p.key === 'mobflare') return 9;
+    return 7;
+  }
+
+  function skillBulletRadius(p){
+    if (p.key === 'mobstone') return 42;
+    if (p.key === 'mobshield') return 26;
+    if (p.key === 'mobnero') return 18;
+    if (p.key === 'mobton') return 34;
+    if (p.key === 'mobmany') return 38;
+    if (p.key === 'mobflare') return 18;
+    if (p.key === 'babymob') return 8;
+    if (p.key === 'chibimaohmob' || p.key === 'hero') return 18;
+    if (p.key === 'minidramob') return 20;
+    return 12;
+  }
+
+  function skillOffset(p, i, count){
+    if (p.key === 'mobflare') {
+      const lane = i % 3;
+      const burst = Math.floor(i / 3);
+      return (lane - 1) * 22 + rand(-4, 4) + burst * 2;
+    }
+
+    if (p.key === 'babymob') return rand(-58, 58);
+    if (p.key === 'mobmany') return (i - (count - 1) / 2) * 20;
+    return (i - (count - 1) / 2) * 8;
+  }
+
+  function petBulletOptions(p, type){
+    return {
+      image:type === 'skill' ? (p.skillAtkImage || p.atkImage || '') : (p.atkImage || ''),
+      pierce:p.key === 'mobton' || p.key === 'mobflare',
+      explode:p.key === 'mobmany',
+      wave:p.key === 'mobmany',
+      homing:p.key === 'mobnero',
+      slow:p.key === 'mobstone',
+      rapid:p.key === 'babymob'
+    };
   }
 
   function usePetSecondSkill(p){
@@ -1123,19 +1174,12 @@
     const count = Math.max(1, Number(second.count || 1));
     const pattern = second.pattern || 'homing';
 
-    if (pattern === 'meteor' || pattern === 'rain') {
-      fireSecondRain(p, targets, second, count);
-    } else if (pattern === 'wide' || pattern === 'fan') {
-      fireSecondFan(p, targets, second, count);
-    } else if (pattern === 'circle') {
-      fireSecondCircle(p, targets, second, count);
-    } else if (pattern === 'side') {
-      fireSecondSide(p, targets, second, count);
-    } else if (pattern === 'bigshot' || pattern === 'crush') {
-      fireSecondBig(p, targets, second, count);
-    } else {
-      fireSecondHoming(p, targets, second, count);
-    }
+    if (pattern === 'meteor' || pattern === 'rain') fireSecondRain(p, targets, second, count);
+    else if (pattern === 'wide' || pattern === 'fan') fireSecondFan(p, targets, second, count);
+    else if (pattern === 'circle') fireSecondCircle(p, targets, second, count);
+    else if (pattern === 'side') fireSecondSide(p, targets, second, count);
+    else if (pattern === 'bigshot' || pattern === 'crush' || pattern === 'laser') fireSecondBig(p, targets, second, count);
+    else fireSecondHoming(p, targets, second, count);
 
     addText(second.name || 'SECOND SKILL', p.x, p.y - 48, bulletColorSecond(p, second));
   }
@@ -1159,6 +1203,7 @@
     for (let i = 0; i < count; i++) {
       const target = targets[i % targets.length];
       const offset = (i - (count - 1) / 2) * 22;
+
       pushSecondBullet(p, target, second, {
         x:p.x + offset,
         y:p.y - 14,
@@ -1208,8 +1253,8 @@
       pushSecondBullet(p, target, second, {
         x:p.x + offset,
         y:p.y - 14,
-        speed:4.2,
-        radiusBoost:1.35
+        speed:second.pattern === 'laser' ? 7.0 : 4.2,
+        radiusBoost:second.pattern === 'laser' ? 1.75 : 1.35
       });
     }
   }
@@ -1274,8 +1319,13 @@
       htmlBullet:second.htmlBullet || p.htmlBullet || '',
       color:bulletColorSecond(p, second),
       drainRate:Number(second.drainRate || 0),
+      pierce:!!second.pierce || second.pattern === 'laser' || p.key === 'mobton' || p.key === 'mobflare',
+      explode:!!second.explode || p.key === 'mobmany',
+      wave:p.key === 'mobmany',
+      homing:second.pattern === 'homing',
       dead:false,
-      life:155
+      life:155,
+      hitIds:new Set()
     });
   }
 
@@ -1313,18 +1363,25 @@
     else if (key === 'mobfrog') count = lv >= 50 ? 6 : lv >= 30 ? 5 : lv >= 5 ? 4 : 3;
     else if (key === 'mobdenden') count = lv >= 50 ? 16 : lv >= 30 ? 14 : lv >= 5 ? 11 : 9;
     else if (key === 'mobwolf') count = lv >= 50 ? 9 : lv >= 30 ? 8 : lv >= 5 ? 6 : 5;
+    else if (key === 'mobstone') count = lv >= 50 ? 3 : lv >= 30 ? 2 : 1;
     else if (key === 'mobslime') count = lv >= 30 ? 5 : 3;
     else if (key === 'mobchibihawk') count = lv >= 50 ? 3 : lv >= 30 ? 2 : 1;
     else if (key === 'punimobpink') count = lv >= 50 ? 12 : lv >= 30 ? 10 : 6;
     else if (key === 'minimiramob') count = lv >= 50 ? 12 : lv >= 30 ? 10 : lv >= 25 ? 10 : lv >= 5 ? 8 : 6;
+    else if (key === 'mobshield') count = lv >= 50 ? 3 : lv >= 30 ? 2 : 1;
     else if (key === 'neonkidmob') count = lv >= 50 ? 5 : lv >= 30 ? 4 : lv >= 5 ? 4 : 3;
     else if (key === 'minidramob') count = lv >= 50 ? 4 : lv >= 30 ? 3 : lv >= 5 ? 3 : 2;
+    else if (key === 'mobnero') count = lv >= 50 ? 10 : lv >= 40 ? 9 : lv >= 30 ? 8 : lv >= 20 ? 7 : lv >= 10 ? 6 : 5;
+    else if (key === 'mobton') count = lv >= 50 ? 5 : lv >= 40 ? 3 : lv >= 30 ? 2 : 1;
+    else if (key === 'mobmany') count = lv >= 50 ? 4 : lv >= 40 ? 3 : lv >= 30 ? 2 : 1;
+    else if (key === 'babymob') count = lv >= 50 ? 60 : lv >= 40 ? 45 : lv >= 30 ? 40 : lv >= 20 ? 35 : lv >= 10 ? 30 : 24;
     else if (key === 'merurumob') count = lv >= 50 ? 7 : lv >= 30 ? 6 : lv >= 15 ? 7 : 5;
     else if (key === 'lilmoblilith') count = lv >= 50 ? 16 : lv >= 30 ? 14 : lv >= 25 ? 14 : lv >= 5 ? 11 : 9;
     else if (key === 'chibimaohmob') count = lv >= 50 ? 3 : lv >= 30 ? 2 : 1;
     else if (key === 'chibimobtetsu') count = lv >= 50 ? 2 : 1;
     else if (key === 'chibimobmelt') count = lv >= 50 ? 4 : lv >= 30 ? 3 : lv >= 5 ? 3 : 2;
     else if (key === 'wondamob') count = lv >= 50 ? 2 : 1;
+    else if (key === 'mobflare') count = lv >= 50 ? 27 : lv >= 40 ? 21 : lv >= 30 ? 18 : lv >= 20 ? 15 : lv >= 10 ? 12 : 9;
     else if (key === 'lilmobnep') count = lv >= 50 ? 6 : lv >= 30 ? 5 : lv >= 5 ? 5 : 4;
     else if (key === 'chibiulmob') count = lv >= 50 ? 15 : lv >= 30 ? 13 : lv >= 25 ? 14 : lv >= 5 ? 11 : 9;
     else if (key === 'hero') count = lv >= 50 ? 5 : lv >= 30 ? 4 : lv >= 5 ? 4 : 3;
@@ -1334,13 +1391,23 @@
     return Math.max(1, count);
   }
 
-  function pushPetBullet(p, target, damage, type, radius, offset){
+  function pushPetBullet(p, target, damage, type, radius, offset, opt){
+    opt = opt || {};
+
     const sx = p.x + Number(offset || 0);
     const sy = p.y - 12;
     const dx = target.x - sx;
     const dy = target.y - sy;
     const len = Math.max(1, Math.hypot(dx, dy));
-    const speed = type === 'skill' ? 6.2 : 7.8;
+
+    let speed = type === 'skill' ? 6.2 : 7.8;
+
+    if (opt.slow) speed = type === 'skill' ? 3.1 : 5.2;
+    if (opt.rapid) speed = type === 'skill' ? 8.2 : 7.8;
+    if (p.key === 'mobton') speed = type === 'skill' ? 6.9 : 8.2;
+    if (p.key === 'mobnero') speed = type === 'skill' ? 6.6 : 7.2;
+    if (p.key === 'mobmany') speed = type === 'skill' ? 3.8 : 5.6;
+    if (p.key === 'mobflare') speed = type === 'skill' ? 6.7 : 6.5;
 
     state.petBullets.push({
       x:sx,
@@ -1351,11 +1418,17 @@
       damage,
       target,
       type,
-      image:p.atkImage || '',
+      image:opt.image != null ? opt.image : (p.atkImage || ''),
       htmlBullet:p.htmlBullet || '',
       color:bulletColor(p),
       dead:false,
-      life:type === 'skill' ? 130 : 90
+      life:type === 'skill' ? 130 : 90,
+      pierce:!!opt.pierce,
+      explode:!!opt.explode,
+      wave:!!opt.wave,
+      homing:!!opt.homing,
+      phase:Math.random() * Math.PI * 2,
+      hitIds:new Set()
     });
   }
 
@@ -1646,6 +1719,7 @@
 
     for (let i = 0; i < total; i++) {
       const offset = (i - (total - 1) / 2) * 34;
+
       state.enemyBullets.push({
         x:clamp(e.x + offset, W * 0.08, W * 0.92),
         y:e.y + 38,
@@ -1680,6 +1754,21 @@
     state.petBullets.forEach(b => {
       if (b.dead) return;
 
+      if (b.homing && b.target && !b.target.dead) {
+        const dx = b.target.x - b.x;
+        const dy = b.target.y - b.y;
+        const len = Math.max(1, Math.hypot(dx, dy));
+        const speed = Math.max(2.5, Math.hypot(b.vx, b.vy));
+
+        b.vx = b.vx * 0.88 + (dx / len * speed) * 0.12;
+        b.vy = b.vy * 0.88 + (dy / len * speed) * 0.12;
+      }
+
+      if (b.wave) {
+        b.phase = Number(b.phase || 0) + 0.12;
+        b.x += Math.sin(b.phase) * 1.4;
+      }
+
       b.x += b.vx;
       b.y += b.vy;
       b.life--;
@@ -1687,36 +1776,102 @@
       const target = b.target;
 
       if (!target || target.dead) {
-        b.dead = true;
+        if (b.pierce || b.explode) hitNearbyEnemies(b);
+        else b.dead = true;
+
+        if (b.life <= 0) b.dead = true;
         return;
       }
 
       if (Math.hypot(b.x - target.x, b.y - target.y) < b.r + target.r) {
-        target.hp -= b.damage;
-        state.stats.damage += b.damage;
-        b.dead = true;
+        damageEnemyByBullet(target, b);
 
-        if (b.drainRate) {
-          const heal = Math.max(1, Math.floor(Number(b.damage || 0) * Number(b.drainRate || 0)));
-          const alive = state.pets.filter(p => !p.dead && p.hp > 0);
-          const self = alive.find(p => Math.hypot(p.x - b.x, p.y - b.y) < 140) || alive[0];
+        if (b.explode) explodePetBullet(b, target.x, target.y);
 
-          if (self) {
-            self.hp = Math.min(self.maxHp, self.hp + heal);
-            addText('HP +' + heal, self.x, self.y - 34, '#9dff73');
-          }
+        if (b.pierce) {
+          b.target = findNextEnemyTarget(b, target);
+          b.damage *= 0.82;
+          if (!b.target || b.damage < 1) b.dead = true;
+        } else {
+          b.dead = true;
         }
-
-        addText('-' + Math.ceil(b.damage), target.x, target.y - 35, b.color);
-        burst(target.x, target.y, b.color, b.type === 'second' ? 18 : b.type === 'skill' ? 12 : 5);
-
-        if (target.hp <= 0) killEnemy(target);
       }
 
       if (b.life <= 0 || b.x < -100 || b.x > W + 100 || b.y < -120 || b.y > H + 120) b.dead = true;
     });
 
     state.petBullets = state.petBullets.filter(b => !b.dead);
+  }
+
+  function hitNearbyEnemies(b){
+    const all = state.enemies.concat(state.bosses).filter(e => !e.dead);
+
+    all.forEach(e => {
+      if (b.dead) return;
+      if (Math.hypot(b.x - e.x, b.y - e.y) <= b.r + e.r) {
+        damageEnemyByBullet(e, b);
+        if (b.explode) explodePetBullet(b, e.x, e.y);
+        if (!b.pierce) b.dead = true;
+      }
+    });
+  }
+
+  function damageEnemyByBullet(target, b){
+    if (!target || target.dead) return;
+
+    target.hp -= b.damage;
+    state.stats.damage += b.damage;
+
+    if (b.drainRate) {
+      const heal = Math.max(1, Math.floor(Number(b.damage || 0) * Number(b.drainRate || 0)));
+      const alive = state.pets.filter(p => !p.dead && p.hp > 0);
+      const self = alive.find(p => Math.hypot(p.x - b.x, p.y - b.y) < 140) || alive[0];
+
+      if (self) {
+        self.hp = Math.min(self.maxHp, self.hp + heal);
+        addText('HP +' + heal, self.x, self.y - 34, '#9dff73');
+      }
+    }
+
+    addText('-' + Math.ceil(b.damage), target.x, target.y - 35, b.color);
+    burst(target.x, target.y, b.color, b.type === 'second' ? 18 : b.type === 'skill' ? 12 : 5);
+
+    if (target.hp <= 0) killEnemy(target);
+  }
+
+  function findNextEnemyTarget(b, oldTarget){
+    let best = null;
+    let bestD = Infinity;
+
+    state.enemies.concat(state.bosses).forEach(e => {
+      if (e.dead || e === oldTarget) return;
+
+      const d = Math.hypot(e.x - b.x, e.y - b.y);
+      if (d < bestD) {
+        bestD = d;
+        best = e;
+      }
+    });
+
+    return best;
+  }
+
+  function explodePetBullet(b, x, y){
+    if (b.__exploded) return;
+    b.__exploded = true;
+
+    const radius = b.type === 'second' ? b.r * 3.2 : b.r * 2.6;
+    const damage = Number(b.damage || 0) * 0.45;
+
+    addText('BOMB', x, y - 20, b.color);
+    burst(x, y, b.color, 22);
+
+    state.enemies.concat(state.bosses).forEach(e => {
+      if (e.dead || e === b.target) return;
+      if (Math.hypot(x - e.x, y - e.y) <= radius + e.r) {
+        damageEnemyByBullet(e, Object.assign({}, b, { damage, explode:false, pierce:false }));
+      }
+    });
   }
 
   function killEnemy(e){
@@ -1803,11 +1958,8 @@
 
     let pool = PET_STONES;
 
-    if (diff.key === 'easy') {
-      pool = PET_STONES.filter(s => s.rarity === 'SR');
-    } else if (diff.key === 'hard') {
-      pool = PET_STONES.filter(s => s.rarity === 'SR');
-    }
+    if (diff.key === 'easy') pool = PET_STONES.filter(s => s.rarity === 'SR');
+    else if (diff.key === 'hard') pool = PET_STONES.filter(s => s.rarity === 'SR');
 
     const stone = Object.assign({}, pick(pool.length ? pool : PET_STONES));
     const result = addGachaStone(stone);
@@ -1849,7 +2001,7 @@
       };
 
       const wasOwned = !!current.owned;
-      let result = {
+      const result = {
         type:'stone',
         no:stone.no,
         name:stone.name,
@@ -2084,10 +2236,7 @@
   }
 
   function updateCutins(){
-    for (const c of state.cutins) {
-      c.life--;
-    }
-
+    for (const c of state.cutins) c.life--;
     state.cutins = state.cutins.filter(c => c.life > 0);
   }
 
@@ -2127,15 +2276,26 @@
 
   function bulletColor(p){
     const key = p.key || '';
+
     if (p.htmlBullet === 'fire') return '#ff6530';
     if (p.htmlBullet === 'water') return '#4bd8ff';
     if (p.htmlBullet === 'thunder') return '#ffe84a';
     if (p.htmlBullet === 'gray') return '#d8f1ff';
+
+    if (key === 'mobstone') return '#ff8b3d';
+    if (key === 'mobshield') return '#dfe8ff';
+    if (key === 'mobnero') return '#65ff9c';
+    if (key === 'mobton') return '#55d6ff';
+    if (key === 'mobflare') return '#ff533d';
+    if (key === 'mobmany') return '#5ffcff';
+    if (key === 'babymob') return '#9deeff';
+
     if (key.includes('riri') || key.includes('lilith') || key.includes('ul') || key === 'merurumob') return '#ff73c9';
     if (key.includes('neon')) return '#5ffcff';
     if (key.includes('maoh')) return '#bd5bff';
     if (key.includes('nep')) return '#55d6ff';
     if (key === 'hero') return '#ffe66b';
+
     return '#dfe8ff';
   }
 
@@ -2332,6 +2492,14 @@
           ctx.fill();
           ctx.stroke();
         }
+      }
+
+      if (b.explode) {
+        ctx.globalAlpha = 0.18;
+        ctx.fillStyle = b.color;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r * 2.1, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       ctx.restore();
