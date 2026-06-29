@@ -208,7 +208,7 @@
     resultShown:false,
     rewardDone:false,
     support:{ rapid:1, power:1, shield:0, coin:1 },
-    stats:{ damage:0, petLost:0, enemyKilled:0, bossKilled:0, clear:false, drops:[], rubyReward:0 }
+    stats:{ damage:0, petLost:0, enemyKilled:0, bossKilled:0, clear:false, drops:[], rubyReward:0, legendUnlocked:false }
   };
 
   function $(id){ return document.getElementById(id); }
@@ -222,7 +222,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260629_pet_mode_balance_full_v1';
+      image.src = src + '?v=20260629_pet_mode_clear_legend_v2';
       images.set(src, image);
     }
 
@@ -260,11 +260,76 @@
     } catch(e) {}
   }
 
-  function isLegendUnlocked(modeKey){
+  function isStageCleared(modeKey, diffKey, stageKey){
     const save = loadClearSave();
-    const modeSave = save[modeKey] || {};
-    const inferno = modeSave.inferno || {};
-    return STAGES_NORMAL.every(stage => !!inferno[stage.key]);
+    return !!(
+      save &&
+      save[modeKey] &&
+      save[modeKey][diffKey] &&
+      save[modeKey][diffKey][stageKey]
+    );
+  }
+
+  function stageListForDifficultyKey(diffKey){
+    if (diffKey === 'legend') return STAGES_NORMAL.concat(STAGES_LEGEND);
+    return STAGES_NORMAL;
+  }
+
+  function clearCountForDifficulty(modeKey, diffKey){
+    const stages = stageListForDifficultyKey(diffKey);
+    let count = 0;
+
+    stages.forEach(stage => {
+      if (isStageCleared(modeKey, diffKey, stage.key)) count++;
+    });
+
+    return {
+      clear:count,
+      total:stages.length
+    };
+  }
+
+  function isDifficultyAllCleared(modeKey, diffKey){
+    const progress = clearCountForDifficulty(modeKey, diffKey);
+    return progress.total > 0 && progress.clear >= progress.total;
+  }
+
+  function infernoProgress(modeKey){
+    return clearCountForDifficulty(modeKey, 'inferno');
+  }
+
+  function isLegendUnlocked(modeKey){
+    return isDifficultyAllCleared(modeKey, 'inferno');
+  }
+
+  function clearBadgeHtml(done){
+    return done ? '<span class="battle-clear-badge">CLEAR</span>' : '';
+  }
+
+  function progressText(modeKey, diffKey){
+    const p = clearCountForDifficulty(modeKey, diffKey);
+    return `${p.clear}/${p.total}`;
+  }
+
+  function legendUnlockText(modeKey){
+    const p = infernoProgress(modeKey);
+    if (p.clear >= p.total) return '<span class="battle-unlock">レジェンド解放済み！</span>';
+    return `レジェンド解放まで インフェルノ ${p.clear}/${p.total}`;
+  }
+
+  function justUnlockedLegendByThisClear(modeKey, diffKey, stageKey){
+    if (diffKey !== 'inferno') return false;
+    if (!STAGES_NORMAL.some(s => s.key === stageKey)) return false;
+
+    const beforeSave = loadClearSave();
+    const beforeMode = beforeSave[modeKey] || {};
+    const beforeInferno = beforeMode.inferno || {};
+    const wasUnlocked = STAGES_NORMAL.every(stage => !!beforeInferno[stage.key]);
+
+    if (wasUnlocked) return false;
+
+    const afterInferno = Object.assign({}, beforeInferno, { [stageKey]:true });
+    return STAGES_NORMAL.every(stage => !!afterInferno[stage.key]);
   }
 
   function getStagesForCurrent(){
@@ -314,6 +379,12 @@
       .battle-sub{margin-top:3px!important;font-size:11px!important;color:#dfe8ff!important;line-height:1.35!important}
       .battle-right{font-size:11px!important;color:#9dff73!important;text-align:right!important;line-height:1.35!important;white-space:nowrap!important}
       .battle-pet-btn.selected{border-color:#ffe66b!important;background:linear-gradient(135deg,rgba(91,76,28,.98),rgba(40,26,8,.98))!important}
+      .battle-mode-btn.cleared,.battle-stage-btn.cleared,.battle-diff-btn.cleared{border-color:#9dff73!important;background:linear-gradient(135deg,rgba(37,90,45,.98),rgba(11,34,18,.98))!important}
+      .battle-clear-badge{display:inline-block!important;margin-top:4px!important;padding:2px 8px!important;border-radius:999px!important;background:#9dff73!important;color:#07370f!important;font-size:10px!important;font-weight:1000!important;box-shadow:0 2px 0 rgba(0,0,0,.28)!important}
+      .battle-lock-badge{display:inline-block!important;margin-top:4px!important;padding:2px 8px!important;border-radius:999px!important;background:#505a72!important;color:#dfe8ff!important;font-size:10px!important;font-weight:1000!important}
+      .battle-progress{margin:8px 0 12px!important;padding:10px!important;border-radius:16px!important;background:rgba(255,255,255,.08)!important;border:2px solid rgba(255,255,255,.16)!important;color:#dfe8ff!important;font-size:12px!important;font-weight:1000!important;line-height:1.45!important}
+      .battle-progress b{color:#ffe66b!important}
+      .battle-unlock{color:#9dff73!important;font-weight:1000!important}
       .battle-btn{border:0!important;border-radius:999px!important;padding:13px 12px!important;font-size:17px!important;font-weight:1000!important;color:#201100!important;background:linear-gradient(#ffe66b,#ffb423)!important;box-shadow:0 5px 0 rgba(0,0,0,.36)!important}
       .battle-btn.blue{color:#fff!important;background:linear-gradient(#60d9ff,#1774ee)!important}
       .battle-btn.green{color:#07370f!important;background:linear-gradient(#9dff73,#26b63e)!important}
@@ -409,13 +480,25 @@
             <h1 class="battle-title">PET MODE</h1>
             <p class="battle-help">使っていないペットも活躍できる専用モードです。</p>
             <div class="battle-grid">
-              ${MODE_MASTER.map(m => `
-                <button class="battle-mode-btn" type="button" data-mode="${m.key}">
-                  <img src="${m.icon}" alt="">
-                  <div><div class="battle-name">${m.name}</div><div class="battle-sub">${m.desc}</div></div>
-                  <div class="battle-right">最大${m.maxPets >= 999 ? '全員' : m.maxPets + '体'}</div>
-                </button>
-              `).join('')}
+              ${MODE_MASTER.map(m => {
+                const inferno = infernoProgress(m.key);
+                const unlocked = isLegendUnlocked(m.key);
+
+                return `
+                  <button class="battle-mode-btn ${unlocked ? 'cleared' : ''}" type="button" data-mode="${m.key}">
+                    <img src="${m.icon}" alt="">
+                    <div>
+                      <div class="battle-name">${m.name}</div>
+                      <div class="battle-sub">
+                        ${m.desc}<br>
+                        インフェルノ ${inferno.clear}/${inferno.total}
+                        ${unlocked ? '<span class="battle-clear-badge">LEGEND OPEN</span>' : ''}
+                      </div>
+                    </div>
+                    <div class="battle-right">最大${m.maxPets >= 999 ? '全員' : m.maxPets + '体'}</div>
+                  </button>
+                `;
+              }).join('')}
             </div>
             <button id="mobBattleMainBtn" class="battle-btn blue" type="button" style="width:100%">メインへ戻る</button>
           </div>
@@ -439,25 +522,60 @@
 
     if (state.screen === 'difficulty') {
       const list = getDifficultiesForMode(state.mode.key);
-      const lockedLegend = !isLegendUnlocked(state.mode.key);
+      const legendUnlocked = isLegendUnlocked(state.mode.key);
+      const inferno = infernoProgress(state.mode.key);
 
       overlay.innerHTML = `
         <div class="battle-menu">
           <div class="battle-card">
             <h1 class="battle-title">${state.mode.name}</h1>
-            <p class="battle-help">${lockedLegend ? 'インフェルノで草原〜魔王城を全クリアするとレジェンド解放。' : 'レジェンド解放済み。'}</p>
+            <p class="battle-help">
+              ${legendUnlocked ? 'インフェルノ全ステージクリア済み。レジェンドに挑戦できます。' : 'インフェルノで草原〜魔王城を全クリアするとレジェンド解放。'}
+            </p>
+
+            <div class="battle-progress">
+              <b>インフェルノ進捗</b>：${inferno.clear}/${inferno.total}<br>
+              ${legendUnlockText(state.mode.key)}
+            </div>
+
             <div class="battle-grid">
               ${list.map(d => {
                 const r = rubyRewardRange(d.key);
+                const p = clearCountForDifficulty(state.mode.key, d.key);
+                const allClear = isDifficultyAllCleared(state.mode.key, d.key);
+
                 return `
-                  <button class="battle-diff-btn" type="button" data-diff="${d.key}">
+                  <button class="battle-diff-btn ${allClear ? 'cleared' : ''}" type="button" data-diff="${d.key}">
                     <img src="${d.icon}" alt="">
-                    <div><div class="battle-name">${d.name}</div><div class="battle-sub">HP x${d.hpRate} / 攻撃 x${d.atkRate} / 石板Drop ${Math.round(d.dropRate * 100)}%</div></div>
+                    <div>
+                      <div class="battle-name">${d.name}</div>
+                      <div class="battle-sub">
+                        HP x${d.hpRate} / 攻撃 x${d.atkRate} / 石板Drop ${Math.round(d.dropRate * 100)}%<br>
+                        クリア状況 ${p.clear}/${p.total}
+                        ${clearBadgeHtml(allClear)}
+                      </div>
+                    </div>
                     <div class="battle-right">${d.rewardCoin.toLocaleString()} COIN<br>💎 +${d.rewardDiamond}<br>♦ ${r[0]}〜${r[1]}</div>
                   </button>
                 `;
               }).join('')}
+
+              ${legendUnlocked ? '' : `
+                <div class="battle-diff-btn" style="opacity:.58;pointer-events:none">
+                  <img src="mt/game5.png" alt="">
+                  <div>
+                    <div class="battle-name">レジェンド</div>
+                    <div class="battle-sub">
+                      インフェルノ全ステージクリアで出現<br>
+                      現在 ${inferno.clear}/${inferno.total}
+                      <span class="battle-lock-badge">LOCK</span>
+                    </div>
+                  </div>
+                  <div class="battle-right">LOCK</div>
+                </div>
+              `}
             </div>
+
             <div class="battle-row">
               <button id="mobBackTitleBtn" class="battle-btn blue" type="button">戻る</button>
               <button id="mobBattleMainBtn" class="battle-btn" type="button">メインへ</button>
@@ -466,7 +584,7 @@
         </div>
       `;
 
-      overlay.querySelectorAll('.battle-diff-btn').forEach(btn => {
+      overlay.querySelectorAll('.battle-diff-btn[data-diff]').forEach(btn => {
         btn.onclick = function(){
           const key = this.getAttribute('data-diff');
           const diff = DIFFICULTIES.find(d => d.key === key);
@@ -484,21 +602,37 @@
 
     if (state.screen === 'stage') {
       const stages = getStagesForCurrent();
+      const progress = clearCountForDifficulty(state.mode.key, state.difficulty.key);
 
       overlay.innerHTML = `
         <div class="battle-menu">
           <div class="battle-card">
             <h1 class="battle-title">ステージ選択</h1>
-            <p class="battle-help">${state.difficulty.name} / ${state.mode.name}</p>
+            <p class="battle-help">
+              ${state.difficulty.name} / ${state.mode.name}<br>
+              クリア状況 ${progress.clear}/${progress.total}
+            </p>
+
             <div class="battle-grid">
-              ${stages.map(stage => `
-                <button class="battle-stage-btn" type="button" data-stage="${stage.key}">
-                  <img class="battle-stage-thumb" src="${stage.bg}" alt="">
-                  <div><div class="battle-name">${stage.name}</div><div class="battle-sub">${getStageDescByMode(state.mode.key, stage)}</div></div>
-                  <div class="battle-right">SELECT</div>
-                </button>
-              `).join('')}
+              ${stages.map(stage => {
+                const cleared = isStageCleared(state.mode.key, state.difficulty.key, stage.key);
+
+                return `
+                  <button class="battle-stage-btn ${cleared ? 'cleared' : ''}" type="button" data-stage="${stage.key}">
+                    <img class="battle-stage-thumb" src="${stage.bg}" alt="">
+                    <div>
+                      <div class="battle-name">${stage.name}</div>
+                      <div class="battle-sub">
+                        ${getStageDescByMode(state.mode.key, stage)}
+                        ${clearBadgeHtml(cleared)}
+                      </div>
+                    </div>
+                    <div class="battle-right">${cleared ? 'CLEAR' : 'SELECT'}</div>
+                  </button>
+                `;
+              }).join('')}
             </div>
+
             <div class="battle-row">
               <button id="mobBackDiffBtn" class="battle-btn blue" type="button">戻る</button>
               <button id="mobBattleMainBtn" class="battle-btn" type="button">メインへ</button>
@@ -645,7 +779,7 @@
     state.frame = 0;
     state.resultShown = false;
     state.rewardDone = false;
-    state.stats = { damage:0, petLost:0, enemyKilled:0, bossKilled:0, clear:false, drops:[], rubyReward:0 };
+    state.stats = { damage:0, petLost:0, enemyKilled:0, bossKilled:0, clear:false, drops:[], rubyReward:0, legendUnlocked:false };
 
     clearBattleObjectsOnly();
     resetSupport();
@@ -1231,10 +1365,6 @@
     else fireSecondHoming(p, targets, second, count);
 
     addText(second.name || 'SECOND SKILL', p.x, p.y - 48, bulletColorSecond(p, second));
-  }
-
-  function fireSecondRain(p, targets, second, count){
-    fireSecondFan(p, targets, normalizeSecondPattern(second), count);
   }
 
   function fireSecondFan(p, targets, second, count){
@@ -2147,7 +2277,13 @@
         addCoin(rewardCoin);
         addDiamond(rewardDiamond);
         addPetRuby(rubyReward);
+
+        const legendJustUnlocked = justUnlockedLegendByThisClear(state.mode.key, diff.key, state.stage.key);
         saveClear(state.mode.key, diff.key, state.stage.key);
+
+        if (legendJustUnlocked) {
+          state.stats.legendUnlocked = true;
+        }
       }
     }
 
@@ -2169,7 +2305,9 @@
             ペットDOWN: ${Number(state.stats.petLost || 0)}<br>
             合計ダメージ: ${Math.ceil(state.stats.damage || 0).toLocaleString()}<br>
             石板Drop: ${state.stats.drops.length ? state.stats.drops.map(d => `${d.rarity} ${d.name}${d.isNew ? ' NEW' : d.converted ? ' MAX変換' : d.plusAfter != null ? ' +' + d.plusAfter : ''}`).join(' / ') : 'なし'}<br><br>
-            ${clear ? `報酬: ${rewardCoin.toLocaleString()} COIN / 💎 +${rewardDiamond} / ペットルビー ♦ +${rubyReward}` : 'クリア報酬なし'}
+            ${clear ? `報酬: ${rewardCoin.toLocaleString()} COIN / 💎 +${rewardDiamond} / ペットルビー ♦ +${rubyReward}` : 'クリア報酬なし'}<br>
+            ${clear ? `クリア状況: ${progressText(state.mode.key, diff.key)}` : ''}
+            ${state.stats.legendUnlocked ? '<br><br><span class="battle-unlock">レジェンド解放！</span><br>難易度選択にレジェンドが出現しました。' : ''}
           </p>
 
           ${state.stats.drops.length ? `
