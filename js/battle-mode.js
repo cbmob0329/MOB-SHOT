@@ -46,9 +46,9 @@
         { name:'モブロック', image:'en/eniwa.png', hp:220, power:10 },
         { name:'スラモブ', image:'en/sra.png', hp:200, power:9 }
       ],
-      mid:{ name:'モブプテラ', image:'en/enpte.png', hp:700, power:14, atkImage:'atk/hawkatk.png', pattern:'mid' },
-      boss:{ name:'ホークモブ', image:'boss/hawks.png', hp:1200, power:18, atkImage:'atk/hawkatk.png', pattern:'hawk' },
-      strongBoss:{ name:'ホークモブⅡ', image:'boss/hawks2.png', hp:1900, power:25, atkImage:'atk/hawkatk.png', pattern:'hawk2' }
+      mid:{ name:'モブプテラ', image:'en/enpte.png', hp:700, power:14, atkImage:'atk/hawkatk.png', atkFlipY:true, pattern:'mid' },
+      boss:{ name:'ホークモブ', image:'boss/hawks.png', hp:1200, power:18, atkImage:'atk/hawkatk.png', atkFlipY:true, pattern:'hawk' },
+      strongBoss:{ name:'ホークモブⅡ', image:'boss/hawks2.png', hp:1900, power:25, atkImage:'atk/hawkatk.png', atkFlipY:true, pattern:'hawk2' }
     },
     {
       key:'desert', name:'砂漠', bg:'sta/backsabaku.png',
@@ -57,9 +57,9 @@
         { name:'モブドワーフ', image:'en/endowa.png', hp:280, power:12 },
         { name:'モブ盗賊', image:'en/entozok.png', hp:260, power:11 }
       ],
-      mid:{ name:'モブデュアル', image:'en/sabadual.png', hp:850, power:17, atkImage:'atk/miraatk.png', pattern:'mid' },
-      boss:{ name:'ミラモブ', image:'boss/miraboss.png', hp:1350, power:20, atkImage:'atk/miraatk.png', pattern:'mira' },
-      strongBoss:{ name:'ミラモブⅡ', image:'boss/bossmira2.png', hp:2100, power:28, atkImage:'atk/miraatk.png', pattern:'mira2' }
+      mid:{ name:'モブデュアル', image:'en/sabadual.png', hp:850, power:17, atkImage:'atk/miraatk.png', atkFlipY:true, pattern:'mid' },
+      boss:{ name:'ミラモブ', image:'boss/miraboss.png', hp:1350, power:20, atkImage:'atk/miraatk.png', atkFlipY:true, pattern:'mira' },
+      strongBoss:{ name:'ミラモブⅡ', image:'boss/bossmira2.png', hp:2100, power:28, atkImage:'atk/miraatk.png', atkFlipY:true, pattern:'mira2' }
     },
     {
       key:'town', name:'田舎町', bg:'sta/backumi.png',
@@ -68,9 +68,9 @@
         { name:'モブファル', image:'en/iwakofal.png', hp:330, power:14 },
         { name:'モブバード', image:'en/enwasi.png', hp:310, power:13 }
       ],
-      mid:{ name:'モブピー', image:'en/enmobpi.png', hp:1000, power:20, atkImage:'atk/hinotama.png', pattern:'mid' },
-      boss:{ name:'モブガーディアン', image:'boss/bossban.png', hp:1550, power:23, atkImage:'atk/hinotama.png', pattern:'guardian' },
-      strongBoss:{ name:'モブガーディアンⅡ', image:'boss/bossban2.png', hp:2350, power:31, atkImage:'atk/hinotama.png', pattern:'guardian2' }
+      mid:{ name:'モブピー', image:'en/enmobpi.png', hp:1000, power:20, atkImage:'atk/hinotama.png', atkFlipY:true, pattern:'mid' },
+      boss:{ name:'モブガーディアン', image:'boss/bossban.png', hp:1550, power:23, atkImage:'atk/hinotama.png', atkFlipY:true, pattern:'guardian' },
+      strongBoss:{ name:'モブガーディアンⅡ', image:'boss/bossban2.png', hp:2350, power:31, atkImage:'atk/hinotama.png', atkFlipY:true, pattern:'guardian2' }
     },
     {
       key:'neon', name:'ネオン街', bg:'sta/backneon.png',
@@ -79,9 +79,9 @@
         { name:'モブグリズリー', image:'en/enguri.png', hp:430, power:17 },
         { name:'ナーガモブ', image:'en/ennarga.png', hp:390, power:16 }
       ],
-      mid:{ name:'モブギドラ', image:'en/neongidra.png', hp:1200, power:23, atkImage:'atk/kaminari.png', pattern:'mid' },
-      boss:{ name:'ネオンモブ', image:'boss/bossneon.png', hp:1750, power:26, atkImage:'atk/kaminari.png', pattern:'neon' },
-      strongBoss:{ name:'ネオンモブⅡ', image:'boss/bossneon2.png', hp:2600, power:36, atkImage:'atk/kaminari.png', pattern:'neon2' }
+      mid:{ name:'モブギドラ', image:'en/neongidra.png', hp:1200, power:23, atkImage:'atk/kaminari.png', atkFlipY:true, pattern:'mid' },
+      boss:{ name:'ネオンモブ', image:'boss/bossneon.png', hp:1750, power:26, atkImage:'atk/kaminari.png', atkFlipY:true, pattern:'neon' },
+      strongBoss:{ name:'ネオンモブⅡ', image:'boss/bossneon2.png', hp:2600, power:36, atkImage:'atk/kaminari.png', atkFlipY:true, pattern:'neon2' }
     },
     {
       key:'magma', name:'マグマ', bg:'sta/backmagma.png',
@@ -90,9 +90,9 @@
         { name:'モブマグプテラ', image:'en/enmagpte.png', hp:480, power:20 },
         { name:'モブマグトカゲ', image:'en/enmagtokage.png', hp:450, power:19 }
       ],
-      mid:{ name:'マグモブレム', image:'en/enmaggolem.png', hp:1450, power:27, atkImage:'atk/dragon.png', pattern:'mid' },
-      boss:{ name:'ドラゴンモブ', image:'boss/bossdragoon.png', hp:2100, power:32, atkImage:'atk/dragon.png', pattern:'dragon' },
-      strongBoss:{ name:'ドラゴンモブⅡ', image:'boss/bossdragoon2.png', hp:3100, power:43, atkImage:'atk/dragon.png', pattern:'dragon2' }
+      mid:{ name:'マグモブレム', image:'en/enmaggolem.png', hp:1450, power:27, atkImage:'atk/dragon.png', atkFlipY:false, pattern:'mid' },
+      boss:{ name:'ドラゴンモブ', image:'boss/bossdragoon.png', hp:2100, power:32, atkImage:'atk/dragon.png', atkFlipY:false, pattern:'dragon' },
+      strongBoss:{ name:'ドラゴンモブⅡ', image:'boss/bossdragoon2.png', hp:3100, power:43, atkImage:'atk/dragon.png', atkFlipY:false, pattern:'dragon2' }
     },
     {
       key:'castle', name:'魔王城', bg:'sta/backmao.png',
@@ -101,9 +101,9 @@
         { name:'モブアサシン', image:'en/enasa.png', hp:560, power:24 },
         { name:'ダークゴブモブ', image:'en/enmaogob.png', hp:540, power:23 }
       ],
-      mid:{ name:'グラディモブ', image:'en/mobgra.png', hp:1700, power:31, atkImage:'atk/atkriri.png', pattern:'mid' },
-      boss:{ name:'モブリリス', image:'boss/bossriris.png', hp:2600, power:40, atkImage:'atk/atkriri.png', pattern:'lilith' },
-      strongBoss:{ name:'モブ魔王', image:'boss/bossmaoh.png', hp:3800, power:54, atkImage:'atk/atkmaoh.png', pattern:'maoh' }
+      mid:{ name:'グラディモブ', image:'en/mobgra.png', hp:1700, power:31, atkImage:'atk/atkriri.png', atkFlipY:false, pattern:'mid' },
+      boss:{ name:'モブリリス', image:'boss/bossriris.png', hp:2600, power:40, atkImage:'atk/atkriri.png', atkFlipY:false, pattern:'lilith' },
+      strongBoss:{ name:'モブ魔王', image:'boss/bossmaoh.png', hp:3800, power:54, atkImage:'atk/atkmaoh.png', atkFlipY:true, pattern:'maoh' }
     }
   ];
 
@@ -115,9 +115,9 @@
         { name:'マルモブ', image:'en/marumob.png', hp:760, power:30 },
         { name:'モブテツ', image:'en/mobtetu.png', hp:730, power:29 }
       ],
-      mid:{ name:'モブニコ', image:'en/mobnico.png', hp:2200, power:38, atkImage:'atk/atkmeiru.png', pattern:'mid' },
-      boss:{ name:'モブメイル', image:'boss/bossmeiru.png', hp:4200, power:60, atkImage:'atk/atkmeiru.png', pattern:'mail' },
-      strongBoss:{ name:'モブスミス', image:'boss/bosssmith.png', hp:5600, power:72, atkImage:'atk/matrix.png', pattern:'smith' }
+      mid:{ name:'モブニコ', image:'en/mobnico.png', hp:2200, power:38, atkImage:'atk/atkmeiru.png', atkFlipY:false, pattern:'mid' },
+      boss:{ name:'モブメイル', image:'boss/bossmeiru.png', hp:4200, power:60, atkImage:'atk/atkmeiru.png', atkFlipY:false, pattern:'mail' },
+      strongBoss:{ name:'モブスミス', image:'boss/bosssmith.png', hp:5600, power:72, atkImage:'atk/matrix.png', atkFlipY:true, pattern:'smith' }
     },
     {
       key:'matrix', name:'マトリックス', bg:'sta/stmatrix.png',
@@ -126,9 +126,9 @@
         { name:'モブシノ', image:'en/mobsino.png', hp:820, power:34 },
         { name:'モブサラ', image:'en/mobsara.png', hp:790, power:32 }
       ],
-      mid:{ name:'ガトリモブ', image:'en/gatorimob.png', hp:2500, power:42, atkImage:'atk/matrix.png', pattern:'mid' },
-      boss:{ name:'モブスミス', image:'boss/bosssmith.png', hp:4600, power:64, atkImage:'atk/matrix.png', pattern:'smith' },
-      strongBoss:{ name:'モブネプ', image:'boss/bossmobnep.png', hp:6000, power:78, atkImage:'atk/atknep.png', pattern:'nep' }
+      mid:{ name:'ガトリモブ', image:'en/gatorimob.png', hp:2500, power:42, atkImage:'atk/matrix.png', atkFlipY:true, pattern:'mid' },
+      boss:{ name:'モブスミス', image:'boss/bosssmith.png', hp:4600, power:64, atkImage:'atk/matrix.png', atkFlipY:true, pattern:'smith' },
+      strongBoss:{ name:'モブネプ', image:'boss/bossmobnep.png', hp:6000, power:78, atkImage:'atk/atknep.png', atkFlipY:true, pattern:'nep' }
     },
     {
       key:'sea', name:'海の線路', bg:'sta/umisenro.png',
@@ -137,9 +137,9 @@
         { name:'バブモブ', image:'en/babumob.png', hp:900, power:37 },
         { name:'ウミシモブ', image:'en/umisimob.png', hp:850, power:35 }
       ],
-      mid:{ name:'モブサメ', image:'en/mobsame.png', hp:2750, power:45, atkImage:'atk/atknep.png', pattern:'mid' },
-      boss:{ name:'モブネプ', image:'boss/bossmobnep.png', hp:5000, power:68, atkImage:'atk/atknep.png', pattern:'nep' },
-      strongBoss:{ name:'ホークモブⅡ', image:'boss/hawks2.png', hp:6600, power:82, atkImage:'atk/hawkatk.png', pattern:'hawk2' }
+      mid:{ name:'モブサメ', image:'en/mobsame.png', hp:2750, power:45, atkImage:'atk/atknep.png', atkFlipY:true, pattern:'mid' },
+      boss:{ name:'モブネプ', image:'boss/bossmobnep.png', hp:5000, power:68, atkImage:'atk/atknep.png', atkFlipY:true, pattern:'nep' },
+      strongBoss:{ name:'ホークモブⅡ', image:'boss/hawks2.png', hp:6600, power:82, atkImage:'atk/hawkatk.png', atkFlipY:true, pattern:'hawk2' }
     },
     {
       key:'neonroad', name:'ネオン高速', bg:'sta/neonlord.png',
@@ -148,9 +148,9 @@
         { name:'モブネオレム', image:'en/neorem.png', hp:980, power:40 },
         { name:'ネオスラモブ', image:'en/neosura.png', hp:910, power:38 }
       ],
-      mid:{ name:'モブコード', image:'en/mobcode.png', hp:3000, power:49, atkImage:'atk/kaminari.png', pattern:'mid' },
-      boss:{ name:'ブルネオモブ', image:'boss/bossneonblue.png', hp:5400, power:72, atkImage:'atk/kaminari.png', pattern:'neon2' },
-      strongBoss:{ name:'パルネオモブ', image:'boss/bossneonp.png', hp:7000, power:86, atkImage:'atk/kaminari.png', pattern:'neon2' }
+      mid:{ name:'モブコード', image:'en/mobcode.png', hp:3000, power:49, atkImage:'atk/kaminari.png', atkFlipY:true, pattern:'mid' },
+      boss:{ name:'ブルネオモブ', image:'boss/bossneonblue.png', hp:5400, power:72, atkImage:'atk/kaminari.png', atkFlipY:true, pattern:'neon2' },
+      strongBoss:{ name:'パルネオモブ', image:'boss/bossneonpur.png', hp:7000, power:86, atkImage:'atk/kaminari.png', atkFlipY:true, pattern:'neon2' }
     },
     {
       key:'makai', name:'魔界', bg:'sta/makai.png',
@@ -159,9 +159,9 @@
         { name:'モブデビピンク', image:'en/mobdebipink.png', hp:1020, power:44 },
         { name:'モブデビパープル', image:'en/mobdebip.png', hp:1050, power:45 }
       ],
-      mid:{ name:'モブマグシャー', image:'en/mobmagsya.png', hp:3300, power:54, atkImage:'atk/atkmaoh.png', pattern:'mid' },
-      boss:{ name:'モブエース', image:'boss/bossace.png', hp:6200, power:80, atkImage:'atk/atkmaoh.png', pattern:'maoh' },
-      strongBoss:{ name:'モブ魔王', image:'boss/bossmaoh.png', hp:8000, power:96, atkImage:'atk/atkmaoh.png', pattern:'maoh' }
+      mid:{ name:'モブマグシャー', image:'en/mobmagsya.png', hp:3300, power:54, atkImage:'atk/atkmaoh.png', atkFlipY:true, pattern:'mid' },
+      boss:{ name:'モブ魔王', image:'boss/bossmaoh.png', hp:6200, power:80, atkImage:'atk/atkmaoh.png', atkFlipY:true, pattern:'maoh' },
+      strongBoss:{ name:'ドラゴンモブⅡ', image:'boss/bossdragoon2.png', hp:8000, power:96, atkImage:'atk/dragon.png', atkFlipY:false, pattern:'dragon2' }
     },
     {
       key:'last', name:'魔王の間', bg:'sta/makailast.png',
@@ -170,9 +170,9 @@
         { name:'モブデーモンレッド', image:'en/mobdemonr.png', hp:1180, power:51 },
         { name:'モブデーモンパープル', image:'en/mobdemonp.png', hp:1220, power:52 }
       ],
-      mid:{ name:'モブリリス', image:'boss/bossriris.png', hp:4000, power:62, atkImage:'atk/atkriri.png', pattern:'lilith' },
-      boss:{ name:'閻魔モブ', image:'boss/enmamob.png', hp:7600, power:92, atkImage:'atk/atkmaoh.png', pattern:'maoh' },
-      strongBoss:{ name:'ウルモブリリス', image:'boss/bossulmob.png', hp:9200, power:108, atkImage:'atk/atkriri.png', pattern:'lilith' }
+      mid:{ name:'モブリリス', image:'boss/bossriris.png', hp:4000, power:62, atkImage:'atk/atkriri.png', atkFlipY:false, pattern:'lilith' },
+      boss:{ name:'閻魔モブ', image:'boss/bossenmob.png', hp:7600, power:92, atkImage:'atk/atkmaoh.png', atkFlipY:true, pattern:'maoh' },
+      strongBoss:{ name:'ウルモブリリス', image:'boss/bossulriri.png', hp:9200, power:108, atkImage:'atk/atkriri.png', atkFlipY:false, pattern:'lilith' }
     }
   ];
 
@@ -222,7 +222,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260629_pet_mode_clear_legend_v2';
+      image.src = src + '?v=20260630_pet_mode_enemy_fix_v1';
       images.set(src, image);
     }
 
@@ -1039,6 +1039,16 @@
     layoutEnemies();
   }
 
+  function enemyAttackFlipY(src){
+    const s = String(src || '');
+
+    if (s.includes('dragon.png')) return false;
+    if (s.includes('atkriri.png')) return false;
+    if (s.includes('atkmeiru.png')) return false;
+
+    return true;
+  }
+
   function spawnEnemy(src, type, index, diff){
     const hp = Math.ceil(Number(src.hp || 1000) * Number(diff.hpRate || 1));
     const power = Math.ceil(Number(src.power || 10) * Number(diff.atkRate || 1));
@@ -1048,6 +1058,7 @@
       name:src.name || 'ENEMY',
       image:src.image || '',
       atkImage:src.atkImage || FALLBACK_ASSET.bossBullet,
+      atkFlipY:src.atkFlipY != null ? !!src.atkFlipY : enemyAttackFlipY(src.atkImage || FALLBACK_ASSET.bossBullet),
       pattern:src.pattern || type,
       hp,
       maxHp:hp,
@@ -1855,6 +1866,7 @@
         r:radius || 14,
         power:Number(e.power || 10),
         image:e.atkImage || FALLBACK_ASSET.bossBullet,
+        flipY:!!e.atkFlipY,
         dead:false,
         life:230
       });
@@ -1873,6 +1885,7 @@
         r:radius || 12,
         power:Number(e.power || 10),
         image:e.atkImage || FALLBACK_ASSET.bossBullet,
+        flipY:!!e.atkFlipY,
         dead:false,
         life:240
       });
@@ -1904,6 +1917,7 @@
         r:radius || 14,
         power:Number(e.power || 10),
         image:e.atkImage || FALLBACK_ASSET.bossBullet,
+        flipY:!!e.atkFlipY,
         dead:false,
         life:230,
         wave:true,
@@ -1921,6 +1935,7 @@
       r,
       power:Number(power || e.power || 10),
       image:e.atkImage || FALLBACK_ASSET.bossBullet,
+      flipY:!!e.atkFlipY,
       dead:false,
       life:230
     });
@@ -2697,7 +2712,21 @@
 
       ctx.save();
 
-      if (!drawImageContain(ctx, image, b.x, b.y, size, size)) {
+      if (imageReady(image)) {
+        ctx.translate(b.x, b.y);
+
+        if (b.flipY) {
+          ctx.scale(1, -1);
+        }
+
+        const iw = image.naturalWidth || image.width;
+        const ih = image.naturalHeight || image.height;
+        const scale = Math.min(size / iw, size / ih);
+        const w = iw * scale;
+        const h = ih * scale;
+
+        ctx.drawImage(image, -w / 2, -h / 2, w, h);
+      } else {
         ctx.fillStyle = '#ff5b5b';
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = b.r >= 30 ? 4 : 2;
