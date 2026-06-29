@@ -14,6 +14,8 @@
   const SECOND_SKILL_UNLOCK_COIN = 100000;
   const SECOND_SKILL_UNLOCK_DIAMOND = 50;
 
+  const PET_UI_VERSION = '20260629_pet_ui_full_v1';
+
   const PET_MODE_FIELDS = [
     { key:'hp', name:'HP', rubyBase:2, coinBase:3000 },
     { key:'power', name:'攻撃', rubyBase:2, coinBase:3000 },
@@ -24,19 +26,19 @@
 
   const SECOND_SKILLS = {
     mobdrago:{
-      name:'ドラゴメテオ',
-      desc:'大きめの炎弾を上から8発落とす。万能型の派手な追撃。',
+      name:'ドラゴフレア',
+      desc:'大きめの炎弾を前方へ扇状に8発放つ。万能型の見やすい追撃。',
       atkImage:'',
       htmlBullet:'fire',
       ct:58,
       firstCt:24,
       count:8,
       size:'big',
-      powerRate:1.15,
-      obstacleRate:1.15,
-      bossRate:1.15,
+      powerRate:1.03,
+      obstacleRate:1.03,
+      bossRate:1.03,
       breakPower:180,
-      pattern:'meteor'
+      pattern:'fan'
     },
     mobfrog:{
       name:'アクアスプラッシュ',
@@ -47,26 +49,26 @@
       firstCt:22,
       count:12,
       size:'normal',
-      powerRate:0.95,
-      obstacleRate:2.40,
-      bossRate:1.10,
+      powerRate:0.86,
+      obstacleRate:2.16,
+      bossRate:0.99,
       breakPower:280,
       pattern:'wide'
     },
     mobdenden:{
-      name:'サンダーレイン',
-      desc:'小さめの雷弾を18発ばら撒く。雑魚殲滅向き。',
+      name:'サンダースプレッド',
+      desc:'小さめの雷弾を前方へ18発ばら撒く。雑魚殲滅向き。',
       atkImage:'',
       htmlBullet:'thunder',
       ct:62,
       firstCt:26,
       count:18,
       size:'small',
-      powerRate:0.62,
-      obstacleRate:0.62,
-      bossRate:0.62,
+      powerRate:0.56,
+      obstacleRate:0.56,
+      bossRate:0.56,
       breakPower:90,
-      pattern:'rain'
+      pattern:'wide'
     },
     mobwolf:{
       name:'ウルフバイトラッシュ',
@@ -77,26 +79,26 @@
       firstCt:28,
       count:6,
       size:'normal',
-      powerRate:1.25,
-      obstacleRate:1.20,
-      bossRate:2.20,
+      powerRate:1.13,
+      obstacleRate:1.08,
+      bossRate:1.98,
       breakPower:330,
       pattern:'homing'
     },
     mobstone:{
-      name:'グランドメテオ',
-      desc:'巨大な隕石弾を3発落とす。遅いが超高火力。',
+      name:'グランドキャノン',
+      desc:'巨大な岩弾を前方へ3発撃ち出す。遅いが高火力。CTは長め。',
       atkImage:'atk/hinotama.png',
       htmlBullet:'',
-      ct:82,
-      firstCt:34,
+      ct:98,
+      firstCt:42,
       count:3,
       size:'huge',
-      powerRate:3.20,
-      obstacleRate:4.20,
-      bossRate:3.80,
-      breakPower:1200,
-      pattern:'meteor'
+      powerRate:2.75,
+      obstacleRate:3.55,
+      bossRate:3.20,
+      breakPower:1050,
+      pattern:'bigshot'
     },
     mobslime:{
       name:'スライムガード',
@@ -107,9 +109,9 @@
       firstCt:30,
       count:4,
       size:'small',
-      powerRate:0.50,
-      obstacleRate:0.50,
-      bossRate:0.50,
+      powerRate:0.45,
+      obstacleRate:0.45,
+      bossRate:0.45,
       breakPower:90,
       heal:35,
       barrierSec:3,
@@ -124,9 +126,9 @@
       firstCt:20,
       count:16,
       size:'small',
-      powerRate:0.82,
-      obstacleRate:0.82,
-      bossRate:0.82,
+      powerRate:0.74,
+      obstacleRate:0.74,
+      bossRate:0.74,
       breakPower:600,
       pattern:'rapid'
     },
@@ -139,9 +141,9 @@
       firstCt:24,
       count:12,
       size:'normal',
-      powerRate:0.70,
-      obstacleRate:0.70,
-      bossRate:0.70,
+      powerRate:0.63,
+      obstacleRate:0.63,
+      bossRate:0.63,
       breakPower:130,
       coinBonusRate:0.08,
       pattern:'bubble'
@@ -155,9 +157,9 @@
       firstCt:24,
       count:10,
       size:'normal',
-      powerRate:1.00,
-      obstacleRate:1.00,
-      bossRate:1.00,
+      powerRate:0.90,
+      obstacleRate:0.90,
+      bossRate:0.90,
       breakPower:160,
       pattern:'side'
     },
@@ -170,9 +172,9 @@
       firstCt:26,
       count:5,
       size:'big',
-      powerRate:1.25,
-      obstacleRate:1.25,
-      bossRate:1.25,
+      powerRate:1.13,
+      obstacleRate:1.13,
+      bossRate:1.13,
       breakPower:500,
       barrierSec:7,
       barrierHpRate:0.30,
@@ -187,9 +189,9 @@
       firstCt:24,
       count:12,
       size:'normal',
-      powerRate:1.08,
-      obstacleRate:1.08,
-      bossRate:1.08,
+      powerRate:0.97,
+      obstacleRate:0.97,
+      bossRate:0.97,
       breakPower:220,
       pattern:'circle'
     },
@@ -202,9 +204,9 @@
       firstCt:34,
       count:1,
       size:'huge',
-      powerRate:5.20,
-      obstacleRate:5.20,
-      bossRate:5.20,
+      powerRate:4.68,
+      obstacleRate:4.68,
+      bossRate:4.68,
       breakPower:1200,
       pattern:'bigshot'
     },
@@ -217,9 +219,9 @@
       firstCt:24,
       count:20,
       size:'normal',
-      powerRate:0.95,
-      obstacleRate:0.95,
-      bossRate:1.15,
+      powerRate:0.86,
+      obstacleRate:0.86,
+      bossRate:1.04,
       breakPower:420,
       pattern:'homing'
     },
@@ -232,9 +234,9 @@
       firstCt:28,
       count:3,
       size:'huge',
-      powerRate:2.40,
-      obstacleRate:2.40,
-      bossRate:2.40,
+      powerRate:2.16,
+      obstacleRate:2.16,
+      bossRate:2.16,
       breakPower:700,
       pierce:true,
       pattern:'laser'
@@ -248,9 +250,9 @@
       firstCt:30,
       count:5,
       size:'huge',
-      powerRate:2.00,
-      obstacleRate:2.00,
-      bossRate:2.00,
+      powerRate:1.80,
+      obstacleRate:1.80,
+      bossRate:1.80,
       breakPower:550,
       explode:true,
       pattern:'bubble'
@@ -264,9 +266,9 @@
       firstCt:22,
       count:100,
       size:'small',
-      powerRate:0.28,
-      obstacleRate:0.28,
-      bossRate:0.28,
+      powerRate:0.25,
+      obstacleRate:0.25,
+      bossRate:0.25,
       breakPower:90,
       pattern:'rapid'
     },
@@ -279,9 +281,9 @@
       firstCt:28,
       count:8,
       size:'normal',
-      powerRate:1.30,
-      obstacleRate:1.30,
-      bossRate:1.30,
+      powerRate:1.17,
+      obstacleRate:1.17,
+      bossRate:1.17,
       breakPower:270,
       drainRate:0.05,
       pattern:'drain'
@@ -295,9 +297,9 @@
       firstCt:30,
       count:15,
       size:'big',
-      powerRate:0.95,
-      obstacleRate:0.95,
-      bossRate:0.95,
+      powerRate:0.86,
+      obstacleRate:0.86,
+      bossRate:0.86,
       breakPower:320,
       pattern:'fan'
     },
@@ -310,9 +312,9 @@
       firstCt:36,
       count:2,
       size:'huge',
-      powerRate:4.30,
-      obstacleRate:4.30,
-      bossRate:4.30,
+      powerRate:3.87,
+      obstacleRate:3.87,
+      bossRate:3.87,
       breakPower:900,
       pattern:'bigshot'
     },
@@ -325,9 +327,9 @@
       firstCt:28,
       count:6,
       size:'small',
-      powerRate:0.70,
-      obstacleRate:0.70,
-      bossRate:0.70,
+      powerRate:0.63,
+      obstacleRate:0.63,
+      bossRate:0.63,
       breakPower:420,
       barrierSec:4,
       pattern:'shield'
@@ -341,9 +343,9 @@
       firstCt:26,
       count:4,
       size:'big',
-      powerRate:2.10,
-      obstacleRate:4.60,
-      bossRate:2.10,
+      powerRate:1.89,
+      obstacleRate:4.14,
+      bossRate:1.89,
       breakPower:700,
       pattern:'crush'
     },
@@ -356,9 +358,9 @@
       firstCt:30,
       count:5,
       size:'small',
-      powerRate:0.55,
-      obstacleRate:0.55,
-      bossRate:0.55,
+      powerRate:0.50,
+      obstacleRate:0.50,
+      bossRate:0.50,
       breakPower:260,
       petRapidBuffSec:10,
       petRapidBuffRate:1.18,
@@ -373,9 +375,9 @@
       firstCt:30,
       count:27,
       size:'normal',
-      powerRate:0.88,
-      obstacleRate:0.88,
-      bossRate:0.88,
+      powerRate:0.79,
+      obstacleRate:0.79,
+      bossRate:0.79,
       breakPower:500,
       pierce:true,
       pattern:'wide'
@@ -389,26 +391,26 @@
       firstCt:30,
       count:16,
       size:'big',
-      powerRate:1.35,
-      obstacleRate:1.35,
-      bossRate:1.35,
+      powerRate:1.22,
+      obstacleRate:1.22,
+      bossRate:1.22,
       breakPower:650,
       pattern:'circle'
     },
     chibiulmob:{
-      name:'ダークローズフォール',
-      desc:'闇弾を20発降らせる。広範囲だが単発は控えめ。',
+      name:'ダークローズバースト',
+      desc:'闇弾を前方へ扇状に20発放つ。広範囲だが単発は控えめ。',
       atkImage:'atk/atkriri.png',
       htmlBullet:'',
       ct:82,
       firstCt:34,
       count:20,
       size:'normal',
-      powerRate:1.05,
-      obstacleRate:1.05,
-      bossRate:1.05,
+      powerRate:0.95,
+      obstacleRate:0.95,
+      bossRate:0.95,
       breakPower:850,
-      pattern:'rain'
+      pattern:'fan'
     },
     hero:{
       name:'ヒーローバースト',
@@ -419,9 +421,9 @@
       firstCt:36,
       count:10,
       size:'big',
-      powerRate:2.30,
-      obstacleRate:2.30,
-      bossRate:2.30,
+      powerRate:2.07,
+      obstacleRate:2.07,
+      bossRate:2.07,
       breakPower:3200,
       pattern:'hero'
     }
@@ -446,9 +448,9 @@
       normalRateRate:0.50,
       normalBreakPower:150,
       skillBaseCount:5,
-      skillPowerRate:0.95,
-      skillObstacleRate:0.95,
-      skillBossRate:0.95,
+      skillPowerRate:0.88,
+      skillObstacleRate:0.88,
+      skillBossRate:0.88,
       skillBreakPower:150,
       skillCt:30,
       firstCt:10,
@@ -474,9 +476,9 @@
       normalRateRate:0.40,
       normalBreakPower:250,
       skillBaseCount:3,
-      skillPowerRate:1.70,
-      skillObstacleRate:2.50,
-      skillBossRate:1.70,
+      skillPowerRate:1.56,
+      skillObstacleRate:2.30,
+      skillBossRate:1.56,
       skillBreakPower:250,
       skillCt:25,
       firstCt:5,
@@ -502,9 +504,9 @@
       normalRateRate:0.50,
       normalBreakPower:80,
       skillBaseCount:9,
-      skillPowerRate:0.62,
-      skillObstacleRate:0.62,
-      skillBossRate:0.62,
+      skillPowerRate:0.57,
+      skillObstacleRate:0.57,
+      skillBossRate:0.57,
       skillBreakPower:80,
       skillCt:35,
       firstCt:15,
@@ -530,9 +532,9 @@
       normalRateRate:0.38,
       normalBreakPower:300,
       skillBaseCount:5,
-      skillPowerRate:1.45,
-      skillObstacleRate:1.45,
-      skillBossRate:2.25,
+      skillPowerRate:1.33,
+      skillObstacleRate:1.33,
+      skillBossRate:2.07,
       skillBreakPower:300,
       skillCt:30,
       firstCt:20,
@@ -554,19 +556,19 @@
       atkImage:'atk/hinotama.png',
       htmlBullet:'',
       skillName:'メテオボール',
-      normalAttackRate:1.30,
-      normalRateRate:0.25,
+      normalAttackRate:1.25,
+      normalRateRate:0.18,
       normalBreakPower:650,
       skillBaseCount:1,
-      skillPowerRate:5.20,
-      skillObstacleRate:6.20,
-      skillBossRate:6.50,
-      skillBreakPower:1200,
-      skillCt:45,
-      firstCt:15,
+      skillPowerRate:4.35,
+      skillObstacleRate:5.25,
+      skillBossRate:5.40,
+      skillBreakPower:1100,
+      skillCt:55,
+      firstCt:20,
       skillWideAt:[50,90],
-      normalWideAt:[1,20,40,70],
-      growthText:'連射は遅いが通常3ワイド。巨大なスロー弾を放つ。Lv50で第二スキル解放可能'
+      normalWideAt:[20,50,80],
+      growthText:'連射はかなり遅いが高火力。通常ワイドは後半から広がる。Lv50で第二スキル解放可能'
     },
     {
       key:'mobslime',
@@ -586,9 +588,9 @@
       normalRateRate:0.42,
       normalBreakPower:80,
       skillBaseCount:3,
-      skillPowerRate:0.58,
-      skillObstacleRate:0.58,
-      skillBossRate:0.58,
+      skillPowerRate:0.53,
+      skillObstacleRate:0.53,
+      skillBossRate:0.53,
       skillBreakPower:80,
       skillCt:42,
       firstCt:20,
@@ -619,9 +621,9 @@
       normalRateRate:0.65,
       normalBreakPower:600,
       skillBaseCount:1,
-      skillPowerRate:3.00,
-      skillObstacleRate:3.00,
-      skillBossRate:3.00,
+      skillPowerRate:2.76,
+      skillObstacleRate:2.76,
+      skillBossRate:2.76,
       skillBreakPower:600,
       skillCt:28,
       firstCt:8,
@@ -647,9 +649,9 @@
       normalRateRate:0.50,
       normalBreakPower:120,
       skillBaseCount:6,
-      skillPowerRate:0.75,
-      skillObstacleRate:0.75,
-      skillBossRate:0.75,
+      skillPowerRate:0.69,
+      skillObstacleRate:0.69,
+      skillBossRate:0.69,
       skillBreakPower:120,
       skillCt:40,
       firstCt:12,
@@ -675,9 +677,9 @@
       normalRateRate:0.52,
       normalBreakPower:150,
       skillBaseCount:6,
-      skillPowerRate:1.00,
-      skillObstacleRate:1.00,
-      skillBossRate:1.00,
+      skillPowerRate:0.92,
+      skillObstacleRate:0.92,
+      skillBossRate:0.92,
       skillBreakPower:150,
       skillCt:35,
       firstCt:12,
@@ -703,9 +705,9 @@
       normalRateRate:0.35,
       normalBreakPower:500,
       skillBaseCount:1,
-      skillPowerRate:0.75,
-      skillObstacleRate:0.75,
-      skillBossRate:0.75,
+      skillPowerRate:0.69,
+      skillObstacleRate:0.69,
+      skillBossRate:0.69,
       skillBreakPower:500,
       skillCt:40,
       firstCt:8,
@@ -733,9 +735,9 @@
       normalRateRate:0.70,
       normalBreakPower:200,
       skillBaseCount:3,
-      skillPowerRate:1.30,
-      skillObstacleRate:1.30,
-      skillBossRate:1.30,
+      skillPowerRate:1.20,
+      skillObstacleRate:1.20,
+      skillBossRate:1.20,
       skillBreakPower:200,
       skillCt:30,
       firstCt:10,
@@ -761,9 +763,9 @@
       normalRateRate:0.38,
       normalBreakPower:1000,
       skillBaseCount:2,
-      skillPowerRate:3.50,
-      skillObstacleRate:3.50,
-      skillBossRate:3.50,
+      skillPowerRate:3.22,
+      skillObstacleRate:3.22,
+      skillBossRate:3.22,
       skillBreakPower:1000,
       skillCt:38,
       firstCt:18,
@@ -789,9 +791,9 @@
       normalRateRate:0.55,
       normalBreakPower:250,
       skillBaseCount:5,
-      skillPowerRate:1.80,
-      skillObstacleRate:1.80,
-      skillBossRate:1.80,
+      skillPowerRate:1.66,
+      skillObstacleRate:1.66,
+      skillBossRate:1.66,
       skillBreakPower:420,
       skillCt:30,
       firstCt:10,
@@ -818,9 +820,9 @@
       normalRateRate:0.45,
       normalBreakPower:400,
       skillBaseCount:1,
-      skillPowerRate:4.00,
-      skillObstacleRate:4.00,
-      skillBossRate:4.00,
+      skillPowerRate:3.68,
+      skillObstacleRate:3.68,
+      skillBossRate:3.68,
       skillBreakPower:700,
       skillCt:33,
       firstCt:10,
@@ -847,14 +849,14 @@
       normalRateRate:0.48,
       normalBreakPower:260,
       skillBaseCount:1,
-      skillPowerRate:5.20,
-      skillObstacleRate:5.20,
-      skillBossRate:5.20,
+      skillPowerRate:4.78,
+      skillObstacleRate:4.78,
+      skillBossRate:4.78,
       skillBreakPower:550,
       skillCt:38,
       firstCt:12,
       skillWideAt:[50,90],
-      normalWideAt:[1,20,40,70],
+      normalWideAt:[20,40,70],
       explode:true,
       growthText:'ゆらゆら揺れるワイド弾。巨大爆発弾を放つ。Lv50で第二スキル解放可能'
     },
@@ -876,9 +878,9 @@
       normalRateRate:0.72,
       normalBreakPower:120,
       skillBaseCount:25,
-      skillPowerRate:0.75,
-      skillObstacleRate:0.75,
-      skillBossRate:0.75,
+      skillPowerRate:0.69,
+      skillObstacleRate:0.69,
+      skillBossRate:0.69,
       skillBreakPower:120,
       skillCt:24,
       firstCt:5,
@@ -904,9 +906,9 @@
       normalRateRate:0.50,
       normalBreakPower:250,
       skillBaseCount:5,
-      skillPowerRate:1.55,
-      skillObstacleRate:1.55,
-      skillBossRate:1.55,
+      skillPowerRate:1.43,
+      skillObstacleRate:1.43,
+      skillBossRate:1.43,
       skillBreakPower:250,
       skillCt:36,
       firstCt:14,
@@ -932,9 +934,9 @@
       normalRateRate:0.60,
       normalBreakPower:300,
       skillBaseCount:9,
-      skillPowerRate:1.05,
-      skillObstacleRate:1.05,
-      skillBossRate:1.05,
+      skillPowerRate:0.97,
+      skillObstacleRate:0.97,
+      skillBossRate:0.97,
       skillBreakPower:300,
       skillCt:42,
       firstCt:16,
@@ -960,9 +962,9 @@
       normalRateRate:0.38,
       normalBreakPower:800,
       skillBaseCount:1,
-      skillPowerRate:4.80,
-      skillObstacleRate:4.80,
-      skillBossRate:4.80,
+      skillPowerRate:4.42,
+      skillObstacleRate:4.42,
+      skillBossRate:4.42,
       skillBreakPower:800,
       skillCt:45,
       firstCt:20,
@@ -988,9 +990,9 @@
       normalRateRate:0.45,
       normalBreakPower:400,
       skillBaseCount:1,
-      skillPowerRate:0.75,
-      skillObstacleRate:0.75,
-      skillBossRate:0.75,
+      skillPowerRate:0.69,
+      skillObstacleRate:0.69,
+      skillBossRate:0.69,
       skillBreakPower:400,
       skillCt:40,
       firstCt:15,
@@ -1016,9 +1018,9 @@
       normalRateRate:0.40,
       normalBreakPower:600,
       skillBaseCount:2,
-      skillPowerRate:2.80,
-      skillObstacleRate:4.20,
-      skillBossRate:2.80,
+      skillPowerRate:2.58,
+      skillObstacleRate:3.86,
+      skillBossRate:2.58,
       skillBreakPower:600,
       skillCt:38,
       firstCt:14,
@@ -1044,9 +1046,9 @@
       normalRateRate:0.55,
       normalBreakPower:250,
       skillBaseCount:1,
-      skillPowerRate:0.75,
-      skillObstacleRate:0.75,
-      skillBossRate:0.75,
+      skillPowerRate:0.69,
+      skillObstacleRate:0.69,
+      skillBossRate:0.69,
       skillBreakPower:250,
       skillCt:50,
       firstCt:20,
@@ -1072,9 +1074,9 @@
       normalRateRate:0.46,
       normalBreakPower:500,
       skillBaseCount:9,
-      skillPowerRate:1.70,
-      skillObstacleRate:1.70,
-      skillBossRate:1.70,
+      skillPowerRate:1.56,
+      skillObstacleRate:1.56,
+      skillBossRate:1.56,
       skillBreakPower:500,
       skillCt:35,
       firstCt:10,
@@ -1102,9 +1104,9 @@
       normalRateRate:0.50,
       normalBreakPower:600,
       skillBaseCount:4,
-      skillPowerRate:2.10,
-      skillObstacleRate:2.10,
-      skillBossRate:2.10,
+      skillPowerRate:1.93,
+      skillObstacleRate:1.93,
+      skillBossRate:1.93,
       skillBreakPower:600,
       skillCt:42,
       firstCt:16,
@@ -1130,9 +1132,9 @@
       normalRateRate:0.60,
       normalBreakPower:800,
       skillBaseCount:9,
-      skillPowerRate:1.55,
-      skillObstacleRate:1.55,
-      skillBossRate:1.55,
+      skillPowerRate:1.43,
+      skillObstacleRate:1.43,
+      skillBossRate:1.43,
       skillBreakPower:800,
       skillCt:45,
       firstCt:18,
@@ -1158,9 +1160,9 @@
       normalRateRate:0.50,
       normalBreakPower:3000,
       skillBaseCount:3,
-      skillPowerRate:4.00,
-      skillObstacleRate:4.00,
-      skillBossRate:4.00,
+      skillPowerRate:3.68,
+      skillObstacleRate:3.68,
+      skillBossRate:3.68,
       skillBreakPower:3000,
       skillCt:50,
       firstCt:20,
@@ -1601,6 +1603,18 @@
     return 50000 + ((lv - 50) * 4500);
   }
 
+  function upgradeCostToLevel(currentLevel, targetLevel){
+    let total = 0;
+    const from = Math.max(1, Number(currentLevel || 1));
+    const to = Math.max(from, Number(targetLevel || from));
+
+    for (let lv = from; lv < to; lv++) {
+      total += upgradeCost(lv);
+    }
+
+    return total;
+  }
+
   function normalLevelRate(level){
     return 1 + ((Math.max(1, Number(level || 1)) - 1) * 0.007);
   }
@@ -1738,6 +1752,47 @@
     renderAll();
   }
 
+  function upgradePet10(key){
+    const pet = getPet(key);
+    if (!pet || !pet.implemented) return;
+
+    const state = loadState();
+
+    if (!state.pets[key]?.owned) {
+      alert('先に購入してください。');
+      return;
+    }
+
+    const petState = state.pets[key];
+    const cap = levelCap(petState);
+    const currentLevel = getLevel(key);
+
+    if (currentLevel >= cap) {
+      alert('最大Lvです。');
+      return;
+    }
+
+    const targetLevel = Math.min(cap, currentLevel + 10);
+    const cost = upgradeCostToLevel(currentLevel, targetLevel);
+
+    if (!spendCoin(cost)) {
+      alert(
+        `COINが足りません。\n` +
+        `Lv${currentLevel}→${targetLevel}\n` +
+        `必要COIN: ${cost.toLocaleString()}`
+      );
+      return;
+    }
+
+    petState.level = targetLevel;
+
+    saveState(state);
+    refreshMainHud();
+    renderAll();
+
+    alert(`${pet.name}\nLv${currentLevel} → Lv${targetLevel}\n消費COIN: ${cost.toLocaleString()}`);
+  }
+
   function unlockSecondSkill(key){
     const pet = getPet(key);
     if (!pet || !pet.implemented) return;
@@ -1862,6 +1917,405 @@
     saveState(state);
     refreshMainHud();
     renderAll();
+    openPerformanceModal(key);
+  }
+
+  function ensurePetStyles(){
+    if (document.getElementById('mobshotPetFullStyle')) return;
+
+    const style = document.createElement('style');
+    style.id = 'mobshotPetFullStyle';
+    style.textContent = `
+      #petOwnedList{
+        display:grid!important;
+        grid-template-columns:repeat(4,minmax(0,1fr))!important;
+        gap:8px!important;
+        align-items:start!important;
+      }
+
+      .pet-card{
+        min-width:0!important;
+        display:flex!important;
+        flex-direction:column!important;
+        gap:7px!important;
+        padding:8px!important;
+        border-radius:16px!important;
+        overflow:hidden!important;
+      }
+
+      .pet-card-icon{
+        width:100%!important;
+        height:62px!important;
+        display:flex!important;
+        justify-content:center!important;
+        align-items:center!important;
+      }
+
+      .pet-card-icon img{
+        max-width:58px!important;
+        max-height:58px!important;
+        object-fit:contain!important;
+      }
+
+      .pet-card-body{
+        min-width:0!important;
+      }
+
+      .pet-card-name{
+        display:block!important;
+        text-align:center!important;
+        font-size:11px!important;
+        line-height:1.15!important;
+        word-break:keep-all!important;
+        overflow:hidden!important;
+      }
+
+      .pet-card-name span{
+        display:block!important;
+        margin-top:3px!important;
+        font-size:10px!important;
+        color:#ffe66b!important;
+      }
+
+      .pet-card-desc,
+      .pet-card-price,
+      .pet-card-spec{
+        display:none!important;
+      }
+
+      .pet-card-actions{
+        display:grid!important;
+        grid-template-columns:1fr!important;
+        gap:5px!important;
+      }
+
+      .pet-card-actions button,
+      .pet-card-btn,
+      .pet-upgrade-btn,
+      .pet-performance-btn,
+      .pet-lv10-btn{
+        width:100%!important;
+        min-height:31px!important;
+        border-radius:999px!important;
+        font-size:10px!important;
+        line-height:1.05!important;
+        padding:6px 3px!important;
+        font-weight:1000!important;
+        white-space:normal!important;
+      }
+
+      .pet-performance-btn{
+        border:0;
+        background:linear-gradient(#64ddff,#1874e8);
+        color:#fff;
+        box-shadow:0 3px 0 rgba(0,0,0,.35);
+      }
+
+      .pet-lv10-btn{
+        border:0;
+        background:linear-gradient(#9dff73,#26a84d);
+        color:#092d12;
+        box-shadow:0 3px 0 rgba(0,0,0,.35);
+      }
+
+      .pet-lv10-btn:disabled,
+      .pet-performance-btn:disabled{
+        opacity:.45!important;
+        filter:grayscale(1)!important;
+      }
+
+      #petPerformanceModal{
+        position:fixed;
+        inset:0;
+        z-index:250000;
+        display:none;
+        align-items:center;
+        justify-content:center;
+        background:rgba(0,0,0,.78);
+        color:#fff;
+        font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      }
+
+      #petPerformanceModal.show{
+        display:flex!important;
+      }
+
+      .pet-performance-panel{
+        width:min(94vw,460px);
+        max-height:88vh;
+        overflow:auto;
+        background:linear-gradient(160deg,#17243e,#070d1b);
+        border:4px solid rgba(120,170,230,.46);
+        border-radius:24px;
+        padding:16px;
+        box-shadow:0 24px 70px rgba(0,0,0,.6);
+      }
+
+      .pet-performance-head{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        position:sticky;
+        top:0;
+        background:linear-gradient(160deg,#17243e,#101a2d);
+        padding-bottom:10px;
+        z-index:2;
+      }
+
+      .pet-performance-title{
+        font-size:22px;
+        font-weight:1000;
+        color:#ffe66b;
+        text-shadow:0 3px 0 #000;
+      }
+
+      .pet-performance-close{
+        border:0;
+        border-radius:999px;
+        padding:9px 13px;
+        font-size:14px;
+        font-weight:1000;
+        color:#fff;
+        background:linear-gradient(#4c5d7f,#1d2a45);
+      }
+
+      .pet-performance-main{
+        display:grid;
+        grid-template-columns:84px 1fr;
+        gap:12px;
+        align-items:center;
+        margin:12px 0;
+      }
+
+      .pet-performance-img{
+        width:84px;
+        height:84px;
+        border-radius:18px;
+        background:rgba(255,255,255,.07);
+        border:2px solid rgba(255,255,255,.18);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+      }
+
+      .pet-performance-img img{
+        max-width:76px;
+        max-height:76px;
+        object-fit:contain;
+      }
+
+      .pet-performance-line{
+        margin:7px 0;
+        padding:9px 10px;
+        border-radius:14px;
+        background:rgba(255,255,255,.07);
+        border:2px solid rgba(255,255,255,.12);
+        font-size:13px;
+        line-height:1.45;
+        font-weight:900;
+      }
+
+      .pet-performance-line b{
+        color:#ffe66b;
+      }
+
+      .pet-mode-row{
+        margin-top:7px;
+        padding:8px;
+        border-radius:13px;
+        background:rgba(255,255,255,.06);
+        border:1px solid rgba(255,255,255,.12);
+      }
+
+      .pet-mode-row-title{
+        font-size:12px;
+        font-weight:1000;
+        margin-bottom:6px;
+      }
+
+      .pet-mode-actions{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:6px;
+      }
+
+      .pet-mode-upgrade-btn{
+        border:0;
+        border-radius:999px;
+        padding:8px 4px;
+        font-size:11px;
+        font-weight:1000;
+        color:#fff;
+        background:linear-gradient(#31405f,#172037);
+      }
+
+      .pet-mode-upgrade-btn:disabled{
+        opacity:.45;
+      }
+
+      @media (max-width:430px){
+        #petOwnedList{
+          grid-template-columns:repeat(4,minmax(0,1fr))!important;
+          gap:6px!important;
+        }
+
+        .pet-card{
+          padding:6px!important;
+        }
+
+        .pet-card-icon{
+          height:54px!important;
+        }
+
+        .pet-card-icon img{
+          max-width:50px!important;
+          max-height:50px!important;
+        }
+
+        .pet-card-name{
+          font-size:10px!important;
+        }
+
+        .pet-card-actions button,
+        .pet-card-btn,
+        .pet-upgrade-btn,
+        .pet-performance-btn,
+        .pet-lv10-btn{
+          font-size:9px!important;
+          min-height:29px!important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function ensurePerformanceModal(){
+    let modal = document.getElementById('petPerformanceModal');
+    if (modal) return modal;
+
+    modal = document.createElement('div');
+    modal.id = 'petPerformanceModal';
+    modal.innerHTML = `
+      <div class="pet-performance-panel">
+        <div class="pet-performance-head">
+          <div class="pet-performance-title" id="petPerformanceTitle">PET</div>
+          <button type="button" class="pet-performance-close" id="petPerformanceCloseBtn">閉じる</button>
+        </div>
+        <div id="petPerformanceBody"></div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.addEventListener('click', function(e){
+      if (e.target === modal) closePerformanceModal();
+    });
+
+    const closeBtn = document.getElementById('petPerformanceCloseBtn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closePerformanceModal);
+    }
+
+    return modal;
+  }
+
+  function closePerformanceModal(){
+    const modal = document.getElementById('petPerformanceModal');
+    if (modal) modal.classList.remove('show');
+  }
+
+  function openPerformanceModal(key){
+    const pet = getPet(key);
+    if (!pet) return;
+
+    const unlockOk = canUnlock(pet);
+    const owned = isOwned(key);
+    const equipped = isEquipped(key);
+    const lockedView = !unlockOk || !pet.implemented;
+    const plus = getPlus(key);
+    const level = getLevel(key);
+    const petState = loadState().pets[key] || defaultPetState();
+    const cap = levelCap(petState);
+    const mode = getPetMode(key);
+    const secondUnlocked = !!petState.secondSkillUnlocked;
+    const second = pet.secondSkill;
+
+    const modal = ensurePerformanceModal();
+    const title = document.getElementById('petPerformanceTitle');
+    const body = document.getElementById('petPerformanceBody');
+
+    if (title) {
+      title.textContent = lockedView ? '？？？' : pet.name;
+    }
+
+    if (!body) return;
+
+    const normalPower = Math.round(pet.normalAttackRate * normalLevelRate(level) * plusPowerRate(plus) * petModePowerRate(mode) * 100);
+    const skillCt = Math.round(skillCooldown(pet, level, plus) * 10) / 10;
+    const secondCt = second ? Math.round(secondSkillCooldown(second, level, plus) * 10) / 10 : 0;
+
+    body.innerHTML = `
+      <div class="pet-performance-main">
+        <div class="pet-performance-img">
+          ${petImageHtml(pet, 'front', lockedView)}
+        </div>
+        <div>
+          <div class="pet-performance-line"><b>${lockedView ? '未解放' : pet.role}</b> / ${pet.unlock || '初期解放'}</div>
+          <div class="pet-performance-line">
+            ${owned ? '所持中' : '未所持'} ${equipped ? '/ 装備中' : ''}<br>
+            Lv${level}/${cap}　+${plus}
+          </div>
+        </div>
+      </div>
+
+      <div class="pet-performance-line">
+        <b>通常攻撃</b><br>
+        攻撃倍率 ${normalPower}% / 連射 ${Math.round(pet.normalRateRate * petModeRapidRate(mode) * 100)}% / 通常ワイド+${normalWideBonus(level, pet, plus)}<br>
+        弾破壊 ${Number(pet.normalBreakPower || 0).toLocaleString()}
+      </div>
+
+      <div class="pet-performance-line">
+        <b>第一スキル</b><br>
+        ${pet.skillName} / CT${skillCt}秒 / スキルワイド+${skillWideBonus(level, pet)}<br>
+        攻撃 ${Math.round(pet.skillPowerRate * skillLevelRate(level) * petModeSkillRate(mode) * 100)}% /
+        障害物 ${Math.round((pet.skillObstacleRate || pet.skillPowerRate) * skillLevelRate(level) * petModeSkillRate(mode) * 100)}% /
+        ボス ${Math.round((pet.skillBossRate || pet.skillPowerRate) * skillLevelRate(level) * petModeSkillRate(mode) * 100)}%
+      </div>
+
+      <div class="pet-performance-line">
+        <b>第二スキル</b><br>
+        ${
+          second
+            ? `${secondUnlocked ? '解放済み' : '未解放'} / ${second.name} / CT${secondCt || second.ct}秒<br>${second.desc}<br>弾数 ${second.count} / タイプ ${second.pattern}`
+            : 'なし'
+        }
+      </div>
+
+      <div class="pet-performance-line">
+        <b>+強化効果</b><br>
+        +1毎パワー+0.1% / +5毎CT-0.1秒 / +10毎スキル強化 / +50通常ワイド+1
+      </div>
+
+      <div class="pet-performance-line">
+        <b>育成メモ</b><br>
+        ${pet.growthText || ''}
+      </div>
+
+      ${petModeHtml(pet, mode, owned, lockedView)}
+    `;
+
+    body.querySelectorAll('.pet-mode-upgrade-btn').forEach(btn => {
+      btn.addEventListener('click', function(){
+        upgradePetMode(
+          this.getAttribute('data-pet'),
+          this.getAttribute('data-field'),
+          this.getAttribute('data-pay')
+        );
+      });
+    });
+
+    modal.classList.add('show');
   }
 
   function petImageHtml(pet, mode, locked){
@@ -1874,7 +2328,7 @@
 
     return `
       <img
-        src="${src}?v=20260627_pet_second_skill_new7"
+        src="${src}?v=${PET_UI_VERSION}"
         alt="${isLocked ? 'LOCK' : pet.name}"
         style="${isLocked ? 'filter:brightness(0) opacity(.75);' : ''}"
         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
@@ -1939,15 +2393,15 @@
 
   function petModeHtml(pet, mode, owned, lockedView){
     if (lockedView) {
-      return `<div class="pet-card-spec">ペットモード強化: 解放後に表示</div>`;
+      return `<div class="pet-performance-line">ペットモード強化: 解放後に表示</div>`;
     }
 
     if (!owned) {
-      return `<div class="pet-card-spec">ペットモード強化: 購入後に強化可能</div>`;
+      return `<div class="pet-performance-line">ペットモード強化: 購入後に強化可能</div>`;
     }
 
     return `
-      <div class="pet-card-spec">
+      <div class="pet-performance-line">
         <b>ペットモード専用強化</b><br>
         合計Lv ${petModeTotalLevel(mode)} / ${PET_MODE_FIELDS.length * PET_MODE_MAX_LEVEL}
       </div>
@@ -1958,9 +2412,9 @@
         const coin = petModeCoinCost(lv, field.key);
 
         return `
-          <div class="pet-card-spec" style="margin-top:6px">
-            ${field.name} Lv${lv}/${PET_MODE_MAX_LEVEL}
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:4px">
+          <div class="pet-mode-row">
+            <div class="pet-mode-row-title">${field.name} Lv${lv}/${PET_MODE_MAX_LEVEL}</div>
+            <div class="pet-mode-actions">
               <button type="button" class="pet-mode-upgrade-btn" data-pet="${pet.key}" data-field="${field.key}" data-pay="ruby" ${lv >= PET_MODE_MAX_LEVEL ? 'disabled' : ''}>
                 ♦${lv >= PET_MODE_MAX_LEVEL ? 'MAX' : ruby}
               </button>
@@ -1971,39 +2425,6 @@
           </div>
         `;
       }).join('')}
-    `;
-  }
-
-  function secondSkillHtml(pet, owned, level, unlocked, lockedView){
-    if (lockedView) {
-      return `<div class="pet-card-spec">第二スキル: ？？？</div>`;
-    }
-
-    const second = pet.secondSkill;
-
-    if (!second) {
-      return `<div class="pet-card-spec">第二スキル: なし</div>`;
-    }
-
-    if (!owned) {
-      return `<div class="pet-card-spec">第二スキル: 購入後、Lv50で解放可能</div>`;
-    }
-
-    if (unlocked) {
-      return `
-        <div class="pet-card-spec" style="border-color:rgba(255,230,107,.55);background:rgba(255,230,107,.08)">
-          <b>第二スキル解放済み</b><br>
-          ${second.name} / CT${second.ct}秒 / ${second.desc}
-        </div>
-      `;
-    }
-
-    return `
-      <div class="pet-card-spec" style="border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.05)">
-        <b>第二スキル未解放</b><br>
-        ${second.name} / ${second.desc}<br>
-        条件: Lv50 + ${SECOND_SKILL_UNLOCK_COIN.toLocaleString()}COIN + ${SECOND_SKILL_UNLOCK_DIAMOND}ダイヤ
-      </div>
     `;
   }
 
@@ -2023,8 +2444,9 @@
       const secondUnlocked = !!petState.secondSkillUnlocked;
       const cap = levelCap(petState);
       const level = getLevel(pet.key);
-      const mode = getPetMode(pet.key);
       const nextCost = level >= cap ? 0 : upgradeCost(level);
+      const lv10Target = Math.min(cap, level + 10);
+      const lv10Cost = level >= cap ? 0 : upgradeCostToLevel(level, lv10Target);
       const plusCost = plus >= MAX_PLUS ? 0 : petPlusCost(plus);
       const lockedView = !unlockOk || !pet.implemented;
       const canSecondUnlock = owned && !secondUnlocked && level >= BASE_MAX_LEVEL && pet.secondSkill;
@@ -2061,34 +2483,12 @@
         <div class="pet-card-body">
           <div class="pet-card-name">
             ${displayName}
-            <span>${lockedView ? '' : `Lv${level}/${cap} +${plus}`}</span>
+            <span>${lockedView ? displayUnlock : `Lv${level}/${cap} +${plus}`}</span>
           </div>
 
           <div class="pet-card-desc">${displayRole} / ${displayUnlock}</div>
-
-          <div class="pet-card-price">
-            ${lockedView ? `条件: ${displayUnlock}` : `購入 ${Number(pet.price || 0).toLocaleString()} COIN / COIN ${getCoin().toLocaleString()} / ダイヤ ${getDiamond().toLocaleString()} / ルビー ♦${getRuby().toLocaleString()}`}
-          </div>
-
-          <div class="pet-card-spec">
-            ${lockedView ? 'LOCK' : `${owned ? '所持中' : '未所持'} ${equipped ? '/ 装備中' : ''}`}
-          </div>
-
-          <div class="pet-card-spec">
-            ${lockedView ? '？？？' : `通常 ${Math.round(pet.normalAttackRate * normalLevelRate(level) * plusPowerRate(plus) * 100)}% / 連射 ${Math.round(pet.normalRateRate * 100)}% / 通常ワイド+${normalWideBonus(level, pet, plus)}`}
-          </div>
-
-          <div class="pet-card-spec">
-            ${lockedView ? '？？？' : `第一スキル: ${pet.skillName} / CT${Math.round(skillCooldown(pet, level, plus) * 10) / 10}秒 / スキルワイド+${skillWideBonus(level, pet)} / +強化Tier${plusSkillTier(plus)}`}
-          </div>
-
-          ${secondSkillHtml(pet, owned, level, secondUnlocked, lockedView)}
-
-          <div class="pet-card-spec">
-            ${lockedView ? '解放後に性能表示' : `+効果: +1毎パワー+0.1% / +5毎CT-0.1秒 / +10毎スキル強化 / +50通常ワイド+1`}
-          </div>
-
-          ${petModeHtml(pet, mode, owned, lockedView)}
+          <div class="pet-card-price">${lockedView ? `条件: ${displayUnlock}` : `購入 ${Number(pet.price || 0).toLocaleString()} COIN`}</div>
+          <div class="pet-card-spec">${lockedView ? 'LOCK' : `${owned ? '所持中' : '未所持'} ${equipped ? '/ 装備中' : ''}`}</div>
         </div>
 
         <div class="pet-card-actions">
@@ -2096,12 +2496,20 @@
             ${mainButtonText}
           </button>
 
+          <button type="button" class="pet-performance-btn" ${(!pet.implemented || !unlockOk) ? 'disabled' : ''}>
+            性能を見る
+          </button>
+
           <button type="button" class="pet-upgrade-btn" ${(!owned || level >= cap || !pet.implemented || !unlockOk) ? 'disabled' : ''}>
-            Lv強化<br>${level >= cap ? 'MAX' : nextCost.toLocaleString()}
+            Lv+1<br>${level >= cap ? 'MAX' : nextCost.toLocaleString()}
+          </button>
+
+          <button type="button" class="pet-lv10-btn" ${(!owned || level >= cap || !pet.implemented || !unlockOk) ? 'disabled' : ''}>
+            Lv+10<br>${level >= cap ? 'MAX' : lv10Cost.toLocaleString()}
           </button>
 
           <button type="button" class="pet-upgrade-btn pet-second-btn" ${(!canSecondUnlock || !pet.implemented || !unlockOk) ? 'disabled' : ''}>
-            第二解放<br>${secondUnlocked ? '解放済' : '100000C+50D'}
+            第二<br>${secondUnlocked ? '解放済' : '解放'}
           </button>
 
           <button type="button" class="pet-upgrade-btn pet-plus-btn" ${(!owned || plus >= MAX_PLUS || !pet.implemented || !unlockOk) ? 'disabled' : ''}>
@@ -2111,7 +2519,9 @@
       `;
 
       const mainBtn = card.querySelector('.pet-card-btn');
+      const performanceBtn = card.querySelector('.pet-performance-btn');
       const upgradeBtn = card.querySelector('.pet-upgrade-btn:not(.pet-plus-btn):not(.pet-second-btn)');
+      const lv10Btn = card.querySelector('.pet-lv10-btn');
       const secondBtn = card.querySelector('.pet-second-btn');
       const plusBtn = card.querySelector('.pet-plus-btn');
 
@@ -2122,9 +2532,21 @@
         });
       }
 
+      if (performanceBtn && pet.implemented && unlockOk) {
+        performanceBtn.addEventListener('click', function(){
+          openPerformanceModal(pet.key);
+        });
+      }
+
       if (upgradeBtn && owned && level < cap && pet.implemented && unlockOk) {
         upgradeBtn.addEventListener('click', function(){
           upgradePet(pet.key);
+        });
+      }
+
+      if (lv10Btn && owned && level < cap && pet.implemented && unlockOk) {
+        lv10Btn.addEventListener('click', function(){
+          upgradePet10(pet.key);
         });
       }
 
@@ -2139,16 +2561,6 @@
           upgradePetPlus(pet.key);
         });
       }
-
-      card.querySelectorAll('.pet-mode-upgrade-btn').forEach(btn => {
-        btn.addEventListener('click', function(){
-          upgradePetMode(
-            this.getAttribute('data-pet'),
-            this.getAttribute('data-field'),
-            this.getAttribute('data-pay')
-          );
-        });
-      });
 
       list.appendChild(card);
     });
@@ -2212,12 +2624,16 @@
   }
 
   function renderAll(){
+    ensurePetStyles();
+    ensurePerformanceModal();
     renderSlots();
     renderFloatPets();
     renderOwnedList();
   }
 
   function init(){
+    ensurePetStyles();
+    ensurePerformanceModal();
     bindButtons();
     renderAll();
   }
@@ -2260,8 +2676,8 @@
           maxPlus:MAX_PLUS,
           maxLevel:levelCap(petState),
           levelCap:levelCap(petState),
-          normalLevelRate:normalLevelRate(level) * plusPowerRate(plus),
-          skillLevelRate:skillLevelRate(level) * (1 + plusSkillTier(plus) * 0.015),
+          normalLevelRate:normalLevelRate(level) * plusPowerRate(plus) * petModePowerRate(mode),
+          skillLevelRate:skillLevelRate(level) * (1 + plusSkillTier(plus) * 0.015) * petModeSkillRate(mode),
           currentSkillCt:skillCooldown(pet, level, plus),
           currentSecondSkillCt:secondSkill ? secondSkill.currentCt : 0,
           normalWideBonus:normalWideBonus(level, pet, plus),
@@ -2287,10 +2703,13 @@
     renderAll,
     openModal,
     closeModal,
+    openPerformanceModal,
+    closePerformanceModal,
 
     buyPet,
     equipPet,
     upgradePet,
+    upgradePet10,
     unlockSecondSkill,
     upgradePetPlus,
     upgradePetMode,
@@ -2328,10 +2747,13 @@
     levelCapBySecondSkill,
 
     upgradeCost,
+    upgradeCostToLevel,
     normalLevelRate,
     skillLevelRate,
     skillCooldown,
     secondSkillCooldown,
+    normalWideBonus,
+    skillWideBonus,
     canUnlock,
     isOwned,
     isEquipped,
