@@ -3,6 +3,7 @@
 (function(){
   const GACHA_SAVE_KEY = 'mobshot_gacha_state_v1';
   const COLLECTION_SAVE_KEY = 'mobshot_collection_display_v1';
+  const SOUL_CT_LIMIT_SEC = 8;
 
   const RARITY = {
     R:   { max:99, image:'mt/R.png' },
@@ -13,9 +14,9 @@
 
   const SOUL_CT = {
     R:   { base:0.01, step:0.001 },
-    SR:  { base:0.03, step:0.002 },
-    SSR: { base:0.05, step:0.005 },
-    UR:  { base:0.08, step:0.008 }
+    SR:  { base:0.04, step:0.003 },
+    SSR: { base:0.08, step:0.006 },
+    UR:  { base:0.15, step:0.012 }
   };
 
   const CATEGORY_LIST = [
@@ -272,6 +273,18 @@
     return bonus;
   }
 
+  function soulLimit(){
+    if (window.MobShotGacha && Number(window.MobShotGacha.SOUL_CT_LIMIT_SEC || 0) > 0) {
+      return Number(window.MobShotGacha.SOUL_CT_LIMIT_SEC);
+    }
+
+    if (window.MobShotSoul && Number(window.MobShotSoul.SOUL_CT_LIMIT_SEC || 0) > 0) {
+      return Number(window.MobShotSoul.SOUL_CT_LIMIT_SEC);
+    }
+
+    return SOUL_CT_LIMIT_SEC;
+  }
+
   function calcSoulCooldownBonus(){
     if (window.MobShotGacha && window.MobShotGacha.calcSoulCooldownReduction) {
       return window.MobShotGacha.calcSoulCooldownReduction();
@@ -289,12 +302,12 @@
       if (!data || !data.owned) return;
 
       const plus = Number(data.plus || 0);
-      const row = SOUL_CT[soul.rarity] || SOUL_CT.R;
+      const row = SOUL_CT[soul.rarity] || SOUL_CT.SR;
 
       total += row.base + plus * row.step;
     });
 
-    return Math.min(3, Math.floor(total * 1000) / 1000);
+    return Math.min(soulLimit(), Math.floor(total * 1000) / 1000);
   }
 
   function displayKey(mode){
@@ -403,7 +416,7 @@
 
   function itemEffectText(item){
     if (currentMode === 'soul') {
-      const row = SOUL_CT[item.rarity] || SOUL_CT.R;
+      const row = SOUL_CT[item.rarity] || SOUL_CT.SR;
       return `スキルCT -${row.base.toFixed(3)}秒 / +1ごとに -${row.step.toFixed(3)}秒`;
     }
 
@@ -669,7 +682,7 @@
     if (currentMode === 'soul') {
       summary.innerHTML =
         `所持 ${ownedCount('soul')} / ${allSouls().length}　合計+${totalPlus('soul').toLocaleString()}<br>` +
-        `効果: スキルCT短縮 -${secondsText(calcSoulCooldownBonus())} / 上限 -3.000秒` +
+        `効果: スキルCT短縮 -${secondsText(calcSoulCooldownBonus())} / 上限 -${secondsText(soulLimit())}` +
         `<div class="collection-rarity-row">
           ${['R','SR','SSR','UR'].map(rarity => `
             <div class="collection-rarity-pill">
@@ -1023,6 +1036,8 @@
     rarityClass,
     rarityMax,
 
-    COLLECTION_SAVE_KEY
+    COLLECTION_SAVE_KEY,
+    SOUL_CT,
+    SOUL_CT_LIMIT_SEC
   };
 })();
