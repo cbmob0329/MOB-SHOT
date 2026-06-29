@@ -10,11 +10,19 @@
     UR:  { max:10, coin:10000, rate:1,  image:'mt/UR.png' }
   };
 
+  const SOUL_RARITY_RATE = {
+    SR: 70,
+    SSR: 25,
+    UR: 5
+  };
+
+  const SOUL_CT_LIMIT_SEC = 8;
+
   const SOUL_CT = {
     R:   { base:0.01, step:0.001 },
-    SR:  { base:0.03, step:0.002 },
-    SSR: { base:0.05, step:0.005 },
-    UR:  { base:0.08, step:0.008 }
+    SR:  { base:0.04, step:0.003 },
+    SSR: { base:0.08, step:0.006 },
+    UR:  { base:0.15, step:0.012 }
   };
 
   const GACHA_IMAGES = {
@@ -143,41 +151,67 @@
     { no:107, name:'あのヒーロー カラー', image:'co/co107.png', rarity:'UR', category:'MOB EVENT', gacha:false }
   ];
 
-  const SOUL_NAMES = [
-    'スラソウル','ロックソウル','盗賊ソウル','ドワーフソウル','バードソウル',
-    'ファルソウル','ナーガソウル','グリズリーソウル','マグトカゲソウル','マグプテラソウル',
-    'ダークゴブソウル','アサシンソウル','テツソウル','マルソウル','サラソウル',
-    'シノソウル','ウミシソウル','バブソウル','ネオスラソウル','ネオレムソウル',
-    'デビブルーソウル','デビピンクソウル','デビパープルソウル','デビイエローソウル','デーモンレッドソウル',
-    'デーモンパープルソウル','プテラソウル','デュアルソウル','ピーソウル','ギドラソウル',
-    'マグモブレムソウル','グラディソウル','ニコソウル','ラスソウル','ガトリソウル',
-    'サメソウル','シャチソウル','コードソウル','ケーブルソウル','マグシャーソウル',
-    'ガラドソウル','メルトソウル','ホークソウル','ミラソウル','ガーディアンソウル',
-    'ネオンソウル','ドラゴンソウル','リリスソウル','魔王ソウル','メイルソウル',
-    'スミスソウル','ネプソウル','ブルネオソウル','パルネオソウル','閻魔ソウル',
-    'ウルリリスソウル','エースソウル','ヒーローソウル','モブRPGソウル','勇者ソウル',
-    'ガチャリリソウル','モフサメソウル','チルベンチソウル','ネコクーソウル','ミラカラーソウル',
-    'ドラゴンカラーソウル','エースカラーソウル','ネプカラーソウル','魔王カラーソウル','ネオンカラーソウル',
-    'リリスカラーソウル','ウルリリスカラーソウル','ウルフソウル','ミニミラソウル','ミニネオンソウル',
-    'ミニヒーローソウル','リリス四姉妹ソウル','アカノメラソウル','ムラノクラソウル','モブグリムソウル'
+  const SOUL_MASTER = [
+    { no:1,  name:'スラモブソウル', image:'soul/so1.png', rarity:'SR', category:'MOB SOUL' },
+    { no:2,  name:'モブロックソウル', image:'soul/so2.png', rarity:'SR', category:'MOB SOUL' },
+    { no:3,  name:'モブバードソウル', image:'soul/so3.png', rarity:'SR', category:'MOB SOUL' },
+    { no:4,  name:'モブマグトカゲソウル', image:'soul/so4.png', rarity:'SR', category:'MOB SOUL' },
+    { no:5,  name:'モブマグプテラソウル', image:'soul/so5.png', rarity:'SR', category:'MOB SOUL' },
+    { no:6,  name:'モブマグゴーレム', image:'soul/so6.png', rarity:'SR', category:'MOB SOUL' },
+    { no:7,  name:'モブグリズリーソウル', image:'soul/so7.png', rarity:'SR', category:'MOB SOUL' },
+    { no:8,  name:'モブマグシャーソウル', image:'soul/so8.png', rarity:'SR', category:'MOB SOUL' },
+    { no:9,  name:'バブモブソウル', image:'soul/so9.png', rarity:'SR', category:'MOB SOUL' },
+    { no:10, name:'モブプテラソウル', image:'soul/so10.png', rarity:'SR', category:'MOB SOUL' },
+    { no:11, name:'モブピーソウル', image:'soul/so11.png', rarity:'SR', category:'MOB SOUL' },
+    { no:12, name:'グラディモブソウル', image:'soul/so12.png', rarity:'SR', category:'MOB SOUL' },
+    { no:13, name:'モブギドラソウル', image:'soul/so13.png', rarity:'SR', category:'MOB SOUL' },
+    { no:14, name:'モブメルルソウル', image:'soul/so14.png', rarity:'SR', category:'MOB SOUL' },
+
+    { no:15, name:'モブドラゴンソウル', image:'soul/so15.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:16, name:'モブデンデンソウル', image:'soul/so16.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:17, name:'モブイルカエルソウル', image:'soul/so17.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:18, name:'モブウルフソウル', image:'soul/so18.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:19, name:'ミニミラモブソウル', image:'soul/so19.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:20, name:'ネオンキッドモブソウル', image:'soul/so20.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:21, name:'モブスラっちソウル', image:'soul/so21.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:22, name:'モブチビホークソウル', image:'soul/so22.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:23, name:'ぷにモブピンクソウル', image:'soul/so23.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:24, name:'ミニモブテツソウル', image:'soul/so24.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:25, name:'モブマニーソウル', image:'soul/so25.png', rarity:'SSR', category:'MOB SOUL' },
+
+    { no:26, name:'リルモブリリス', image:'soul/so26.png', rarity:'UR', category:'MOB SOUL' },
+    { no:27, name:'モブネロ', image:'soul/so27.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:28, name:'モブトン', image:'soul/so28.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:29, name:'ちびウルモブ', image:'soul/so29.png', rarity:'UR', category:'MOB SOUL' },
+    { no:30, name:'ミニあのヒーロー', image:'soul/so30.png', rarity:'UR', category:'MOB SOUL' },
+    { no:31, name:'モブフレア', image:'soul/so31.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:32, name:'読みかけの本', image:'soul/so32.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:33, name:'ホークモブ', image:'soul/so33.png', rarity:'SR', category:'MOB SOUL' },
+    { no:34, name:'ホークモブⅡ', image:'soul/so34.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:35, name:'モブガーディアン', image:'soul/so35.png', rarity:'SR', category:'MOB SOUL' },
+    { no:36, name:'モブガーディアンⅡ', image:'soul/so36.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:37, name:'ネオンモブⅡ', image:'soul/so37.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:38, name:'ドラゴンモブⅡ', image:'soul/so38.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:39, name:'ミラモブ', image:'soul/so39.png', rarity:'SR', category:'MOB SOUL' },
+    { no:40, name:'ミラモブⅡ', image:'soul/so40.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:41, name:'モブリリス', image:'soul/so41.png', rarity:'UR', category:'MOB SOUL' },
+    { no:42, name:'モブ魔王', image:'soul/so42.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:43, name:'モブスミス', image:'soul/so43.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:44, name:'モブネプ', image:'soul/so44.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:45, name:'閻魔モブ', image:'soul/so45.png', rarity:'UR', category:'MOB SOUL' },
+    { no:46, name:'ウルモブリリス', image:'soul/so46.png', rarity:'UR', category:'MOB SOUL' },
+    { no:47, name:'モブエース', image:'soul/so47.png', rarity:'UR', category:'MOB SOUL' },
+    { no:48, name:'モブラス', image:'soul/so48.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:49, name:'モブニコ', image:'soul/so49.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:50, name:'マルモブ', image:'soul/so50.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:51, name:'モブテツ', image:'soul/so51.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:52, name:'モブメイル', image:'soul/so52.png', rarity:'UR', category:'MOB SOUL' },
+    { no:53, name:'モブネコクー', image:'soul/so53.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:54, name:'モブシャーロック', image:'soul/so54.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:55, name:'モブマジック', image:'soul/so55.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:56, name:'モブ勇者', image:'soul/so56.png', rarity:'SSR', category:'MOB SOUL' },
+    { no:57, name:'デザートモブ', image:'soul/so57.png', rarity:'UR', category:'MOB SOUL' }
   ];
-
-  const SOUL_MASTER = SOUL_NAMES.map((name, index) => {
-    const no = index + 1;
-    let rarity = 'R';
-
-    if (no >= 55 && no <= 72) rarity = 'SR';
-    if (no >= 73 && no <= 78) rarity = 'SSR';
-    if (no >= 79) rarity = 'UR';
-
-    return {
-      no,
-      name,
-      image:`soul/${no}.png`,
-      rarity,
-      category:'MOB SOUL'
-    };
-  });
 
   let isAnimating = false;
   let lastType = 'stone';
@@ -212,11 +246,7 @@
   }
 
   function defaultState(){
-    return {
-      stones:{},
-      skills:{},
-      souls:{}
-    };
+    return { stones:{}, skills:{}, souls:{} };
   }
 
   function loadState(){
@@ -278,7 +308,7 @@
   }
 
   function soulEffectLabel(soul){
-    const row = SOUL_CT[soul.rarity] || SOUL_CT.R;
+    const row = SOUL_CT[soul.rarity] || SOUL_CT.SR;
     return `スキルCT -${row.base.toFixed(3)}秒 / +1ごとに -${row.step.toFixed(3)}秒`;
   }
 
@@ -324,6 +354,21 @@
     return 'R';
   }
 
+  function rollSoulRarity(){
+    const total = Object.keys(SOUL_RARITY_RATE).reduce((sum, key) => {
+      return sum + Number(SOUL_RARITY_RATE[key] || 0);
+    }, 0);
+
+    let roll = Math.random() * total;
+
+    for (const key of ['SR','SSR','UR']) {
+      roll -= Number(SOUL_RARITY_RATE[key] || 0);
+      if (roll <= 0) return key;
+    }
+
+    return 'SR';
+  }
+
   function rollStone(){
     const rarity = rollRarity();
     let pool = gachaStonePool().filter(stone => stone.rarity === rarity);
@@ -336,7 +381,7 @@
   }
 
   function rollSoul(){
-    const rarity = rollRarity();
+    const rarity = rollSoulRarity();
     let pool = gachaSoulPool().filter(soul => soul.rarity === rarity);
 
     if (!pool.length) pool = gachaSoulPool();
@@ -577,12 +622,12 @@
       if (!data || !data.owned) return;
 
       const plus = Number(data.plus || 0);
-      const row = SOUL_CT[soul.rarity] || SOUL_CT.R;
+      const row = SOUL_CT[soul.rarity] || SOUL_CT.SR;
 
       total += row.base + plus * row.step;
     });
 
-    return Math.min(3, Math.floor(total * 1000) / 1000);
+    return Math.min(SOUL_CT_LIMIT_SEC, Math.floor(total * 1000) / 1000);
   }
 
   function injectStyle(){
@@ -643,7 +688,6 @@
       .gacha-skill-tag,.gacha-soul-tag{display:inline-block;margin-bottom:5px;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:1000}
       .gacha-skill-tag{background:linear-gradient(#9deeff,#4bb8ff);color:#00172a}
       .gacha-soul-tag{background:linear-gradient(#ff9df0,#9b5cff);color:#1b001f}
-      .gacha-new-tag{display:inline-block;margin-top:3px;padding:3px 8px;border-radius:999px;background:linear-gradient(#fffa9b,#ffbc2e);color:#2a1700;font-size:10px;font-weight:1000}
       .gacha-cost-diamond{display:inline-flex;align-items:center;justify-content:center;gap:5px}
       .gacha-cost-diamond:before{content:'◆';color:#7be7ff;text-shadow:0 0 8px #7be7ff}
       @media (max-width:430px){
@@ -710,7 +754,6 @@
 
   function close(){
     if (isAnimating) return;
-
     const modal = $('gachaModal');
     if (modal) modal.classList.add('hidden');
   }
@@ -748,7 +791,7 @@
   function gachaCosts(type){
     if (type === 'stone') return { one:1, ten:10, fifty:50 };
     if (type === 'skill') return { one:5, ten:50, fifty:250 };
-    if (type === 'soul') return { one:5, ten:50, fifty:250 };
+    if (type === 'soul') return { one:10, ten:100, fifty:500 };
     return { one:1, ten:10, fifty:50 };
   }
 
@@ -876,12 +919,8 @@
   }
 
   function resultNote(r){
-    if (r.converted) {
-      return `MAX変換 +${Number(r.convertCoin || 0).toLocaleString()} COIN`;
-    }
-
+    if (r.converted) return `MAX変換 +${Number(r.convertCoin || 0).toLocaleString()} COIN`;
     if (r.isNew) return 'NEW!! アンロック';
-
     return `+${r.plusAfter}/${rarityMax(r.rarity)}`;
   }
 
@@ -988,6 +1027,8 @@
     STONE_MASTER,
     SOUL_MASTER,
     SOUL_CT,
+    SOUL_CT_LIMIT_SEC,
+    SOUL_RARITY_RATE,
     GACHA_SAVE_KEY
   };
 
@@ -1000,6 +1041,7 @@
     rarityClass,
     rarityMax,
     SOUL_MASTER,
-    SOUL_CT
+    SOUL_CT,
+    SOUL_CT_LIMIT_SEC
   };
 })();
