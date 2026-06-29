@@ -230,7 +230,7 @@
       price: 30000,
       rank: 20,
       ownedDefault: false,
-      menuImage: 'play/magic.png',
+      menuImage: 'play/magic1.png',
       backImage: 'play/magic2.png',
       desc: 'RANK20で解放 / 能力変化なし'
     },
