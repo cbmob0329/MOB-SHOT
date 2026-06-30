@@ -14,7 +14,7 @@
   const SECOND_SKILL_UNLOCK_COIN = 100000;
   const SECOND_SKILL_UNLOCK_DIAMOND = 50;
 
-  const PET_UI_VERSION = '20260629_pet_ui_full_v1';
+  const PET_UI_VERSION = '20260630_pet_ui_no_dialog_unlock_fix_v1';
 
   const PET_MODE_FIELDS = [
     { key:'hp', name:'HP', rubyBase:2, coinBase:3000 },
@@ -1178,13 +1178,7 @@
   });
 
   function defaultPetMode(){
-    return {
-      hp:0,
-      power:0,
-      rapid:0,
-      skill:0,
-      dodge:0
-    };
+    return { hp:0, power:0, rapid:0, skill:0, dodge:0 };
   }
 
   function defaultPetState(){
@@ -1202,10 +1196,26 @@
     PET_MASTER.forEach(pet => {
       pets[pet.key] = defaultPetState();
     });
-    return {
-      equipped:[],
-      pets
-    };
+    return { equipped:[], pets };
+  }
+
+  function showPetToast(message, type){
+    ensurePetStyles();
+
+    let toast = document.getElementById('mobshotPetToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'mobshotPetToast';
+      document.body.appendChild(toast);
+    }
+
+    toast.className = 'show ' + (type || 'info');
+    toast.textContent = String(message || '');
+
+    clearTimeout(showPetToast._timer);
+    showPetToast._timer = setTimeout(function(){
+      toast.classList.remove('show');
+    }, 1300);
   }
 
   function normalizePetMode(raw){
@@ -1213,10 +1223,7 @@
     raw = raw || {};
 
     PET_MODE_FIELDS.forEach(field => {
-      base[field.key] = Math.max(
-        0,
-        Math.min(PET_MODE_MAX_LEVEL, Number(raw[field.key] || 0))
-      );
+      base[field.key] = Math.max(0, Math.min(PET_MODE_MAX_LEVEL, Number(raw[field.key] || 0)));
     });
 
     return base;
@@ -1407,9 +1414,7 @@
     const haveCoin = Number(save.coin || 0);
     const haveDiamond = Number(save.diamond || 0);
 
-    if (haveCoin < coinCost || haveDiamond < diamondCost) {
-      return false;
-    }
+    if (haveCoin < coinCost || haveDiamond < diamondCost) return false;
 
     save.coin = haveCoin - coinCost;
     save.diamond = haveDiamond - diamondCost;
@@ -1547,13 +1552,16 @@
 
     if (pet.unlockType === 'initial') return true;
     if (pet.unlockType === 'rank') return rank >= Number(pet.rank || 1);
+
     if (pet.unlockType === 'grassClear') return hasClearedStageId(save, '1-3');
-    if (pet.unlockType === 'desertClear') return hasClearedStageId(save, '2-3');
-    if (pet.unlockType === 'townClear') return hasClearedStageId(save, '3-3');
+    if (pet.unlockType === 'desertClear') return hasClearedStageId(save, '1-6');
+    if (pet.unlockType === 'townClear') return hasClearedStageId(save, '1-9');
+
     if (pet.unlockType === 'hardClear') return hasClearedStageId(save, '4-9');
     if (pet.unlockType === 'veryHardClear') return hasClearedStageId(save, '6-9');
     if (pet.unlockType === 'infernoClear') return hasClearedStageId(save, '8-9');
-    if (pet.unlockType === 'seaClear') return hasClearedStageId(save, '10-9');
+
+    if (pet.unlockType === 'seaClear') return hasClearedStageId(save, '11-9');
     if (pet.unlockType === 'legendClear') return hasClearedStageId(save, '14-9');
 
     return rank >= Number(pet.rank || 1);
@@ -1651,26 +1659,27 @@
     if (!pet || !pet.implemented) return;
 
     if (!canUnlock(pet)) {
-      alert(`${pet.unlock}で解放されます。`);
+      showPetToast(`${pet.unlock}で解放されます`, 'warn');
       return;
     }
 
     const state = loadState();
 
     if (state.pets[key]?.owned) {
-      alert('すでに所持しています。');
+      showPetToast('すでに所持しています', 'info');
       return;
     }
 
     const save = getSave();
     const coin = Number(save.coin || 0);
+    const price = Number(pet.price || 0);
 
-    if (coin < Number(pet.price || 0)) {
-      alert(`COINが足りません。\n必要COIN: ${Number(pet.price || 0).toLocaleString()}`);
+    if (coin < price) {
+      showPetToast(`COIN不足：必要 ${price.toLocaleString()}`, 'warn');
       return;
     }
 
-    save.coin = coin - Number(pet.price || 0);
+    save.coin = coin - price;
     saveMainData(save);
 
     state.pets[key] = {
@@ -1684,6 +1693,7 @@
     saveState(state);
     refreshMainHud();
     renderAll();
+    showPetToast(`${pet.name}を購入しました`, 'ok');
   }
 
   function equipPet(key){
@@ -1701,17 +1711,19 @@
       state.equipped = state.equipped.filter(v => v !== key);
       saveState(state);
       renderAll();
+      showPetToast(`${pet.name}を外しました`, 'info');
       return;
     }
 
     if (state.equipped.length >= MAX_EQUIPPED_PETS) {
-      alert(`装備できるペットは最大${MAX_EQUIPPED_PETS}体です。先に外してください。`);
+      showPetToast(`装備は最大${MAX_EQUIPPED_PETS}体です`, 'warn');
       return;
     }
 
     state.equipped.push(key);
     saveState(state);
     renderAll();
+    showPetToast(`${pet.name}を装備しました`, 'ok');
   }
 
   function upgradePet(key){
@@ -1721,7 +1733,7 @@
     const state = loadState();
 
     if (!state.pets[key]?.owned) {
-      alert('先に購入してください。');
+      showPetToast('先に購入してください', 'warn');
       return;
     }
 
@@ -1731,9 +1743,9 @@
 
     if (currentLevel >= cap) {
       if (!petState.secondSkillUnlocked) {
-        alert(`現在の最大Lvです。\nLv99まで育成するには、第二スキル解放が必要です。\n必要: ${SECOND_SKILL_UNLOCK_COIN.toLocaleString()}COIN + ${SECOND_SKILL_UNLOCK_DIAMOND}ダイヤ`);
+        showPetToast('Lv99には第二スキル解放が必要です', 'warn');
       } else {
-        alert('最大Lvです。');
+        showPetToast('最大Lvです', 'info');
       }
       return;
     }
@@ -1741,7 +1753,7 @@
     const cost = upgradeCost(currentLevel);
 
     if (!spendCoin(cost)) {
-      alert(`COINが足りません。\n必要COIN: ${cost.toLocaleString()}`);
+      showPetToast(`COIN不足：必要 ${cost.toLocaleString()}`, 'warn');
       return;
     }
 
@@ -1750,6 +1762,7 @@
     saveState(state);
     refreshMainHud();
     renderAll();
+    showPetToast(`${pet.name} Lv${currentLevel} → Lv${currentLevel + 1}`, 'ok');
   }
 
   function upgradePet10(key){
@@ -1759,7 +1772,7 @@
     const state = loadState();
 
     if (!state.pets[key]?.owned) {
-      alert('先に購入してください。');
+      showPetToast('先に購入してください', 'warn');
       return;
     }
 
@@ -1768,7 +1781,7 @@
     const currentLevel = getLevel(key);
 
     if (currentLevel >= cap) {
-      alert('最大Lvです。');
+      showPetToast('最大Lvです', 'info');
       return;
     }
 
@@ -1776,11 +1789,7 @@
     const cost = upgradeCostToLevel(currentLevel, targetLevel);
 
     if (!spendCoin(cost)) {
-      alert(
-        `COINが足りません。\n` +
-        `Lv${currentLevel}→${targetLevel}\n` +
-        `必要COIN: ${cost.toLocaleString()}`
-      );
+      showPetToast(`COIN不足：必要 ${cost.toLocaleString()}`, 'warn');
       return;
     }
 
@@ -1790,7 +1799,7 @@
     refreshMainHud();
     renderAll();
 
-    alert(`${pet.name}\nLv${currentLevel} → Lv${targetLevel}\n消費COIN: ${cost.toLocaleString()}`);
+    showPetToast(`${pet.name} Lv${currentLevel} → Lv${targetLevel}`, 'ok');
   }
 
   function unlockSecondSkill(key){
@@ -1801,17 +1810,17 @@
     const petState = state.pets[key];
 
     if (!petState || !petState.owned) {
-      alert('先に購入してください。');
+      showPetToast('先に購入してください', 'warn');
       return;
     }
 
     if (petState.secondSkillUnlocked) {
-      alert('すでに第二スキル解放済みです。');
+      showPetToast('第二スキル解放済みです', 'info');
       return;
     }
 
     if (Number(petState.level || 1) < BASE_MAX_LEVEL) {
-      alert(`第二スキル解放にはLv${BASE_MAX_LEVEL}が必要です。`);
+      showPetToast(`第二解放にはLv${BASE_MAX_LEVEL}が必要です`, 'warn');
       return;
     }
 
@@ -1819,16 +1828,12 @@
     const diamond = getDiamond();
 
     if (coin < SECOND_SKILL_UNLOCK_COIN || diamond < SECOND_SKILL_UNLOCK_DIAMOND) {
-      alert(
-        `素材が足りません。\n` +
-        `必要: ${SECOND_SKILL_UNLOCK_COIN.toLocaleString()}COIN + ${SECOND_SKILL_UNLOCK_DIAMOND}ダイヤ\n` +
-        `所持: ${coin.toLocaleString()}COIN + ${diamond}ダイヤ`
-      );
+      showPetToast(`素材不足：${SECOND_SKILL_UNLOCK_COIN.toLocaleString()}C + 💎${SECOND_SKILL_UNLOCK_DIAMOND}`, 'warn');
       return;
     }
 
     if (!spendCoinAndDiamond(SECOND_SKILL_UNLOCK_COIN, SECOND_SKILL_UNLOCK_DIAMOND)) {
-      alert('素材が足りません。');
+      showPetToast('素材が足りません', 'warn');
       return;
     }
 
@@ -1839,7 +1844,7 @@
     refreshMainHud();
     renderAll();
 
-    alert(`${pet.name}\n第二スキル「${pet.secondSkillName}」解放！\nLv99まで強化可能になりました！`);
+    showPetToast(`${pet.secondSkillName} 解放！`, 'ok');
   }
 
   function upgradePetPlus(key){
@@ -1849,28 +1854,31 @@
     const state = loadState();
 
     if (!state.pets[key]?.owned) {
-      alert('先に購入してください。');
+      showPetToast('先に購入してください', 'warn');
       return;
     }
 
     const plus = Math.max(0, Math.min(MAX_PLUS, Number(state.pets[key].plus || 0)));
 
     if (plus >= MAX_PLUS) {
-      alert('+値は最大です。');
+      showPetToast('+値は最大です', 'info');
       return;
     }
 
     const cost = petPlusCost(plus);
 
     if (!spendRuby(cost)) {
-      alert(`ペットルビーが足りません。\n必要ルビー: ${cost}\n所持ルビー: ${getRuby()}`);
+      showPetToast(`ルビー不足：必要 ♦${cost}`, 'warn');
       return;
     }
 
     state.pets[key].plus = plus + 1;
+
     saveState(state);
     refreshMainHud();
     renderAll();
+
+    showPetToast(`${pet.name} +${plus} → +${plus + 1}`, 'ok');
   }
 
   function upgradePetMode(key, fieldKey, payType){
@@ -1880,7 +1888,7 @@
     const state = loadState();
 
     if (!state.pets[key]?.owned) {
-      alert('先に購入してください。');
+      showPetToast('先に購入してください', 'warn');
       return;
     }
 
@@ -1891,7 +1899,7 @@
     const current = Number(mode[fieldKey] || 0);
 
     if (current >= PET_MODE_MAX_LEVEL) {
-      alert(`${field.name}は最大Lvです。`);
+      showPetToast(`${field.name}は最大Lvです`, 'info');
       return;
     }
 
@@ -1901,12 +1909,12 @@
 
     if (payType === 'coin') {
       if (!spendCoin(cost)) {
-        alert(`COINが足りません。\n必要COIN: ${cost.toLocaleString()}`);
+        showPetToast(`COIN不足：必要 ${cost.toLocaleString()}`, 'warn');
         return;
       }
     } else {
       if (!spendRuby(cost)) {
-        alert(`ペットルビーが足りません。\n必要ルビー: ${cost}\n所持ルビー: ${getRuby()}`);
+        showPetToast(`ルビー不足：必要 ♦${cost}`, 'warn');
         return;
       }
     }
@@ -1917,7 +1925,13 @@
     saveState(state);
     refreshMainHud();
     renderAll();
-    openPerformanceModal(key);
+
+    const modal = document.getElementById('petPerformanceModal');
+    if (modal && modal.classList.contains('show')) {
+      openPerformanceModal(key);
+    }
+
+    showPetToast(`${field.name} Lv${current} → Lv${current + 1}`, 'ok');
   }
 
   function ensurePetStyles(){
@@ -2154,6 +2168,48 @@
         opacity:.45;
       }
 
+      #mobshotPetToast{
+        position:fixed;
+        left:50%;
+        bottom:calc(18px + env(safe-area-inset-bottom));
+        transform:translateX(-50%) translateY(18px);
+        z-index:999999;
+        max-width:min(90vw,420px);
+        padding:11px 16px;
+        border-radius:999px;
+        background:rgba(12,18,31,.94);
+        color:#fff;
+        font-size:13px;
+        line-height:1.25;
+        font-weight:1000;
+        text-align:center;
+        opacity:0;
+        pointer-events:none;
+        border:2px solid rgba(255,255,255,.25);
+        box-shadow:0 10px 30px rgba(0,0,0,.45);
+        transition:opacity .16s ease, transform .16s ease;
+      }
+
+      #mobshotPetToast.show{
+        opacity:1;
+        transform:translateX(-50%) translateY(0);
+      }
+
+      #mobshotPetToast.ok{
+        border-color:rgba(157,255,115,.9);
+        color:#9dff73;
+      }
+
+      #mobshotPetToast.warn{
+        border-color:rgba(255,230,107,.9);
+        color:#ffe66b;
+      }
+
+      #mobshotPetToast.info{
+        border-color:rgba(100,221,255,.9);
+        color:#64ddff;
+      }
+
       @media (max-width:430px){
         #petOwnedList{
           grid-template-columns:repeat(4,minmax(0,1fr))!important;
@@ -2213,9 +2269,7 @@
     });
 
     const closeBtn = document.getElementById('petPerformanceCloseBtn');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', closePerformanceModal);
-    }
+    if (closeBtn) closeBtn.addEventListener('click', closePerformanceModal);
 
     return modal;
   }
@@ -2245,10 +2299,7 @@
     const title = document.getElementById('petPerformanceTitle');
     const body = document.getElementById('petPerformanceBody');
 
-    if (title) {
-      title.textContent = lockedView ? '？？？' : pet.name;
-    }
-
+    if (title) title.textContent = lockedView ? '？？？' : pet.name;
     if (!body) return;
 
     const normalPower = Math.round(pet.normalAttackRate * normalLevelRate(level) * plusPowerRate(plus) * petModePowerRate(mode) * 100);
@@ -2322,9 +2373,7 @@
     const isLocked = !!locked || !pet.implemented;
     const src = mode === 'back' ? pet.backImage : pet.frontImage;
 
-    if (!src) {
-      return `<span class="pet-img-fallback">?</span>`;
-    }
+    if (!src) return `<span class="pet-img-fallback">?</span>`;
 
     return `
       <img
@@ -2392,13 +2441,8 @@
   }
 
   function petModeHtml(pet, mode, owned, lockedView){
-    if (lockedView) {
-      return `<div class="pet-performance-line">ペットモード強化: 解放後に表示</div>`;
-    }
-
-    if (!owned) {
-      return `<div class="pet-performance-line">ペットモード強化: 購入後に強化可能</div>`;
-    }
+    if (lockedView) return `<div class="pet-performance-line">ペットモード強化: 解放後に表示</div>`;
+    if (!owned) return `<div class="pet-performance-line">ペットモード強化: 購入後に強化可能</div>`;
 
     return `
       <div class="pet-performance-line">
