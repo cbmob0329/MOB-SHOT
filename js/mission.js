@@ -61,6 +61,19 @@
     1000,1500,2000,3000,4000,5000
   ];
 
+  const SOUL_KIND_TARGETS = [
+    1,3,5,10,15,20,25,30,35,40,45,50,55,57
+  ];
+
+  const SOUL_TOTAL_COUNT_TARGETS = [
+    1,3,5,10,15,20,25,30,40,50,75,
+    100,125,150,175,200,225,250,275,300
+  ];
+
+  const SOUL_PLUS_TARGETS = [
+    1,3,5,10,20,30,50,75,100,150,200,250,300
+  ];
+
   const SKILL_COUNT_TARGETS = [
     1,2,3,4,5,6,7,8,9,10,11,12,13,14
   ];
@@ -405,15 +418,32 @@
     }
 
     try {
-      return JSON.parse(localStorage.getItem('mobshot_gacha_state_v1')) || { stones:{}, skills:{} };
+      const parsed = JSON.parse(localStorage.getItem('mobshot_gacha_state_v1')) || {};
+      return Object.assign({ stones:{}, skills:{}, souls:{} }, parsed, {
+        stones:Object.assign({}, parsed.stones || {}),
+        skills:Object.assign({}, parsed.skills || {}),
+        souls:Object.assign({}, parsed.souls || {})
+      });
     } catch(e) {
-      return { stones:{}, skills:{} };
+      return { stones:{}, skills:{}, souls:{} };
     }
   }
 
   function allStones(){
     if (window.MobShotGacha && window.MobShotGacha.allStones) {
       return window.MobShotGacha.allStones();
+    }
+
+    return [];
+  }
+
+  function allSouls(){
+    if (window.MobShotGacha && window.MobShotGacha.allSouls) {
+      return window.MobShotGacha.allSouls();
+    }
+
+    if (window.MobShotSoul && window.MobShotSoul.allSouls) {
+      return window.MobShotSoul.allSouls();
     }
 
     return [];
@@ -697,7 +727,7 @@
         tab:'collection',
         icon:'石',
         title:`石板${target}枚所持`,
-        desc:'石板コレクションの所持枚数',
+        desc:'石板コレクションの所持種類数',
         currentType:'collectionOwned',
         target,
         reward:{ coin:target * 3000, diamond:0 }
@@ -717,7 +747,7 @@
           tab:'collection',
           icon:rarity,
           title:`${rarity}石板${target}枚所持`,
-          desc:`${rarity}石板の所持枚数`,
+          desc:`${rarity}石板の所持種類数`,
           currentType:'collectionRarityOwned',
           rarity,
           target,
@@ -751,6 +781,81 @@
       currentType:'collectionOwned',
       target:85,
       reward:{ coin:500000, diamond:200 }
+    });
+
+    SOUL_KIND_TARGETS.forEach(target => {
+      missions.push({
+        id:`soul_kind_${target}`,
+        tab:'collection',
+        icon:'魂',
+        title:`モブソウル${target}種所持`,
+        desc:'被りを除いたモブソウルの所持種類数',
+        currentType:'soulOwnedKind',
+        target,
+        reward:{ coin:target * 5000, diamond:0 }
+      });
+    });
+
+    SOUL_TOTAL_COUNT_TARGETS.forEach(target => {
+      missions.push({
+        id:`soul_total_${target}`,
+        tab:'collection',
+        icon:'数',
+        title:`モブソウル累計${target}個所持`,
+        desc:'初回入手＋被りを含めたモブソウル総所持数',
+        currentType:'soulTotalCount',
+        target,
+        reward:{ coin:scaleCoin(target, 1300), diamond:0 }
+      });
+    });
+
+    RARITIES.forEach(rarity => {
+      const targets =
+        rarity === 'R' ? [1,3,5,10,15,20,25,30] :
+        rarity === 'SR' ? [1,3,5,10,15,20,25] :
+        rarity === 'SSR' ? [1,3,5,10,15,20,25] :
+        [1,2,3,5,7,10];
+
+      targets.forEach(target => {
+        missions.push({
+          id:`soul_${rarity}_${target}`,
+          tab:'collection',
+          icon:rarity,
+          title:`${rarity}ソウル${target}種所持`,
+          desc:`${rarity}モブソウルの所持種類数`,
+          currentType:'soulRarityOwned',
+          rarity,
+          target,
+          reward:{
+            coin:target * (rarity === 'UR' ? 35000 : rarity === 'SSR' ? 18000 : rarity === 'SR' ? 9000 : 4000),
+            diamond:0
+          }
+        });
+      });
+    });
+
+    SOUL_PLUS_TARGETS.forEach(target => {
+      missions.push({
+        id:`soul_plus_${target}`,
+        tab:'collection',
+        icon:'魂+',
+        title:`モブソウル合計+${target}`,
+        desc:'所持モブソウルの強化値合計',
+        currentType:'soulTotalPlus',
+        target,
+        reward:{ coin:scaleCoin(target, 1500), diamond:0 }
+      });
+    });
+
+    missions.push({
+      id:'soul_complete_57',
+      tab:'collection',
+      icon:'魂完',
+      title:'モブソウルコンプリート',
+      desc:'モブソウル57種をすべて所持',
+      currentType:'soulOwnedKind',
+      target:57,
+      reward:{ coin:600000, diamond:0 }
     });
 
     return missions;
@@ -985,6 +1090,46 @@
     return total;
   }
 
+  function soulOwnedKindCount(){
+    const gacha = getGachaState();
+    let count = 0;
+
+    allSouls().forEach(soul => {
+      const data = gacha.souls && gacha.souls[String(soul.no)];
+      if (data && data.owned) count++;
+    });
+
+    return count;
+  }
+
+  function soulRarityOwnedCount(rarity){
+    const gacha = getGachaState();
+    let count = 0;
+
+    allSouls().forEach(soul => {
+      if (soul.rarity !== rarity) return;
+      const data = gacha.souls && gacha.souls[String(soul.no)];
+      if (data && data.owned) count++;
+    });
+
+    return count;
+  }
+
+  function soulTotalPlus(){
+    const gacha = getGachaState();
+    let total = 0;
+
+    Object.keys(gacha.souls || {}).forEach(key => {
+      total += Number(gacha.souls[key].plus || 0);
+    });
+
+    return total;
+  }
+
+  function soulTotalCount(){
+    return soulOwnedKindCount() + soulTotalPlus();
+  }
+
   function skillOwnedCount(){
     const gacha = getGachaState();
     const set = new Set();
@@ -1028,6 +1173,11 @@
     if (mission.currentType === 'collectionRarityOwned') return collectionRarityOwnedCount(mission.rarity);
     if (mission.currentType === 'collectionTotalPlus') return collectionTotalPlus();
 
+    if (mission.currentType === 'soulOwnedKind') return soulOwnedKindCount();
+    if (mission.currentType === 'soulRarityOwned') return soulRarityOwnedCount(mission.rarity);
+    if (mission.currentType === 'soulTotalPlus') return soulTotalPlus();
+    if (mission.currentType === 'soulTotalCount') return soulTotalCount();
+
     if (mission.currentType === 'skillOwned') return skillOwnedCount();
     if (mission.currentType === 'skillTotalPlus') return skillTotalPlus();
     if (mission.currentType === 'skillUseCount') return Number(s.skillUseCount || 0);
@@ -1065,7 +1215,7 @@
     if (!tabs) return;
 
     [
-      { id:'missionTabCollection', text:'石板', tab:'collection' },
+      { id:'missionTabCollection', text:'コレクション', tab:'collection' },
       { id:'missionTabSkill', text:'スキル', tab:'skill' },
       { id:'missionTabEventGold', text:'GOLD', tab:'eventGold' },
       { id:'missionTabEventQuest', text:'クエスト', tab:'eventQuest' },
@@ -1397,6 +1547,7 @@
   window.addEventListener('mobshot:saveUpdated', render);
   window.addEventListener('mobshot:eventStatsUpdated', render);
   window.addEventListener('mobshot:gachaUpdated', render);
+  window.addEventListener('mobshot:soulUpdated', render);
 
   window.MobShotMission = {
     init,
