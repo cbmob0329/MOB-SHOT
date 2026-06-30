@@ -5,7 +5,6 @@
 
   const ADMIN_SAVE_KEY = 'mobshot_admin_mode_v1';
   const ADMIN_PASSWORD = 'Cb110329';
-
   const BATTLE_MODE_ICON = 'mt/petbattle.png';
 
   const mainScreen =
@@ -93,7 +92,6 @@
     });
 
     document.body.classList.toggle('mob-admin-mode', active);
-    setBattleModeIcon();
   }
 
   function setupAdminObserver(){
@@ -102,7 +100,6 @@
 
     const observer = new MutationObserver(function(){
       applyAdminModeVisuals();
-      setBattleModeIcon();
     });
 
     observer.observe(document.body, {
@@ -205,29 +202,6 @@
       @keyframes mobSoulImageCounter{
         0%{transform:rotate(var(--soul-counter-start, 0deg))}
         100%{transform:rotate(var(--soul-counter-end, -360deg))}
-      }
-
-      .mob-battle-mode-image-btn{
-        display:flex!important;
-        align-items:center!important;
-        justify-content:center!important;
-        padding:0!important;
-        overflow:hidden!important;
-        color:transparent!important;
-        font-size:0!important;
-        line-height:0!important;
-        text-indent:0!important;
-        white-space:normal!important;
-      }
-
-      .mob-battle-mode-image-btn .mob-battle-mode-icon{
-        display:block!important;
-        width:100%!important;
-        height:100%!important;
-        max-width:100%!important;
-        max-height:100%!important;
-        object-fit:contain!important;
-        pointer-events:none!important;
       }
 
       .main-rank-next-badge{
@@ -737,96 +711,6 @@
     };
   }
 
-  function shouldUseAsBattleButton(btn){
-    if (!btn) return false;
-
-    const id = String(btn.id || '');
-    const className = String(btn.className || '');
-    const label = String(btn.textContent || '').trim();
-
-    if ([
-      'battleBtn',
-      'openBattleBtn',
-      'pvpBtn',
-      'versusBtn'
-    ].includes(id)) return true;
-
-    if (id.toLowerCase().indexOf('battle') >= 0) return true;
-    if (id.toLowerCase().indexOf('pvp') >= 0) return true;
-    if (id.toLowerCase().indexOf('versus') >= 0) return true;
-
-    if (className.toLowerCase().indexOf('battle') >= 0) return true;
-    if (className.toLowerCase().indexOf('pvp') >= 0) return true;
-    if (className.toLowerCase().indexOf('versus') >= 0) return true;
-
-    if (label === '対戦') return true;
-    if (label === 'BATTLE') return true;
-    if (label === 'BATTLE MODE') return true;
-    if (label === 'バトル') return true;
-
-    return false;
-  }
-
-  function convertButtonToBattleIcon(btn){
-    if (!btn) return;
-
-    btn.setAttribute('aria-label', 'BATTLE MODE');
-    btn.setAttribute('title', 'BATTLE MODE');
-    btn.classList.add('mob-battle-mode-image-btn');
-
-    let img = btn.querySelector('img.mob-battle-mode-icon');
-
-    if (!img) {
-      while (btn.firstChild) {
-        btn.removeChild(btn.firstChild);
-      }
-
-      img = document.createElement('img');
-      img.className = 'mob-battle-mode-icon';
-      img.alt = 'BATTLE MODE';
-      img.src = BATTLE_MODE_ICON;
-
-      img.onerror = function(){
-        img.style.display = 'none';
-        btn.classList.remove('mob-battle-mode-image-btn');
-        btn.textContent = 'BATTLE MODE';
-      };
-
-      btn.appendChild(img);
-    } else {
-      img.src = BATTLE_MODE_ICON;
-      img.alt = 'BATTLE MODE';
-      img.style.display = '';
-    }
-  }
-
-  function setBattleModeIcon(){
-    [
-      'battleImg',
-      'battleModeImg',
-      'battleIcon',
-      'battleModeIcon'
-    ].forEach(id => {
-      setImage(id, BATTLE_MODE_ICON);
-    });
-
-    [
-      'battleBtn',
-      'openBattleBtn',
-      'pvpBtn',
-      'versusBtn'
-    ].forEach(id => {
-      const btn = $(id);
-      if (btn) convertButtonToBattleIcon(btn);
-    });
-
-    document.querySelectorAll('button').forEach(btn => {
-      if (shouldUseAsBattleButton(btn)) {
-        convertButtonToBattleIcon(btn);
-      }
-    });
-  }
-
   function readSave(){
     if (window.MobShotStorage && window.MobShotStorage.load) {
       return window.MobShotStorage.load();
@@ -1038,7 +922,6 @@
   function refreshMainVisuals(){
     refreshMainStoneDisplay();
     refreshMainSoulDisplay();
-    setBattleModeIcon();
 
     if (window.MobShotEquip && window.MobShotEquip.updateMainPlayerImage) window.MobShotEquip.updateMainPlayerImage();
     if (window.MobShotPets && window.MobShotPets.renderAll) window.MobShotPets.renderAll();
@@ -1046,7 +929,6 @@
     if (window.MobShotEquip && window.MobShotEquip.render) window.MobShotEquip.render();
     if (window.MobShotMission && window.MobShotMission.render) window.MobShotMission.render();
 
-    setBattleModeIcon();
     applyAdminModeVisuals();
   }
 
@@ -1073,10 +955,7 @@
   }
 
   function initImages(){
-    if (!D) {
-      setBattleModeIcon();
-      return;
-    }
+    if (!D) return;
 
     if (D.menu) {
       setImage('titleImg', D.menu.title);
@@ -1087,9 +966,9 @@
       setImage('gachaImg', D.menu.gacha);
       setImage('missionImg', D.menu.mission);
       setImage('collectionImg', D.menu.collection);
-    }
 
-    setBattleModeIcon();
+      setImage('battleImg', BATTLE_MODE_ICON);
+    }
 
     if (D.player) {
       setImage('mainPlayer', D.player.menuImage || D.player.image);
@@ -1101,8 +980,6 @@
       setImage('hudCoinImg', D.hud.coin);
       setImage('hudLifeImg', D.hud.life);
     }
-
-    setBattleModeIcon();
   }
 
   function goMain(){
@@ -1327,49 +1204,37 @@
     bindDeleteSave();
 
     refreshMainVisuals();
-    setBattleModeIcon();
     applyAdminModeVisuals();
-
-    setTimeout(setBattleModeIcon, 50);
-    setTimeout(setBattleModeIcon, 250);
-    setTimeout(setBattleModeIcon, 800);
 
     window.addEventListener('mobshot:saveUpdated', function(){
       refreshMainHud();
       refreshMainVisuals();
-      setBattleModeIcon();
     });
 
     window.addEventListener('mobshot:rankUp', function(e){
       refreshMainHud();
       showRankUp(e.detail || {});
-      setBattleModeIcon();
     });
 
     window.addEventListener('mobshot:gachaUpdated', function(){
       refreshMainVisuals();
-      setBattleModeIcon();
     });
 
     window.addEventListener('mobshot:collectionDisplayUpdated', function(){
       refreshMainStoneDisplay();
       refreshMainSoulDisplay();
-      setBattleModeIcon();
     });
 
     window.addEventListener('mobshot:soulDisplayUpdated', function(){
       refreshMainSoulDisplay();
-      setBattleModeIcon();
     });
 
     window.addEventListener('mobshot:soulUpdated', function(){
       refreshMainSoulDisplay();
-      setBattleModeIcon();
     });
 
     window.addEventListener('mobshot:adminModeChanged', function(){
       applyAdminModeVisuals();
-      setBattleModeIcon();
     });
   }
 
