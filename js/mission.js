@@ -246,6 +246,39 @@
         padding:8px 3px !important;
         white-space:nowrap;
       }
+
+      .mission-bulk-wrap{
+        margin:0 0 10px;
+        display:grid;
+        grid-template-columns:1fr;
+        gap:7px;
+      }
+
+      .mission-claim-all-btn{
+        width:100%;
+        border:0;
+        border-radius:18px;
+        padding:12px 14px;
+        font-size:15px;
+        font-weight:1000;
+        color:#181000;
+        background:linear-gradient(#ffe66b,#ffb423);
+        box-shadow:0 5px 0 rgba(0,0,0,.35);
+      }
+
+      .mission-claim-all-btn:disabled{
+        opacity:.48;
+        filter:grayscale(1);
+      }
+
+      .mission-claim-all-help{
+        color:#dfe8ff;
+        font-size:11px;
+        font-weight:900;
+        text-align:center;
+        line-height:1.35;
+        opacity:.9;
+      }
     `;
 
     document.head.appendChild(style);
@@ -315,6 +348,13 @@
     }
 
     pop.classList.remove('hidden');
+  }
+
+  function showBulkRewardPop(count, reward){
+    showRewardPop(
+      { title:`${count.toLocaleString()}個のミッションを受け取りました` },
+      reward
+    );
   }
 
   function closeRewardPop(){
@@ -1234,6 +1274,108 @@
     });
   }
 
+  function ensureBulkClaimButton(){
+    injectMissionRewardStyle();
+
+    if ($('missionBulkWrap')) return $('missionBulkWrap');
+
+    const list = $('missionList');
+    if (!list || !list.parentNode) return null;
+
+    const wrap = document.createElement('div');
+    wrap.id = 'missionBulkWrap';
+    wrap.className = 'mission-bulk-wrap';
+    wrap.innerHTML = `
+      <button id="missionClaimAllBtn" class="mission-claim-all-btn" type="button">このタブの達成済みをすべて受け取る</button>
+      <div id="missionClaimAllHelp" class="mission-claim-all-help">達成済み・未受取のミッションだけまとめて受け取ります。</div>
+    `;
+
+    list.parentNode.insertBefore(wrap, list);
+
+    const btn = $('missionClaimAllBtn');
+
+    if (btn && !btn.__mobMissionClaimAllBound) {
+      btn.__mobMissionClaimAllBound = true;
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        claimAllCurrentTab();
+      }, { passive:false });
+    }
+
+    return wrap;
+  }
+
+  function getReadyMissionsForTab(tab, missionState, save){
+    return allMissions().filter(mission => {
+      if (mission.tab !== tab) return false;
+      if (missionState.claimed[mission.id]) return false;
+      return currentValue(mission, save) >= mission.target;
+    });
+  }
+
+  function updateBulkClaimButton(){
+    ensureBulkClaimButton();
+
+    const btn = $('missionClaimAllBtn');
+    const help = $('missionClaimAllHelp');
+
+    if (!btn) return;
+
+    const missionState = loadState();
+    const save = getSave();
+    const ready = getReadyMissionsForTab(currentTab, missionState, save);
+    const coin = ready.reduce((sum, mission) => sum + Number(mission.reward && mission.reward.coin || 0), 0);
+    const diamond = ready.reduce((sum, mission) => sum + Number(mission.reward && mission.reward.diamond || 0), 0);
+
+    btn.disabled = ready.length <= 0;
+    btn.textContent = ready.length > 0
+      ? `達成済み${ready.length.toLocaleString()}個をすべて受け取る`
+      : '受け取れるミッションはありません';
+
+    if (help) {
+      help.textContent = ready.length > 0
+        ? `合計報酬: ${rewardText({ coin, diamond })}`
+        : '達成済み・未受取のミッションだけまとめて受け取ります。';
+    }
+  }
+
+  function claimAllCurrentTab(){
+    const missionState = loadState();
+    const save = getSave();
+    const ready = getReadyMissionsForTab(currentTab, missionState, save);
+
+    if (!ready.length) {
+      showMissionToast('受け取れるミッションがありません');
+      updateBulkClaimButton();
+      return;
+    }
+
+    let totalCoin = 0;
+    let totalDiamond = 0;
+
+    ready.forEach(mission => {
+      const reward = mission.reward || {};
+
+      totalCoin += Number(reward.coin || 0);
+      totalDiamond += Number(reward.diamond || 0);
+      missionState.claimed[mission.id] = true;
+    });
+
+    save.coin = Number(save.coin || 0) + totalCoin;
+    save.diamond = Number(save.diamond || 0) + totalDiamond;
+
+    saveMainData(save);
+    saveState(missionState);
+
+    showBulkRewardPop(ready.length, {
+      coin:totalCoin,
+      diamond:totalDiamond
+    });
+
+    refreshAll();
+  }
+
   function claimMission(id){
     const missionState = loadState();
     const save = getSave();
@@ -1322,6 +1464,7 @@
 
   function render(){
     ensureExtraTabs();
+    ensureBulkClaimButton();
 
     const list = $('missionList');
     if (!list) return;
@@ -1344,18 +1487,22 @@
         </div>
       `;
       list.appendChild(empty);
+      updateBulkClaimButton();
       return;
     }
 
     missions.forEach(mission => {
       renderMissionCard(mission, missionState, save);
     });
+
+    updateBulkClaimButton();
   }
 
   function setTab(tab){
     currentTab = tab;
 
     ensureExtraTabs();
+    ensureBulkClaimButton();
 
     const tabs = {
       stage:$('missionTabStage'),
@@ -1393,6 +1540,7 @@
 
     ensureRewardPop();
     ensureExtraTabs();
+    ensureBulkClaimButton();
     setTab(currentTab || 'stage');
     modal.classList.remove('hidden');
   }
@@ -1406,6 +1554,7 @@
   function bind(){
     ensureRewardPop();
     ensureExtraTabs();
+    ensureBulkClaimButton();
 
     const openBtn = $('openMissionBtn');
 
@@ -1573,6 +1722,7 @@
     onSkillUsed,
     onStageClear,
 
+    claimAllCurrentTab,
     allMissions
   };
 })();
