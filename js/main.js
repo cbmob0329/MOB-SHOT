@@ -154,16 +154,11 @@
         margin-left:-89px;
         margin-top:-89px;
         border-radius:50%;
-        animation:mobSoulOrbitSpin 8s linear infinite;
         transform-origin:center center;
+        animation:mobSoulOrbitSpin var(--soul-duration, 8s) linear infinite;
+        animation-delay:var(--soul-delay, 0s);
       }
-      .main-soul-orbit.reverse{
-        animation-direction:reverse;
-        animation-duration:10s;
-      }
-      .main-soul-orbit.slow{
-        animation-duration:12s;
-      }
+
       .main-soul-orbit-item{
         position:absolute;
         left:50%;
@@ -179,40 +174,33 @@
         filter:drop-shadow(0 7px 0 rgba(0,0,0,.25)) drop-shadow(0 0 10px rgba(255,157,240,.38));
         animation:mobSoulItemFloat 2.2s ease-in-out infinite;
       }
+
       .main-soul-orbit-item img{
         width:46px;
         height:46px;
         object-fit:contain;
-        animation:mobSoulImageCounter 8s linear infinite reverse;
+        transform-origin:center center;
+        animation:mobSoulImageCounter var(--soul-duration, 8s) linear infinite;
+        animation-delay:var(--soul-delay, 0s);
       }
-      .main-soul-orbit.reverse .main-soul-orbit-item img{
-        animation-name:mobSoulImageCounterReverse;
-        animation-duration:10s;
-      }
-      .main-soul-orbit.slow .main-soul-orbit-item img{
-        animation-duration:12s;
-      }
-      .main-soul-orbit:nth-child(2){transform:rotate(120deg)}
-      .main-soul-orbit:nth-child(3){transform:rotate(240deg)}
+
       .main-soul-orbit:nth-child(2) .main-soul-orbit-item{animation-delay:-.7s}
       .main-soul-orbit:nth-child(3) .main-soul-orbit-item{animation-delay:-1.4s}
 
       @keyframes mobSoulOrbitSpin{
-        0%{transform:rotate(0deg)}
-        100%{transform:rotate(360deg)}
+        0%{transform:rotate(var(--soul-orbit-start, 0deg))}
+        100%{transform:rotate(var(--soul-orbit-end, 360deg))}
       }
+
       @keyframes mobSoulItemFloat{
         0%{margin-top:0;transform:scale(1)}
         50%{margin-top:-8px;transform:scale(1.08)}
         100%{margin-top:0;transform:scale(1)}
       }
+
       @keyframes mobSoulImageCounter{
-        0%{transform:rotate(0deg)}
-        100%{transform:rotate(-360deg)}
-      }
-      @keyframes mobSoulImageCounterReverse{
-        0%{transform:rotate(0deg)}
-        100%{transform:rotate(360deg)}
+        0%{transform:rotate(var(--soul-counter-start, 0deg))}
+        100%{transform:rotate(var(--soul-counter-end, -360deg))}
       }
 
       .main-rank-next-badge{
@@ -877,15 +865,57 @@
 
     layer.style.display = 'block';
 
-    const classes = ['', 'reverse', 'slow'];
+    const orbitSettings = [
+      {
+        className:'',
+        duration:'8s',
+        delay:'0s',
+        orbitStart:'0deg',
+        orbitEnd:'360deg',
+        counterStart:'0deg',
+        counterEnd:'-360deg'
+      },
+      {
+        className:'reverse',
+        duration:'10s',
+        delay:'-2.2s',
+        orbitStart:'120deg',
+        orbitEnd:'-240deg',
+        counterStart:'-120deg',
+        counterEnd:'240deg'
+      },
+      {
+        className:'slow',
+        duration:'12s',
+        delay:'-4.4s',
+        orbitStart:'240deg',
+        orbitEnd:'600deg',
+        counterStart:'-240deg',
+        counterEnd:'-600deg'
+      }
+    ];
 
-    layer.innerHTML = souls.slice(0, 3).map((soul, index) => `
-      <div class="main-soul-orbit ${classes[index] || ''}" style="animation-delay:${index * -2.2}s">
-        <div class="main-soul-orbit-item">
-          <img src="${soul.image}" alt="SOUL" onerror="this.style.display='none'">
+    layer.innerHTML = souls.slice(0, 3).map((soul, index) => {
+      const set = orbitSettings[index] || orbitSettings[0];
+
+      return `
+        <div
+          class="main-soul-orbit ${set.className}"
+          style="
+            --soul-duration:${set.duration};
+            --soul-delay:${set.delay};
+            --soul-orbit-start:${set.orbitStart};
+            --soul-orbit-end:${set.orbitEnd};
+            --soul-counter-start:${set.counterStart};
+            --soul-counter-end:${set.counterEnd};
+          "
+        >
+          <div class="main-soul-orbit-item">
+            <img src="${soul.image}" alt="SOUL" onerror="this.style.display='none'">
+          </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   function refreshMainVisuals(){
