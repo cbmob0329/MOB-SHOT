@@ -6,6 +6,8 @@
   const ADMIN_SAVE_KEY = 'mobshot_admin_mode_v1';
   const ADMIN_PASSWORD = 'Cb110329';
 
+  const BATTLE_MODE_ICON = 'mt/petbattle.png';
+
   const mainScreen =
     document.getElementById('mainScreen') ||
     document.getElementById('mainView') ||
@@ -710,6 +712,17 @@
     };
   }
 
+  function setBattleModeIcon(){
+    [
+      'battleImg',
+      'battleModeImg',
+      'battleIcon',
+      'battleModeIcon'
+    ].forEach(id => {
+      setImage(id, BATTLE_MODE_ICON);
+    });
+  }
+
   function readSave(){
     if (window.MobShotStorage && window.MobShotStorage.load) {
       return window.MobShotStorage.load();
@@ -921,6 +934,7 @@
   function refreshMainVisuals(){
     refreshMainStoneDisplay();
     refreshMainSoulDisplay();
+    setBattleModeIcon();
 
     if (window.MobShotEquip && window.MobShotEquip.updateMainPlayerImage) window.MobShotEquip.updateMainPlayerImage();
     if (window.MobShotPets && window.MobShotPets.renderAll) window.MobShotPets.renderAll();
@@ -928,6 +942,7 @@
     if (window.MobShotEquip && window.MobShotEquip.render) window.MobShotEquip.render();
     if (window.MobShotMission && window.MobShotMission.render) window.MobShotMission.render();
 
+    setBattleModeIcon();
     applyAdminModeVisuals();
   }
 
@@ -954,7 +969,10 @@
   }
 
   function initImages(){
-    if (!D) return;
+    if (!D) {
+      setBattleModeIcon();
+      return;
+    }
 
     if (D.menu) {
       setImage('titleImg', D.menu.title);
@@ -966,8 +984,7 @@
       setImage('missionImg', D.menu.mission);
       setImage('collectionImg', D.menu.collection);
 
-      if (D.menu.battle) setImage('battleImg', D.menu.battle);
-      if (D.menu.pvp) setImage('battleImg', D.menu.pvp);
+      setBattleModeIcon();
     }
 
     if (D.player) {
@@ -980,6 +997,8 @@
       setImage('hudCoinImg', D.hud.coin);
       setImage('hudLifeImg', D.hud.life);
     }
+
+    setBattleModeIcon();
   }
 
   function goMain(){
@@ -1204,6 +1223,7 @@
     bindDeleteSave();
 
     refreshMainVisuals();
+    setBattleModeIcon();
     applyAdminModeVisuals();
 
     window.addEventListener('mobshot:saveUpdated', function(){
