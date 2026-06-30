@@ -4,6 +4,7 @@
   const S = window.MobShotGameSkillsShared = window.MobShotGameSkillsShared || {};
 
   const images = new Map();
+  const MIN_SKILL_COOLDOWN_SEC = 3;
 
   S.gameState = null;
   S.slots = [];
@@ -57,7 +58,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=skill_balance_20260626';
+      image.src = src + '?v=skill_soul_ct_20260630';
       images.set(src, image);
     }
 
@@ -79,6 +80,72 @@
     }
   }
 
+  function getSoulCooldownReductionSec(){
+    if (
+      window.MobShotSoul &&
+      typeof window.MobShotSoul.getCooldownReduction === 'function'
+    ) {
+      return Math.max(0, Number(window.MobShotSoul.getCooldownReduction() || 0));
+    }
+
+    if (
+      window.MobShotSoul &&
+      typeof window.MobShotSoul.calcCooldownReduction === 'function'
+    ) {
+      return Math.max(0, Number(window.MobShotSoul.calcCooldownReduction() || 0));
+    }
+
+    if (
+      window.MobShotGacha &&
+      typeof window.MobShotGacha.calcSoulCooldownReduction === 'function'
+    ) {
+      return Math.max(0, Number(window.MobShotGacha.calcSoulCooldownReduction() || 0));
+    }
+
+    if (
+      window.MobShotCollection &&
+      typeof window.MobShotCollection.calcSoulCooldownBonus === 'function'
+    ) {
+      return Math.max(0, Number(window.MobShotCollection.calcSoulCooldownBonus() || 0));
+    }
+
+    return 0;
+  }
+
+  function calcSkillCooldownSec(skill){
+    const base = Math.max(0, Number(skill && skill.cooldown || 10));
+    const reduce = getSoulCooldownReductionSec();
+
+    return Math.max(MIN_SKILL_COOLDOWN_SEC, base - reduce);
+  }
+
+  function calcSkillCooldownFrames(skill){
+    return Math.max(
+      Math.floor(MIN_SKILL_COOLDOWN_SEC * 60),
+      Math.floor(calcSkillCooldownSec(skill) * 60)
+    );
+  }
+
+  function refreshSlotMaxCooldowns(){
+    S.slots.forEach(slot => {
+      if (!slot || !slot.skill) return;
+
+      const oldMax = Math.max(1, Number(slot.maxCd || 1));
+      const oldCd = Math.max(0, Number(slot.cd || 0));
+      const oldRate = oldCd > 0 ? oldCd / oldMax : 0;
+
+      slot.maxCd = calcSkillCooldownFrames(slot.skill);
+
+      if (oldCd > 0) {
+        slot.cd = Math.max(1, Math.ceil(slot.maxCd * oldRate));
+      } else {
+        slot.cd = 0;
+      }
+
+      slot.ready = slot.cd <= 0;
+    });
+  }
+
   function init(state){
     S.gameState = state;
     S.skillBullets = [];
@@ -98,7 +165,7 @@
         skill,
         slotIndex: index,
         cd: 0,
-        maxCd: Math.floor(Number(skill.cooldown || 10) * 60),
+        maxCd: calcSkillCooldownFrames(skill),
         ready: true
       });
     });
@@ -148,6 +215,8 @@
 
     if (!slot || !slot.skill) return;
     if (slot.cd > 0) return;
+
+    slot.maxCd = calcSkillCooldownFrames(slot.skill);
 
     activate(slot);
 
@@ -213,6 +282,8 @@
 
   function updateCooldowns(){
     S.slots.forEach(slot => {
+      if (!slot) return;
+
       if (slot.cd > 0) {
         slot.cd--;
       }
@@ -307,7 +378,10 @@
     const frames = Math.floor(Number(sec || 1) * 60);
 
     S.slots.forEach(slot => {
-      slot.cd = Math.max(0, slot.cd - frames);
+      if (!slot) return;
+
+      slot.cd = Math.max(0, Number(slot.cd || 0) - frames);
+      slot.ready = slot.cd <= 0;
     });
 
     updateHud();
@@ -315,6 +389,8 @@
 
   function fillAll(){
     S.slots.forEach(slot => {
+      if (!slot) return;
+
       slot.cd = 0;
       slot.ready = true;
     });
@@ -372,6 +448,21 @@
     }
   }
 
+  window.addEventListener('mobshot:soulUpdated', function(){
+    refreshSlotMaxCooldowns();
+    updateHud();
+  });
+
+  window.addEventListener('mobshot:gachaUpdated', function(){
+    refreshSlotMaxCooldowns();
+    updateHud();
+  });
+
+  window.addEventListener('mobshot:collectionDisplayUpdated', function(){
+    refreshSlotMaxCooldowns();
+    updateHud();
+  });
+
   S.img = img;
   S.imageReady = imageReady;
   S.showSkillText = showSkillText;
@@ -389,6 +480,10 @@
     playerBulletScale,
     playerBulletDamageAdd,
     reduceCooldownAll,
-    fillAll
+    fillAll,
+    getSoulCooldownReductionSec,
+    calcSkillCooldownSec,
+    calcSkillCooldownFrames,
+    refreshSlotMaxCooldowns
   };
 })();
