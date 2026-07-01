@@ -48,11 +48,11 @@
   }
 
   const GOLD_DIFFICULTY_FALLBACK = {
-    easy:{ key:'easy', name:'イージー', color:'#9dff73', clearCoin:5000, firstCoin:3000, firstDiamond:5, chestMul:10.0, bossHpMul:1.0, bossCoinMul:10.0, bossMinHp:600, areaKey:'grass', areaName:'草原', background:'sta/backsougen.png', bosses:['ホークモブ','ミラモブ'], enemySpawn:true, timeLimitSec:30 },
-    hard:{ key:'hard', name:'ハード', color:'#6be6ff', clearCoin:15000, firstCoin:8000, firstDiamond:8, chestMul:25.0, bossHpMul:1.35, bossCoinMul:24.0, bossMinHp:1800, areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', bosses:['ミラモブⅡ','ネオンモブ'], enemySpawn:true, timeLimitSec:30 },
-    veryHard:{ key:'veryHard', name:'ベリーハード', color:'#ffcf5b', clearCoin:40000, firstCoin:15000, firstDiamond:10, chestMul:55.0, bossHpMul:1.8, bossCoinMul:50.0, bossMinHp:3800, areaKey:'magma', areaName:'マグマ', background:'sta/backmagma.png', bosses:['ドラゴンモブ','ドラゴンモブⅡ'], enemySpawn:true, timeLimitSec:30 },
-    inferno:{ key:'inferno', name:'インフェルノ', color:'#ff5b5b', clearCoin:120000, firstCoin:30000, firstDiamond:20, chestMul:120.0, bossHpMul:2.35, bossCoinMul:105.0, bossMinHp:7200, areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', bosses:['モブリリス','ドラゴンモブⅡ'], enemySpawn:true, timeLimitSec:30 },
-    legend:{ key:'legend', name:'レジェンド', color:'#d86bff', clearCoin:300000, firstCoin:80000, firstDiamond:50, chestMul:260.0, bossHpMul:3.2, bossCoinMul:220.0, bossMinHp:12000, areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', bosses:['モブリリス','モブ魔王'], enemySpawn:true, timeLimitSec:30 }
+    easy:{ key:'easy', name:'イージー', color:'#9dff73', clearCoin:8000, firstCoin:3000, firstDiamond:5, chestMul:3.2, bossHpMul:1.0, bossCoinMul:6.0, bossMinHp:600, areaKey:'grass', areaName:'草原', background:'sta/backsougen.png', bosses:['ホークモブ','ミラモブ'], enemySpawn:true, timeLimitSec:30 },
+    hard:{ key:'hard', name:'ハード', color:'#6be6ff', clearCoin:24000, firstCoin:8000, firstDiamond:8, chestMul:8.0, bossHpMul:1.35, bossCoinMul:14.0, bossMinHp:1800, areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', bosses:['ミラモブⅡ','ネオンモブ'], enemySpawn:true, timeLimitSec:30 },
+    veryHard:{ key:'veryHard', name:'ベリーハード', color:'#ffcf5b', clearCoin:65000, firstCoin:15000, firstDiamond:10, chestMul:18.0, bossHpMul:1.8, bossCoinMul:32.0, bossMinHp:3800, areaKey:'magma', areaName:'マグマ', background:'sta/backmagma.png', bosses:['ドラゴンモブ','ドラゴンモブⅡ'], enemySpawn:true, timeLimitSec:30 },
+    inferno:{ key:'inferno', name:'インフェルノ', color:'#ff5b5b', clearCoin:180000, firstCoin:30000, firstDiamond:20, chestMul:42.0, bossHpMul:2.35, bossCoinMul:70.0, bossMinHp:7200, areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', bosses:['モブリリス','ドラゴンモブⅡ'], enemySpawn:true, timeLimitSec:30 },
+    legend:{ key:'legend', name:'レジェンド', color:'#d86bff', clearCoin:450000, firstCoin:80000, firstDiamond:50, chestMul:95.0, bossHpMul:3.2, bossCoinMul:150.0, bossMinHp:12000, areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', bosses:['モブリリス','モブ魔王'], enemySpawn:true, timeLimitSec:30 }
   };
 
   const QUEST_DIFFICULTY_FALLBACK = {
@@ -791,17 +791,13 @@
     }
 
     if (localFrame >= nextChestAt) {
-      spawnAreaChest(api, areaKey, Math.max(1, enemyPower * 0.45), Number(diff.chestMul || 1) * 5.5);
+      spawnAreaChest(api, areaKey, Math.max(1, enemyPower * 0.35), Number(diff.chestMul || 1) * 1.8);
 
-      if (Math.random() < 0.55) {
-        spawnAreaChest(api, areaKey, Math.max(1, enemyPower * 0.45), Number(diff.chestMul || 1) * 5.5);
+      if (Math.random() < 0.35) {
+        spawnAreaChest(api, areaKey, Math.max(1, enemyPower * 0.35), Number(diff.chestMul || 1) * 1.8);
       }
 
-      if (Math.random() < 0.22) {
-        spawnAreaChest(api, areaKey, Math.max(1, enemyPower * 0.45), Number(diff.chestMul || 1) * 5.5);
-      }
-
-      nextChestAt = localFrame + intRand(48, 82);
+      nextChestAt = localFrame + intRand(70, 110);
     }
 
     const bossAlive = state.entities.some(e => !e.dead && e.kind === 'boss');
