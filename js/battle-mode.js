@@ -7,6 +7,20 @@
   const PET_MODE_SKILL_NERF = 0.94;
   const PET_MODE_SECOND_NERF = 0.92;
 
+  const PET_MODE_SCORE_REWARD = {
+    zako:80,
+    midBoss:420,
+    boss:1200,
+    clear:1800,
+    damageDiv:12
+  };
+
+  const PET_MODE_COIN_REWARD = {
+    zako:[20, 45],
+    midBoss:[220, 420],
+    boss:[700, 1300]
+  };
+
   const FALLBACK_ASSET = {
     bg:'sta/backsabaku.png',
     petBullet:'mt/atk.png',
@@ -208,7 +222,20 @@
     resultShown:false,
     rewardDone:false,
     support:{ rapid:1, power:1, shield:0, coin:1 },
-    stats:{ damage:0, petLost:0, enemyKilled:0, bossKilled:0, clear:false, drops:[], rubyReward:0, legendUnlocked:false }
+    stats:{
+      damage:0,
+      score:0,
+      killCoin:0,
+      clearScore:0,
+      clearCoin:0,
+      petLost:0,
+      enemyKilled:0,
+      bossKilled:0,
+      clear:false,
+      drops:[],
+      rubyReward:0,
+      legendUnlocked:false
+    }
   };
 
   function $(id){ return document.getElementById(id); }
@@ -222,7 +249,7 @@
 
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260630_pet_mode_enemy_fix_v1';
+      image.src = src + '?v=20260701_pet_mode_score_coin_v1';
       images.set(src, image);
     }
 
@@ -779,7 +806,20 @@
     state.frame = 0;
     state.resultShown = false;
     state.rewardDone = false;
-    state.stats = { damage:0, petLost:0, enemyKilled:0, bossKilled:0, clear:false, drops:[], rubyReward:0, legendUnlocked:false };
+    state.stats = {
+      damage:0,
+      score:0,
+      killCoin:0,
+      clearScore:0,
+      clearCoin:0,
+      petLost:0,
+      enemyKilled:0,
+      bossKilled:0,
+      clear:false,
+      drops:[],
+      rubyReward:0,
+      legendUnlocked:false
+    };
 
     clearBattleObjectsOnly();
     resetSupport();
@@ -2068,6 +2108,8 @@
   function killEnemy(e){
     if (!e || e.dead) return;
 
+    giveEnemyKillReward(e);
+
     e.dead = true;
 
     if (e.type === 'zako') state.stats.enemyKilled++;
@@ -2266,6 +2308,109 @@
     return ruby;
   }
 
+  function petModeRewardRate(){
+    const diff = state.difficulty || DIFFICULTIES[0];
+    const mode = state.mode || MODE_MASTER[0];
+
+    let rate = 1;
+
+    if (diff.key === 'easy') rate *= 1.00;
+    else if (diff.key === 'hard') rate *= 1.45;
+    else if (diff.key === 'veryhard') rate *= 2.15;
+    else if (diff.key === 'inferno') rate *= 3.40;
+    else if (diff.key === 'legend') rate *= 5.20;
+
+    if (mode.key === 'boss') rate *= 1.25;
+    else if (mode.key === 'ragnarok') rate *= 1.75;
+
+    return rate;
+  }
+
+  function enemyScoreReward(enemy){
+    const rate = petModeRewardRate();
+    const base =
+      enemy.type === 'zako'
+        ? PET_MODE_SCORE_REWARD.zako
+        : enemy.type === 'midBoss'
+          ? PET_MODE_SCORE_REWARD.midBoss
+          : PET_MODE_SCORE_REWARD.boss;
+
+    const hpBonus = Math.floor(Number(enemy.maxHp || 0) / PET_MODE_SCORE_REWARD.damageDiv);
+
+    return Math.max(1, Math.ceil((base + hpBonus) * rate));
+  }
+
+  function enemyCoinReward(enemy){
+    const rate = petModeRewardRate();
+    const range =
+      enemy.type === 'zako'
+        ? PET_MODE_COIN_REWARD.zako
+        : enemy.type === 'midBoss'
+          ? PET_MODE_COIN_REWARD.midBoss
+          : PET_MODE_COIN_REWARD.boss;
+
+    let coin = intRand(range[0], range[1]);
+    coin = Math.ceil(coin * rate * Number(state.support.coin || 1));
+
+    return Math.max(1, coin);
+  }
+
+  function clearScoreReward(){
+    const diff = state.difficulty || DIFFICULTIES[0];
+    const mode = state.mode || MODE_MASTER[0];
+
+    let score = PET_MODE_SCORE_REWARD.clear;
+
+    if (diff.key === 'hard') score *= 1.6;
+    else if (diff.key === 'veryhard') score *= 2.6;
+    else if (diff.key === 'inferno') score *= 4.4;
+    else if (diff.key === 'legend') score *= 7.2;
+
+    if (mode.key === 'boss') score *= 1.35;
+    else if (mode.key === 'ragnarok') score *= 2.1;
+
+    const aliveBonus = state.pets.filter(p => !p.dead).length * 180;
+    const lostPenalty = Number(state.stats.petLost || 0) * 120;
+
+    return Math.max(0, Math.ceil(score + aliveBonus - lostPenalty));
+  }
+
+  function addScore(amount){
+    const score = Math.max(0, Math.ceil(Number(amount || 0)));
+    if (!score) return;
+
+    let save = null;
+
+    if (window.MobShotStorage && window.MobShotStorage.load) {
+      save = window.MobShotStorage.load();
+      save.score = Number(save.score || 0) + score;
+      window.MobShotStorage.save(save);
+    } else {
+      try { save = JSON.parse(localStorage.getItem('mobshot_split_v1')) || {}; } catch(e) { save = {}; }
+      save.score = Number(save.score || 0) + score;
+      try { localStorage.setItem('mobshot_split_v1', JSON.stringify(save)); } catch(e) {}
+    }
+
+    refreshMainHud();
+  }
+
+  function giveEnemyKillReward(enemy){
+    if (!enemy || enemy.__petRewarded) return;
+    enemy.__petRewarded = true;
+
+    const score = enemyScoreReward(enemy);
+    const coin = enemyCoinReward(enemy);
+
+    state.stats.score = Number(state.stats.score || 0) + score;
+    state.stats.killCoin = Number(state.stats.killCoin || 0) + coin;
+
+    addScore(score);
+    addCoin(coin);
+
+    addText('+' + score + ' SCORE', enemy.x, enemy.y - 70, '#9deeff');
+    addText('+' + coin + ' COIN', enemy.x, enemy.y - 52, '#ffe66b');
+  }
+
   function showResult(clear, reason){
     if (state.resultShown) return;
 
@@ -2278,18 +2423,26 @@
     let rewardCoin = 0;
     let rewardDiamond = 0;
     let rubyReward = 0;
+    let clearScore = 0;
 
     if (clear) {
       rewardCoin = Math.ceil(diff.rewardCoin * state.support.coin);
       rewardDiamond = diff.rewardDiamond;
       rubyReward = calcRubyReward(diff, state.mode);
+      clearScore = clearScoreReward();
 
       if (state.mode.key === 'boss') rewardCoin = Math.ceil(rewardCoin * 1.4);
       if (state.mode.key === 'ragnarok') rewardCoin = Math.ceil(rewardCoin * 2.0);
 
       if (!state.rewardDone) {
         state.rewardDone = true;
+
+        state.stats.clearCoin = rewardCoin;
+        state.stats.clearScore = clearScore;
+        state.stats.score = Number(state.stats.score || 0) + clearScore;
+
         addCoin(rewardCoin);
+        addScore(clearScore);
         addDiamond(rewardDiamond);
         addPetRuby(rubyReward);
 
@@ -2303,6 +2456,9 @@
     }
 
     state.stats.rubyReward = rubyReward;
+
+    const totalCoin = Number(state.stats.killCoin || 0) + Number(state.stats.clearCoin || 0);
+    const totalScore = Number(state.stats.score || 0);
 
     const overlay = $('battleOverlay');
     if (!overlay) return;
@@ -2318,9 +2474,16 @@
             ステージ: ${state.stage.name}<br>
             撃破: ${Number(state.stats.enemyKilled || 0)} / BOSS ${Number(state.stats.bossKilled || 0)}<br>
             ペットDOWN: ${Number(state.stats.petLost || 0)}<br>
-            合計ダメージ: ${Math.ceil(state.stats.damage || 0).toLocaleString()}<br>
+            合計ダメージ: ${Math.ceil(state.stats.damage || 0).toLocaleString()}<br><br>
+
+            獲得SCORE: ${totalScore.toLocaleString()}<br>
+            撃破COIN: ${Number(state.stats.killCoin || 0).toLocaleString()}<br>
+            クリアCOIN: ${clear ? Number(state.stats.clearCoin || rewardCoin || 0).toLocaleString() : '0'}<br>
+            合計COIN: ${totalCoin.toLocaleString()}<br><br>
+
             石板Drop: ${state.stats.drops.length ? state.stats.drops.map(d => `${d.rarity} ${d.name}${d.isNew ? ' NEW' : d.converted ? ' MAX変換' : d.plusAfter != null ? ' +' + d.plusAfter : ''}`).join(' / ') : 'なし'}<br><br>
-            ${clear ? `報酬: ${rewardCoin.toLocaleString()} COIN / 💎 +${rewardDiamond} / ペットルビー ♦ +${rubyReward}` : 'クリア報酬なし'}<br>
+
+            ${clear ? `報酬: 💎 +${rewardDiamond} / ペットルビー ♦ +${rubyReward}` : 'クリア報酬なし'}<br>
             ${clear ? `クリア状況: ${progressText(state.mode.key, diff.key)}` : ''}
             ${state.stats.legendUnlocked ? '<br><br><span class="battle-unlock">レジェンド解放！</span><br>難易度選択にレジェンドが出現しました。' : ''}
           </p>
@@ -2544,7 +2707,7 @@
 
     ctx.save();
     ctx.fillStyle = 'rgba(0,0,0,.58)';
-    roundRect(10, 10, W - 20, 62, 18);
+    roundRect(10, 10, W - 20, 78, 18);
     ctx.fill();
 
     ctx.font = '900 13px system-ui';
@@ -2554,6 +2717,9 @@
 
     ctx.fillStyle = '#fff';
     ctx.fillText(`${state.stage ? state.stage.name : ''}  PET ${alive}/${total}  撃破 ${state.stats.enemyKilled + state.stats.bossKilled}`, 22, 55);
+
+    ctx.fillStyle = '#9deeff';
+    ctx.fillText(`SCORE ${Number(state.stats.score || 0).toLocaleString()}  COIN +${Number(state.stats.killCoin || 0).toLocaleString()}`, 22, 76);
 
     if (state.support.shield > 0) {
       ctx.textAlign = 'right';
