@@ -1,10 +1,13 @@
 'use strict';
+
 (function(){
   const SAVE_KEY = 'mobshot_pet_mode_clear_v1';
   const GACHA_SAVE_KEY = 'mobshot_gacha_state_v1';
   const PET_MODE_MISSION_SAVE_KEY = 'mobshot_pet_mode_mission_v1';
+
   const PET_MODE_SKILL_NERF = 0.94;
   const PET_MODE_SECOND_NERF = 0.92;
+
   const PET_MODE_SCORE_REWARD = {
     zako:80,
     midBoss:420,
@@ -12,11 +15,13 @@
     clear:1800,
     damageDiv:12
   };
+
   const PET_MODE_COIN_REWARD = {
     zako:[20, 45],
     midBoss:[220, 420],
     boss:[700, 1300]
   };
+
   const PET_MODE_DIFFICULTY_POINT = {
     easy:1,
     hard:2,
@@ -24,6 +29,7 @@
     inferno:5,
     legend:8
   };
+
   const PET_MODE_MISSION_STEPS = {
     play:[1,3,5,7,10,12,15,17,20,25,30,35,40,45,50],
     clearPoint:[1,3,5,7,10,12,15,17,20,25,30,35,40,45,50],
@@ -31,6 +37,7 @@
     drop:[1,2,3,5,7,10,12,15,17,20,25,30],
     petClearPoint:[1,3,5,7,10,12,15,17,20]
   };
+
   const PET_MODE_MISSION_REPEAT = {
     play:{ start:55, step:5 },
     clearPoint:{ start:55, step:5 },
@@ -38,6 +45,7 @@
     drop:{ start:35, step:5 },
     petClearPoint:{ start:25, step:5 }
   };
+
   const PET_MODE_MISSION_LABELS = {
     play:'プレイ数',
     clearPoint:'クリアポイント',
@@ -45,16 +53,19 @@
     drop:'石板ドロップ数',
     petClearPoint:'ペット別クリアポイント'
   };
+
   const FALLBACK_ASSET = {
     bg:'sta/backsabaku.png',
     petBullet:'mt/atk.png',
     bossBullet:'atk/hinotama.png'
   };
+
   const MODE_MASTER = [
     { key:'arena', name:'アリーナ', icon:'mt/are.png', desc:'選んだペット最大4体で、雑魚3体＋中ボス1体に挑戦！', maxPets:4 },
     { key:'boss', name:'ボス降臨', icon:'mt/petboss.png', desc:'選んだペット最大6体で、ステージボス1体に挑戦！', maxPets:6 },
     { key:'ragnarok', name:'ラグナロク', icon:'mt/rag.png', desc:'所持ペット全員で、通常ボス＋強力ボスの2体に挑戦！', maxPets:999 }
   ];
+
   const DIFFICULTIES = [
     { key:'easy', name:'イージー', icon:'mt/game1.png', hpRate:0.65, atkRate:0.60, dropRate:0.08, rewardCoin:1500, rewardDiamond:0 },
     { key:'hard', name:'ハード', icon:'mt/game2.png', hpRate:1.00, atkRate:1.00, dropRate:0.12, rewardCoin:3000, rewardDiamond:1 },
@@ -62,6 +73,7 @@
     { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', hpRate:2.45, atkRate:2.10, dropRate:0.28, rewardCoin:12000, rewardDiamond:4 },
     { key:'legend', name:'レジェンド', icon:'mt/game5.png', hpRate:3.60, atkRate:3.00, dropRate:0.45, rewardCoin:25000, rewardDiamond:8, legend:true }
   ];
+
   const PET_STONES = [
     { no:56, name:'モブドラゴン', image:'co/co56.png', rarity:'SR', category:'MOB PET' },
     { no:57, name:'モブイルカエル', image:'co/co57.png', rarity:'SR', category:'MOB PET' },
@@ -72,6 +84,7 @@
     { no:89, name:'ミニあのヒーロー', image:'co/co89.png', rarity:'SR', category:'MOB PET' },
     { no:90, name:'ミニミラモブ カラー', image:'co/co90.png', rarity:'SSR', category:'MOB PET' }
   ];
+
   const STAGES_NORMAL = [
     {
       key:'grass', name:'草原', bg:'sta/backsougen.png',
@@ -140,6 +153,7 @@
       strongBoss:{ name:'モブ魔王', image:'boss/bossmaoh.png', hp:3800, power:54, atkImage:'atk/atkmaoh.png', atkFlipY:true, pattern:'maoh' }
     }
   ];
+
   const STAGES_LEGEND = [
     {
       key:'prison', name:'監獄', bg:'sta/stkan.png',
@@ -208,6 +222,7 @@
       strongBoss:{ name:'ウルモブリリス', image:'boss/bossulriri.png', hp:9200, power:108, atkImage:'atk/atkriri.png', atkFlipY:false, pattern:'lilith' }
     }
   ];
+
   let canvas = null;
   let ctx = null;
   let W = 0;
@@ -215,7 +230,9 @@
   let DPR = 1;
   let raf = 0;
   let running = false;
+
   const images = new Map();
+
   const state = {
     screen:'title',
     frame:0,
@@ -239,6 +256,7 @@
     rewardDone:false,
     missionMessage:'',
     missionMessageTimer:0,
+    missionTab:'ready',
     support:{ rapid:1, power:1, shield:0, coin:1 },
     stats:{
       damage:0,
@@ -255,33 +273,42 @@
       legendUnlocked:false
     }
   };
+
   function $(id){ return document.getElementById(id); }
   function rand(a,b){ return a + Math.random() * (b - a); }
   function intRand(a,b){ return Math.floor(rand(a, b + 1)); }
   function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
   function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
   function img(src){
     if (!src) return null;
+
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260701_pet_mode_mission_v1';
+      image.src = src + '?v=20260701_pet_mode_mission_ui_v2';
       images.set(src, image);
     }
+
     return images.get(src);
   }
+
   function imageReady(image){
     return image && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
   }
+
   function drawImageContain(ctx, image, cx, cy, maxW, maxH){
     if (!imageReady(image)) return false;
+
     const iw = image.naturalWidth || image.width;
     const ih = image.naturalHeight || image.height;
     const scale = Math.min(maxW / iw, maxH / ih);
     const w = iw * scale;
     const h = ih * scale;
+
     ctx.drawImage(image, cx - w / 2, cy - h / 2, w, h);
     return true;
   }
+
   function escapeHtml(value){
     return String(value == null ? '' : value)
       .replace(/&/g, '&amp;')
@@ -290,9 +317,11 @@
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
   }
+
   function loadClearSave(){
     try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch(e) { return {}; }
   }
+
   function saveClear(modeKey, diffKey, stageKey){
     try {
       const save = loadClearSave();
@@ -302,6 +331,7 @@
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     } catch(e) {}
   }
+
   function isStageCleared(modeKey, diffKey, stageKey){
     const save = loadClearSave();
     return !!(
@@ -311,114 +341,149 @@
       save[modeKey][diffKey][stageKey]
     );
   }
+
   function stageListForDifficultyKey(diffKey){
     if (diffKey === 'legend') return STAGES_NORMAL.concat(STAGES_LEGEND);
     return STAGES_NORMAL;
   }
+
   function clearCountForDifficulty(modeKey, diffKey){
     const stages = stageListForDifficultyKey(diffKey);
     let count = 0;
+
     stages.forEach(stage => {
       if (isStageCleared(modeKey, diffKey, stage.key)) count++;
     });
+
     return {
       clear:count,
       total:stages.length
     };
   }
+
   function isDifficultyAllCleared(modeKey, diffKey){
     const progress = clearCountForDifficulty(modeKey, diffKey);
     return progress.total > 0 && progress.clear >= progress.total;
   }
+
   function infernoProgress(modeKey){
     return clearCountForDifficulty(modeKey, 'inferno');
   }
+
   function isLegendUnlocked(modeKey){
     return isDifficultyAllCleared(modeKey, 'inferno');
   }
+
   function clearBadgeHtml(done){
     return done ? '<span class="battle-clear-badge">CLEAR</span>' : '';
   }
+
   function progressText(modeKey, diffKey){
     const p = clearCountForDifficulty(modeKey, diffKey);
     return `${p.clear}/${p.total}`;
   }
+
   function legendUnlockText(modeKey){
     const p = infernoProgress(modeKey);
     if (p.clear >= p.total) return '<span class="battle-unlock">レジェンド解放済み！</span>';
     return `レジェンド解放まで インフェルノ ${p.clear}/${p.total}`;
   }
+
   function justUnlockedLegendByThisClear(modeKey, diffKey, stageKey){
     if (diffKey !== 'inferno') return false;
     if (!STAGES_NORMAL.some(s => s.key === stageKey)) return false;
+
     const beforeSave = loadClearSave();
     const beforeMode = beforeSave[modeKey] || {};
     const beforeInferno = beforeMode.inferno || {};
     const wasUnlocked = STAGES_NORMAL.every(stage => !!beforeInferno[stage.key]);
+
     if (wasUnlocked) return false;
+
     const afterInferno = Object.assign({}, beforeInferno, { [stageKey]:true });
     return STAGES_NORMAL.every(stage => !!afterInferno[stage.key]);
   }
+
   function getStagesForCurrent(){
     if (!state.difficulty || !state.difficulty.legend) return STAGES_NORMAL;
     return STAGES_NORMAL.concat(STAGES_LEGEND);
   }
+
   function getDifficultiesForMode(modeKey){
     const unlocked = isLegendUnlocked(modeKey);
     return DIFFICULTIES.filter(d => !d.legend || unlocked);
   }
+
   function difficultyPoint(diffKey){
     return Number(PET_MODE_DIFFICULTY_POINT[diffKey] || 1);
   }
+
   function loadMissionSave(){
     let save = null;
+
     try {
       save = JSON.parse(localStorage.getItem(PET_MODE_MISSION_SAVE_KEY)) || {};
     } catch(e) {
       save = {};
     }
+
     save.stats = save.stats || {};
     save.stats.play = Number(save.stats.play || 0);
     save.stats.clearPoint = Number(save.stats.clearPoint || 0);
     save.stats.kill = Number(save.stats.kill || 0);
     save.stats.drop = Number(save.stats.drop || 0);
     save.stats.petClearPoint = save.stats.petClearPoint || {};
+
     save.claimed = save.claimed || {};
     save.claimed.play = save.claimed.play || {};
     save.claimed.clearPoint = save.claimed.clearPoint || {};
     save.claimed.kill = save.claimed.kill || {};
     save.claimed.drop = save.claimed.drop || {};
     save.claimed.petClearPoint = save.claimed.petClearPoint || {};
+
     return save;
   }
+
   function saveMissionSave(save){
     try {
       localStorage.setItem(PET_MODE_MISSION_SAVE_KEY, JSON.stringify(save));
     } catch(e) {}
+
     window.dispatchEvent(new CustomEvent('mobshot:petModeMissionUpdated'));
   }
+
   function addMissionStat(type, amount){
     const save = loadMissionSave();
     const value = Math.max(0, Number(amount || 0));
+
     if (!value) return;
+
     save.stats[type] = Number(save.stats[type] || 0) + value;
     saveMissionSave(save);
   }
+
   function addPetMissionPoint(petKeys, point){
     if (!Array.isArray(petKeys) || !petKeys.length) return;
+
     const add = Math.max(0, Number(point || 0));
     if (!add) return;
+
     const save = loadMissionSave();
+
     save.stats.petClearPoint = save.stats.petClearPoint || {};
+
     petKeys.forEach(key => {
       if (!key) return;
       save.stats.petClearPoint[key] = Number(save.stats.petClearPoint[key] || 0) + add;
     });
+
     saveMissionSave(save);
   }
+
   function missionReward(type, target, petKey){
     const reward = { coin:0, diamond:0, ruby:0 };
     const t = Number(target || 0);
+
     if (type === 'play') {
       const table = {
         1:{ coin:500 },
@@ -437,13 +502,16 @@
         45:{ coin:17000 },
         50:{ coin:22000, diamond:2, ruby:15 }
       };
+
       Object.assign(reward, table[t] || {});
+
       if (!reward.coin && t >= PET_MODE_MISSION_REPEAT.play.start) {
         reward.coin = 5000;
         if (t % 10 === 0) reward.ruby += 5;
         if (t % 25 === 0) reward.diamond += 1;
       }
     }
+
     if (type === 'clearPoint') {
       const table = {
         1:{ coin:1000 },
@@ -462,13 +530,16 @@
         45:{ coin:43000 },
         50:{ coin:55000, diamond:3, ruby:25 }
       };
+
       Object.assign(reward, table[t] || {});
+
       if (!reward.coin && t >= PET_MODE_MISSION_REPEAT.clearPoint.start) {
         reward.coin = 8000;
         if (t % 10 === 0) reward.ruby += 8;
         if (t % 25 === 0) reward.diamond += 2;
       }
     }
+
     if (type === 'kill') {
       const table = {
         1:{ coin:300 },
@@ -483,13 +554,16 @@
         75:{ coin:12000 },
         100:{ coin:18000, diamond:2, ruby:12 }
       };
+
       Object.assign(reward, table[t] || {});
+
       if (!reward.coin && t >= PET_MODE_MISSION_REPEAT.kill.start) {
         reward.coin = 7000;
         if (t % 50 === 0) reward.ruby += 8;
         if (t % 100 === 0) reward.diamond += 2;
       }
     }
+
     if (type === 'drop') {
       const table = {
         1:{ coin:1000 },
@@ -505,13 +579,16 @@
         25:{ coin:28000 },
         30:{ coin:40000, diamond:3, ruby:25 }
       };
+
       Object.assign(reward, table[t] || {});
+
       if (!reward.coin && t >= PET_MODE_MISSION_REPEAT.drop.start) {
         reward.coin = 15000;
         if (t % 10 === 0) reward.ruby += 15;
         if (t % 25 === 0) reward.diamond += 3;
       }
     }
+
     if (type === 'petClearPoint') {
       const table = {
         1:{ coin:500 },
@@ -524,54 +601,71 @@
         17:{ coin:7500 },
         20:{ coin:10000, diamond:2, ruby:12 }
       };
+
       Object.assign(reward, table[t] || {});
+
       if (!reward.coin && t >= PET_MODE_MISSION_REPEAT.petClearPoint.start) {
         reward.coin = 5000;
         if (t % 10 === 0) reward.ruby += 5;
         if (t % 25 === 0) reward.diamond += 2;
       }
     }
+
     reward.coin = Math.max(0, Math.ceil(Number(reward.coin || 0)));
     reward.diamond = Math.max(0, Math.ceil(Number(reward.diamond || 0)));
     reward.ruby = Math.max(0, Math.ceil(Number(reward.ruby || 0)));
+
     return reward;
   }
+
   function rewardText(reward){
     const parts = [];
+
     if (reward.coin) parts.push(`${Number(reward.coin).toLocaleString()} COIN`);
     if (reward.diamond) parts.push(`💎 +${Number(reward.diamond).toLocaleString()}`);
     if (reward.ruby) parts.push(`♦ +${Number(reward.ruby).toLocaleString()}`);
+
     return parts.length ? parts.join(' / ') : '報酬なし';
   }
+
   function applyMissionReward(reward){
     if (!reward) return;
+
     if (reward.coin) addCoin(reward.coin);
     if (reward.diamond) addDiamond(reward.diamond);
     if (reward.ruby) addPetRuby(reward.ruby);
   }
+
   function missionTargets(type, current){
     const fixed = PET_MODE_MISSION_STEPS[type] || [];
     const repeat = PET_MODE_MISSION_REPEAT[type];
     const targets = fixed.slice();
+
     if (repeat && Number(current || 0) >= Number(repeat.start || 0)) {
       const currentNum = Number(current || 0);
       let target = Number(repeat.start || 0);
+
       while (target <= currentNum) {
         if (!targets.includes(target)) targets.push(target);
         target += Number(repeat.step || 1);
       }
     }
+
     return targets.sort((a,b) => a - b);
   }
-  function missionRows(){
+
+  function allMissionRows(){
     const save = loadMissionSave();
     const rows = [];
+
     ['play','clearPoint','kill','drop'].forEach(type => {
       const current = Number(save.stats[type] || 0);
       const targets = missionTargets(type, current);
+
       targets.forEach(target => {
         const claimed = !!(save.claimed[type] && save.claimed[type][String(target)]);
         const reward = missionReward(type, target);
+
         rows.push({
           type,
           petKey:'',
@@ -585,15 +679,19 @@
         });
       });
     });
+
     const ownedPets = getOwnedPetList();
     const petPoint = save.stats.petClearPoint || {};
     const claimedPet = save.claimed.petClearPoint || {};
+
     ownedPets.forEach(pet => {
       const current = Number(petPoint[pet.key] || 0);
       const targets = missionTargets('petClearPoint', current);
+
       targets.forEach(target => {
         const claimed = !!(claimedPet[pet.key] && claimedPet[pet.key][String(target)]);
         const reward = missionReward('petClearPoint', target, pet.key);
+
         rows.push({
           type:'petClearPoint',
           petKey:pet.key,
@@ -609,61 +707,152 @@
         });
       });
     });
+
     rows.sort((a,b) => {
       const aReady = a.complete && !a.claimed ? 0 : a.claimed ? 2 : 1;
       const bReady = b.complete && !b.claimed ? 0 : b.claimed ? 2 : 1;
+
       if (aReady !== bReady) return aReady - bReady;
+
       const order = { play:1, clearPoint:2, kill:3, drop:4, petClearPoint:5 };
       if (order[a.sortType] !== order[b.sortType]) return order[a.sortType] - order[b.sortType];
+
+      if ((a.petName || '') !== (b.petName || '')) {
+        return String(a.petName || '').localeCompare(String(b.petName || ''), 'ja');
+      }
+
       return a.target - b.target;
     });
+
     return rows;
   }
+
+  function missionRows(){
+    return allMissionRows();
+  }
+
+  function pushUniqueMissionRow(list, row){
+    if (!row) return;
+
+    const key = missionRowKey(row);
+    if (list.some(r => missionRowKey(r) === key)) return;
+
+    list.push(row);
+  }
+
+  function nextMissionRowForType(rows, type){
+    return rows
+      .filter(row => row.type === type && !row.claimed && !row.complete)
+      .sort((a,b) => a.target - b.target)[0] || null;
+  }
+
+  function nextMissionRowForPet(rows, petKey){
+    return rows
+      .filter(row => row.type === 'petClearPoint' && row.petKey === petKey && !row.claimed && !row.complete)
+      .sort((a,b) => a.target - b.target)[0] || null;
+  }
+
+  function visibleMissionRows(){
+    const tab = state.missionTab || 'ready';
+    const rows = allMissionRows();
+    const visible = [];
+    const readyRows = rows.filter(row => row.complete && !row.claimed);
+
+    if (tab === 'ready') {
+      return readyRows;
+    }
+
+    if (tab === 'common') {
+      readyRows
+        .filter(row => row.type !== 'petClearPoint')
+        .forEach(row => pushUniqueMissionRow(visible, row));
+
+      ['play','clearPoint','kill','drop'].forEach(type => {
+        pushUniqueMissionRow(visible, nextMissionRowForType(rows, type));
+      });
+
+      return visible;
+    }
+
+    if (tab === 'pet') {
+      readyRows
+        .filter(row => row.type === 'petClearPoint')
+        .forEach(row => pushUniqueMissionRow(visible, row));
+
+      getOwnedPetList().forEach(pet => {
+        pushUniqueMissionRow(visible, nextMissionRowForPet(rows, pet.key));
+      });
+
+      return visible;
+    }
+
+    return readyRows;
+  }
+
   function claimMission(row){
     if (!row || !row.complete || row.claimed) return false;
+
     const save = loadMissionSave();
+
     if (row.type === 'petClearPoint') {
       save.claimed.petClearPoint = save.claimed.petClearPoint || {};
       save.claimed.petClearPoint[row.petKey] = save.claimed.petClearPoint[row.petKey] || {};
+
       if (save.claimed.petClearPoint[row.petKey][String(row.target)]) return false;
+
       save.claimed.petClearPoint[row.petKey][String(row.target)] = true;
     } else {
       save.claimed[row.type] = save.claimed[row.type] || {};
+
       if (save.claimed[row.type][String(row.target)]) return false;
+
       save.claimed[row.type][String(row.target)] = true;
     }
+
     saveMissionSave(save);
     applyMissionReward(row.reward);
+
     return true;
   }
+
   function claimMissionByKey(key){
-    const rows = missionRows();
+    const rows = allMissionRows();
     const row = rows.find(r => missionRowKey(r) === key);
+
     if (!row) return;
+
     if (claimMission(row)) {
       state.missionMessage = `受け取り完了：${rewardText(row.reward)}`;
       state.missionMessageTimer = 120;
     }
+
     renderOverlay();
   }
+
   function claimAllMissions(){
-    const rows = missionRows().filter(r => r.complete && !r.claimed);
+    const rows = allMissionRows().filter(r => r.complete && !r.claimed);
     let count = 0;
     const total = { coin:0, diamond:0, ruby:0 };
+
     rows.forEach(row => {
       const ok = claimMission(row);
       if (!ok) return;
+
       count++;
       total.coin += Number(row.reward.coin || 0);
       total.diamond += Number(row.reward.diamond || 0);
       total.ruby += Number(row.reward.ruby || 0);
     });
+
     state.missionMessage = count
       ? `一括受け取り：${rewardText(total)}`
       : '受け取れるミッションはありません';
+
     state.missionMessageTimer = 140;
+    state.missionTab = 'ready';
     renderOverlay();
   }
+
   function missionRowKey(row){
     return [
       row.type,
@@ -671,8 +860,10 @@
       row.target
     ].join('__');
   }
+
   function missionStatSummary(){
     const save = loadMissionSave();
+
     return `
       プレイ ${Number(save.stats.play || 0).toLocaleString()} / 
       クリアPT ${Number(save.stats.clearPoint || 0).toLocaleString()} / 
@@ -680,6 +871,7 @@
       Drop ${Number(save.stats.drop || 0).toLocaleString()}
     `;
   }
+
   function ensureScreen(){
     let screen = $('battleScreen');
     const app = $('app') || document.body;
@@ -707,6 +899,9 @@
       .battle-overlay{position:absolute!important;inset:0!important;z-index:50!important;pointer-events:none!important;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
       .battle-menu{position:absolute!important;inset:0!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:16px!important;background:rgba(0,0,0,.64)!important;pointer-events:auto!important}
       .battle-card{width:min(94vw,470px)!important;max-height:90svh!important;overflow:auto!important;border-radius:26px!important;padding:18px!important;text-align:center!important;background:linear-gradient(180deg,rgba(35,28,78,.98),rgba(5,8,22,.98))!important;border:3px solid rgba(255,255,255,.35)!important;box-shadow:0 18px 48px rgba(0,0,0,.7)!important}
+      .battle-card.mission-card{display:flex!important;flex-direction:column!important;max-height:90svh!important;overflow:hidden!important;padding:14px!important}
+      .battle-mission-head{flex:0 0 auto!important}
+      .battle-mission-scroll{flex:1 1 auto!important;overflow:auto!important;max-height:52svh!important;padding-right:2px!important;margin-top:8px!important;-webkit-overflow-scrolling:touch!important}
       .battle-title{margin:0 0 10px!important;font-size:30px!important;font-weight:1000!important;color:#ffe66b!important;text-shadow:0 5px 0 #000!important;line-height:1.05!important}
       .battle-help{margin:0 0 14px!important;color:#dfe8ff!important;font-size:13px!important;font-weight:900!important;line-height:1.55!important}
       .battle-grid{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;margin-bottom:12px!important}
@@ -733,7 +928,7 @@
       .battle-drop-card img{width:52px!important;height:52px!important;object-fit:contain!important;display:block!important;margin:0 auto 3px!important}
       .battle-drop-name{font-size:9px!important;font-weight:1000!important;color:#fff!important;line-height:1.2!important}
       .battle-drop-rarity{font-size:10px!important;font-weight:1000!important;color:#ffe66b!important}
-      .battle-mission-list{display:grid!important;grid-template-columns:1fr!important;gap:9px!important;margin:10px 0!important}
+      .battle-mission-list{display:grid!important;grid-template-columns:1fr!important;gap:9px!important;margin:0!important}
       .battle-mission-row{grid-template-columns:46px 1fr 78px!important;padding:9px!important}
       .battle-mission-row.ready{border-color:#ffe66b!important;background:linear-gradient(135deg,rgba(92,75,24,.98),rgba(35,23,5,.98))!important}
       .battle-mission-row.done{opacity:.58!important}
@@ -745,11 +940,15 @@
       .battle-mission-btn:disabled{color:#dfe8ff!important;background:linear-gradient(#69738a,#3b4354)!important;box-shadow:none!important}
       .battle-mission-note{margin:8px 0!important;padding:9px!important;border-radius:14px!important;background:rgba(255,255,255,.08)!important;border:2px solid rgba(255,255,255,.14)!important;color:#dfe8ff!important;font-size:11px!important;font-weight:900!important;line-height:1.45!important}
       .battle-mission-message{margin:8px 0!important;padding:9px!important;border-radius:14px!important;background:rgba(157,255,115,.12)!important;border:2px solid rgba(157,255,115,.28)!important;color:#9dff73!important;font-size:12px!important;font-weight:1000!important;line-height:1.45!important}
+      .battle-mission-top-row{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin:8px 0!important}
+      .battle-mission-tabs{display:grid!important;grid-template-columns:1fr 1fr 1fr!important;gap:6px!important;margin:8px 0 4px!important}
+      .battle-mission-tab{border:0!important;border-radius:999px!important;padding:9px 4px!important;font-size:12px!important;font-weight:1000!important;color:#dfe8ff!important;background:linear-gradient(#606a80,#323b50)!important;box-shadow:0 3px 0 rgba(0,0,0,.32)!important}
+      .battle-mission-tab.active{color:#201100!important;background:linear-gradient(#ffe66b,#ffb423)!important}
+      .battle-mission-empty{padding:18px 10px!important;border-radius:16px!important;background:rgba(255,255,255,.08)!important;border:2px solid rgba(255,255,255,.14)!important;color:#dfe8ff!important;font-size:13px!important;font-weight:1000!important;line-height:1.5!important}
     `;
     document.head.appendChild(style);
   }
-
-  function initCanvas(){
+    function initCanvas(){
     ensureScreen();
     injectStyle();
 
@@ -797,6 +996,7 @@
     state.selectedPetKeys = [];
     state.resultShown = false;
     state.rewardDone = false;
+    state.missionTab = 'ready';
 
     clearObjects();
     renderOverlay();
@@ -821,46 +1021,62 @@
   }
 
   function renderMissionScreen(){
-    const rows = missionRows();
-    const readyCount = rows.filter(r => r.complete && !r.claimed).length;
-    const showRows = rows.filter((row, index) => {
-      if (row.complete && !row.claimed) return true;
-      if (!row.claimed) return index < 80;
-      return index < 120;
-    });
+    const allRows = allMissionRows();
+    const readyCount = allRows.filter(r => r.complete && !r.claimed).length;
+    const showRows = visibleMissionRows();
+    const tab = state.missionTab || 'ready';
 
     return `
       <div class="battle-menu">
-        <div class="battle-card">
-          <h1 class="battle-title">PET MISSION</h1>
-          <p class="battle-help">
-            ペットモード専用ミッションです。<br>
-            高難易度ほどクリアポイントが多く進みます。
-          </p>
+        <div class="battle-card mission-card">
+          <div class="battle-mission-head">
+            <h1 class="battle-title">PET MISSION</h1>
 
-          <div class="battle-mission-note">
-            EASY +1 / HARD +2 / VERY HARD +3 / INFERNO +5 / LEGEND +8<br>
-            ペット別ミッションはアリーナ・ボス降臨のみ進行します。ラグナロクでは進行しません。<br>
-            ${missionStatSummary()}
+            <div class="battle-mission-note">
+              高難易度ほどクリアポイントUP<br>
+              EASY +1 / HARD +2 / VERY HARD +3 / INFERNO +5 / LEGEND +8<br>
+              ペット別はアリーナ・ボス降臨のみ進行<br>
+              ${missionStatSummary()}
+            </div>
+
+            ${state.missionMessage && state.missionMessageTimer > 0 ? `
+              <div class="battle-mission-message">${escapeHtml(state.missionMessage)}</div>
+            ` : ''}
+
+            <button id="mobMissionClaimAllBtn" class="battle-btn green" type="button" style="width:100%">
+              一括受け取り ${readyCount > 0 ? '(' + readyCount + ')' : ''}
+            </button>
+
+            <div class="battle-mission-top-row">
+              <button id="mobMissionBackBtn" class="battle-btn blue" type="button">戻る</button>
+              <button id="mobMissionMainBtn" class="battle-btn" type="button">メインへ</button>
+            </div>
+
+            <div class="battle-mission-tabs">
+              <button class="battle-mission-tab ${tab === 'ready' ? 'active' : ''}" type="button" data-mission-tab="ready">
+                受取可能
+              </button>
+              <button class="battle-mission-tab ${tab === 'common' ? 'active' : ''}" type="button" data-mission-tab="common">
+                共通
+              </button>
+              <button class="battle-mission-tab ${tab === 'pet' ? 'active' : ''}" type="button" data-mission-tab="pet">
+                ペット別
+              </button>
+            </div>
           </div>
 
-          ${state.missionMessage && state.missionMessageTimer > 0 ? `
-            <div class="battle-mission-message">${escapeHtml(state.missionMessage)}</div>
-          ` : ''}
-
-          <button id="mobMissionClaimAllBtn" class="battle-btn green" type="button" style="width:100%;margin-bottom:10px">
-            一括受け取り ${readyCount > 0 ? '(' + readyCount + ')' : ''}
-          </button>
-
-          <div class="battle-mission-list">
-            ${showRows.length ? showRows.map(row => missionRowHtml(row)).join('') : `
-              <div class="battle-mission-note">表示できるミッションがありません。</div>
-            `}
-          </div>
-
-          <div class="battle-row">
-            <button id="mobMissionBackBtn" class="battle-btn blue" type="button">戻る</button>
-            <button id="mobMissionMainBtn" class="battle-btn" type="button">メインへ</button>
+          <div class="battle-mission-scroll">
+            <div class="battle-mission-list">
+              ${showRows.length ? showRows.map(row => missionRowHtml(row)).join('') : `
+                <div class="battle-mission-empty">
+                  ${tab === 'ready'
+                    ? '受け取れるミッションはありません。'
+                    : tab === 'common'
+                      ? '共通ミッションは表示できるものがありません。'
+                      : 'ペット別ミッションは表示できるものがありません。'}
+                </div>
+              `}
+            </div>
           </div>
         </div>
       </div>
@@ -869,6 +1085,7 @@
 
   function missionRowHtml(row){
     const key = missionRowKey(row);
+
     const icon =
       row.type === 'play' ? '▶' :
       row.type === 'clearPoint' ? '★' :
@@ -903,10 +1120,22 @@
     if (claimAll) claimAll.onclick = claimAllMissions;
 
     const back = $('mobMissionBackBtn');
-    if (back) back.onclick = function(){ state.screen = 'title'; renderOverlay(); };
+    if (back) {
+      back.onclick = function(){
+        state.screen = 'title';
+        renderOverlay();
+      };
+    }
 
     const main = $('mobMissionMainBtn');
     if (main) main.onclick = close;
+
+    overlay.querySelectorAll('[data-mission-tab]').forEach(btn => {
+      btn.onclick = function(){
+        state.missionTab = this.getAttribute('data-mission-tab') || 'ready';
+        renderOverlay();
+      };
+    });
 
     overlay.querySelectorAll('[data-claim]').forEach(btn => {
       btn.onclick = function(){
@@ -929,7 +1158,7 @@
     }
 
     if (state.screen === 'title') {
-      const readyCount = missionRows().filter(r => r.complete && !r.claimed).length;
+      const readyCount = allMissionRows().filter(r => r.complete && !r.claimed).length;
 
       overlay.innerHTML = `
         <div class="battle-menu">
@@ -971,13 +1200,19 @@
           const key = this.getAttribute('data-mode');
           const mode = MODE_MASTER.find(m => m.key === key);
           if (!mode) return;
+
           state.mode = mode;
           state.screen = 'difficulty';
           renderOverlay();
         };
       });
 
-      $('mobPetMissionBtn').onclick = function(){ state.screen = 'mission'; renderOverlay(); };
+      $('mobPetMissionBtn').onclick = function(){
+        state.screen = 'mission';
+        state.missionTab = 'ready';
+        renderOverlay();
+      };
+
       $('mobBattleMainBtn').onclick = close;
       return;
     }
@@ -1051,13 +1286,18 @@
           const key = this.getAttribute('data-diff');
           const diff = DIFFICULTIES.find(d => d.key === key);
           if (!diff) return;
+
           state.difficulty = diff;
           state.screen = 'stage';
           renderOverlay();
         };
       });
 
-      $('mobBackTitleBtn').onclick = function(){ state.screen = 'title'; renderOverlay(); };
+      $('mobBackTitleBtn').onclick = function(){
+        state.screen = 'title';
+        renderOverlay();
+      };
+
       $('mobBattleMainBtn').onclick = close;
       return;
     }
@@ -1123,7 +1363,11 @@
         };
       });
 
-      $('mobBackDiffBtn').onclick = function(){ state.screen = 'difficulty'; renderOverlay(); };
+      $('mobBackDiffBtn').onclick = function(){
+        state.screen = 'difficulty';
+        renderOverlay();
+      };
+
       $('mobBattleMainBtn').onclick = close;
       return;
     }
@@ -1176,7 +1420,11 @@
         };
       });
 
-      $('mobBackStageBtn').onclick = function(){ state.screen = 'stage'; renderOverlay(); };
+      $('mobBackStageBtn').onclick = function(){
+        state.screen = 'stage';
+        renderOverlay();
+      };
+
       $('mobStartPetModeBtn').onclick = beginGame;
       return;
     }
@@ -1453,8 +1701,7 @@
 
     return ct;
   }
-
-  function assignPetFormationTargets(){
+    function assignPetFormationTargets(){
     const alive = state.pets.filter(p => !p.dead);
     if (!alive.length) return;
 
@@ -1815,7 +2062,8 @@
       rapid:p.key === 'babymob'
     };
   }
-    function usePetSecondSkill(p){
+
+  function usePetSecondSkill(p){
     const second = normalizeSecondPattern(p.secondSkill);
     if (!second) return;
 
@@ -2980,8 +3228,15 @@
     `;
 
     $('mobRetryBtn').onclick = beginGame;
-    $('mobMissionResultBtn').onclick = function(){ state.screen = 'mission'; renderOverlay(); };
-    $('mobBackModeBtn').onclick = function(){ state.screen = 'title'; renderOverlay(); };
+    $('mobMissionResultBtn').onclick = function(){
+      state.screen = 'mission';
+      state.missionTab = 'ready';
+      renderOverlay();
+    };
+    $('mobBackModeBtn').onclick = function(){
+      state.screen = 'title';
+      renderOverlay();
+    };
     $('mobResultMainBtn').onclick = close;
   }
 
@@ -3571,7 +3826,7 @@
     open,
     close,
     loadMissionSave,
-    missionRows
+    missionRows:allMissionRows
   };
 
   document.addEventListener('DOMContentLoaded', bindMainButton);
