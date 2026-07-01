@@ -48,11 +48,11 @@
   }
 
   const GOLD_DIFFICULTY_FALLBACK = {
-    easy:{ key:'easy', name:'イージー', color:'#9dff73', clearCoin:300, firstCoin:3000, firstDiamond:5, chestMul:1.2, bossHpMul:1.0, bossCoinMul:1.4, bossMinHp:600, areaKey:'grass', areaName:'草原', background:'sta/backsougen.png', bosses:['ホークモブ','ミラモブ'], enemySpawn:true, timeLimitSec:30 },
-    hard:{ key:'hard', name:'ハード', color:'#6be6ff', clearCoin:800, firstCoin:8000, firstDiamond:8, chestMul:2.0, bossHpMul:1.35, bossCoinMul:2.6, bossMinHp:1800, areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', bosses:['ミラモブⅡ','ネオンモブ'], enemySpawn:true, timeLimitSec:30 },
-    veryHard:{ key:'veryHard', name:'ベリーハード', color:'#ffcf5b', clearCoin:1500, firstCoin:15000, firstDiamond:10, chestMul:3.2, bossHpMul:1.8, bossCoinMul:4.4, bossMinHp:3800, areaKey:'magma', areaName:'マグマ', background:'sta/backmagma.png', bosses:['ドラゴンモブ','ドラゴンモブⅡ'], enemySpawn:true, timeLimitSec:30 },
-    inferno:{ key:'inferno', name:'インフェルノ', color:'#ff5b5b', clearCoin:3000, firstCoin:30000, firstDiamond:20, chestMul:5.0, bossHpMul:2.35, bossCoinMul:8.0, bossMinHp:7200, areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', bosses:['モブリリス','ドラゴンモブⅡ'], enemySpawn:true, timeLimitSec:30 },
-    legend:{ key:'legend', name:'レジェンド', color:'#d86bff', clearCoin:7000, firstCoin:80000, firstDiamond:50, chestMul:8.0, bossHpMul:3.2, bossCoinMul:13.0, bossMinHp:12000, areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', bosses:['モブリリス','モブ魔王'], enemySpawn:true, timeLimitSec:30 }
+    easy:{ key:'easy', name:'イージー', color:'#9dff73', clearCoin:5000, firstCoin:3000, firstDiamond:5, chestMul:10.0, bossHpMul:1.0, bossCoinMul:10.0, bossMinHp:600, areaKey:'grass', areaName:'草原', background:'sta/backsougen.png', bosses:['ホークモブ','ミラモブ'], enemySpawn:true, timeLimitSec:30 },
+    hard:{ key:'hard', name:'ハード', color:'#6be6ff', clearCoin:15000, firstCoin:8000, firstDiamond:8, chestMul:25.0, bossHpMul:1.35, bossCoinMul:24.0, bossMinHp:1800, areaKey:'desert', areaName:'砂漠', background:'sta/backsabaku.png', bosses:['ミラモブⅡ','ネオンモブ'], enemySpawn:true, timeLimitSec:30 },
+    veryHard:{ key:'veryHard', name:'ベリーハード', color:'#ffcf5b', clearCoin:40000, firstCoin:15000, firstDiamond:10, chestMul:55.0, bossHpMul:1.8, bossCoinMul:50.0, bossMinHp:3800, areaKey:'magma', areaName:'マグマ', background:'sta/backmagma.png', bosses:['ドラゴンモブ','ドラゴンモブⅡ'], enemySpawn:true, timeLimitSec:30 },
+    inferno:{ key:'inferno', name:'インフェルノ', color:'#ff5b5b', clearCoin:120000, firstCoin:30000, firstDiamond:20, chestMul:120.0, bossHpMul:2.35, bossCoinMul:105.0, bossMinHp:7200, areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', bosses:['モブリリス','ドラゴンモブⅡ'], enemySpawn:true, timeLimitSec:30 },
+    legend:{ key:'legend', name:'レジェンド', color:'#d86bff', clearCoin:300000, firstCoin:80000, firstDiamond:50, chestMul:260.0, bossHpMul:3.2, bossCoinMul:220.0, bossMinHp:12000, areaKey:'castle', areaName:'魔王城', background:'sta/backmao.png', bosses:['モブリリス','モブ魔王'], enemySpawn:true, timeLimitSec:30 }
   };
 
   const QUEST_DIFFICULTY_FALLBACK = {
@@ -164,6 +164,16 @@
     return raw || 'easy';
   }
 
+  function goldBossDiamondRate(key){
+    key = normalizeDifficultyKey(key);
+    if (key === 'easy') return 0.50;
+    if (key === 'hard') return 0.70;
+    if (key === 'veryHard') return 0.80;
+    if (key === 'inferno') return 0.90;
+    if (key === 'legend') return 1.00;
+    return 0;
+  }
+
   function readEventRequest(){
     try {
       const raw = localStorage.getItem(EVENT_SAVE_KEY);
@@ -268,6 +278,8 @@
     const save = getSave();
     save.diamond = Number(save.diamond || 0) + add;
     saveMainData(save);
+
+    window.dispatchEvent(new CustomEvent('mobshot:diamondUpdated', { detail:{ diamond:save.diamond, add:add } }));
   }
 
   function stageAreaData(areaKey){
@@ -617,10 +629,10 @@
       kind:'chest',
       name:def.name,
       image:def.image,
-      x:rand(W * 0.2, W * 0.8),
+      x:rand(W * 0.16, W * 0.84),
       y:-76,
-      vx:0,
-      vy:1.35,
+      vx:rand(-0.25, 0.25),
+      vy:1.25 + rand(0, 0.22),
       w:64,
       h:58,
       hp,
@@ -779,11 +791,17 @@
     }
 
     if (localFrame >= nextChestAt) {
-      if (Math.random() < 0.65) {
-        spawnAreaChest(api, areaKey, Math.max(1, enemyPower * 0.45), Number(diff.chestMul || 1) * 3.6);
+      spawnAreaChest(api, areaKey, Math.max(1, enemyPower * 0.45), Number(diff.chestMul || 1) * 5.5);
+
+      if (Math.random() < 0.55) {
+        spawnAreaChest(api, areaKey, Math.max(1, enemyPower * 0.45), Number(diff.chestMul || 1) * 5.5);
       }
 
-      nextChestAt = localFrame + intRand(170, 260);
+      if (Math.random() < 0.22) {
+        spawnAreaChest(api, areaKey, Math.max(1, enemyPower * 0.45), Number(diff.chestMul || 1) * 5.5);
+      }
+
+      nextChestAt = localFrame + intRand(48, 82);
     }
 
     const bossAlive = state.entities.some(e => !e.dead && e.kind === 'boss');
@@ -1952,7 +1970,7 @@
       const diff = getGoldDifficulty();
 
       nextEnemyAt = 120;
-      nextChestAt = 170;
+      nextChestAt = 40;
       nextGimmickAt = 150;
 
       api.setEventMode({ active:true, key:'gold' });
@@ -2007,6 +2025,31 @@
 
       if (window.MobShotEvents && window.MobShotEvents.recordEventBossKill) {
         window.MobShotEvents.recordEventBossKill(entity.name);
+      }
+
+      if (eventType === 'gold' && entity.kind === 'boss') {
+        const diff = getGoldDifficulty();
+        const rate = goldBossDiamondRate(diff.key);
+
+        if (Math.random() < rate) {
+          addDiamond(1);
+
+          if (api && api.state && Array.isArray(api.state.texts)) {
+            api.state.texts.push({
+              x:entity.x || api.W / 2,
+              y:entity.y || api.H * 0.25,
+              text:'+1 DIAMOND',
+              life:70,
+              vy:-0.8,
+              color:'#8ee8ff',
+              size:22
+            });
+          }
+
+          if (api && api.showBanner) {
+            api.showBanner('DIAMOND DROP!');
+          }
+        }
       }
     }
 
