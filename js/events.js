@@ -10,11 +10,11 @@
   const TEST_GOLD_TICKET_START = 0;
 
   const GOLD_DIFFICULTIES = [
-    { key:'easy', name:'イージー', icon:'mt/game1.png', color:'#9dff73', firstCoin:3000, firstDiamond:5, clearCoin:300, chestMul:0.8, bossHpMul:1.0, bossCoinMul:1.0, bossCount:2, bosses:['ホークモブ','ミラモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ホークモブ + ミラモブ' },
-    { key:'hard', name:'ハード', icon:'mt/game2.png', color:'#6be6ff', firstCoin:8000, firstDiamond:8, clearCoin:800, chestMul:1.4, bossHpMul:1.35, bossCoinMul:1.8, bossCount:2, bosses:['ミラモブⅡ','ネオンモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ミラモブⅡ + ネオンモブ' },
-    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', firstCoin:15000, firstDiamond:10, clearCoin:1500, chestMul:2.2, bossHpMul:1.8, bossCoinMul:3.2, bossCount:2, bosses:['ドラゴンモブ','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ドラゴンモブ + ドラゴンモブⅡ' },
-    { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', color:'#ff5b5b', firstCoin:30000, firstDiamond:20, clearCoin:3000, chestMul:3.5, bossHpMul:2.35, bossCoinMul:6.0, bossCount:2, bosses:['モブリリス','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + ドラゴンモブⅡ' },
-    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', firstCoin:80000, firstDiamond:50, clearCoin:7000, chestMul:5.5, bossHpMul:3.2, bossCoinMul:10.0, bossCount:2, bosses:['モブリリス','モブ魔王'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + モブ魔王' }
+    { key:'easy', name:'イージー', icon:'mt/game1.png', color:'#9dff73', firstCoin:3000, firstDiamond:5, clearCoin:300, chestMul:1.2, bossHpMul:1.0, bossCoinMul:1.4, bossCount:2, bosses:['ホークモブ','ミラモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ホークモブ + ミラモブ' },
+    { key:'hard', name:'ハード', icon:'mt/game2.png', color:'#6be6ff', firstCoin:8000, firstDiamond:8, clearCoin:800, chestMul:2.0, bossHpMul:1.35, bossCoinMul:2.6, bossCount:2, bosses:['ミラモブⅡ','ネオンモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ミラモブⅡ + ネオンモブ' },
+    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', firstCoin:15000, firstDiamond:10, clearCoin:1500, chestMul:3.2, bossHpMul:1.8, bossCoinMul:4.4, bossCount:2, bosses:['ドラゴンモブ','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ドラゴンモブ + ドラゴンモブⅡ' },
+    { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', color:'#ff5b5b', firstCoin:30000, firstDiamond:20, clearCoin:3000, chestMul:5.0, bossHpMul:2.35, bossCoinMul:8.0, bossCount:2, bosses:['モブリリス','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + ドラゴンモブⅡ' },
+    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', firstCoin:80000, firstDiamond:50, clearCoin:7000, chestMul:8.0, bossHpMul:3.2, bossCoinMul:13.0, bossCount:2, bosses:['モブリリス','モブ魔王'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + モブ魔王' }
   ];
 
   const DOUBLE_DIFFICULTIES = [
@@ -41,23 +41,23 @@
 
   const QUEST_STAGES = [
     { id:1, key:'pterarush', title:'プテラッシュ', areaKey:'grass', areaName:'草原', background:null, desc:'中ボスのプテラが2体 → 3体 → 5体で出現。全て倒すとクリア。', label:'プテラ 2→3→5', rank:1, questEnemyMode:'low', gimmickSpawn:false },
-    { id:2, key:'guardian_test', title:'番人試験', areaKey:'town', areaName:'田舎町', background:null, desc:'ミニサイズの番人が2体同時に出現。両方倒すとクリア。', label:'小番人 2体同時', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:2, key:'guardian_test', title:'番人試験', areaKey:'town', areaName:'田舎町', background:null, desc:'小さめの番人が2体同時に出現。両方倒すとクリア。', label:'小番人 2体同時', rank:1, questEnemyMode:'low', gimmickSpawn:false },
     { id:3, key:'grass_traveler', title:'草原の旅人', areaKey:'grass', areaName:'草原', background:null, desc:'グラディモブ2体とモブニコ2体が同時出現。全て倒すとクリア。', label:'グラディ2 + ニコ2', rank:1, questEnemyMode:'low', gimmickSpawn:false },
-    { id:4, key:'thieves', title:'盗賊団', areaKey:'desert', areaName:'砂漠', background:null, desc:'ミラモブ1体と砂漠の雑魚敵を倒すとクリア。雑魚湧きは少なめ。', label:'ミラモブ + 雑魚少なめ', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:4, key:'thieves', title:'盗賊団', areaKey:'desert', areaName:'砂漠', background:null, desc:'砂漠の雑魚敵10体を3回倒すと、最後にミラモブが出現。倒すとクリア。', label:'雑魚10×3 → ミラモブ', rank:1, questEnemyMode:'none', gimmickSpawn:false },
     { id:5, key:'desert_ruler', title:'砂漠を統べる者', areaKey:'desert', areaName:'砂漠', background:null, desc:'ミラモブⅡが2体同時出現。全て倒すとクリア。', label:'ミラモブⅡ 2体', rank:1, questEnemyMode:'low', gimmickSpawn:false },
-    { id:6, key:'desert_sharks', title:'砂漠に潜む鮫', areaKey:'desert', areaName:'砂漠', background:null, desc:'モブサメが4体同時出現。全て倒すとクリア。', label:'モブサメ 4体', rank:1, questEnemyMode:'low', gimmickSpawn:false },
-    { id:7, key:'hot_magma', title:'アチアチマグマ', areaKey:'magma', areaName:'マグマ', background:null, desc:'開始直後からドラゴンと中ボス2体が同時出現。全て倒すとクリア。', label:'ドラゴン + 中ボス2体', rank:1, questEnemyMode:'low', gimmickSpawn:false },
-    { id:8, key:'magma_guardian', title:'マグマに潜むガーディアン', areaKey:'magma', areaName:'マグマ', background:null, desc:'マグモブレム3体とモブガーディアンⅡが同時出現。全て倒すとクリア。', label:'マグレム3 + 番人Ⅱ', rank:1, questEnemyMode:'low', gimmickSpawn:false },
-    { id:9, key:'sky_rulers', title:'空の支配者', areaKey:'town', areaName:'田舎町', background:null, desc:'モブバード、モブファル、モブマグプテラが少し出現。ホークモブⅡとドラゴンモブⅡを両方倒すとクリア。', label:'ホークⅡ + ドラゴンⅡ', rank:1, questEnemyMode:'low', gimmickSpawn:false },
-    { id:10, key:'neon_nightmare', title:'ネオン街の悪夢', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブコード、モブケーブル、ネオンモブが同時出現。全て倒すとクリア。', label:'コード + ケーブル + ネオン', rank:1, questEnemyMode:'low', gimmickSpawn:false },
-    { id:11, key:'nine_heads', title:'9つの首', areaKey:'neon', areaName:'ネオン街', background:null, desc:'ネオンギドラ3体同時 → 大型ネオンギドラ1体。倒すとクリア。', label:'ギドラ3体 + 大型1体', rank:1, questEnemyMode:'low', gimmickSpawn:false },
-    { id:12, key:'town_dragon', title:'街を襲うドラゴン', areaKey:'town', areaName:'田舎町', background:null, desc:'ドラゴンモブⅡとモブギドラ2体が同時出現。全て倒すとクリア。', label:'ドラゴンⅡ + ギドラ2', rank:1, questEnemyMode:'low', gimmickSpawn:false },
-    { id:13, key:'three_birds', title:'三鳥見参', areaKey:'grass', areaName:'草原', background:null, desc:'ホークモブ2体とホークモブⅡが同時出現。全て倒すとクリア。', label:'ホーク2 + ホークⅡ', rank:1, questEnemyMode:'low', gimmickSpawn:false },
-    { id:14, key:'neon_maoh', title:'ネオン街の魔王', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブ魔王、モブケーブル、モブコードが同時出現。全て倒すとクリア。', label:'魔王 + ケーブル + コード', rank:1, questEnemyMode:'low', gimmickSpawn:false },
-    { id:15, key:'magma_beauty', title:'マグマを好む美女', areaKey:'magma', areaName:'マグマ', background:null, desc:'モブリリスとモブメルト3体が同時出現。全て倒すとクリア。', label:'リリス + メルト3', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:6, key:'desert_sharks', title:'砂漠に潜む鮫', areaKey:'desert', areaName:'砂漠', background:null, desc:'モブサメ2体 → モブサメ4体の順番で出現。全て倒すとクリア。', label:'モブサメ2 → 4', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:7, key:'hot_magma', title:'アチアチマグマ', areaKey:'magma', areaName:'マグマ', background:null, desc:'ドラゴンモブが最初から出現し、中ボス3体が1体ずつ順番に出現。全て倒すとクリア。', label:'ドラゴン + 中ボス3体順番', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:8, key:'magma_guardian', title:'マグマに潜むガーディアン', areaKey:'magma', areaName:'マグマ', background:null, desc:'モブガーディアンⅡが最初から出現し、中ボス3体が1体ずつ順番に出現。全て倒すとクリア。', label:'番人Ⅱ + 中ボス3体順番', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:9, key:'sky_rulers', title:'空の支配者', areaKey:'town', areaName:'田舎町', background:null, desc:'ホークモブ、ホークモブⅡ、ドラゴンモブⅡが同時出現。全て倒すとクリア。', label:'ホーク + ホークⅡ + ドラゴンⅡ', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:10, key:'neon_nightmare', title:'ネオン街の悪夢', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブコード、モブケーブル、ネオンモブが出現。コードとケーブルを倒すとコード2体・ケーブル2体が追加出現。全て倒すとクリア。', label:'コード/ケーブル撃破 → 追加4体', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:11, key:'nine_heads', title:'9つの首', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブギドラ3体 → モブギドラ6体の順番で出現。大型は出現しない。全て倒すとクリア。', label:'ギドラ3 → ギドラ6', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:12, key:'town_dragon', title:'街を襲うドラゴン', areaKey:'town', areaName:'田舎町', background:null, desc:'ドラゴンモブⅡとモブギドラ4体が同時出現。全て倒すとクリア。', label:'ドラゴンⅡ + ギドラ4', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:13, key:'three_birds', title:'三鳥見参', areaKey:'grass', areaName:'草原', background:null, desc:'ホークモブ3体 → ホークモブⅡ3体の順番で出現。全て倒すとクリア。', label:'ホーク3 → ホークⅡ3', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:14, key:'neon_maoh', title:'ネオン街の魔王', areaKey:'neon', areaName:'ネオン街', background:null, desc:'モブ魔王、ネオンモブ、モブケーブル、モブコードが同時出現。全て倒すとクリア。', label:'魔王 + ネオン + ケーブル + コード', rank:1, questEnemyMode:'low', gimmickSpawn:false },
+    { id:15, key:'magma_beauty', title:'マグマを好む美女', areaKey:'magma', areaName:'マグマ', background:null, desc:'モブリリスとモブメルト3体が出現。全て倒すと追加でモブメルト4体が出現。倒すとクリア。', label:'リリス + メルト3 → メルト4', rank:1, questEnemyMode:'low', gimmickSpawn:false },
     { id:16, key:'maoh_duel', title:'対峙する魔王', areaKey:'castle', areaName:'魔王城', background:null, desc:'モブ魔王を倒すと、次のモブ魔王と2体のミラモブが出現。全て倒すとクリア。', label:'魔王 → 魔王 + ミラ2体', rank:1, questEnemyMode:'low', gimmickSpawn:false },
     { id:17, key:'lilith_sisters', title:'リリス四姉妹', areaKey:'castle', areaName:'魔王城', background:null, desc:'小さめのモブリリスが4体同時に出現。全て倒すとクリア。', label:'小モブリリス 4体同時', rank:1, questEnemyMode:'low', gimmickSpawn:false },
-    { id:18, key:'castle_machine', title:'魔王城の精密機械', areaKey:'castle', areaName:'魔王城', background:null, desc:'ネオンモブ3体とホークモブが同時出現。全て倒すとクリア。', label:'ネオン3 + ホーク', rank:1, questEnemyMode:'low', gimmickSpawn:false }
+    { id:18, key:'castle_machine', title:'魔王城の精密機械', areaKey:'castle', areaName:'魔王城', background:null, desc:'ネオンモブ3体とホークモブが出現。全て倒すと魔王2体が追加出現。倒すとクリア。', label:'ネオン3 + ホーク → 魔王2', rank:1, questEnemyMode:'low', gimmickSpawn:false }
   ];
 
   const EVENTS = [
@@ -67,30 +67,22 @@
     { key:'secretBoss', name:'シークレットボス', image:'mt/event_secret.png', desc:'COMING SOON' }
   ];
 
-  function qs(id){
-    return document.getElementById(id);
-  }
-
-  function clone(obj){
-    return JSON.parse(JSON.stringify(obj));
-  }
+  function qs(id){ return document.getElementById(id); }
+  function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
   function normalizeDifficultyKey(key){
     const raw = String(key || '').trim();
-
     if (raw === 'イージー') return 'easy';
     if (raw === 'ハード') return 'hard';
     if (raw === 'ベリーハード') return 'veryHard';
     if (raw === 'インフェルノ') return 'inferno';
     if (raw === 'レジェンド') return 'legend';
-
     if (raw === 'easy') return 'easy';
     if (raw === 'hard') return 'hard';
     if (raw === 'veryHard') return 'veryHard';
     if (raw === 'veryhard') return 'veryHard';
     if (raw === 'inferno') return 'inferno';
     if (raw === 'legend') return 'legend';
-
     return raw || 'easy';
   }
 
@@ -100,212 +92,30 @@
     const style = document.createElement('style');
     style.id = 'mobEventUiStyle';
     style.textContent = `
-      .event-card{
-        grid-template-columns:72px 1fr !important;
-        align-items:start !important;
-        gap:10px !important;
-        padding:10px !important;
-      }
-
-      .event-icon{
-        width:64px !important;
-        height:64px !important;
-        object-fit:contain !important;
-      }
-
-      .event-info h3{
-        font-size:19px !important;
-        margin-bottom:3px !important;
-      }
-
-      .event-info p{
-        font-size:11px !important;
-        margin-bottom:6px !important;
-      }
-
-      .event-info p:empty{
-        display:none !important;
-      }
-
-      .event-difficulty-grid{
-        display:grid;
-        grid-template-columns:1fr;
-        gap:7px;
-        margin-top:8px;
-      }
-
-      .event-difficulty-card{
-        position:relative;
-        width:100%;
-        min-height:56px;
-        overflow:hidden;
-        border:0;
-        border-radius:15px;
-        padding:0;
-        background:rgba(255,255,255,.08);
-        box-shadow:0 4px 0 rgba(0,0,0,.34);
-      }
-
-      .event-difficulty-card:disabled{
-        opacity:.45;
-        filter:grayscale(1);
-      }
-
-      .event-difficulty-card img{
-        position:absolute;
-        inset:0;
-        width:100%;
-        height:100%;
-        object-fit:cover;
-      }
-
-      .event-difficulty-card::after{
-        content:"";
-        position:absolute;
-        inset:0;
-        background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.14),rgba(0,0,0,.44));
-        pointer-events:none;
-      }
-
-      .event-difficulty-name{
-        position:absolute;
-        left:12px;
-        top:7px;
-        z-index:2;
-        font-size:15px;
-        font-weight:1000;
-        color:#fff;
-        text-shadow:0 3px 0 #000;
-        letter-spacing:.04em;
-      }
-
-      .event-difficulty-small{
-        position:absolute;
-        left:12px;
-        bottom:7px;
-        z-index:2;
-        font-size:10px;
-        line-height:1.2;
-        font-weight:1000;
-        color:#dfe8ff;
-        text-shadow:0 2px 0 #000;
-        text-align:left;
-        max-width:76%;
-      }
-
-      .event-difficulty-badge{
-        position:absolute;
-        right:8px;
-        top:7px;
-        z-index:2;
-        padding:4px 7px;
-        border-radius:999px;
-        font-size:10px;
-        font-weight:1000;
-        color:#151000;
-        background:linear-gradient(#ffe66b,#ffb423);
-        box-shadow:0 3px 0 rgba(0,0,0,.35);
-      }
-
-      .event-quest-wrap{
-        display:grid;
-        grid-template-columns:1fr;
-        gap:9px;
-        margin-top:8px;
-        max-height:60vh;
-        overflow:auto;
-        padding-right:2px;
-      }
-
-      .event-quest-box{
-        padding:8px;
-        border-radius:16px;
-        background:rgba(255,255,255,.07);
-        border:2px solid rgba(255,255,255,.15);
-      }
-
-      .event-quest-title{
-        font-size:16px;
-        font-weight:1000;
-        color:#fff;
-        text-shadow:0 2px 0 #000;
-        margin-bottom:7px;
-      }
-
-      .event-quest-label{
-        font-size:10px;
-        font-weight:900;
-        color:#dfe8ff;
-        text-shadow:0 2px 0 #000;
-        margin:-3px 0 7px;
-        line-height:1.35;
-      }
-
-      .event-quest-diff-row{
-        display:grid;
-        grid-template-columns:repeat(3,1fr);
-        gap:6px;
-      }
-
-      .event-quest-diff-btn{
-        position:relative;
-        width:100%;
-        height:48px;
-        overflow:hidden;
-        border:0;
-        border-radius:13px;
-        padding:0;
-        background:rgba(255,255,255,.08);
-        box-shadow:0 3px 0 rgba(0,0,0,.34);
-      }
-
-      .event-quest-diff-btn:disabled{
-        opacity:.45;
-        filter:grayscale(1);
-      }
-
-      .event-quest-diff-btn img{
-        position:absolute;
-        inset:0;
-        width:100%;
-        height:100%;
-        object-fit:cover;
-      }
-
-      .event-quest-diff-btn::after{
-        content:"";
-        position:absolute;
-        inset:0;
-        background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.58));
-        pointer-events:none;
-      }
-
-      .event-quest-diff-name{
-        position:absolute;
-        left:4px;
-        right:4px;
-        bottom:5px;
-        z-index:2;
-        color:#fff;
-        font-size:10px;
-        font-weight:1000;
-        text-align:center;
-        text-shadow:0 2px 0 #000;
-        white-space:nowrap;
-      }
-
-      .event-quest-diff-lock{
-        position:absolute;
-        top:4px;
-        right:4px;
-        z-index:3;
-        padding:2px 5px;
-        border-radius:999px;
-        background:rgba(0,0,0,.68);
-        color:#ffe66b;
-        font-size:8px;
-        font-weight:1000;
-      }
+      .event-card{grid-template-columns:72px 1fr!important;align-items:start!important;gap:10px!important;padding:10px!important}
+      .event-icon{width:64px!important;height:64px!important;object-fit:contain!important}
+      .event-info h3{font-size:19px!important;margin-bottom:3px!important}
+      .event-info p{font-size:11px!important;margin-bottom:6px!important}
+      .event-info p:empty{display:none!important}
+      .event-difficulty-grid{display:grid;grid-template-columns:1fr;gap:7px;margin-top:8px}
+      .event-difficulty-card{position:relative;width:100%;min-height:56px;overflow:hidden;border:0;border-radius:15px;padding:0;background:rgba(255,255,255,.08);box-shadow:0 4px 0 rgba(0,0,0,.34)}
+      .event-difficulty-card:disabled{opacity:.45;filter:grayscale(1)}
+      .event-difficulty-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+      .event-difficulty-card::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.14),rgba(0,0,0,.44));pointer-events:none}
+      .event-difficulty-name{position:absolute;left:12px;top:7px;z-index:2;font-size:15px;font-weight:1000;color:#fff;text-shadow:0 3px 0 #000;letter-spacing:.04em}
+      .event-difficulty-small{position:absolute;left:12px;bottom:7px;z-index:2;font-size:10px;line-height:1.2;font-weight:1000;color:#dfe8ff;text-shadow:0 2px 0 #000;text-align:left;max-width:76%}
+      .event-difficulty-badge{position:absolute;right:8px;top:7px;z-index:2;padding:4px 7px;border-radius:999px;font-size:10px;font-weight:1000;color:#151000;background:linear-gradient(#ffe66b,#ffb423);box-shadow:0 3px 0 rgba(0,0,0,.35)}
+      .event-quest-wrap{display:grid;grid-template-columns:1fr;gap:9px;margin-top:8px;max-height:60vh;overflow:auto;padding-right:2px}
+      .event-quest-box{padding:8px;border-radius:16px;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.15)}
+      .event-quest-title{font-size:16px;font-weight:1000;color:#fff;text-shadow:0 2px 0 #000;margin-bottom:7px}
+      .event-quest-label{font-size:10px;font-weight:900;color:#dfe8ff;text-shadow:0 2px 0 #000;margin:-3px 0 7px;line-height:1.35}
+      .event-quest-diff-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+      .event-quest-diff-btn{position:relative;width:100%;height:48px;overflow:hidden;border:0;border-radius:13px;padding:0;background:rgba(255,255,255,.08);box-shadow:0 3px 0 rgba(0,0,0,.34)}
+      .event-quest-diff-btn:disabled{opacity:.45;filter:grayscale(1)}
+      .event-quest-diff-btn img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+      .event-quest-diff-btn::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.58));pointer-events:none}
+      .event-quest-diff-name{position:absolute;left:4px;right:4px;bottom:5px;z-index:2;color:#fff;font-size:10px;font-weight:1000;text-align:center;text-shadow:0 2px 0 #000;white-space:nowrap}
+      .event-quest-diff-lock{position:absolute;top:4px;right:4px;z-index:3;padding:2px 5px;border-radius:999px;background:rgba(0,0,0,.68);color:#ffe66b;font-size:8px;font-weight:1000}
     `;
     document.head.appendChild(style);
   }
@@ -316,80 +126,17 @@
     const style = document.createElement('style');
     style.id = 'mobEventConfirmStyle';
     style.textContent = `
-      .mob-event-confirm{
-        position:absolute;
-        inset:0;
-        z-index:120;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding:18px;
-        background:rgba(0,0,0,.72);
-      }
+      .mob-event-confirm{position:absolute;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.72)}
       .mob-event-confirm.hidden{display:none}
-      .mob-event-confirm-card{
-        width:min(90vw,440px);
-        border-radius:28px;
-        padding:18px;
-        background:linear-gradient(180deg,rgba(34,26,70,.98),rgba(6,8,24,.98));
-        border:4px solid rgba(255,255,255,.35);
-        box-shadow:0 18px 48px rgba(0,0,0,.65), inset 0 0 0 2px rgba(255,255,255,.08);
-        text-align:center;
-      }
-      .mob-event-confirm-title{
-        margin:0 0 10px;
-        font-size:26px;
-        font-weight:1000;
-        color:#fff;
-        text-shadow:0 4px 0 #000;
-      }
-      .mob-event-confirm-sub{
-        margin:0 0 14px;
-        font-size:17px;
-        font-weight:1000;
-        color:#ffe66b;
-        line-height:1.45;
-      }
-      .mob-event-confirm-reward{
-        margin:10px 0;
-        padding:12px;
-        border-radius:18px;
-        background:rgba(255,255,255,.10);
-        border:2px solid rgba(255,255,255,.22);
-        color:#fff;
-        font-size:15px;
-        font-weight:900;
-        line-height:1.55;
-      }
-      .mob-event-confirm-extra{
-        margin:8px 0 14px;
-        color:#dfe8ff;
-        font-size:13px;
-        font-weight:800;
-        line-height:1.45;
-      }
-      .mob-event-confirm-actions{
-        display:grid;
-        grid-template-columns:1fr;
-        gap:10px;
-      }
-      .mob-event-confirm-yes,
-      .mob-event-confirm-no{
-        border:0;
-        border-radius:999px;
-        padding:14px 18px;
-        font-size:18px;
-        font-weight:1000;
-        box-shadow:0 5px 0 rgba(0,0,0,.38);
-      }
-      .mob-event-confirm-yes{
-        background:linear-gradient(#9dff73,#26b63e);
-        color:#07370f;
-      }
-      .mob-event-confirm-no{
-        background:linear-gradient(#ffffff,#aeb7c8);
-        color:#182033;
-      }
+      .mob-event-confirm-card{width:min(90vw,440px);border-radius:28px;padding:18px;background:linear-gradient(180deg,rgba(34,26,70,.98),rgba(6,8,24,.98));border:4px solid rgba(255,255,255,.35);box-shadow:0 18px 48px rgba(0,0,0,.65),inset 0 0 0 2px rgba(255,255,255,.08);text-align:center}
+      .mob-event-confirm-title{margin:0 0 10px;font-size:26px;font-weight:1000;color:#fff;text-shadow:0 4px 0 #000}
+      .mob-event-confirm-sub{margin:0 0 14px;font-size:17px;font-weight:1000;color:#ffe66b;line-height:1.45}
+      .mob-event-confirm-reward{margin:10px 0;padding:12px;border-radius:18px;background:rgba(255,255,255,.10);border:2px solid rgba(255,255,255,.22);color:#fff;font-size:15px;font-weight:900;line-height:1.55}
+      .mob-event-confirm-extra{margin:8px 0 14px;color:#dfe8ff;font-size:13px;font-weight:800;line-height:1.45}
+      .mob-event-confirm-actions{display:grid;grid-template-columns:1fr;gap:10px}
+      .mob-event-confirm-yes,.mob-event-confirm-no{border:0;border-radius:999px;padding:14px 18px;font-size:18px;font-weight:1000;box-shadow:0 5px 0 rgba(0,0,0,.38)}
+      .mob-event-confirm-yes{background:linear-gradient(#9dff73,#26b63e);color:#07370f}
+      .mob-event-confirm-no{background:linear-gradient(#ffffff,#aeb7c8);color:#182033}
     `;
     document.head.appendChild(style);
   }
@@ -466,9 +213,9 @@
   function showMessage(title, message){
     openConfirm({
       title,
-      sub: message,
-      reward: '',
-      extra: '',
+      sub:message,
+      reward:'',
+      extra:'',
       yesText:'OK',
       hideNo:true
     });
@@ -476,12 +223,7 @@
 
   function getSave(){
     if (window.MobShotStorage && window.MobShotStorage.load) return window.MobShotStorage.load();
-
-    try {
-      return JSON.parse(localStorage.getItem('mobshot_split_v1')) || {};
-    } catch(e) {
-      return {};
-    }
+    try { return JSON.parse(localStorage.getItem('mobshot_split_v1')) || {}; } catch(e) { return {}; }
   }
 
   function saveMainData(save){
@@ -489,7 +231,6 @@
       window.MobShotStorage.save(save);
       return true;
     }
-
     try {
       localStorage.setItem('mobshot_split_v1', JSON.stringify(save));
       return true;
@@ -498,51 +239,28 @@
     }
   }
 
-  function getRank(){
-    return Number(getSave().rank || 1);
-  }
-
-  function isUnlocked(){
-    return true;
-  }
+  function getRank(){ return Number(getSave().rank || 1); }
+  function isUnlocked(){ return true; }
 
   function isDifficultyAllCleared(difficultyName){
-    if (!window.MobShotStorage || !window.MobShotStorage.STAGE_LIST || !window.MobShotStorage.load) {
-      return false;
-    }
+    if (!window.MobShotStorage || !window.MobShotStorage.STAGE_LIST || !window.MobShotStorage.load) return false;
 
     const save = window.MobShotStorage.load();
-    const cleared = save.stageProgress && save.stageProgress.clearedStageIds
-      ? save.stageProgress.clearedStageIds
-      : {};
-
+    const cleared = save.stageProgress && save.stageProgress.clearedStageIds ? save.stageProgress.clearedStageIds : {};
     const targets = window.MobShotStorage.STAGE_LIST.filter(stage => stage.difficulty === difficultyName);
 
     if (!targets.length) return false;
-
     return targets.every(stage => !!cleared[stage.id]);
   }
 
-  function isEventQuestUnlocked(){
-    return true;
-  }
+  function isEventQuestUnlocked(){ return true; }
+  function isDoubleBossUnlocked(){ return isDifficultyAllCleared('ハード'); }
 
-  function isDoubleBossUnlocked(){
-    return isDifficultyAllCleared('ハード');
-  }
-
-  function defaultItems(){
-    return { goldTicket:0, __testInitialized:true };
-  }
+  function defaultItems(){ return { goldTicket:0, __testInitialized:true }; }
 
   function loadItems(){
     let items = null;
-
-    try {
-      items = JSON.parse(localStorage.getItem(EVENT_ITEM_KEY)) || null;
-    } catch(e) {
-      items = null;
-    }
+    try { items = JSON.parse(localStorage.getItem(EVENT_ITEM_KEY)) || null; } catch(e) { items = null; }
 
     if (!items || !items.__testInitialized) {
       items = defaultItems();
@@ -554,9 +272,7 @@
   }
 
   function saveItems(items){
-    try {
-      localStorage.setItem(EVENT_ITEM_KEY, JSON.stringify(items || defaultItems()));
-    } catch(e) {}
+    try { localStorage.setItem(EVENT_ITEM_KEY, JSON.stringify(items || defaultItems())); } catch(e) {}
   }
 
   function defaultStats(){
@@ -579,12 +295,7 @@
 
   function loadStats(){
     let stats = null;
-
-    try {
-      stats = JSON.parse(localStorage.getItem(EVENT_STATS_KEY)) || null;
-    } catch(e) {
-      stats = null;
-    }
+    try { stats = JSON.parse(localStorage.getItem(EVENT_STATS_KEY)) || null; } catch(e) { stats = null; }
 
     stats = Object.assign(defaultStats(), stats || {});
     stats.bossKills = stats.bossKills || {};
@@ -597,9 +308,7 @@
   }
 
   function saveStats(stats){
-    try {
-      localStorage.setItem(EVENT_STATS_KEY, JSON.stringify(stats || defaultStats()));
-    } catch(e) {}
+    try { localStorage.setItem(EVENT_STATS_KEY, JSON.stringify(stats || defaultStats())); } catch(e) {}
   }
 
   function addStat(key, amount){
@@ -610,17 +319,9 @@
     return stats[key];
   }
 
-  function getGoldTicket(){
-    return 0;
-  }
-
-  function addGoldTicket(amount){
-    return 0;
-  }
-
-  function consumeGoldTicket(amount){
-    return true;
-  }
+  function getGoldTicket(){ return 0; }
+  function addGoldTicket(amount){ return 0; }
+  function consumeGoldTicket(amount){ return true; }
 
   function resetTestTickets(){
     render();
@@ -651,17 +352,11 @@
   }
 
   function loadGoldClear(){
-    try {
-      return JSON.parse(localStorage.getItem(GOLD_CLEAR_KEY)) || {};
-    } catch(e) {
-      return {};
-    }
+    try { return JSON.parse(localStorage.getItem(GOLD_CLEAR_KEY)) || {}; } catch(e) { return {}; }
   }
 
   function saveGoldClear(data){
-    try {
-      localStorage.setItem(GOLD_CLEAR_KEY, JSON.stringify(data || {}));
-    } catch(e) {}
+    try { localStorage.setItem(GOLD_CLEAR_KEY, JSON.stringify(data || {})); } catch(e) {}
   }
 
   function hasGoldCleared(difficultyKey){
@@ -675,17 +370,11 @@
   }
 
   function loadDoubleClear(){
-    try {
-      return JSON.parse(localStorage.getItem(DOUBLE_CLEAR_KEY)) || {};
-    } catch(e) {
-      return {};
-    }
+    try { return JSON.parse(localStorage.getItem(DOUBLE_CLEAR_KEY)) || {}; } catch(e) { return {}; }
   }
 
   function saveDoubleClear(data){
-    try {
-      localStorage.setItem(DOUBLE_CLEAR_KEY, JSON.stringify(data || {}));
-    } catch(e) {}
+    try { localStorage.setItem(DOUBLE_CLEAR_KEY, JSON.stringify(data || {})); } catch(e) {}
   }
 
   function doubleClearKey(difficultyKey, stageId){
@@ -706,7 +395,6 @@
     difficultyKey = normalizeDifficultyKey(difficultyKey);
 
     if (!isDoubleBossUnlocked()) return false;
-
     if (difficultyKey === 'veryHard') return true;
 
     if (difficultyKey === 'inferno') {
@@ -736,11 +424,9 @@
 
   function isQuestDifficultyUnlocked(difficultyKey){
     difficultyKey = normalizeDifficultyKey(difficultyKey);
-
     if (difficultyKey === 'easy') return true;
     if (difficultyKey === 'veryHard') return isQuestDifficultyAllCleared('easy');
     if (difficultyKey === 'legend') return isQuestDifficultyAllCleared('veryHard');
-
     return false;
   }
 
@@ -749,9 +435,7 @@
     return isQuestDifficultyUnlocked(diff.key);
   }
 
-  function consumeCoin(amount){
-    return true;
-  }
+  function consumeCoin(amount){ return true; }
 
   function recordGoldClear(difficultyKey, coinAmount){
     const stats = loadStats();
@@ -771,7 +455,6 @@
 
   function recordDoubleBossClear(difficultyKey, stageId, coinAmount){
     difficultyKey = normalizeDifficultyKey(difficultyKey);
-
     const stats = loadStats();
     const stageKey = doubleClearKey(difficultyKey, stageId);
 
@@ -786,7 +469,6 @@
 
   function recordEventQuestClear(difficultyKey, questId, coinAmount){
     difficultyKey = normalizeDifficultyKey(difficultyKey);
-
     const stats = loadStats();
     const stageKey = questClearKey(difficultyKey, questId);
 
@@ -857,9 +539,7 @@
 
   function rewardTextQuest(diff, stage){
     const cleared = hasQuestCleared(diff.key, stage.id);
-    return cleared
-      ? 'クリア済み\n特別な石板ドロップあり'
-      : 'クリア報酬\n特別な石板ドロップ予定';
+    return cleared ? 'クリア済み\n特別な石板ドロップあり' : 'クリア報酬\n特別な石板ドロップ予定';
   }
 
   function render(){
@@ -896,23 +576,15 @@
       title.textContent = ev.name;
 
       const desc = document.createElement('p');
-
-      if (ev.key === 'eventQuest') {
-        desc.textContent = 'クエストをクリアして特別な石板を手に入れよう！';
-      } else {
-        desc.textContent = ev.desc || '';
-      }
+      desc.textContent = ev.key === 'eventQuest' ? 'クエストをクリアして特別な石板を手に入れよう！' : ev.desc || '';
 
       info.appendChild(title);
       info.appendChild(desc);
 
-      if (ev.key === 'gold') {
-        renderGoldButtons(info, unlocked);
-      } else if (ev.key === 'scoreAttack') {
-        renderScoreAttackButton(info, unlocked);
-      } else if (ev.key === 'eventQuest') {
-        renderQuestButtons(info, eventQuestUnlocked);
-      } else {
+      if (ev.key === 'gold') renderGoldButtons(info, unlocked);
+      else if (ev.key === 'scoreAttack') renderScoreAttackButton(info, unlocked);
+      else if (ev.key === 'eventQuest') renderQuestButtons(info, eventQuestUnlocked);
+      else {
         const btn = document.createElement('button');
         btn.className = 'event-play-btn';
         btn.type = 'button';
@@ -937,10 +609,7 @@
       btn.className = 'event-difficulty-card';
       btn.disabled = !unlocked;
 
-      const status =
-        !unlocked ? 'LOCK' :
-        hasGoldCleared(diff.key) ? 'CLEAR済' :
-        'START';
+      const status = !unlocked ? 'LOCK' : hasGoldCleared(diff.key) ? 'CLEAR済' : 'START';
 
       btn.innerHTML = `
         <img src="${diff.icon}" alt="${diff.name}">
@@ -960,9 +629,7 @@
           sub:`${diff.name}に出撃しますか？`,
           reward:rewardTextGold(diff),
           extra:`チケット消費なし\n自由に挑戦できます。\n\n${diff.label}`,
-          onYes:function(){
-            startEvent('gold', diff.key);
-          }
+          onYes:function(){ startEvent('gold', diff.key); }
         });
       });
 
@@ -998,9 +665,7 @@
         sub:'ボス連戦に挑戦しますか？',
         reward:'報酬\nスコア記録のみ',
         extra:'歴代ボスを順番に撃破します。',
-        onYes:function(){
-          startEvent('scoreAttack', '');
-        }
+        onYes:function(){ startEvent('scoreAttack', ''); }
       });
     });
 
@@ -1061,9 +726,7 @@
             sub:`${stage.title} / ${diff.name}に出撃しますか？`,
             reward:rewardTextQuest(diff, stage),
             extra:`COIN消費なし\n\n${stage.desc || stage.label || ''}`,
-            onYes:function(){
-              startEvent('eventQuest', diff.key, stage.id);
-            }
+            onYes:function(){ startEvent('eventQuest', diff.key, stage.id); }
           });
         });
 
@@ -1090,7 +753,6 @@
 
     if (key === 'gold') {
       const diff = getDifficulty(diffKey || 'easy');
-
       data.goldDifficulty = clone(diff);
       data.difficultyData = clone(diff);
     }
@@ -1103,13 +765,10 @@
       data.doubleBossStageId = Number(stage.id);
       data.selectedStageId = Number(stage.id);
       data.stageId = Number(stage.id);
-
       data.difficultyData = clone(diff);
       data.difficultyData.key = diff.key;
-
       data.stage = clone(stage);
       data.doubleStage = clone(stage);
-
       data.areaKey = stage.areaKey;
       data.areaName = stage.areaName;
       data.title = stage.title;
@@ -1148,22 +807,16 @@
       const quest = getQuestStage(selectedStageId || 1);
 
       if (!canPlayQuest(quest, diff)) {
-        if (diff.key === 'veryHard') {
-          showMessage('LOCK', 'イベントクエストのイージーを全てクリアすると解放されます。');
-        } else if (diff.key === 'legend') {
-          showMessage('LOCK', 'イベントクエストのベリーハードを全てクリアすると解放されます。');
-        } else {
-          showMessage('LOCK', 'このクエストはまだ解放されていません。');
-        }
+        if (diff.key === 'veryHard') showMessage('LOCK', 'イベントクエストのイージーを全てクリアすると解放されます。');
+        else if (diff.key === 'legend') showMessage('LOCK', 'イベントクエストのベリーハードを全てクリアすると解放されます。');
+        else showMessage('LOCK', 'このクエストはまだ解放されていません。');
         return;
       }
     }
 
     const eventData = makeEventData(key, difficultyKey, selectedStageId);
 
-    try {
-      localStorage.setItem(EVENT_SAVE_KEY, JSON.stringify(eventData));
-    } catch(e) {}
+    try { localStorage.setItem(EVENT_SAVE_KEY, JSON.stringify(eventData)); } catch(e) {}
 
     closeModal();
 
@@ -1218,34 +871,17 @@
     const ev = getCurrentEvent();
 
     if (!ev || ev.key !== 'doubleBoss') {
-      return {
-        difficulty:getDoubleDifficulty('veryHard'),
-        stage:getDoubleStage(1)
-      };
+      return { difficulty:getDoubleDifficulty('veryHard'), stage:getDoubleStage(1) };
     }
 
     const diffKey = normalizeDifficultyKey(ev.difficulty || ev.difficultyKey || 'veryHard');
     const difficulty = getDoubleDifficulty(diffKey);
-
-    const id = Number(
-      ev.stageId ||
-      ev.doubleStageId ||
-      ev.doubleBossStageId ||
-      ev.selectedStageId ||
-      (ev.stage && ev.stage.id) ||
-      (ev.doubleStage && ev.doubleStage.id) ||
-      1
-    );
+    const id = Number(ev.stageId || ev.doubleStageId || ev.doubleBossStageId || ev.selectedStageId || (ev.stage && ev.stage.id) || (ev.doubleStage && ev.doubleStage.id) || 1);
 
     let stage = getDoubleStage(id);
 
-    if (ev.stage && ev.stage.bossA && ev.stage.bossB) {
-      stage = Object.assign({}, stage, ev.stage);
-    }
-
-    if (ev.doubleStage && ev.doubleStage.bossA && ev.doubleStage.bossB) {
-      stage = Object.assign({}, stage, ev.doubleStage);
-    }
+    if (ev.stage && ev.stage.bossA && ev.stage.bossB) stage = Object.assign({}, stage, ev.stage);
+    if (ev.doubleStage && ev.doubleStage.bossA && ev.doubleStage.bossB) stage = Object.assign({}, stage, ev.doubleStage);
 
     if (ev.bossA) stage.bossA = ev.bossA;
     if (ev.bossB) stage.bossB = ev.bossB;
@@ -1261,14 +897,11 @@
     const ev = getCurrentEvent();
     const difficulty = getQuestDifficulty(ev && (ev.difficulty || ev.difficultyKey) ? (ev.difficulty || ev.difficultyKey) : 'easy');
     const stage = getQuestStage(ev && ev.stageId ? ev.stageId : 1);
-
     return { difficulty, stage };
   }
 
   function clearCurrentEvent(){
-    try {
-      localStorage.removeItem(EVENT_SAVE_KEY);
-    } catch(e) {}
+    try { localStorage.removeItem(EVENT_SAVE_KEY); } catch(e) {}
   }
 
   function bind(){
