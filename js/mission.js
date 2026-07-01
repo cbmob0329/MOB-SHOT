@@ -74,6 +74,15 @@
     1,3,5,10,20,30,50,75,100,150,200,250,300
   ];
 
+  const AVATAR_OWNED_TARGETS = [
+    2,3,4,5,6,7,8,9,10,12,14,16,18,20,22,24,26,28,30,31
+  ];
+
+  const PET_TOTAL_UPGRADE_TARGETS = [
+    10,30,50,75,100,150,200,300,400,500,750,
+    1000,1250,1500,1750,2000,2250,2500,2750,3000
+  ];
+
   const SKILL_COUNT_TARGETS = [
     1,2,3,4,5,6,7,8,9,10,11,12,13,14
   ];
@@ -145,140 +154,22 @@
     const style = document.createElement('style');
     style.id = 'mobMissionRewardStyle';
     style.textContent = `
-      .mission-reward-pop{
-        position:absolute;
-        inset:0;
-        z-index:170;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding:18px;
-        background:rgba(0,0,0,.62);
-      }
-
-      .mission-reward-pop.hidden{
-        display:none;
-      }
-
-      .mission-reward-card{
-        width:min(90vw,420px);
-        border-radius:26px;
-        padding:18px;
-        text-align:center;
-        background:linear-gradient(180deg,rgba(35,28,78,.98),rgba(5,8,22,.98));
-        border:3px solid rgba(255,255,255,.38);
-        box-shadow:0 18px 48px rgba(0,0,0,.7);
-        animation:missionRewardIn .22s ease-out both;
-      }
-
-      @keyframes missionRewardIn{
-        from{transform:scale(.9) translateY(12px);opacity:0}
-        to{transform:scale(1) translateY(0);opacity:1}
-      }
-
-      .mission-reward-title{
-        font-size:26px;
-        font-weight:1000;
-        color:#ffe66b;
-        text-shadow:0 3px 0 #000,0 0 14px rgba(255,230,107,.7);
-        margin-bottom:8px;
-      }
-
-      .mission-reward-name{
-        font-size:15px;
-        font-weight:1000;
-        color:#fff;
-        line-height:1.4;
-        margin-bottom:12px;
-      }
-
-      .mission-reward-list{
-        display:grid;
-        grid-template-columns:1fr;
-        gap:8px;
-        margin:0 0 14px;
-      }
-
-      .mission-reward-ok{
-        border:0;
-        border-radius:999px;
-        padding:12px 24px;
-        font-size:16px;
-        font-weight:1000;
-        color:#181000;
-        background:linear-gradient(#ffe66b,#ffb423);
-        box-shadow:0 5px 0 rgba(0,0,0,.35);
-      }
-
-      .mission-toast{
-        position:absolute;
-        left:50%;
-        top:22%;
-        transform:translateX(-50%);
-        z-index:180;
-        max-width:86vw;
-        min-width:220px;
-        padding:12px 16px;
-        border-radius:999px;
-        background:linear-gradient(#ffffff,#b7c1d5);
-        color:#102033;
-        font-size:14px;
-        font-weight:1000;
-        text-align:center;
-        box-shadow:0 6px 0 rgba(0,0,0,.35);
-        pointer-events:none;
-        opacity:0;
-        transition:opacity .18s, transform .18s;
-      }
-
-      .mission-toast.show{
-        opacity:1;
-        transform:translateX(-50%) translateY(-5px);
-      }
-
-      .mission-tabs{
-        grid-template-columns:repeat(4,1fr) !important;
-        gap:5px !important;
-      }
-
-      .mission-tab{
-        font-size:11px !important;
-        padding:8px 3px !important;
-        white-space:nowrap;
-      }
-
-      .mission-bulk-wrap{
-        margin:0 0 10px;
-        display:grid;
-        grid-template-columns:1fr;
-        gap:7px;
-      }
-
-      .mission-claim-all-btn{
-        width:100%;
-        border:0;
-        border-radius:18px;
-        padding:12px 14px;
-        font-size:15px;
-        font-weight:1000;
-        color:#181000;
-        background:linear-gradient(#ffe66b,#ffb423);
-        box-shadow:0 5px 0 rgba(0,0,0,.35);
-      }
-
-      .mission-claim-all-btn:disabled{
-        opacity:.48;
-        filter:grayscale(1);
-      }
-
-      .mission-claim-all-help{
-        color:#dfe8ff;
-        font-size:11px;
-        font-weight:900;
-        text-align:center;
-        line-height:1.35;
-        opacity:.9;
-      }
+      .mission-reward-pop{position:absolute;inset:0;z-index:170;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.62)}
+      .mission-reward-pop.hidden{display:none}
+      .mission-reward-card{width:min(90vw,420px);border-radius:26px;padding:18px;text-align:center;background:linear-gradient(180deg,rgba(35,28,78,.98),rgba(5,8,22,.98));border:3px solid rgba(255,255,255,.38);box-shadow:0 18px 48px rgba(0,0,0,.7);animation:missionRewardIn .22s ease-out both}
+      @keyframes missionRewardIn{from{transform:scale(.9) translateY(12px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+      .mission-reward-title{font-size:26px;font-weight:1000;color:#ffe66b;text-shadow:0 3px 0 #000,0 0 14px rgba(255,230,107,.7);margin-bottom:8px}
+      .mission-reward-name{font-size:15px;font-weight:1000;color:#fff;line-height:1.4;margin-bottom:12px}
+      .mission-reward-list{display:grid;grid-template-columns:1fr;gap:8px;margin:0 0 14px}
+      .mission-reward-ok{border:0;border-radius:999px;padding:12px 24px;font-size:16px;font-weight:1000;color:#181000;background:linear-gradient(#ffe66b,#ffb423);box-shadow:0 5px 0 rgba(0,0,0,.35)}
+      .mission-toast{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:180;max-width:86vw;min-width:220px;padding:12px 16px;border-radius:999px;background:linear-gradient(#ffffff,#b7c1d5);color:#102033;font-size:14px;font-weight:1000;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.35);pointer-events:none;opacity:0;transition:opacity .18s, transform .18s}
+      .mission-toast.show{opacity:1;transform:translateX(-50%) translateY(-5px)}
+      .mission-tabs{grid-template-columns:repeat(4,1fr)!important;gap:5px!important}
+      .mission-tab{font-size:11px!important;padding:8px 3px!important;white-space:nowrap}
+      .mission-bulk-wrap{margin:0 0 10px;display:grid;grid-template-columns:1fr;gap:7px}
+      .mission-claim-all-btn{width:100%;border:0;border-radius:18px;padding:12px 14px;font-size:15px;font-weight:1000;color:#181000;background:linear-gradient(#ffe66b,#ffb423);box-shadow:0 5px 0 rgba(0,0,0,.35)}
+      .mission-claim-all-btn:disabled{opacity:.48;filter:grayscale(1)}
+      .mission-claim-all-help{color:#dfe8ff;font-size:11px;font-weight:900;text-align:center;line-height:1.35;opacity:.9}
     `;
 
     document.head.appendChild(style);
@@ -321,9 +212,7 @@
 
     let rewardText = '';
 
-    if (Number(reward.coin || 0) > 0) {
-      rewardText += Number(reward.coin).toLocaleString() + 'コイン';
-    }
+    if (Number(reward.coin || 0) > 0) rewardText += Number(reward.coin).toLocaleString() + 'コイン';
 
     if (Number(reward.diamond || 0) > 0) {
       if (rewardText) rewardText += ' / ';
@@ -334,14 +223,7 @@
 
     if (list) {
       list.innerHTML = `
-        <div style="
-          font-size:26px;
-          font-weight:1000;
-          color:#ffd54a;
-          text-align:center;
-          padding:20px 0;
-          line-height:1.35;
-        ">
+        <div style="font-size:26px;font-weight:1000;color:#ffd54a;text-align:center;padding:20px 0;line-height:1.35;">
           ${rewardText}
         </div>
       `;
@@ -351,10 +233,7 @@
   }
 
   function showBulkRewardPop(count, reward){
-    showRewardPop(
-      { title:`${count.toLocaleString()}個のミッションを受け取りました` },
-      reward
-    );
+    showRewardPop({ title:`${count.toLocaleString()}個のミッションを受け取りました` }, reward);
   }
 
   function closeRewardPop(){
@@ -409,9 +288,7 @@
   }
 
   function getSave(){
-    if (window.MobShotStorage && window.MobShotStorage.load) {
-      return window.MobShotStorage.load();
-    }
+    if (window.MobShotStorage && window.MobShotStorage.load) return window.MobShotStorage.load();
 
     return {
       coin:0,
@@ -436,9 +313,7 @@
   }
 
   function getEventStats(){
-    if (window.MobShotEvents && window.MobShotEvents.loadStats) {
-      return window.MobShotEvents.loadStats();
-    }
+    if (window.MobShotEvents && window.MobShotEvents.loadStats) return window.MobShotEvents.loadStats();
 
     return {
       goldClear:0,
@@ -453,9 +328,7 @@
   }
 
   function getGachaState(){
-    if (window.MobShotGacha && window.MobShotGacha.loadState) {
-      return window.MobShotGacha.loadState();
-    }
+    if (window.MobShotGacha && window.MobShotGacha.loadState) return window.MobShotGacha.loadState();
 
     try {
       const parsed = JSON.parse(localStorage.getItem('mobshot_gacha_state_v1')) || {};
@@ -469,23 +342,45 @@
     }
   }
 
-  function allStones(){
-    if (window.MobShotGacha && window.MobShotGacha.allStones) {
-      return window.MobShotGacha.allStones();
-    }
+  function getShopState(){
+    if (window.MobShotShop && window.MobShotShop.loadState) return window.MobShotShop.loadState();
 
+    try {
+      return JSON.parse(localStorage.getItem('mobshot_shop_state_v1')) || { avatars:{} };
+    } catch(e) {
+      return { avatars:{} };
+    }
+  }
+
+  function getPetState(){
+    if (window.MobShotPets && window.MobShotPets.loadState) return window.MobShotPets.loadState();
+
+    try {
+      return JSON.parse(localStorage.getItem('mobshot_pet_state_v5')) || { pets:{} };
+    } catch(e) {
+      return { pets:{} };
+    }
+  }
+
+  function allStones(){
+    if (window.MobShotGacha && window.MobShotGacha.allStones) return window.MobShotGacha.allStones();
     return [];
   }
 
   function allSouls(){
-    if (window.MobShotGacha && window.MobShotGacha.allSouls) {
-      return window.MobShotGacha.allSouls();
-    }
+    if (window.MobShotGacha && window.MobShotGacha.allSouls) return window.MobShotGacha.allSouls();
+    if (window.MobShotSoul && window.MobShotSoul.allSouls) return window.MobShotSoul.allSouls();
+    return [];
+  }
 
-    if (window.MobShotSoul && window.MobShotSoul.allSouls) {
-      return window.MobShotSoul.allSouls();
-    }
+  function allAvatars(){
+    if (window.MobShotShop && Array.isArray(window.MobShotShop.AVATAR_MASTER)) return window.MobShotShop.AVATAR_MASTER;
+    if (window.MobShotEquip && Array.isArray(window.MobShotEquip.AVATARS)) return window.MobShotEquip.AVATARS;
+    return [];
+  }
 
+  function allPets(){
+    if (window.MobShotPets && Array.isArray(window.MobShotPets.PET_MASTER)) return window.MobShotPets.PET_MASTER;
     return [];
   }
 
@@ -494,10 +389,7 @@
   }
 
   function stageList(){
-    if (window.MobShotStorage && window.MobShotStorage.STAGE_LIST) {
-      return window.MobShotStorage.STAGE_LIST;
-    }
-
+    if (window.MobShotStorage && window.MobShotStorage.STAGE_LIST) return window.MobShotStorage.STAGE_LIST;
     return [];
   }
 
@@ -506,10 +398,7 @@
   }
 
   function clearedStageIndex(save){
-    return Number(save.stageProgress && save.stageProgress.highestStageIndex != null
-      ? save.stageProgress.highestStageIndex
-      : -1
-    );
+    return Number(save.stageProgress && save.stageProgress.highestStageIndex != null ? save.stageProgress.highestStageIndex : -1);
   }
 
   function eventReward(size){
@@ -563,8 +452,6 @@
     const missions = [];
 
     AREA_REACH_REWARDS.forEach(item => {
-      const targetIndex = stageIndexById(item.stageId);
-
       missions.push({
         id:item.id,
         tab:'stage',
@@ -572,7 +459,7 @@
         title:item.title,
         desc:`${item.stageId}をクリア`,
         currentType:'stageIndex',
-        target:targetIndex,
+        target:stageIndexById(item.stageId),
         reward:{ coin:item.coin, diamond:item.diamond }
       });
     });
@@ -901,6 +788,32 @@
     return missions;
   }
 
+  function makeAvatarMissions(){
+    return AVATAR_OWNED_TARGETS.map(target => ({
+      id:`avatar_owned_${target}`,
+      tab:'avatar',
+      icon:'人',
+      title:`アバター${target}体所持`,
+      desc:'初期アバターを含む所持アバター数。2体目から報酬対象。',
+      currentType:'avatarOwned',
+      target,
+      reward:{ coin:0, diamond:10 }
+    }));
+  }
+
+  function makePetMissions(){
+    return PET_TOTAL_UPGRADE_TARGETS.map(target => ({
+      id:`pet_total_upgrade_${target}`,
+      tab:'pet',
+      icon:'PET',
+      title:`ペット合計強化${target}`,
+      desc:'ペットLv・+強化・ペットモード強化の合計値',
+      currentType:'petTotalUpgrade',
+      target,
+      reward:{ coin:0, diamond:10 }
+    }));
+  }
+
   function makeSkillMissions(){
     const missions = [];
 
@@ -1089,6 +1002,8 @@
       ...makeCoinMissions(),
       ...makeScoreMissions(),
       ...makeCollectionMissions(),
+      ...makeAvatarMissions(),
+      ...makePetMissions(),
       ...makeSkillMissions(),
       ...makeEventMissions()
     ];
@@ -1170,6 +1085,39 @@
     return soulOwnedKindCount() + soulTotalPlus();
   }
 
+  function avatarOwnedCount(){
+    const shop = getShopState();
+    let count = 0;
+
+    allAvatars().forEach(avatar => {
+      if (shop.avatars && shop.avatars[avatar.key]) count++;
+    });
+
+    return count;
+  }
+
+  function petTotalUpgrade(){
+    const state = getPetState();
+    let total = 0;
+
+    Object.keys(state.pets || {}).forEach(key => {
+      const pet = state.pets[key];
+      if (!pet || !pet.owned) return;
+
+      total += Math.max(0, Number(pet.level || 1) - 1);
+      total += Math.max(0, Number(pet.plus || 0));
+
+      const mode = pet.petMode || {};
+      total += Math.max(0, Number(mode.hp || 0));
+      total += Math.max(0, Number(mode.power || 0));
+      total += Math.max(0, Number(mode.rapid || 0));
+      total += Math.max(0, Number(mode.skill || 0));
+      total += Math.max(0, Number(mode.dodge || 0));
+    });
+
+    return total;
+  }
+
   function skillOwnedCount(){
     const gacha = getGachaState();
     const set = new Set();
@@ -1218,6 +1166,9 @@
     if (mission.currentType === 'soulTotalPlus') return soulTotalPlus();
     if (mission.currentType === 'soulTotalCount') return soulTotalCount();
 
+    if (mission.currentType === 'avatarOwned') return avatarOwnedCount();
+    if (mission.currentType === 'petTotalUpgrade') return petTotalUpgrade();
+
     if (mission.currentType === 'skillOwned') return skillOwnedCount();
     if (mission.currentType === 'skillTotalPlus') return skillTotalPlus();
     if (mission.currentType === 'skillUseCount') return Number(s.skillUseCount || 0);
@@ -1239,9 +1190,7 @@
       let count = 0;
 
       for (let i = 1; i <= Number(mission.maxStage || 0); i++) {
-        if (window.MobShotEvents && window.MobShotEvents.hasQuestCleared && window.MobShotEvents.hasQuestCleared(mission.difficulty, i)) {
-          count++;
-        }
+        if (window.MobShotEvents && window.MobShotEvents.hasQuestCleared && window.MobShotEvents.hasQuestCleared(mission.difficulty, i)) count++;
       }
 
       return count;
@@ -1256,6 +1205,8 @@
 
     [
       { id:'missionTabCollection', text:'コレクション', tab:'collection' },
+      { id:'missionTabAvatar', text:'アバター', tab:'avatar' },
+      { id:'missionTabPet', text:'ペット', tab:'pet' },
       { id:'missionTabSkill', text:'スキル', tab:'skill' },
       { id:'missionTabEventGold', text:'GOLD', tab:'eventGold' },
       { id:'missionTabEventQuest', text:'クエスト', tab:'eventQuest' },
@@ -1356,7 +1307,6 @@
 
     ready.forEach(mission => {
       const reward = mission.reward || {};
-
       totalCoin += Number(reward.coin || 0);
       totalDiamond += Number(reward.diamond || 0);
       missionState.claimed[mission.id] = true;
@@ -1368,11 +1318,7 @@
     saveMainData(save);
     saveState(missionState);
 
-    showBulkRewardPop(ready.length, {
-      coin:totalCoin,
-      diamond:totalDiamond
-    });
-
+    showBulkRewardPop(ready.length, { coin:totalCoin, diamond:totalDiamond });
     refreshAll();
   }
 
@@ -1420,12 +1366,10 @@
     const rate = progressRate(current, mission.target);
 
     const card = document.createElement('div');
-
     card.className = 'mission-card' + (complete ? ' complete' : '');
 
     card.innerHTML = `
       <div class="mission-card-icon">${mission.icon}</div>
-
       <div class="mission-card-body">
         <div class="mission-card-name">${mission.title}</div>
         <div class="mission-card-desc">${mission.desc}</div>
@@ -1435,7 +1379,6 @@
           <div class="mission-progress-fill" style="width:${rate}%"></div>
         </div>
       </div>
-
       <div class="mission-card-actions">
         <button type="button" class="mission-card-btn ${complete ? 'ready' : ''}" ${!complete ? 'disabled' : ''}>
           ${complete ? '受け取る' : '未達成'}
@@ -1511,6 +1454,8 @@
       rank:$('missionTabRank'),
       coin:$('missionTabCoin'),
       collection:$('missionTabCollection'),
+      avatar:$('missionTabAvatar'),
+      pet:$('missionTabPet'),
       skill:$('missionTabSkill'),
       eventGold:$('missionTabEventGold'),
       eventQuest:$('missionTabEventQuest'),
@@ -1518,9 +1463,7 @@
     };
 
     Object.keys(tabs).forEach(key => {
-      if (tabs[key]) {
-        tabs[key].classList.toggle('active', key === tab);
-      }
+      if (tabs[key]) tabs[key].classList.toggle('active', key === tab);
     });
 
     const help = $('missionHelpText');
@@ -1593,6 +1536,8 @@
       missionTabRank:'rank',
       missionTabCoin:'coin',
       missionTabCollection:'collection',
+      missionTabAvatar:'avatar',
+      missionTabPet:'pet',
       missionTabSkill:'skill',
       missionTabEventGold:'eventGold',
       missionTabEventQuest:'eventQuest',
@@ -1697,6 +1642,8 @@
   window.addEventListener('mobshot:eventStatsUpdated', render);
   window.addEventListener('mobshot:gachaUpdated', render);
   window.addEventListener('mobshot:soulUpdated', render);
+  window.addEventListener('mobshot:petUpdated', render);
+  window.addEventListener('mobshot:petRubyUpdated', render);
 
   window.MobShotMission = {
     init,
