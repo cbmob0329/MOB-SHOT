@@ -10,11 +10,11 @@
   const TEST_GOLD_TICKET_START = 0;
 
   const GOLD_DIFFICULTIES = [
-    { key:'easy', name:'イージー', icon:'mt/game1.png', color:'#9dff73', firstCoin:3000, firstDiamond:5, clearCoin:5000, chestMul:10.0, bossHpMul:1.0, bossCoinMul:10.0, bossCount:2, bosses:['ホークモブ','ミラモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ホークモブ + ミラモブ' },
-    { key:'hard', name:'ハード', icon:'mt/game2.png', color:'#6be6ff', firstCoin:8000, firstDiamond:8, clearCoin:15000, chestMul:25.0, bossHpMul:1.35, bossCoinMul:24.0, bossCount:2, bosses:['ミラモブⅡ','ネオンモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ミラモブⅡ + ネオンモブ' },
-    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', firstCoin:15000, firstDiamond:10, clearCoin:40000, chestMul:55.0, bossHpMul:1.8, bossCoinMul:50.0, bossCount:2, bosses:['ドラゴンモブ','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ドラゴンモブ + ドラゴンモブⅡ' },
-    { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', color:'#ff5b5b', firstCoin:30000, firstDiamond:20, clearCoin:120000, chestMul:120.0, bossHpMul:2.35, bossCoinMul:105.0, bossCount:2, bosses:['モブリリス','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + ドラゴンモブⅡ' },
-    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', firstCoin:80000, firstDiamond:50, clearCoin:300000, chestMul:260.0, bossHpMul:3.2, bossCoinMul:220.0, bossCount:2, bosses:['モブリリス','モブ魔王'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + モブ魔王' }
+    { key:'easy', name:'イージー', icon:'mt/game1.png', color:'#9dff73', firstCoin:3000, firstDiamond:5, clearCoin:8000, chestMul:3.2, bossHpMul:1.0, bossCoinMul:6.0, bossCount:2, bosses:['ホークモブ','ミラモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ホークモブ + ミラモブ' },
+    { key:'hard', name:'ハード', icon:'mt/game2.png', color:'#6be6ff', firstCoin:8000, firstDiamond:8, clearCoin:24000, chestMul:8.0, bossHpMul:1.35, bossCoinMul:14.0, bossCount:2, bosses:['ミラモブⅡ','ネオンモブ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ミラモブⅡ + ネオンモブ' },
+    { key:'veryHard', name:'ベリーハード', icon:'mt/game3.png', color:'#ffcf5b', firstCoin:15000, firstDiamond:10, clearCoin:65000, chestMul:18.0, bossHpMul:1.8, bossCoinMul:32.0, bossCount:2, bosses:['ドラゴンモブ','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'ドラゴンモブ + ドラゴンモブⅡ' },
+    { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', color:'#ff5b5b', firstCoin:30000, firstDiamond:20, clearCoin:180000, chestMul:42.0, bossHpMul:2.35, bossCoinMul:70.0, bossCount:2, bosses:['モブリリス','ドラゴンモブⅡ'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + ドラゴンモブⅡ' },
+    { key:'legend', name:'レジェンド', icon:'mt/game5.png', color:'#d86bff', firstCoin:80000, firstDiamond:50, clearCoin:450000, chestMul:95.0, bossHpMul:3.2, bossCoinMul:150.0, bossCount:2, bosses:['モブリリス','モブ魔王'], midBossCount:0, enemySpawn:true, showMidBoss:false, label:'モブリリス + モブ魔王' }
   ];
 
   const DOUBLE_DIFFICULTIES = [
