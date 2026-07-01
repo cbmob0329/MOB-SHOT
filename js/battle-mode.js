@@ -1,12 +1,10 @@
 'use strict';
-
 (function(){
   const SAVE_KEY = 'mobshot_pet_mode_clear_v1';
   const GACHA_SAVE_KEY = 'mobshot_gacha_state_v1';
-
+  const PET_MODE_MISSION_SAVE_KEY = 'mobshot_pet_mode_mission_v1';
   const PET_MODE_SKILL_NERF = 0.94;
   const PET_MODE_SECOND_NERF = 0.92;
-
   const PET_MODE_SCORE_REWARD = {
     zako:80,
     midBoss:420,
@@ -14,25 +12,49 @@
     clear:1800,
     damageDiv:12
   };
-
   const PET_MODE_COIN_REWARD = {
     zako:[20, 45],
     midBoss:[220, 420],
     boss:[700, 1300]
   };
-
+  const PET_MODE_DIFFICULTY_POINT = {
+    easy:1,
+    hard:2,
+    veryhard:3,
+    inferno:5,
+    legend:8
+  };
+  const PET_MODE_MISSION_STEPS = {
+    play:[1,3,5,7,10,12,15,17,20,25,30,35,40,45,50],
+    clearPoint:[1,3,5,7,10,12,15,17,20,25,30,35,40,45,50],
+    kill:[1,3,5,10,15,20,30,40,50,75,100],
+    drop:[1,2,3,5,7,10,12,15,17,20,25,30],
+    petClearPoint:[1,3,5,7,10,12,15,17,20]
+  };
+  const PET_MODE_MISSION_REPEAT = {
+    play:{ start:55, step:5 },
+    clearPoint:{ start:55, step:5 },
+    kill:{ start:125, step:25 },
+    drop:{ start:35, step:5 },
+    petClearPoint:{ start:25, step:5 }
+  };
+  const PET_MODE_MISSION_LABELS = {
+    play:'プレイ数',
+    clearPoint:'クリアポイント',
+    kill:'撃破数',
+    drop:'石板ドロップ数',
+    petClearPoint:'ペット別クリアポイント'
+  };
   const FALLBACK_ASSET = {
     bg:'sta/backsabaku.png',
     petBullet:'mt/atk.png',
     bossBullet:'atk/hinotama.png'
   };
-
   const MODE_MASTER = [
     { key:'arena', name:'アリーナ', icon:'mt/are.png', desc:'選んだペット最大4体で、雑魚3体＋中ボス1体に挑戦！', maxPets:4 },
     { key:'boss', name:'ボス降臨', icon:'mt/petboss.png', desc:'選んだペット最大6体で、ステージボス1体に挑戦！', maxPets:6 },
     { key:'ragnarok', name:'ラグナロク', icon:'mt/rag.png', desc:'所持ペット全員で、通常ボス＋強力ボスの2体に挑戦！', maxPets:999 }
   ];
-
   const DIFFICULTIES = [
     { key:'easy', name:'イージー', icon:'mt/game1.png', hpRate:0.65, atkRate:0.60, dropRate:0.08, rewardCoin:1500, rewardDiamond:0 },
     { key:'hard', name:'ハード', icon:'mt/game2.png', hpRate:1.00, atkRate:1.00, dropRate:0.12, rewardCoin:3000, rewardDiamond:1 },
@@ -40,7 +62,6 @@
     { key:'inferno', name:'インフェルノ', icon:'mt/game4.png', hpRate:2.45, atkRate:2.10, dropRate:0.28, rewardCoin:12000, rewardDiamond:4 },
     { key:'legend', name:'レジェンド', icon:'mt/game5.png', hpRate:3.60, atkRate:3.00, dropRate:0.45, rewardCoin:25000, rewardDiamond:8, legend:true }
   ];
-
   const PET_STONES = [
     { no:56, name:'モブドラゴン', image:'co/co56.png', rarity:'SR', category:'MOB PET' },
     { no:57, name:'モブイルカエル', image:'co/co57.png', rarity:'SR', category:'MOB PET' },
@@ -51,7 +72,6 @@
     { no:89, name:'ミニあのヒーロー', image:'co/co89.png', rarity:'SR', category:'MOB PET' },
     { no:90, name:'ミニミラモブ カラー', image:'co/co90.png', rarity:'SSR', category:'MOB PET' }
   ];
-
   const STAGES_NORMAL = [
     {
       key:'grass', name:'草原', bg:'sta/backsougen.png',
@@ -120,7 +140,6 @@
       strongBoss:{ name:'モブ魔王', image:'boss/bossmaoh.png', hp:3800, power:54, atkImage:'atk/atkmaoh.png', atkFlipY:true, pattern:'maoh' }
     }
   ];
-
   const STAGES_LEGEND = [
     {
       key:'prison', name:'監獄', bg:'sta/stkan.png',
@@ -189,7 +208,6 @@
       strongBoss:{ name:'ウルモブリリス', image:'boss/bossulriri.png', hp:9200, power:108, atkImage:'atk/atkriri.png', atkFlipY:false, pattern:'lilith' }
     }
   ];
-
   let canvas = null;
   let ctx = null;
   let W = 0;
@@ -197,9 +215,7 @@
   let DPR = 1;
   let raf = 0;
   let running = false;
-
   const images = new Map();
-
   const state = {
     screen:'title',
     frame:0,
@@ -221,6 +237,8 @@
     messageTimer:0,
     resultShown:false,
     rewardDone:false,
+    missionMessage:'',
+    missionMessageTimer:0,
     support:{ rapid:1, power:1, shield:0, coin:1 },
     stats:{
       damage:0,
@@ -237,46 +255,44 @@
       legendUnlocked:false
     }
   };
-
   function $(id){ return document.getElementById(id); }
   function rand(a,b){ return a + Math.random() * (b - a); }
   function intRand(a,b){ return Math.floor(rand(a, b + 1)); }
   function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
   function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
-
   function img(src){
     if (!src) return null;
-
     if (!images.has(src)) {
       const image = new Image();
-      image.src = src + '?v=20260701_pet_mode_score_coin_v1';
+      image.src = src + '?v=20260701_pet_mode_mission_v1';
       images.set(src, image);
     }
-
     return images.get(src);
   }
-
   function imageReady(image){
     return image && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
   }
-
   function drawImageContain(ctx, image, cx, cy, maxW, maxH){
     if (!imageReady(image)) return false;
-
     const iw = image.naturalWidth || image.width;
     const ih = image.naturalHeight || image.height;
     const scale = Math.min(maxW / iw, maxH / ih);
     const w = iw * scale;
     const h = ih * scale;
-
     ctx.drawImage(image, cx - w / 2, cy - h / 2, w, h);
     return true;
   }
-
+  function escapeHtml(value){
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
   function loadClearSave(){
     try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch(e) { return {}; }
   }
-
   function saveClear(modeKey, diffKey, stageKey){
     try {
       const save = loadClearSave();
@@ -286,7 +302,6 @@
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     } catch(e) {}
   }
-
   function isStageCleared(modeKey, diffKey, stageKey){
     const save = loadClearSave();
     return !!(
@@ -296,79 +311,375 @@
       save[modeKey][diffKey][stageKey]
     );
   }
-
   function stageListForDifficultyKey(diffKey){
     if (diffKey === 'legend') return STAGES_NORMAL.concat(STAGES_LEGEND);
     return STAGES_NORMAL;
   }
-
   function clearCountForDifficulty(modeKey, diffKey){
     const stages = stageListForDifficultyKey(diffKey);
     let count = 0;
-
     stages.forEach(stage => {
       if (isStageCleared(modeKey, diffKey, stage.key)) count++;
     });
-
     return {
       clear:count,
       total:stages.length
     };
   }
-
   function isDifficultyAllCleared(modeKey, diffKey){
     const progress = clearCountForDifficulty(modeKey, diffKey);
     return progress.total > 0 && progress.clear >= progress.total;
   }
-
   function infernoProgress(modeKey){
     return clearCountForDifficulty(modeKey, 'inferno');
   }
-
   function isLegendUnlocked(modeKey){
     return isDifficultyAllCleared(modeKey, 'inferno');
   }
-
   function clearBadgeHtml(done){
     return done ? '<span class="battle-clear-badge">CLEAR</span>' : '';
   }
-
   function progressText(modeKey, diffKey){
     const p = clearCountForDifficulty(modeKey, diffKey);
     return `${p.clear}/${p.total}`;
   }
-
   function legendUnlockText(modeKey){
     const p = infernoProgress(modeKey);
     if (p.clear >= p.total) return '<span class="battle-unlock">レジェンド解放済み！</span>';
     return `レジェンド解放まで インフェルノ ${p.clear}/${p.total}`;
   }
-
   function justUnlockedLegendByThisClear(modeKey, diffKey, stageKey){
     if (diffKey !== 'inferno') return false;
     if (!STAGES_NORMAL.some(s => s.key === stageKey)) return false;
-
     const beforeSave = loadClearSave();
     const beforeMode = beforeSave[modeKey] || {};
     const beforeInferno = beforeMode.inferno || {};
     const wasUnlocked = STAGES_NORMAL.every(stage => !!beforeInferno[stage.key]);
-
     if (wasUnlocked) return false;
-
     const afterInferno = Object.assign({}, beforeInferno, { [stageKey]:true });
     return STAGES_NORMAL.every(stage => !!afterInferno[stage.key]);
   }
-
   function getStagesForCurrent(){
     if (!state.difficulty || !state.difficulty.legend) return STAGES_NORMAL;
     return STAGES_NORMAL.concat(STAGES_LEGEND);
   }
-
   function getDifficultiesForMode(modeKey){
     const unlocked = isLegendUnlocked(modeKey);
     return DIFFICULTIES.filter(d => !d.legend || unlocked);
   }
-
+  function difficultyPoint(diffKey){
+    return Number(PET_MODE_DIFFICULTY_POINT[diffKey] || 1);
+  }
+  function loadMissionSave(){
+    let save = null;
+    try {
+      save = JSON.parse(localStorage.getItem(PET_MODE_MISSION_SAVE_KEY)) || {};
+    } catch(e) {
+      save = {};
+    }
+    save.stats = save.stats || {};
+    save.stats.play = Number(save.stats.play || 0);
+    save.stats.clearPoint = Number(save.stats.clearPoint || 0);
+    save.stats.kill = Number(save.stats.kill || 0);
+    save.stats.drop = Number(save.stats.drop || 0);
+    save.stats.petClearPoint = save.stats.petClearPoint || {};
+    save.claimed = save.claimed || {};
+    save.claimed.play = save.claimed.play || {};
+    save.claimed.clearPoint = save.claimed.clearPoint || {};
+    save.claimed.kill = save.claimed.kill || {};
+    save.claimed.drop = save.claimed.drop || {};
+    save.claimed.petClearPoint = save.claimed.petClearPoint || {};
+    return save;
+  }
+  function saveMissionSave(save){
+    try {
+      localStorage.setItem(PET_MODE_MISSION_SAVE_KEY, JSON.stringify(save));
+    } catch(e) {}
+    window.dispatchEvent(new CustomEvent('mobshot:petModeMissionUpdated'));
+  }
+  function addMissionStat(type, amount){
+    const save = loadMissionSave();
+    const value = Math.max(0, Number(amount || 0));
+    if (!value) return;
+    save.stats[type] = Number(save.stats[type] || 0) + value;
+    saveMissionSave(save);
+  }
+  function addPetMissionPoint(petKeys, point){
+    if (!Array.isArray(petKeys) || !petKeys.length) return;
+    const add = Math.max(0, Number(point || 0));
+    if (!add) return;
+    const save = loadMissionSave();
+    save.stats.petClearPoint = save.stats.petClearPoint || {};
+    petKeys.forEach(key => {
+      if (!key) return;
+      save.stats.petClearPoint[key] = Number(save.stats.petClearPoint[key] || 0) + add;
+    });
+    saveMissionSave(save);
+  }
+  function missionReward(type, target, petKey){
+    const reward = { coin:0, diamond:0, ruby:0 };
+    const t = Number(target || 0);
+    if (type === 'play') {
+      const table = {
+        1:{ coin:500 },
+        3:{ coin:800 },
+        5:{ coin:1200, ruby:3 },
+        7:{ coin:1500 },
+        10:{ coin:2000, ruby:5 },
+        12:{ coin:2500 },
+        15:{ coin:3000 },
+        17:{ coin:3500 },
+        20:{ coin:5000, diamond:1, ruby:8 },
+        25:{ coin:7000 },
+        30:{ coin:9000, ruby:10 },
+        35:{ coin:11000 },
+        40:{ coin:14000, ruby:12 },
+        45:{ coin:17000 },
+        50:{ coin:22000, diamond:2, ruby:15 }
+      };
+      Object.assign(reward, table[t] || {});
+      if (!reward.coin && t >= PET_MODE_MISSION_REPEAT.play.start) {
+        reward.coin = 5000;
+        if (t % 10 === 0) reward.ruby += 5;
+        if (t % 25 === 0) reward.diamond += 1;
+      }
+    }
+    if (type === 'clearPoint') {
+      const table = {
+        1:{ coin:1000 },
+        3:{ coin:1500 },
+        5:{ coin:2500, ruby:5 },
+        7:{ coin:3500 },
+        10:{ coin:5000, ruby:8 },
+        12:{ coin:6500 },
+        15:{ coin:8500 },
+        17:{ coin:10000 },
+        20:{ coin:13000, diamond:1, ruby:10 },
+        25:{ coin:17000, diamond:1 },
+        30:{ coin:22000, ruby:15 },
+        35:{ coin:28000 },
+        40:{ coin:35000, diamond:2, ruby:18 },
+        45:{ coin:43000 },
+        50:{ coin:55000, diamond:3, ruby:25 }
+      };
+      Object.assign(reward, table[t] || {});
+      if (!reward.coin && t >= PET_MODE_MISSION_REPEAT.clearPoint.start) {
+        reward.coin = 8000;
+        if (t % 10 === 0) reward.ruby += 8;
+        if (t % 25 === 0) reward.diamond += 2;
+      }
+    }
+    if (type === 'kill') {
+      const table = {
+        1:{ coin:300 },
+        3:{ coin:500 },
+        5:{ coin:800, ruby:2 },
+        10:{ coin:1500, ruby:3 },
+        15:{ coin:2200 },
+        20:{ coin:3000 },
+        30:{ coin:4500, ruby:5 },
+        40:{ coin:6000 },
+        50:{ coin:8000, diamond:1, ruby:8 },
+        75:{ coin:12000 },
+        100:{ coin:18000, diamond:2, ruby:12 }
+      };
+      Object.assign(reward, table[t] || {});
+      if (!reward.coin && t >= PET_MODE_MISSION_REPEAT.kill.start) {
+        reward.coin = 7000;
+        if (t % 50 === 0) reward.ruby += 8;
+        if (t % 100 === 0) reward.diamond += 2;
+      }
+    }
+    if (type === 'drop') {
+      const table = {
+        1:{ coin:1000 },
+        2:{ coin:1500 },
+        3:{ coin:2000 },
+        5:{ coin:3000, ruby:5 },
+        7:{ coin:4500 },
+        10:{ coin:7000, diamond:1, ruby:8 },
+        12:{ coin:9000 },
+        15:{ coin:12000, ruby:10 },
+        17:{ coin:15000 },
+        20:{ coin:20000, diamond:2, ruby:15 },
+        25:{ coin:28000 },
+        30:{ coin:40000, diamond:3, ruby:25 }
+      };
+      Object.assign(reward, table[t] || {});
+      if (!reward.coin && t >= PET_MODE_MISSION_REPEAT.drop.start) {
+        reward.coin = 15000;
+        if (t % 10 === 0) reward.ruby += 15;
+        if (t % 25 === 0) reward.diamond += 3;
+      }
+    }
+    if (type === 'petClearPoint') {
+      const table = {
+        1:{ coin:500 },
+        3:{ coin:1000 },
+        5:{ coin:1500, ruby:3 },
+        7:{ coin:2200 },
+        10:{ coin:3500, diamond:1, ruby:5 },
+        12:{ coin:4500 },
+        15:{ coin:6000, ruby:8 },
+        17:{ coin:7500 },
+        20:{ coin:10000, diamond:2, ruby:12 }
+      };
+      Object.assign(reward, table[t] || {});
+      if (!reward.coin && t >= PET_MODE_MISSION_REPEAT.petClearPoint.start) {
+        reward.coin = 5000;
+        if (t % 10 === 0) reward.ruby += 5;
+        if (t % 25 === 0) reward.diamond += 2;
+      }
+    }
+    reward.coin = Math.max(0, Math.ceil(Number(reward.coin || 0)));
+    reward.diamond = Math.max(0, Math.ceil(Number(reward.diamond || 0)));
+    reward.ruby = Math.max(0, Math.ceil(Number(reward.ruby || 0)));
+    return reward;
+  }
+  function rewardText(reward){
+    const parts = [];
+    if (reward.coin) parts.push(`${Number(reward.coin).toLocaleString()} COIN`);
+    if (reward.diamond) parts.push(`💎 +${Number(reward.diamond).toLocaleString()}`);
+    if (reward.ruby) parts.push(`♦ +${Number(reward.ruby).toLocaleString()}`);
+    return parts.length ? parts.join(' / ') : '報酬なし';
+  }
+  function applyMissionReward(reward){
+    if (!reward) return;
+    if (reward.coin) addCoin(reward.coin);
+    if (reward.diamond) addDiamond(reward.diamond);
+    if (reward.ruby) addPetRuby(reward.ruby);
+  }
+  function missionTargets(type, current){
+    const fixed = PET_MODE_MISSION_STEPS[type] || [];
+    const repeat = PET_MODE_MISSION_REPEAT[type];
+    const targets = fixed.slice();
+    if (repeat && Number(current || 0) >= Number(repeat.start || 0)) {
+      const currentNum = Number(current || 0);
+      let target = Number(repeat.start || 0);
+      while (target <= currentNum) {
+        if (!targets.includes(target)) targets.push(target);
+        target += Number(repeat.step || 1);
+      }
+    }
+    return targets.sort((a,b) => a - b);
+  }
+  function missionRows(){
+    const save = loadMissionSave();
+    const rows = [];
+    ['play','clearPoint','kill','drop'].forEach(type => {
+      const current = Number(save.stats[type] || 0);
+      const targets = missionTargets(type, current);
+      targets.forEach(target => {
+        const claimed = !!(save.claimed[type] && save.claimed[type][String(target)]);
+        const reward = missionReward(type, target);
+        rows.push({
+          type,
+          petKey:'',
+          title:PET_MODE_MISSION_LABELS[type],
+          current,
+          target,
+          reward,
+          claimed,
+          complete:current >= target,
+          sortType:type
+        });
+      });
+    });
+    const ownedPets = getOwnedPetList();
+    const petPoint = save.stats.petClearPoint || {};
+    const claimedPet = save.claimed.petClearPoint || {};
+    ownedPets.forEach(pet => {
+      const current = Number(petPoint[pet.key] || 0);
+      const targets = missionTargets('petClearPoint', current);
+      targets.forEach(target => {
+        const claimed = !!(claimedPet[pet.key] && claimedPet[pet.key][String(target)]);
+        const reward = missionReward('petClearPoint', target, pet.key);
+        rows.push({
+          type:'petClearPoint',
+          petKey:pet.key,
+          petName:pet.name || pet.key,
+          petImage:pet.frontImage || pet.backImage || '',
+          title:`${pet.name || pet.key}でクリア`,
+          current,
+          target,
+          reward,
+          claimed,
+          complete:current >= target,
+          sortType:'petClearPoint'
+        });
+      });
+    });
+    rows.sort((a,b) => {
+      const aReady = a.complete && !a.claimed ? 0 : a.claimed ? 2 : 1;
+      const bReady = b.complete && !b.claimed ? 0 : b.claimed ? 2 : 1;
+      if (aReady !== bReady) return aReady - bReady;
+      const order = { play:1, clearPoint:2, kill:3, drop:4, petClearPoint:5 };
+      if (order[a.sortType] !== order[b.sortType]) return order[a.sortType] - order[b.sortType];
+      return a.target - b.target;
+    });
+    return rows;
+  }
+  function claimMission(row){
+    if (!row || !row.complete || row.claimed) return false;
+    const save = loadMissionSave();
+    if (row.type === 'petClearPoint') {
+      save.claimed.petClearPoint = save.claimed.petClearPoint || {};
+      save.claimed.petClearPoint[row.petKey] = save.claimed.petClearPoint[row.petKey] || {};
+      if (save.claimed.petClearPoint[row.petKey][String(row.target)]) return false;
+      save.claimed.petClearPoint[row.petKey][String(row.target)] = true;
+    } else {
+      save.claimed[row.type] = save.claimed[row.type] || {};
+      if (save.claimed[row.type][String(row.target)]) return false;
+      save.claimed[row.type][String(row.target)] = true;
+    }
+    saveMissionSave(save);
+    applyMissionReward(row.reward);
+    return true;
+  }
+  function claimMissionByKey(key){
+    const rows = missionRows();
+    const row = rows.find(r => missionRowKey(r) === key);
+    if (!row) return;
+    if (claimMission(row)) {
+      state.missionMessage = `受け取り完了：${rewardText(row.reward)}`;
+      state.missionMessageTimer = 120;
+    }
+    renderOverlay();
+  }
+  function claimAllMissions(){
+    const rows = missionRows().filter(r => r.complete && !r.claimed);
+    let count = 0;
+    const total = { coin:0, diamond:0, ruby:0 };
+    rows.forEach(row => {
+      const ok = claimMission(row);
+      if (!ok) return;
+      count++;
+      total.coin += Number(row.reward.coin || 0);
+      total.diamond += Number(row.reward.diamond || 0);
+      total.ruby += Number(row.reward.ruby || 0);
+    });
+    state.missionMessage = count
+      ? `一括受け取り：${rewardText(total)}`
+      : '受け取れるミッションはありません';
+    state.missionMessageTimer = 140;
+    renderOverlay();
+  }
+  function missionRowKey(row){
+    return [
+      row.type,
+      row.petKey || 'none',
+      row.target
+    ].join('__');
+  }
+  function missionStatSummary(){
+    const save = loadMissionSave();
+    return `
+      プレイ ${Number(save.stats.play || 0).toLocaleString()} / 
+      クリアPT ${Number(save.stats.clearPoint || 0).toLocaleString()} / 
+      撃破 ${Number(save.stats.kill || 0).toLocaleString()} / 
+      Drop ${Number(save.stats.drop || 0).toLocaleString()}
+    `;
+  }
   function ensureScreen(){
     let screen = $('battleScreen');
     const app = $('app') || document.body;
@@ -399,8 +710,8 @@
       .battle-title{margin:0 0 10px!important;font-size:30px!important;font-weight:1000!important;color:#ffe66b!important;text-shadow:0 5px 0 #000!important;line-height:1.05!important}
       .battle-help{margin:0 0 14px!important;color:#dfe8ff!important;font-size:13px!important;font-weight:900!important;line-height:1.55!important}
       .battle-grid{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;margin-bottom:12px!important}
-      .battle-mode-btn,.battle-stage-btn,.battle-diff-btn,.battle-pet-btn{display:grid!important;grid-template-columns:58px 1fr auto!important;gap:10px!important;align-items:center!important;width:100%!important;border:2px solid rgba(255,255,255,.26)!important;border-radius:18px!important;padding:10px!important;background:linear-gradient(135deg,rgba(50,68,105,.96),rgba(13,22,40,.96))!important;color:#fff!important;font-weight:1000!important;text-align:left!important;box-shadow:0 6px 0 rgba(0,0,0,.28)!important}
-      .battle-mode-btn img,.battle-diff-btn img,.battle-pet-btn img{width:54px!important;height:54px!important;object-fit:contain!important}
+      .battle-mode-btn,.battle-stage-btn,.battle-diff-btn,.battle-pet-btn,.battle-mission-row{display:grid!important;grid-template-columns:58px 1fr auto!important;gap:10px!important;align-items:center!important;width:100%!important;border:2px solid rgba(255,255,255,.26)!important;border-radius:18px!important;padding:10px!important;background:linear-gradient(135deg,rgba(50,68,105,.96),rgba(13,22,40,.96))!important;color:#fff!important;font-weight:1000!important;text-align:left!important;box-shadow:0 6px 0 rgba(0,0,0,.28)!important}
+      .battle-mode-btn img,.battle-diff-btn img,.battle-pet-btn img,.battle-mission-row img{width:54px!important;height:54px!important;object-fit:contain!important}
       .battle-stage-thumb{width:54px!important;height:54px!important;border-radius:12px!important;background:#0b1325!important;object-fit:cover!important;border:2px solid rgba(255,255,255,.18)!important}
       .battle-name{font-size:17px!important;color:#ffe66b!important}
       .battle-sub{margin-top:3px!important;font-size:11px!important;color:#dfe8ff!important;line-height:1.35!important}
@@ -415,12 +726,25 @@
       .battle-btn{border:0!important;border-radius:999px!important;padding:13px 12px!important;font-size:17px!important;font-weight:1000!important;color:#201100!important;background:linear-gradient(#ffe66b,#ffb423)!important;box-shadow:0 5px 0 rgba(0,0,0,.36)!important}
       .battle-btn.blue{color:#fff!important;background:linear-gradient(#60d9ff,#1774ee)!important}
       .battle-btn.green{color:#07370f!important;background:linear-gradient(#9dff73,#26b63e)!important}
+      .battle-btn.gray{color:#fff!important;background:linear-gradient(#78839b,#354057)!important}
       .battle-row{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;margin-top:10px!important}
       .battle-drop-grid{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:8px!important;margin:10px 0!important}
       .battle-drop-card{border-radius:14px!important;padding:6px!important;background:rgba(255,255,255,.12)!important;border:2px solid rgba(255,255,255,.25)!important;text-align:center!important}
       .battle-drop-card img{width:52px!important;height:52px!important;object-fit:contain!important;display:block!important;margin:0 auto 3px!important}
       .battle-drop-name{font-size:9px!important;font-weight:1000!important;color:#fff!important;line-height:1.2!important}
       .battle-drop-rarity{font-size:10px!important;font-weight:1000!important;color:#ffe66b!important}
+      .battle-mission-list{display:grid!important;grid-template-columns:1fr!important;gap:9px!important;margin:10px 0!important}
+      .battle-mission-row{grid-template-columns:46px 1fr 78px!important;padding:9px!important}
+      .battle-mission-row.ready{border-color:#ffe66b!important;background:linear-gradient(135deg,rgba(92,75,24,.98),rgba(35,23,5,.98))!important}
+      .battle-mission-row.done{opacity:.58!important}
+      .battle-mission-icon{display:flex!important;align-items:center!important;justify-content:center!important;width:44px!important;height:44px!important;border-radius:14px!important;background:rgba(255,255,255,.12)!important;border:2px solid rgba(255,255,255,.18)!important;font-size:22px!important}
+      .battle-mission-title{font-size:13px!important;color:#ffe66b!important;line-height:1.25!important}
+      .battle-mission-desc{margin-top:2px!important;font-size:10px!important;color:#dfe8ff!important;line-height:1.35!important}
+      .battle-mission-reward{margin-top:3px!important;font-size:10px!important;color:#9dff73!important;line-height:1.3!important}
+      .battle-mission-btn{border:0!important;border-radius:999px!important;padding:8px 7px!important;font-size:11px!important;font-weight:1000!important;color:#201100!important;background:linear-gradient(#ffe66b,#ffb423)!important;box-shadow:0 3px 0 rgba(0,0,0,.32)!important}
+      .battle-mission-btn:disabled{color:#dfe8ff!important;background:linear-gradient(#69738a,#3b4354)!important;box-shadow:none!important}
+      .battle-mission-note{margin:8px 0!important;padding:9px!important;border-radius:14px!important;background:rgba(255,255,255,.08)!important;border:2px solid rgba(255,255,255,.14)!important;color:#dfe8ff!important;font-size:11px!important;font-weight:900!important;line-height:1.45!important}
+      .battle-mission-message{margin:8px 0!important;padding:9px!important;border-radius:14px!important;background:rgba(157,255,115,.12)!important;border:2px solid rgba(157,255,115,.28)!important;color:#9dff73!important;font-size:12px!important;font-weight:1000!important;line-height:1.45!important}
     `;
     document.head.appendChild(style);
   }
@@ -496,11 +820,117 @@
     if (main) main.classList.add('active');
   }
 
+  function renderMissionScreen(){
+    const rows = missionRows();
+    const readyCount = rows.filter(r => r.complete && !r.claimed).length;
+    const showRows = rows.filter((row, index) => {
+      if (row.complete && !row.claimed) return true;
+      if (!row.claimed) return index < 80;
+      return index < 120;
+    });
+
+    return `
+      <div class="battle-menu">
+        <div class="battle-card">
+          <h1 class="battle-title">PET MISSION</h1>
+          <p class="battle-help">
+            ペットモード専用ミッションです。<br>
+            高難易度ほどクリアポイントが多く進みます。
+          </p>
+
+          <div class="battle-mission-note">
+            EASY +1 / HARD +2 / VERY HARD +3 / INFERNO +5 / LEGEND +8<br>
+            ペット別ミッションはアリーナ・ボス降臨のみ進行します。ラグナロクでは進行しません。<br>
+            ${missionStatSummary()}
+          </div>
+
+          ${state.missionMessage && state.missionMessageTimer > 0 ? `
+            <div class="battle-mission-message">${escapeHtml(state.missionMessage)}</div>
+          ` : ''}
+
+          <button id="mobMissionClaimAllBtn" class="battle-btn green" type="button" style="width:100%;margin-bottom:10px">
+            一括受け取り ${readyCount > 0 ? '(' + readyCount + ')' : ''}
+          </button>
+
+          <div class="battle-mission-list">
+            ${showRows.length ? showRows.map(row => missionRowHtml(row)).join('') : `
+              <div class="battle-mission-note">表示できるミッションがありません。</div>
+            `}
+          </div>
+
+          <div class="battle-row">
+            <button id="mobMissionBackBtn" class="battle-btn blue" type="button">戻る</button>
+            <button id="mobMissionMainBtn" class="battle-btn" type="button">メインへ</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function missionRowHtml(row){
+    const key = missionRowKey(row);
+    const icon =
+      row.type === 'play' ? '▶' :
+      row.type === 'clearPoint' ? '★' :
+      row.type === 'kill' ? '⚔' :
+      row.type === 'drop' ? '◆' :
+      '🐾';
+
+    const progress = `${Math.min(row.current, row.target).toLocaleString()} / ${row.target.toLocaleString()}`;
+    const status = row.claimed ? '受取済' : row.complete ? '受け取る' : '未達成';
+    const disabled = row.claimed || !row.complete ? 'disabled' : '';
+    const cls = row.claimed ? 'done' : row.complete ? 'ready' : '';
+
+    const imageHtml = row.petImage
+      ? `<img src="${escapeHtml(row.petImage)}" alt="">`
+      : `<div class="battle-mission-icon">${icon}</div>`;
+
+    return `
+      <div class="battle-mission-row ${cls}" data-mission="${escapeHtml(key)}">
+        ${imageHtml}
+        <div>
+          <div class="battle-mission-title">${escapeHtml(row.title)}</div>
+          <div class="battle-mission-desc">${progress}</div>
+          <div class="battle-mission-reward">${escapeHtml(rewardText(row.reward))}</div>
+        </div>
+        <button class="battle-mission-btn" type="button" data-claim="${escapeHtml(key)}" ${disabled}>${status}</button>
+      </div>
+    `;
+  }
+
+  function bindMissionButtons(overlay){
+    const claimAll = $('mobMissionClaimAllBtn');
+    if (claimAll) claimAll.onclick = claimAllMissions;
+
+    const back = $('mobMissionBackBtn');
+    if (back) back.onclick = function(){ state.screen = 'title'; renderOverlay(); };
+
+    const main = $('mobMissionMainBtn');
+    if (main) main.onclick = close;
+
+    overlay.querySelectorAll('[data-claim]').forEach(btn => {
+      btn.onclick = function(){
+        const key = this.getAttribute('data-claim');
+        claimMissionByKey(key);
+      };
+    });
+  }
+
   function renderOverlay(){
     const overlay = $('battleOverlay');
     if (!overlay) return;
 
+    if (state.missionMessageTimer > 0) state.missionMessageTimer--;
+
+    if (state.screen === 'mission') {
+      overlay.innerHTML = renderMissionScreen();
+      bindMissionButtons(overlay);
+      return;
+    }
+
     if (state.screen === 'title') {
+      const readyCount = missionRows().filter(r => r.complete && !r.claimed).length;
+
       overlay.innerHTML = `
         <div class="battle-menu">
           <div class="battle-card">
@@ -527,6 +957,10 @@
                 `;
               }).join('')}
             </div>
+
+            <button id="mobPetMissionBtn" class="battle-btn green" type="button" style="width:100%;margin-bottom:10px">
+              ミッション${readyCount > 0 ? '（受取 ' + readyCount + '）' : ''}
+            </button>
             <button id="mobBattleMainBtn" class="battle-btn blue" type="button" style="width:100%">メインへ戻る</button>
           </div>
         </div>
@@ -543,6 +977,7 @@
         };
       });
 
+      $('mobPetMissionBtn').onclick = function(){ state.screen = 'mission'; renderOverlay(); };
       $('mobBattleMainBtn').onclick = close;
       return;
     }
@@ -578,7 +1013,7 @@
                       <div class="battle-name">${d.name}</div>
                       <div class="battle-sub">
                         HP x${d.hpRate} / 攻撃 x${d.atkRate} / 石板Drop ${Math.round(d.dropRate * 100)}%<br>
-                        クリア状況 ${p.clear}/${p.total}
+                        クリア状況 ${p.clear}/${p.total} / ミッションPT +${difficultyPoint(d.key)}
                         ${clearBadgeHtml(allClear)}
                       </div>
                     </div>
@@ -696,12 +1131,19 @@
     if (state.screen === 'petSelect') {
       const max = Number(state.mode.maxPets || 4);
       const selectedCount = state.selectedPetKeys.length;
+      const petMissionNote = state.mode.key === 'ragnarok'
+        ? 'ラグナロクではペット別ミッションは進行しません。'
+        : 'クリア時、選択ペットのペット別ポイントが進みます。';
 
       overlay.innerHTML = `
         <div class="battle-menu">
           <div class="battle-card">
             <h1 class="battle-title">ペット選択</h1>
-            <p class="battle-help">${state.mode.name} / ${state.stage.name} / ${state.difficulty.name}<br>最大${max}体まで。足りなくても出撃可能。</p>
+            <p class="battle-help">
+              ${state.mode.name} / ${state.stage.name} / ${state.difficulty.name}<br>
+              最大${max}体まで。足りなくても出撃可能。<br>
+              ${petMissionNote}
+            </p>
             <div class="battle-grid">
               ${state.availablePets.map(p => `
                 <button class="battle-pet-btn ${state.selectedPetKeys.includes(p.key) ? 'selected' : ''}" type="button" data-pet="${p.key}">
@@ -829,6 +1271,8 @@
       showResult(false, '出撃できるペットがいません');
       return;
     }
+
+    addMissionStat('play', 1);
 
     spawnContent();
     showMessage(`${state.mode.name} START!`);
@@ -1133,6 +1577,7 @@
     state.frame++;
 
     if (state.messageTimer > 0) state.messageTimer--;
+    if (state.missionMessageTimer > 0) state.missionMessageTimer--;
 
     updateTexts();
     updateParticles();
@@ -1370,8 +1815,7 @@
       rapid:p.key === 'babymob'
     };
   }
-
-  function usePetSecondSkill(p){
+    function usePetSecondSkill(p){
     const second = normalizeSecondPattern(p.secondSkill);
     if (!second) return;
 
@@ -2109,6 +2553,7 @@
     if (!e || e.dead) return;
 
     giveEnemyKillReward(e);
+    addMissionStat('kill', 1);
 
     e.dead = true;
 
@@ -2199,6 +2644,7 @@
     const savedStone = Object.assign({}, stone, result || {});
 
     state.stats.drops.push(savedStone);
+    addMissionStat('drop', 1);
 
     state.dropCards.push({
       stone:savedStone,
@@ -2411,6 +2857,20 @@
     addText('+' + coin + ' COIN', enemy.x, enemy.y - 52, '#ffe66b');
   }
 
+  function recordClearMissionProgress(){
+    const point = difficultyPoint(state.difficulty && state.difficulty.key);
+
+    addMissionStat('clearPoint', point);
+
+    if (state.mode && state.mode.key !== 'ragnarok') {
+      const petKeys = state.pets
+        .filter(p => p && p.key)
+        .map(p => p.key);
+
+      addPetMissionPoint(petKeys, point);
+    }
+  }
+
   function showResult(clear, reason){
     if (state.resultShown) return;
 
@@ -2424,12 +2884,15 @@
     let rewardDiamond = 0;
     let rubyReward = 0;
     let clearScore = 0;
+    let missionPoint = 0;
+    let petPointText = '';
 
     if (clear) {
       rewardCoin = Math.ceil(diff.rewardCoin * state.support.coin);
       rewardDiamond = diff.rewardDiamond;
       rubyReward = calcRubyReward(diff, state.mode);
       clearScore = clearScoreReward();
+      missionPoint = difficultyPoint(diff.key);
 
       if (state.mode.key === 'boss') rewardCoin = Math.ceil(rewardCoin * 1.4);
       if (state.mode.key === 'ragnarok') rewardCoin = Math.ceil(rewardCoin * 2.0);
@@ -2446,6 +2909,8 @@
         addDiamond(rewardDiamond);
         addPetRuby(rubyReward);
 
+        recordClearMissionProgress();
+
         const legendJustUnlocked = justUnlockedLegendByThisClear(state.mode.key, diff.key, state.stage.key);
         saveClear(state.mode.key, diff.key, state.stage.key);
 
@@ -2453,6 +2918,10 @@
           state.stats.legendUnlocked = true;
         }
       }
+
+      petPointText = state.mode.key === 'ragnarok'
+        ? 'ペット別PT: ラグナロク対象外'
+        : `ペット別PT: 出撃ペット +${missionPoint}`;
     }
 
     state.stats.rubyReward = rubyReward;
@@ -2481,6 +2950,8 @@
             クリアCOIN: ${clear ? Number(state.stats.clearCoin || rewardCoin || 0).toLocaleString() : '0'}<br>
             合計COIN: ${totalCoin.toLocaleString()}<br><br>
 
+            ${clear ? `ミッションPT: クリアPT +${missionPoint}<br>${petPointText}<br><br>` : ''}
+
             石板Drop: ${state.stats.drops.length ? state.stats.drops.map(d => `${d.rarity} ${d.name}${d.isNew ? ' NEW' : d.converted ? ' MAX変換' : d.plusAfter != null ? ' +' + d.plusAfter : ''}`).join(' / ') : 'なし'}<br><br>
 
             ${clear ? `報酬: 💎 +${rewardDiamond} / ペットルビー ♦ +${rubyReward}` : 'クリア報酬なし'}<br>
@@ -2501,6 +2972,7 @@
           ` : ''}
 
           <button id="mobRetryBtn" class="battle-btn green" type="button" style="width:100%">もう一度</button>
+          <button id="mobMissionResultBtn" class="battle-btn" type="button" style="width:100%;margin-top:10px">ミッション確認</button>
           <button id="mobBackModeBtn" class="battle-btn" type="button" style="width:100%;margin-top:10px">モード選択へ</button>
           <button id="mobResultMainBtn" class="battle-btn blue" type="button" style="width:100%;margin-top:10px">メインへ戻る</button>
         </div>
@@ -2508,6 +2980,7 @@
     `;
 
     $('mobRetryBtn').onclick = beginGame;
+    $('mobMissionResultBtn').onclick = function(){ state.screen = 'mission'; renderOverlay(); };
     $('mobBackModeBtn').onclick = function(){ state.screen = 'title'; renderOverlay(); };
     $('mobResultMainBtn').onclick = close;
   }
@@ -3094,7 +3567,12 @@
     }
   }
 
-  window.MobShotBattle = { open, close };
+  window.MobShotBattle = {
+    open,
+    close,
+    loadMissionSave,
+    missionRows
+  };
 
   document.addEventListener('DOMContentLoaded', bindMainButton);
   window.addEventListener('load', bindMainButton);
