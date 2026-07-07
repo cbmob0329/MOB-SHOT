@@ -1,4 +1,4 @@
-　'use strict';
+'use strict';
 
 (function(){
   let gameState = null;
@@ -10,9 +10,13 @@
   const cutins = [];
   const supportEffects = [];
 
-  const FIRST_SKILL_GLOBAL_RATE = 0.94;
-  const SECOND_SKILL_GLOBAL_RATE = 0.92;
-  const PET_BATTLE_VERSION = '20260629_pet_battle_full_v1';
+  const FIRST_SKILL_GLOBAL_RATE = 0.82;
+  const SECOND_SKILL_GLOBAL_RATE = 0.38;
+  const SECOND_SKILL_BOSS_EXTRA_RATE = 0.75;
+  const SECOND_SKILL_EXPLOSION_RATE = 0.32;
+  const FIRST_SKILL_BOSS_SAFETY_RATE = 0.88;
+
+  const PET_BATTLE_VERSION = '20260707_game_pets_second_balance_v2';
 
   function img(src){
     if (!src) return null;
@@ -41,6 +45,14 @@
 
   function plusSkillTier(pet){
     return Math.floor(plus(pet) / 10);
+  }
+
+  function isBossTarget(target){
+    return !!(target && (target.kind === 'boss' || target.kind === 'midBoss'));
+  }
+
+  function isObstacleTarget(target){
+    return !!(target && (target.kind === 'gimmick' || target.kind === 'chest'));
   }
 
   function normalRate(pet){
@@ -520,23 +532,39 @@
   function homingSecondBullets(pet, targets, second, count){
     if (!targets.length) return;
 
-    for (let i = 0; i < count; i++) {
-      const target = targets[i % targets.length];
-      const offset = (i - (count - 1) / 2) * 20;
-      pushSecondBullet(pet, target, second, offset, {
-        speed:second.pattern === 'rapid' ? 7.4 : 5.8
-      });
-    }
-
     if (second.pattern === 'hero') {
-      for (let i = 0; i < 5; i++) {
+      const mainCount = Math.max(1, Math.floor(count / 2));
+      const subCount = Math.max(1, count - mainCount);
+
+      for (let i = 0; i < mainCount; i++) {
         const target = targets[i % targets.length];
+        const offset = (i - (mainCount - 1) / 2) * 22;
+
+        pushSecondBullet(pet, target, second, offset, {
+          speed:5.8
+        });
+      }
+
+      for (let i = 0; i < subCount; i++) {
+        const target = targets[i % targets.length];
+
         pushSecondBullet(pet, target, second, random(-40, 40), {
           speed:7.0,
           radiusBoost:0.65,
           damageRate:0.55
         });
       }
+
+      return;
+    }
+
+    for (let i = 0; i < count; i++) {
+      const target = targets[i % targets.length];
+      const offset = (i - (count - 1) / 2) * 20;
+
+      pushSecondBullet(pet, target, second, offset, {
+        speed:second.pattern === 'rapid' ? 7.4 : 5.8
+      });
     }
   }
 
@@ -587,27 +615,21 @@
   function secondPowerRate(pet, second, target){
     let rate = Number(second.powerRate || 1);
 
-    if (target && (target.kind === 'gimmick' || target.kind === 'chest')) {
+    if (isObstacleTarget(target)) {
       rate = Number(second.obstacleRate || rate);
     }
 
-    if (target && (target.kind === 'boss' || target.kind === 'midBoss')) {
+    if (isBossTarget(target)) {
       rate = Number(second.bossRate || rate);
+      rate *= SECOND_SKILL_BOSS_EXTRA_RATE;
     }
 
     if (target && target.kind === 'enemyBullet') {
       rate = Number(second.bulletRate || rate);
     }
 
-    const lv = level(pet);
-    const tier = plusSkillTier(pet);
-
-    rate *= Number(second.levelRate || 1);
-    rate *= 1 + Math.max(0, lv - 50) * 0.004;
-    rate *= 1 + tier * 0.01;
-
     if (pet.data.key === 'mobstone') {
-      rate *= 0.92;
+      rate *= 0.88;
     }
 
     return skillRate(pet, rate, true);
@@ -785,11 +807,11 @@
     const tier = plusSkillTier(pet);
     let rate = Number(pet.data.skillPowerRate || 1);
 
-    if (target && (target.kind === 'gimmick' || target.kind === 'chest')) {
+    if (isObstacleTarget(target)) {
       rate = Number(pet.data.skillObstacleRate || rate);
     }
 
-    if (target && (target.kind === 'boss' || target.kind === 'midBoss')) {
+    if (isBossTarget(target)) {
       rate = Number(pet.data.skillBossRate || rate);
     }
 
@@ -803,8 +825,8 @@
     }
 
     if (key === 'mobfrog') {
-      if (lv >= 50) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 3.85 : 2.55;
-      else if (lv >= 30) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 3.35 : 2.28;
+      if (lv >= 50) rate = isObstacleTarget(target) ? 3.85 : 2.55;
+      else if (lv >= 30) rate = isObstacleTarget(target) ? 3.35 : 2.28;
     }
 
     if (key === 'mobdenden') {
@@ -813,8 +835,8 @@
     }
 
     if (key === 'mobwolf') {
-      if (lv >= 50) rate = target && (target.kind === 'boss' || target.kind === 'midBoss') ? 3.45 : 2.22;
-      else if (lv >= 30) rate = target && (target.kind === 'boss' || target.kind === 'midBoss') ? 3.00 : 1.95;
+      if (lv >= 50) rate = isBossTarget(target) ? 3.45 : 2.22;
+      else if (lv >= 30) rate = isBossTarget(target) ? 3.00 : 1.95;
     }
 
     if (key === 'mobstone') {
@@ -896,8 +918,8 @@
     }
 
     if (key === 'chibimobmelt') {
-      if (lv >= 50) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 6.65 : 4.82;
-      else if (lv >= 30) rate = target && (target.kind === 'gimmick' || target.kind === 'chest') ? 5.95 : 4.35;
+      if (lv >= 50) rate = isObstacleTarget(target) ? 6.65 : 4.82;
+      else if (lv >= 30) rate = isObstacleTarget(target) ? 5.95 : 4.35;
     }
 
     if (key === 'wondamob') {
@@ -925,6 +947,10 @@
     }
 
     rate *= 1 + tier * 0.015;
+
+    if (isBossTarget(target)) {
+      rate *= FIRST_SKILL_BOSS_SAFETY_RATE;
+    }
 
     return skillRate(pet, rate, false);
   }
@@ -1156,7 +1182,7 @@
     b.__exploded = true;
 
     const radius = b.type === 'second' ? b.r * 3.2 : b.r * 2.6;
-    const damage = Number(b.damage || 0) * 0.45;
+    const damage = Number(b.damage || 0) * (b.type === 'second' ? SECOND_SKILL_EXPLOSION_RATE : 0.45);
 
     petTexts.push({
       text:'BOMB',
@@ -1171,9 +1197,13 @@
       if (target === b.target) return;
 
       const hitRadius = target.r || Math.max(target.w || 40, target.h || 40) / 2;
+
       if (Math.hypot(x - target.x, y - target.y) <= radius + hitRadius) {
-        if (validBreakableBullet(target)) damageBreakableBullet(target, Object.assign({}, b, { damage }));
-        else damageTarget(target, damage, b);
+        if (validBreakableBullet(target)) {
+          damageBreakableBullet(target, Object.assign({}, b, { damage }));
+        } else {
+          damageTarget(target, damage, b);
+        }
       }
     });
   }
