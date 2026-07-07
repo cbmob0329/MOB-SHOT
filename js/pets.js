@@ -14,7 +14,7 @@
   const SECOND_SKILL_UNLOCK_COIN = 100000;
   const SECOND_SKILL_UNLOCK_DIAMOND = 50;
 
-  const PET_UI_VERSION = '20260630_pet_ui_no_dialog_unlock_fix_v1';
+  const PET_UI_VERSION = '20260706_second_skill_balance_v1';
 
   const PET_MODE_FIELDS = [
     { key:'hp', name:'HP', rubyBase:2, coinBase:3000 },
@@ -34,9 +34,9 @@
       firstCt:24,
       count:8,
       size:'big',
-      powerRate:1.03,
-      obstacleRate:1.03,
-      bossRate:1.03,
+      powerRate:0.34,
+      obstacleRate:0.58,
+      bossRate:0.32,
       breakPower:180,
       pattern:'fan'
     },
@@ -49,9 +49,9 @@
       firstCt:22,
       count:12,
       size:'normal',
-      powerRate:0.86,
-      obstacleRate:2.16,
-      bossRate:0.99,
+      powerRate:0.22,
+      obstacleRate:1.20,
+      bossRate:0.20,
       breakPower:280,
       pattern:'wide'
     },
@@ -64,24 +64,24 @@
       firstCt:26,
       count:18,
       size:'small',
-      powerRate:0.56,
-      obstacleRate:0.56,
-      bossRate:0.56,
+      powerRate:0.13,
+      obstacleRate:0.22,
+      bossRate:0.10,
       breakPower:90,
       pattern:'wide'
     },
     mobwolf:{
       name:'ウルフバイトラッシュ',
-      desc:'追尾弾を6発放つ。ボスへの倍率が高い。',
+      desc:'追尾弾を6発放つ。ボスへの倍率が少し高い。',
       atkImage:'',
       htmlBullet:'gray',
       ct:64,
       firstCt:28,
       count:6,
       size:'normal',
-      powerRate:1.13,
-      obstacleRate:1.08,
-      bossRate:1.98,
+      powerRate:0.42,
+      obstacleRate:0.55,
+      bossRate:0.48,
       breakPower:330,
       pattern:'homing'
     },
@@ -94,9 +94,9 @@
       firstCt:42,
       count:3,
       size:'huge',
-      powerRate:2.75,
-      obstacleRate:3.55,
-      bossRate:3.20,
+      powerRate:0.72,
+      obstacleRate:1.65,
+      bossRate:0.58,
       breakPower:1050,
       pattern:'bigshot'
     },
@@ -109,9 +109,9 @@
       firstCt:30,
       count:4,
       size:'small',
-      powerRate:0.45,
-      obstacleRate:0.45,
-      bossRate:0.45,
+      powerRate:0.18,
+      obstacleRate:0.25,
+      bossRate:0.14,
       breakPower:90,
       heal:35,
       barrierSec:3,
@@ -126,9 +126,9 @@
       firstCt:20,
       count:16,
       size:'small',
-      powerRate:0.74,
-      obstacleRate:0.74,
-      bossRate:0.74,
+      powerRate:0.16,
+      obstacleRate:0.22,
+      bossRate:0.12,
       breakPower:600,
       pattern:'rapid'
     },
@@ -141,9 +141,9 @@
       firstCt:24,
       count:12,
       size:'normal',
-      powerRate:0.63,
-      obstacleRate:0.63,
-      bossRate:0.63,
+      powerRate:0.18,
+      obstacleRate:0.25,
+      bossRate:0.12,
       breakPower:130,
       coinBonusRate:0.08,
       pattern:'bubble'
@@ -157,9 +157,9 @@
       firstCt:24,
       count:10,
       size:'normal',
-      powerRate:0.90,
-      obstacleRate:0.90,
-      bossRate:0.90,
+      powerRate:0.25,
+      obstacleRate:0.35,
+      bossRate:0.18,
       breakPower:160,
       pattern:'side'
     },
@@ -172,9 +172,9 @@
       firstCt:26,
       count:5,
       size:'big',
-      powerRate:1.13,
-      obstacleRate:1.13,
-      bossRate:1.13,
+      powerRate:0.32,
+      obstacleRate:0.55,
+      bossRate:0.22,
       breakPower:500,
       barrierSec:7,
       barrierHpRate:0.30,
@@ -189,9 +189,9 @@
       firstCt:24,
       count:12,
       size:'normal',
-      powerRate:0.97,
-      obstacleRate:0.97,
-      bossRate:0.97,
+      powerRate:0.24,
+      obstacleRate:0.34,
+      bossRate:0.16,
       breakPower:220,
       pattern:'circle'
     },
@@ -204,9 +204,9 @@
       firstCt:34,
       count:1,
       size:'huge',
-      powerRate:4.68,
-      obstacleRate:4.68,
-      bossRate:4.68,
+      powerRate:1.35,
+      obstacleRate:2.05,
+      bossRate:1.15,
       breakPower:1200,
       pattern:'bigshot'
     },
@@ -219,9 +219,9 @@
       firstCt:24,
       count:20,
       size:'normal',
-      powerRate:0.86,
-      obstacleRate:0.86,
-      bossRate:1.04,
+      powerRate:0.13,
+      obstacleRate:0.22,
+      bossRate:0.10,
       breakPower:420,
       pattern:'homing'
     },
@@ -234,9 +234,9 @@
       firstCt:28,
       count:3,
       size:'huge',
-      powerRate:2.16,
-      obstacleRate:2.16,
-      bossRate:2.16,
+      powerRate:0.52,
+      obstacleRate:1.05,
+      bossRate:0.42,
       breakPower:700,
       pierce:true,
       pattern:'laser'
@@ -250,9 +250,9 @@
       firstCt:30,
       count:5,
       size:'huge',
-      powerRate:1.80,
-      obstacleRate:1.80,
-      bossRate:1.80,
+      powerRate:0.32,
+      obstacleRate:0.85,
+      bossRate:0.24,
       breakPower:550,
       explode:true,
       pattern:'bubble'
@@ -266,9 +266,9 @@
       firstCt:22,
       count:100,
       size:'small',
-      powerRate:0.25,
-      obstacleRate:0.25,
-      bossRate:0.25,
+      powerRate:0.025,
+      obstacleRate:0.055,
+      bossRate:0.018,
       breakPower:90,
       pattern:'rapid'
     },
@@ -281,9 +281,9 @@
       firstCt:28,
       count:8,
       size:'normal',
-      powerRate:1.17,
-      obstacleRate:1.17,
-      bossRate:1.17,
+      powerRate:0.32,
+      obstacleRate:0.45,
+      bossRate:0.24,
       breakPower:270,
       drainRate:0.05,
       pattern:'drain'
@@ -297,9 +297,9 @@
       firstCt:30,
       count:15,
       size:'big',
-      powerRate:0.86,
-      obstacleRate:0.86,
-      bossRate:0.86,
+      powerRate:0.18,
+      obstacleRate:0.30,
+      bossRate:0.13,
       breakPower:320,
       pattern:'fan'
     },
@@ -312,9 +312,9 @@
       firstCt:36,
       count:2,
       size:'huge',
-      powerRate:3.87,
-      obstacleRate:3.87,
-      bossRate:3.87,
+      powerRate:0.82,
+      obstacleRate:1.35,
+      bossRate:0.62,
       breakPower:900,
       pattern:'bigshot'
     },
@@ -327,9 +327,9 @@
       firstCt:28,
       count:6,
       size:'small',
-      powerRate:0.63,
-      obstacleRate:0.63,
-      bossRate:0.63,
+      powerRate:0.20,
+      obstacleRate:0.40,
+      bossRate:0.14,
       breakPower:420,
       barrierSec:4,
       pattern:'shield'
@@ -343,9 +343,9 @@
       firstCt:26,
       count:4,
       size:'big',
-      powerRate:1.89,
-      obstacleRate:4.14,
-      bossRate:1.89,
+      powerRate:0.55,
+      obstacleRate:1.90,
+      bossRate:0.36,
       breakPower:700,
       pattern:'crush'
     },
@@ -358,9 +358,9 @@
       firstCt:30,
       count:5,
       size:'small',
-      powerRate:0.50,
-      obstacleRate:0.50,
-      bossRate:0.50,
+      powerRate:0.14,
+      obstacleRate:0.25,
+      bossRate:0.10,
       breakPower:260,
       petRapidBuffSec:10,
       petRapidBuffRate:1.18,
@@ -375,9 +375,9 @@
       firstCt:30,
       count:27,
       size:'normal',
-      powerRate:0.79,
-      obstacleRate:0.79,
-      bossRate:0.79,
+      powerRate:0.09,
+      obstacleRate:0.18,
+      bossRate:0.065,
       breakPower:500,
       pierce:true,
       pattern:'wide'
@@ -391,9 +391,9 @@
       firstCt:30,
       count:16,
       size:'big',
-      powerRate:1.22,
-      obstacleRate:1.22,
-      bossRate:1.22,
+      powerRate:0.18,
+      obstacleRate:0.34,
+      bossRate:0.12,
       breakPower:650,
       pattern:'circle'
     },
@@ -406,9 +406,9 @@
       firstCt:34,
       count:20,
       size:'normal',
-      powerRate:0.95,
-      obstacleRate:0.95,
-      bossRate:0.95,
+      powerRate:0.11,
+      obstacleRate:0.22,
+      bossRate:0.08,
       breakPower:850,
       pattern:'fan'
     },
@@ -421,15 +421,14 @@
       firstCt:36,
       count:10,
       size:'big',
-      powerRate:2.07,
-      obstacleRate:2.07,
-      bossRate:2.07,
+      powerRate:0.24,
+      obstacleRate:0.58,
+      bossRate:0.18,
       breakPower:3200,
       pattern:'hero'
     }
   };
-
-  const PET_MASTER = [
+    const PET_MASTER = [
     {
       key:'mobdrago',
       name:'モブドラゴン',
@@ -2302,7 +2301,7 @@
     if (title) title.textContent = lockedView ? '？？？' : pet.name;
     if (!body) return;
 
-    const normalPower = Math.round(pet.normalAttackRate * normalLevelRate(level) * plusPowerRate(plus) * petModePowerRate(mode) * 100);
+    const normalPower = Math.round(pet.normalAttackRate * normalLevelRate(level) * plusPowerRate(plus) * 100);
     const skillCt = Math.round(skillCooldown(pet, level, plus) * 10) / 10;
     const secondCt = second ? Math.round(secondSkillCooldown(second, level, plus) * 10) / 10 : 0;
 
@@ -2329,16 +2328,16 @@
       <div class="pet-performance-line">
         <b>第一スキル</b><br>
         ${pet.skillName} / CT${skillCt}秒 / スキルワイド+${skillWideBonus(level, pet)}<br>
-        攻撃 ${Math.round(pet.skillPowerRate * skillLevelRate(level) * petModeSkillRate(mode) * 100)}% /
-        障害物 ${Math.round((pet.skillObstacleRate || pet.skillPowerRate) * skillLevelRate(level) * petModeSkillRate(mode) * 100)}% /
-        ボス ${Math.round((pet.skillBossRate || pet.skillPowerRate) * skillLevelRate(level) * petModeSkillRate(mode) * 100)}%
+        攻撃 ${Math.round(pet.skillPowerRate * skillLevelRate(level) * (1 + plusSkillTier(plus) * 0.015) * 100)}% /
+        障害物 ${Math.round((pet.skillObstacleRate || pet.skillPowerRate) * skillLevelRate(level) * (1 + plusSkillTier(plus) * 0.015) * 100)}% /
+        ボス ${Math.round((pet.skillBossRate || pet.skillPowerRate) * skillLevelRate(level) * (1 + plusSkillTier(plus) * 0.015) * 100)}%
       </div>
 
       <div class="pet-performance-line">
         <b>第二スキル</b><br>
         ${
           second
-            ? `${secondUnlocked ? '解放済み' : '未解放'} / ${second.name} / CT${secondCt || second.ct}秒<br>${second.desc}<br>弾数 ${second.count} / タイプ ${second.pattern}`
+            ? `${secondUnlocked ? '解放済み' : '未解放'} / ${second.name} / CT${secondCt || second.ct}秒<br>${second.desc}<br>弾数 ${second.count} / タイプ ${second.pattern}<br>通常モード用にボス倍率を抑制済み`
             : 'なし'
         }
       </div>
@@ -2447,7 +2446,8 @@
     return `
       <div class="pet-performance-line">
         <b>ペットモード専用強化</b><br>
-        合計Lv ${petModeTotalLevel(mode)} / ${PET_MODE_FIELDS.length * PET_MODE_MAX_LEVEL}
+        合計Lv ${petModeTotalLevel(mode)} / ${PET_MODE_FIELDS.length * PET_MODE_MAX_LEVEL}<br>
+        ※通常ステージ火力には乗らず、ペットモード専用で反映
       </div>
 
       ${PET_MODE_FIELDS.map(field => {
@@ -2701,10 +2701,14 @@
         const level = getLevel(key);
         const mode = getPetMode(key);
         const secondUnlocked = !!petState.secondSkillUnlocked;
+
+        const normalRateForNormalMode = normalLevelRate(level) * plusPowerRate(plus);
+        const skillRateForNormalMode = skillLevelRate(level) * (1 + plusSkillTier(plus) * 0.015);
+
         const secondSkill = secondUnlocked && pet.secondSkill
           ? Object.assign({}, pet.secondSkill, {
               currentCt:secondSkillCooldown(pet.secondSkill, level, plus),
-              levelRate:skillLevelRate(level) * petModeSkillRate(mode),
+              levelRate:skillRateForNormalMode,
               plusTier:plusSkillTier(plus)
             })
           : null;
@@ -2720,8 +2724,10 @@
           maxPlus:MAX_PLUS,
           maxLevel:levelCap(petState),
           levelCap:levelCap(petState),
-          normalLevelRate:normalLevelRate(level) * plusPowerRate(plus) * petModePowerRate(mode),
-          skillLevelRate:skillLevelRate(level) * (1 + plusSkillTier(plus) * 0.015) * petModeSkillRate(mode),
+
+          normalLevelRate:normalRateForNormalMode,
+          skillLevelRate:skillRateForNormalMode,
+
           currentSkillCt:skillCooldown(pet, level, plus),
           currentSecondSkillCt:secondSkill ? secondSkill.currentCt : 0,
           normalWideBonus:normalWideBonus(level, pet, plus),
@@ -2730,6 +2736,7 @@
           plusCtBonus:plusCtBonus(plus),
           plusSkillTier:plusSkillTier(plus),
           plusNormalWideBonus:plusNormalWideBonus(plus),
+
           petModeHpRate:petModeHpRate(mode),
           petModePowerRate:petModePowerRate(mode),
           petModeRapidRate:petModeRapidRate(mode),
